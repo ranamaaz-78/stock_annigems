@@ -13,11 +13,10 @@ ENV PHP_OPCACHE_ENABLE=1
 ENV AUTORUN_ENABLED=false
 
 USER root
-RUN install-php-extensions intl bcmath gd
+RUN install-php-extensions intl bcmath gd zip
 USER www-data
 
 COPY --chown=www-data:www-data . /var/www/html
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Vite ki built files (CSS/JS) pehle stage se copy
 COPY --from=assets --chown=www-data:www-data /app/public/build /var/www/html/public/build
