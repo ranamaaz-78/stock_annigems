@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -40,6 +41,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+         if (config('app.env') === 'production') {
+        URL::forceScheme('https');
+    }
+
         // Page links use the Annigems look, not Laravel's stock Tailwind colours.
         Paginator::defaultView('vendor.pagination.annigems');
         Paginator::defaultSimpleView('vendor.pagination.annigems-simple');
