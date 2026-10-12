@@ -13,8 +13,9 @@ use RuntimeException;
  * SuperAdminSeeder
  *
  * Creates the first (and only bootstrap) SuperAdmin account from .env.
- * Idempotent: running twice updates the existing account by email instead
- * of inserting a duplicate. No dummy branches or other users are seeded.
+ * Only creates the user the first time; an existing user (matched by email)
+ * is left untouched, so its password is never reset. No dummy branches or
+ * other users are seeded.
  */
 class SuperAdminSeeder extends Seeder
 {
@@ -38,7 +39,7 @@ class SuperAdminSeeder extends Seeder
 
         $superadminRole = Role::query()->where('name', UserRole::SUPERADMIN->value)->first();
 
-        User::query()->updateOrCreate(
+        User::query()->firstOrCreate(
             ['email' => $email],
             [
                 'name' => $name,
