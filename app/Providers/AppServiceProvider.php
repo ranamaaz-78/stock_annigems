@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Creditor;
 use App\Models\Customer;
+use App\Models\DeliveryNote;
 use App\Models\Invoice;
 use App\Models\JewelleryItem;
 use App\Models\Performa;
@@ -144,6 +145,7 @@ class AppServiceProvider extends ServiceProvider
         $this->bindBranchScoped('jewelleryItem', JewelleryItem::class);
         $this->bindBranchScoped('quotation', Quotation::class);
         $this->bindBranchScoped('invoice', Invoice::class);
+        $this->bindBranchScoped('deliveryNote', DeliveryNote::class);
         $this->bindBranchScoped('performa', Performa::class);
         $this->bindBranchScoped('creditor', Creditor::class);
 

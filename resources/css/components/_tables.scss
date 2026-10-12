@@ -316,3 +316,64 @@ td.table-admin__actions-col {
 .table-admin--lots tbody tr {
   height: 3.5rem;
 }
+
+/**
+ * Stones allocated on the jewellery form.
+ *
+ * One row per lot: identity on the left, the amount the operator types in the
+ * middle, and the read-only rate and cost on the right, aligned so digits line
+ * up. The footer repeats the cost column so the total sits under its figures.
+ */
+.stone-alloc {
+  &__lot {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__mode {
+    padding: 0.0625rem 0.375rem;
+    border-radius: 999px;
+    background-color: var(--color-surface-container);
+    color: var(--color-on-surface-variant);
+    font-family: var(--font-label-caps);
+    font-size: 0.6875rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  &__amount {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+
+    input {
+      width: 5.5rem;
+      text-align: right;
+    }
+  }
+
+  &__unit {
+    min-width: 1.5rem;
+    color: var(--color-on-surface-variant);
+  }
+
+  tfoot th,
+  tfoot td {
+    padding: 0.75rem 1rem;
+    border-top: 2px solid var(--color-outline-variant);
+    background-color: var(--color-surface-container-low);
+    font-weight: 700;
+  }
+
+  &__total-label {
+    text-align: right;
+    font-family: var(--font-label-caps);
+    font-size: var(--text-label-caps);
+    letter-spacing: var(--text-label-caps-tracking);
+    text-transform: uppercase;
+    color: var(--color-on-surface-variant);
+  }
+}

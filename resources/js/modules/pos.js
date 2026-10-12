@@ -147,7 +147,10 @@ export function bindPos() {
     }
 
     let state = emptyState();
-    let documentKind = 'quotation';
+    // Invoice when the cashier may convert, otherwise only quotations exist.
+    let documentKind = config.defaultKind === 'invoice' ? 'invoice' : 'quotation';
+    // Next number of each series, as last read from the server.
+    let documentNumbers = { ...(config.documentNumbers || {}) };
 
     /**
      * Fresh ticket: no customer, no lines, tax off, discount off.
@@ -216,6 +219,12 @@ export function bindPos() {
         previewTax: root.querySelector('[data-preview-tax]'),
         previewTotalNote: root.querySelector('[data-preview-total-note]'),
         previewGrandLabel: root.querySelector('[data-preview-grand-label]'),
+        kindOptions: root.querySelectorAll('[data-kind]'),
+        kindOnly: root.querySelectorAll('[data-kind-only]'),
+        kindChip: root.querySelector('[data-kind-chip]'),
+        kindNote: root.querySelector('[data-kind-note]'),
+        generateDeliveryNote: root.querySelector('[data-generate-delivery-note]'),
+        actionHelp: root.querySelector('[data-action-help]'),
         previewGrand: root.querySelector('[data-preview-grand]'),
         linesFoot: root.querySelector('[data-lines-foot]'),
         payCustomer: document.querySelector('[data-pay-customer]'),
@@ -243,8 +252,10 @@ export function bindPos() {
     function render() {
         clampDiscount();
 
-        const taxType = state.apply_tax && config.taxEnabled ? (config.taxType || 'none') : 'none';
-        const taxRate = state.apply_tax && config.taxEnabled ? String(config.taxRate ?? 0) : '0';
+        // A delivery note never carries tax, whatever the ticket's tax toggle says.
+        const taxed = state.apply_tax && config.taxEnabled && documentKind !== 'delivery_note';
+        const taxType = taxed ? (config.taxType || 'none') : 'none';
+        const taxRate = taxed ? String(config.taxRate ?? 0) : '0';
 
         const result = recalculate(state.lines, {
             discount_type: state.discount_on ? state.discount_type : 'none',
@@ -270,8 +281,10 @@ export function bindPos() {
         els.discountOff?.classList.toggle('is-hidden', state.discount_on);
         els.discountFields?.classList.toggle('is-hidden', !state.discount_on);
 
-        els.taxOff?.classList.toggle('is-hidden', state.apply_tax);
-        els.taxApplied?.classList.toggle('is-hidden', !state.apply_tax);
+        // No tax controls on a delivery note: it is issued without tax.
+        const noTax = documentKind === 'delivery_note';
+        els.taxOff?.classList.toggle('is-hidden', state.apply_tax || noTax);
+        els.taxApplied?.classList.toggle('is-hidden', !state.apply_tax || noTax);
 
         if (els.taxAppliedLabel) {
             const name = config.taxLabel || 'GST';
@@ -291,6 +304,46 @@ export function bindPos() {
         }
         if (els.validUntil) {
             els.validUntil.textContent = formatDate(addDays(state.quotation_date, validityDays));
+        }
+        renderKindNote();
+    }
+
+    /**
+     * The number this ticket will get, for the kind chosen. It is a preview
+     * of the next number in that series; the real one is issued on save.
+     */
+    function renderDocumentNumber() {
+        if (!els.previewNumber) return;
+
+        els.previewNumber.textContent = documentNumbers[documentKind] || 'Draft';
+    }
+
+    /**
+     * Fetch the next numbers again, after a save used one up.
+     */
+    async function refreshDocumentNumbers() {
+        if (!routes.numbers) return;
+
+        const { ok, json } = await fetchJson(routes.numbers);
+        if (ok && json.data) {
+            documentNumbers = { ...documentNumbers, ...json.data };
+            renderDocumentNumber();
+        }
+    }
+
+    /**
+     * Line under the action button. For a quotation it names the date the
+     * offer lapses, so it follows the issue date the cashier picks.
+     */
+    function renderKindNote() {
+        if (!els.kindNote) return;
+
+        if (documentKind === 'invoice') {
+            els.kindNote.textContent = 'Payment is taken next. Stock is deducted when the invoice is saved.';
+        } else if (documentKind === 'delivery_note') {
+            els.kindNote.textContent = 'No tax is added. Stock leaves now; the note can be cancelled or invoiced later.';
+        } else {
+            els.kindNote.textContent = `Valid until ${formatDate(addDays(state.quotation_date, validityDays))} — ${validityDays} ${validityDays === 1 ? 'day' : 'days'} from the issue date.`;
         }
     }
 
@@ -435,25 +488,48 @@ export function bindPos() {
             // Rate is per unit (qty × rate = amount). Jewellery qty is always 1,
             // so the rate is the gold + set-stone total for that piece.
             const rateValue = isJewellery
-                ? (Number(line.gold_value) || 0) + (Number(line.stone_value) || 0)
+                ? Math.round(((Number(line.gold_value) || 0) + (Number(line.stone_value) || 0)) * 100) / 100
                 : Number(line.price_per_piece) || 0;
 
-            const stonesHtml = isJewellery
+            // Set stones: one tidy row each, name and detail on the left and the
+            // price per piece to type on the right, under a single heading.
+            const stoneRows = isJewellery
                 ? (line.stones || []).map((stone, stoneIndex) => {
-                    const parts = [stone.stone_name_snapshot || stone.stone_type_snapshot];
-                    if (Number(stone.carat_snapshot) > 0) {
-                        parts.push(`${stone.carat_snapshot}ct`);
-                    }
+                    const name = stone.stone_name_snapshot || stone.stone_type_snapshot || 'Stone';
+                    const detail = [
+                        Number(stone.carat_snapshot) > 0 ? `${Number(stone.carat_snapshot)} ct` : '',
+                        `× ${stone.quantity}`,
+                    ].filter(Boolean).join(' · ');
 
-                    return `<span class="sheet-table__sub pos-qty">
-                        ${escapeHtml(parts.filter(Boolean).join(' · '))} × ${escapeHtml(stone.quantity)}
+                    return `<label class="pos-stone">
+                        <span class="pos-stone__name">${escapeHtml(name)}<small>${escapeHtml(detail)}</small></span>
                         ${cellInput({
                             value: amountOrEmpty(stone.price_per_piece),
                             extra: `data-stone-price data-line="${index}" data-stone="${stoneIndex}"`,
-                            aria: 'Stone price per piece',
+                            aria: `${name} price per piece`,
                         })}
-                    </span>`;
+                    </label>`;
                 }).join('')
+                : '';
+
+            // Metal first: what the gold of this piece comes to (net weight x
+            // the day's rate for its purity), so the Rate column can be read as
+            // metal + stones rather than one unexplained number.
+            const goldRate = Number(line.gold_rate_applied) || 0;
+            const goldValue = Number(line.gold_value) || 0;
+            const metalName = [line.purity_snapshot, line.metal_snapshot].filter(Boolean).join(' ') || 'Metal';
+            const metalRow = isJewellery
+                ? `<div class="pos-stone__head"><span>Metal</span><span>Value</span></div>
+                    <div class="pos-stone">
+                        <span class="pos-stone__name">${escapeHtml(metalName)}<small>${goldRate > 0
+                            ? `${weight.toFixed(3)} g × ${formatAmount(goldRate)} / g`
+                            : 'No gold rate for this purity today'}</small></span>
+                        <span class="pos-stone__value${goldRate > 0 ? '' : ' pos-stone__value--missing'}">${goldRate > 0 ? formatAmount(goldValue) : '—'}</span>
+                    </div>`
+                : '';
+
+            const stonesHtml = isJewellery
+                ? `${metalRow}${stoneRows ? `<div class="pos-stone__head"><span>Set stones</span><span>Price / pc</span></div>${stoneRows}` : ''}`
                 : '';
 
             const makingCell = isJewellery
@@ -617,7 +693,7 @@ export function bindPos() {
             els.previewCountLines.textContent = `${lineCount} ${lineCount === 1 ? 'line' : 'lines'}`;
         }
         if (els.previewItemsNote) els.previewItemsNote.textContent = `${summary} on this ticket`;
-        if (els.previewNumber) els.previewNumber.textContent = 'Draft';
+        renderDocumentNumber();
 
         if (els.previewSubtotal) els.previewSubtotal.textContent = formatMoney(documentTotals.subtotal);
         if (els.previewLinesTotal) els.previewLinesTotal.textContent = formatMoney(documentTotals.subtotal);
@@ -654,8 +730,30 @@ export function bindPos() {
     function setDocumentKind(kind) {
         documentKind = kind;
         const isInvoice = kind === 'invoice';
-        if (els.previewGrandLabel) els.previewGrandLabel.textContent = isInvoice ? 'Grand Total' : 'Quotation Total';
-        els.validUntilRows?.forEach((row) => row.classList.toggle('is-hidden', isInvoice));
+        const isQuotation = kind === 'quotation';
+        const labels = { invoice: 'Grand Total', quotation: 'Quotation Total', delivery_note: 'Delivery Note Total' };
+        if (els.previewGrandLabel) els.previewGrandLabel.textContent = labels[kind] || labels.quotation;
+        els.validUntilRows?.forEach((row) => row.classList.toggle('is-hidden', !isQuotation));
+
+        // The selector, the badge, the action button and the help all follow.
+        els.kindOptions?.forEach((option) => {
+            const on = option.dataset.kind === kind;
+            option.classList.toggle('is-on', on);
+            option.setAttribute('aria-checked', on ? 'true' : 'false');
+        });
+        els.kindOnly?.forEach((control) => control.classList.toggle('is-hidden', control.dataset.kindOnly !== kind));
+        if (els.kindChip) els.kindChip.textContent = { invoice: 'Invoice', quotation: 'Quotation', delivery_note: 'Delivery Note' }[kind] || 'Quotation';
+        if (els.actionHelp) {
+            els.actionHelp.textContent = {
+                invoice: 'An invoice takes payment and marks stock sold. It prints, then clears the ticket.',
+                quotation: 'A quotation holds stock until it is converted or cancelled. It prints, then clears the ticket.',
+                delivery_note: 'A delivery note takes the stock out now and prints the client\'s copy. No tax, no payment.',
+            }[kind] || '';
+        }
+        renderKindNote();
+        renderDocumentNumber();
+        // Totals and the tax controls depend on the kind.
+        if (typeof render === 'function' && state) render();
     }
 
     /**
@@ -1038,7 +1136,8 @@ export function bindPos() {
         if (els.discountValue) els.discountValue.value = '';
         if (els.notes) els.notes.value = '';
         hideCustomerSuggestions();
-        setDocumentKind('quotation');
+        // The chosen document type stays for the next ticket.
+        setDocumentKind(documentKind);
         setCustomerChip('idle');
         clearScanError();
         render();
@@ -1070,10 +1169,42 @@ export function bindPos() {
 
         if (ok) {
             finishAndPrint(json.data?.print_url, json.message || 'Quotation saved.');
+            refreshDocumentNumbers();
         } else if (json.errors && Object.keys(json.errors).length) {
             showErrors(json.errors, json.message);
         } else {
             window.AnnigemsAlert?.notifyError(json.message || 'The quotation could not be saved.');
+        }
+    }
+
+    /**
+     * POST delivery-notes.store: no payment, no tax. The stock leaves with it.
+     *
+     * @param {HTMLButtonElement} button
+     */
+    async function generateDeliveryNote(button) {
+        if (!validateCustomer()) return;
+        if (!state.lines.length) {
+            window.AnnigemsAlert?.notifyError('Add at least one item to the delivery note.');
+            return;
+        }
+
+        setDocumentKind('delivery_note');
+
+        const loading = window.AnnigemsButton?.startButtonLoading(button, 'Saving…');
+        const { ok, json } = await fetchJson(routes.deliveryNote, {
+            method: 'POST',
+            body: JSON.stringify({ ...buildFormPayload(), apply_tax: false }),
+        });
+        loading?.restore();
+
+        if (ok) {
+            finishAndPrint(json.data?.print_url, json.message || 'Delivery note saved.');
+            refreshDocumentNumbers();
+        } else if (json.errors && Object.keys(json.errors).length) {
+            showErrors(json.errors, json.message);
+        } else {
+            window.AnnigemsAlert?.notifyError(json.message || 'The delivery note could not be saved.');
         }
     }
 
@@ -1120,6 +1251,7 @@ export function bindPos() {
             window.AnnigemsModal?.closeModal('pos-invoice-modal');
             form.reset();
             finishAndPrint(json.data?.print_url, json.message || 'Invoice created.');
+            refreshDocumentNumbers();
         } else if (json.errors && Object.keys(json.errors).length) {
             showErrors(json.errors, json.message);
         } else {
@@ -1211,6 +1343,11 @@ export function bindPos() {
         generateQuotation(els.generateQuote);
     });
 
+    els.generateDeliveryNote?.addEventListener('click', (event) => {
+        event.preventDefault();
+        generateDeliveryNote(els.generateDeliveryNote);
+    });
+
     els.generateInvoice?.addEventListener('click', (event) => {
         event.preventDefault();
         if (!validateCustomer()) return;
@@ -1222,8 +1359,11 @@ export function bindPos() {
         window.AnnigemsModal?.openModal('pos-invoice-modal');
     });
 
-    document.querySelector('#pos-invoice-modal [data-modal-close]')?.addEventListener('click', () => {
-        setDocumentKind('quotation');
+    els.kindOptions?.forEach((option) => {
+        option.addEventListener('click', () => {
+            if (option.disabled) return;
+            setDocumentKind(['invoice', 'delivery_note'].includes(option.dataset.kind) ? option.dataset.kind : 'quotation');
+        });
     });
 
     const invoiceForm = document.getElementById('pos-invoice-modal-form');

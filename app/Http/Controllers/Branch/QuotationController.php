@@ -126,8 +126,9 @@ class QuotationController extends Controller
         }
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Quotation saved.', [
+            return $this->jsonSuccess('Quotation '.$quotation->quotation_number.' saved.', [
                 'uuid' => $quotation->uuid,
+                'number' => $quotation->quotation_number,
                 'print_url' => route('branch.quotations.print', $quotation),
             ]);
         }
@@ -220,8 +221,9 @@ class QuotationController extends Controller
         }
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Invoice created successfully.', [
+            return $this->jsonSuccess('Invoice '.$invoice->invoice_number.' created.', [
                 'uuid' => $invoice->uuid,
+                'number' => $invoice->invoice_number,
                 'print_url' => route('branch.invoices.print', $invoice),
             ]);
         }

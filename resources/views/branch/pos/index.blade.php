@@ -39,11 +39,17 @@
         // the issue date, using the same format the printed sheet uses.
         'dateFormat' => (string) setting('date_format', 'd-m-Y'),
         'validityDays' => $validityDays,
+        // Invoice when the cashier may convert, otherwise only quotations exist.
+        'defaultKind' => $canConvert ? 'invoice' : 'quotation',
+        'canDeliver' => $canDeliver,
+        'documentNumbers' => $documentNumbers,
         'routes' => [
             'lookup' => route('branch.quotations.lookup'),
             'search' => route('branch.quotations.search'),
             'store' => route('branch.quotations.store'),
             'invoice' => route('branch.quotations.invoice'),
+            'deliveryNote' => route('branch.delivery-notes.store'),
+            'numbers' => route('branch.pos.numbers'),
             'customerLookup' => route('branch.customers.lookup'),
             'customerSearch' => route('branch.customers.search'),
         ],
@@ -88,6 +94,7 @@
 
                         <div class="pos-dochead">
                             <div class="pos-dochead__title">
+                                <span class="pos-chip pos-chip--kind" data-kind-chip>Quotation</span>
                                 <span class="pos-chip pos-chip--ok">
                                     <span class="material-symbols-outlined icon icon--xs">verified_user</span>
                                     Stock protected
@@ -96,7 +103,11 @@
                             <div class="pos-meta">
                                 <div class="pos-meta__cell">
                                     <span class="pos-cap">Document no.</span>
-                                    <span class="pos-chip pos-chip--draft" data-preview-number>Draft</span>
+                                    <span
+                                        class="pos-chip pos-chip--draft"
+                                        data-preview-number
+                                        title="Given when you save. If another till saves first, yours moves to the next number."
+                                    >{{ $canConvert ? $documentNumbers['invoice'] : $documentNumbers['quotation'] }}</span>
                                 </div>
                                 <div class="pos-meta__cell">
                                     <label class="pos-cap" for="pos-issue-date">Issue date</label>
@@ -123,6 +134,53 @@
 
                     {{-- Phone filters the cached registry. A miss is just a new customer. --}}
                     <section class="pos-billto" aria-label="Customer">
+                        {{-- What this ticket becomes. Everything below follows the choice. --}}
+                        <div class="pos-kind" role="radiogroup" aria-label="Document type" data-kind-group>
+                            <button
+                                type="button"
+                                class="pos-kind__opt"
+                                role="radio"
+                                aria-checked="false"
+                                data-kind="invoice"
+                                @disabled(! $canConvert)
+                                @if(! $canConvert) title="You are not allowed to create invoices" @endif
+                            >
+                                <span class="material-symbols-outlined icon icon--md" aria-hidden="true">receipt_long</span>
+                                <span class="pos-kind__text">
+                                    <span class="pos-kind__name">Invoice</span>
+                                    <span class="pos-kind__sub">Takes payment now · deducts stock</span>
+                                </span>
+                            </button>
+                            <button
+                                type="button"
+                                class="pos-kind__opt"
+                                role="radio"
+                                aria-checked="false"
+                                data-kind="quotation"
+                            >
+                                <span class="material-symbols-outlined icon icon--md" aria-hidden="true">request_quote</span>
+                                <span class="pos-kind__text">
+                                    <span class="pos-kind__name">Quotation</span>
+                                    <span class="pos-kind__sub">Valid {{ $validityDays }} {{ $validityDays === 1 ? 'day' : 'days' }} · holds stock</span>
+                                </span>
+                            </button>
+                            <button
+                                type="button"
+                                class="pos-kind__opt"
+                                role="radio"
+                                aria-checked="false"
+                                data-kind="delivery_note"
+                                @disabled(! $canDeliver)
+                                @if(! $canDeliver) title="You are not allowed to create delivery notes" @endif
+                            >
+                                <span class="material-symbols-outlined icon icon--md" aria-hidden="true">local_shipping</span>
+                                <span class="pos-kind__text">
+                                    <span class="pos-kind__name">Delivery Note · Albarán</span>
+                                    <span class="pos-kind__sub">No tax · takes stock now</span>
+                                </span>
+                            </button>
+                        </div>
+
                         <div class="pos-section__head">
                             <span class="pos-secno">01</span>
                             <h2 class="pos-section__title">Billed to</h2>
@@ -277,7 +335,7 @@
                             <textarea id="pos-notes" class="pos-notes" data-doc-notes rows="5" placeholder="Sizing, collection date, stone certificates…"></textarea>
                             <p class="pos-hint">
                                 <span class="material-symbols-outlined icon icon--xs">shield_lock</span>
-                                <span data-action-help>A quotation holds stock until it is converted or cancelled. An invoice takes payment and marks stock sold. Both print, then clear the ticket.</span>
+                                <span data-action-help>A quotation holds stock until it is converted or cancelled.</span>
                             </p>
                         </div>
 
@@ -343,16 +401,24 @@
                                 </div>
                             </div>
 
+                            {{-- Only the button for the chosen document type is shown. --}}
                             @if($canConvert)
-                                <x-btn type="button" block data-generate-invoice loading-text="Saving…">
+                                <x-btn type="button" block data-generate-invoice data-kind-only="invoice" loading-text="Saving…">
                                     <span class="material-symbols-outlined icon icon--sm">receipt_long</span>
                                     Generate Invoice &amp; Deduct Stock
                                 </x-btn>
                             @endif
-                            <x-btn type="button" variant="secondary" block data-generate-quotation loading-text="Saving…">
+                            <x-btn type="button" block data-generate-quotation data-kind-only="quotation" loading-text="Saving…">
                                 <span class="material-symbols-outlined icon icon--sm">request_quote</span>
                                 Generate Quotation
                             </x-btn>
+                            @if($canDeliver)
+                                <x-btn type="button" block data-generate-delivery-note data-kind-only="delivery_note" loading-text="Saving…">
+                                    <span class="material-symbols-outlined icon icon--sm">local_shipping</span>
+                                    Generate Delivery Note &amp; Deduct Stock
+                                </x-btn>
+                            @endif
+                            <p class="pos-settle__note" data-kind-note></p>
                         </div>
                     </section>
                 </div>

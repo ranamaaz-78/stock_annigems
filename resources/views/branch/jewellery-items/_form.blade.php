@@ -1,6 +1,7 @@
-{{-- Dense jewellery item form minus pricing. Stone rows are allocated packets, not free-text. --}}
+{{-- Dense jewellery item form. Stone rows are allocated packets, not free-text; their cost shows only to users who may see cost. --}}
 @php
     $item = $item ?? null;
+    $showCost = auth()->user()?->hasPermission('items.view_cost') ?? false;
     $allocated = $item
         ? $item->itemStones->map(function ($row) {
             $stone = $row->stone;
@@ -11,6 +12,11 @@
                 'carat' => (string) $row->carat_snapshot,
                 'quantity' => (int) $row->quantity,
                 'available' => (int) ($stone?->quantity ?? 0),
+                'mode' => $row->pricing_mode?->value ?? $stone?->pricing_mode?->value,
+                'grams' => $row->weight_grams === null ? null : (string) $row->weight_grams,
+                'available_grams' => $stone?->weight_grams === null ? null : (string) $stone->weight_grams,
+                'rate' => $showCost ? (string) $row->unit_rate : null,
+                'cost' => $showCost ? (string) $row->line_cost : null,
                 'type' => $row->stone_type_snapshot,
                 'shape' => $row->shape_snapshot,
             ];
@@ -25,6 +31,7 @@
      data-subs-url="{{ url('/branch/jewellery-items/categories/__UUID__/sub-categories') }}"
      data-purities-url="{{ url('/branch/metals/__UUID__/purities') }}"
      data-grams-per-carat="{{ $gramsPerCarat }}"
+     data-show-cost="{{ $showCost ? '1' : '0' }}"
      data-scanner="{{ json_encode($scanner) }}"
      data-allocated="{{ $allocated->toJson() }}"
      data-selected-sub="{{ old('sub_category_id', $item->sub_category_id ?? '') }}"
@@ -95,8 +102,8 @@
 
         <section>
             <h2 class="text-headline-sm border-b border-outline-variant pb-2 mb-3">Stones</h2>
-            <p class="text-body-sm text-on-surface-variant mb-3">Scan a packet barcode, enter the 3-letter short code, or search by name. Scanning an already-added packet increases its quantity. Stock is deducted only when you save.</p>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+            <p class="text-body-sm text-on-surface-variant mb-3">Scan a packet barcode or search by name. Scanning an already-added packet increases its quantity. A stone priced per gram is added by the grams used. Stock is deducted only when you save.@if($showCost) The price of each stone is worked out from its own rate.@endif</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                 <div data-scan-wrap>
                     <label class="form-label" for="jewellery-scan">Scan packet</label>
                     <div class="flex gap-2">
@@ -104,19 +111,6 @@
                         <x-btn type="button" variant="secondary" data-lookup-button>Lookup</x-btn>
                     </div>
                     <p data-scan-message class="form-error is-hidden mt-1"></p>
-                </div>
-                <div>
-                    <label class="form-label" for="jewellery-short-code">Short code</label>
-                    <input
-                        id="jewellery-short-code"
-                        type="text"
-                        class="input-field"
-                        maxlength="3"
-                        autocomplete="off"
-                        placeholder="DIA"
-                        data-short-code-input
-                    >
-                    <p class="form-help mt-1">Three letters saved on the stone.</p>
                 </div>
                 <div>
                     <label class="form-label" for="jewellery-search">Search by name</label>
@@ -133,17 +127,30 @@
                 </div>
             </div>
             <div class="overflow-x-auto">
-                <table class="table-admin">
+                <table class="table-admin stone-alloc">
                     <thead>
                         <tr>
                             <th>Stone</th>
-                            <th>Carat</th>
-                            <th>Qty</th>
-                            <th>Available</th>
+                            <th class="table-admin__num">Carat</th>
+                            <th>Used</th>
+                            <th class="table-admin__num">Available</th>
+                            @if($showCost)
+                                <th class="table-admin__num">Rate</th>
+                                <th class="table-admin__num">Cost</th>
+                            @endif
                             <th></th>
                         </tr>
                     </thead>
                     <tbody data-stone-rows></tbody>
+                    @if($showCost)
+                        <tfoot>
+                            <tr>
+                                <th colspan="5" class="stone-alloc__total-label">Total stone cost</th>
+                                <td class="table-admin__num font-data-mono" data-stone-cost-total>0.000</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    @endif
                 </table>
             </div>
             <p data-error-for="stones" class="form-error {{ $errors->has('stones') ? '' : 'is-hidden' }}">{{ $errors->first('stones') }}</p>

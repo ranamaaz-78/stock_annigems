@@ -1,10 +1,11 @@
-{{-- Jewellery item detail: snapshots, gated photos, movement timeline. No prices. --}}
+{{-- Jewellery item detail: snapshots, gated photos, movement timeline. Stone cost is shown only to users who may see cost. --}}
 @extends('layouts.branch')
 
 @section('title', $item->item_code)
 @section('page-title', $item->item_code)
 
 @section('content')
+@php $showStoneCost = auth()->user()?->hasPermission('items.view_cost') ?? false; @endphp
 <x-page-header :title="$item->name" :subtitle="$item->item_code">
     <x-slot:actions>
         <x-btn href="{{ route('branch.jewellery-items.index') }}" variant="secondary">Back</x-btn>
@@ -116,6 +117,10 @@
                     <th>Carat</th>
                     <th>Qty</th>
                     <th>Total ct</th>
+                    @if($showStoneCost)
+                        <th>Rate</th>
+                        <th>Cost</th>
+                    @endif
                     <th></th>
                 </tr>
             </thead>
@@ -129,8 +134,12 @@
                         <td>{{ $row->color_snapshot ?? '—' }}</td>
                         <td>{{ $row->clarity_snapshot ?? '—' }}</td>
                         <td class="font-data-mono">{{ $row->carat_snapshot }}</td>
-                        <td class="font-data-mono">{{ $row->quantity }}</td>
+                        <td class="font-data-mono">{{ $row->weight_grams !== null ? rtrim(rtrim((string) $row->weight_grams, '0'), '.').' g' : $row->quantity }}</td>
                         <td class="font-data-mono">{{ $row->total_carat }}</td>
+                        @if($showStoneCost)
+                            <td class="font-data-mono">{{ $row->pricing_mode ? setting_money($row->unit_rate).' / '.match ($row->pricing_mode) { \App\Enums\StonePricingMode::PER_CARAT => 'ct', \App\Enums\StonePricingMode::PER_GRAM => 'g', default => 'pc' } : '—' }}</td>
+                            <td class="font-data-mono">{{ $row->pricing_mode ? setting_money($row->line_cost) : '—' }}</td>
+                        @endif
                         <td>
                             @if($row->stone)
                                 <a href="{{ route('branch.stones.show', $row->stone) }}" class="form-link text-body-sm">Catalog</a>
@@ -139,6 +148,15 @@
                     </tr>
                 @endforeach
             </tbody>
+            @if($showStoneCost)
+                <tfoot>
+                    <tr>
+                        <th colspan="10" class="text-right">Stone cost</th>
+                        <th class="font-data-mono">{{ setting_money($item->itemStones->sum('line_cost')) }}</th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+            @endif
         </table>
     @endif
 </div>

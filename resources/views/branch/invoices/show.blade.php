@@ -22,6 +22,12 @@
 
 <div class="doc-meta">
     <x-attribution :record="$invoice" />
+    @if($invoice->deliveryNote)
+        <p class="doc-meta__link">
+            From delivery note
+            <a href="{{ route('branch.delivery-notes.show', $invoice->deliveryNote) }}">{{ $invoice->deliveryNote->delivery_note_number }}</a>
+        </p>
+    @endif
     <p class="doc-meta__link">
         Public verification: <a href="{{ $verifyUrl }}" target="_blank" rel="noopener">{{ $verifyUrl }}</a>
     </p>

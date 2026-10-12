@@ -278,6 +278,25 @@ class SalesLookupService
     }
 
     /**
+     * The price per piece a stone allocation was costed at when the piece was made.
+     *
+     * A per-gram allocation is one row (quantity 1), so its price is the whole
+     * line cost. The snapshot is what the shop paid for the stone, so it is
+     * loaded only for users allowed to see cost (items.view_cost); everyone
+     * else starts at zero and types the price, as before.
+     */
+    private function allocationPiecePrice(\App\Models\JewelleryItemStone $allocation): string
+    {
+        $quantity = (int) $allocation->quantity;
+
+        if ($quantity < 1 || ! auth()->user()?->hasPermission('items.view_cost')) {
+            return '0.00';
+        }
+
+        return number_format((float) $allocation->line_cost / $quantity, 2, '.', '');
+    }
+
+    /**
      * Build jewellery line template from live item.
      *
      * @return array<string, mixed>
@@ -293,7 +312,7 @@ class SalesLookupService
             'color_snapshot' => $s->color_snapshot,
             'clarity_snapshot' => $s->clarity_snapshot,
             'quantity' => $s->quantity,
-            'price_per_piece' => '0.00',
+            'price_per_piece' => $this->allocationPiecePrice($s),
             'total_price' => '0.00',
         ])->values()->all();
 
@@ -419,11 +438,36 @@ class SalesLookupService
         foreach ($allocations as $position => $allocation) {
             $id = (int) ($allocation['jewellery_item_stone_id'] ?? 0);
 
+            // Nothing submitted for a stone keeps the price it was loaded with.
             $allocations[$position]['price_per_piece'] = $pricesById[$id]
-                ?? ($submitted[$position]['price_per_piece'] ?? '0.00');
+                ?? ($submitted[$position]['price_per_piece'] ?? $allocation['price_per_piece'] ?? '0.00');
         }
 
         return $allocations;
+    }
+
+    /**
+     * What one piece of a lot is bought for, to start a loose-stone line from.
+     *
+     * Per carat is the lot's piece price (carat x rate) and per piece is its
+     * rate. A per-gram lot is weighed, not counted, so it has no price per
+     * piece. Like the jewellery stone prices, this is purchase cost and is
+     * loaded only for users who may see cost (items.view_cost); everyone else
+     * starts at zero and types the price.
+     */
+    private function stonePiecePrice(Stone $stone): string
+    {
+        if (! auth()->user()?->hasPermission('items.view_cost')) {
+            return '0.00';
+        }
+
+        $price = match ($stone->pricing_mode) {
+            \App\Enums\StonePricingMode::PER_CARAT => $stone->piece_price,
+            \App\Enums\StonePricingMode::PER_PIECE => $stone->price_per_piece,
+            default => null,
+        };
+
+        return number_format((float) $price, 2, '.', '');
     }
 
     /**
@@ -444,7 +488,7 @@ class SalesLookupService
             'category_snapshot' => $stone->shape,
             'quantity' => 1,
             'available_quantity' => (int) $stone->quantity,
-            'price_per_piece' => '0.00',
+            'price_per_piece' => $this->stonePiecePrice($stone),
             'stones' => [],
         ];
     }

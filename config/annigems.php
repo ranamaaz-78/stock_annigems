@@ -190,6 +190,13 @@ return [
                     'enabled' => true,
                 ],
                 [
+                    'label' => 'Delivery Notes',
+                    'route' => 'branch.delivery-notes.index',
+                    'icon' => 'local_shipping',
+                    'permission' => 'delivery_notes.view',
+                    'enabled' => true,
+                ],
+                [
                     'label' => 'Customers',
                     'route' => 'branch.customers.index',
                     'icon' => 'group',

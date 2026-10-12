@@ -107,6 +107,53 @@ class StonePricingService
     }
 
     /**
+     * What a share of a lot costs when it goes into a jewellery piece.
+     *
+     * Priced in the unit the lot was bought in. `unit_rate` is the lot's own
+     * rate in that unit, kept so the piece still explains its cost after the
+     * lot's rate is edited.
+     *
+     * @param  int  $pieces  Pieces used (piece and carat lots)
+     * @param  float  $grams  Grams used (gram lots)
+     * @return array{pricing_mode: StonePricingMode, unit_rate: float, line_cost: float}
+     */
+    public function allocationCost(Stone $stone, int $pieces, float $grams): array
+    {
+        $mode = $stone->pricing_mode ?? StonePricingMode::PER_PIECE;
+
+        $rate = $this->round((float) match ($mode) {
+            StonePricingMode::PER_CARAT => $stone->price_per_carat,
+            StonePricingMode::PER_PIECE => $stone->price_per_piece,
+            StonePricingMode::PER_GRAM => $stone->price_per_gram,
+        });
+
+        return [
+            'pricing_mode' => $mode,
+            'unit_rate' => $rate,
+            'line_cost' => $this->costAtRate($mode, $rate, (float) $stone->carat, $pieces, $grams),
+        ];
+    }
+
+    /**
+     * Cost of an allocation at a rate that is already known.
+     *
+     *   per carat  round(carat x rate) x pieces   (the lot's piece price)
+     *   per piece  rate x pieces
+     *   per gram   rate x grams
+     *
+     * Used for a fresh allocation and to re-cost a kept snapshot when only
+     * the quantity went down, so the rate never silently follows the lot.
+     */
+    public function costAtRate(StonePricingMode $mode, float $rate, float $carat, int $pieces, float $grams): float
+    {
+        return match ($mode) {
+            StonePricingMode::PER_CARAT => $this->round($this->round($carat * $rate) * $pieces),
+            StonePricingMode::PER_PIECE => $this->round($rate * $pieces),
+            StonePricingMode::PER_GRAM => $this->round($rate * $grams),
+        };
+    }
+
+    /**
      * Whether a stored total still matches what the inputs produce.
      *
      * Used when the sheet supplies its own TOTAL COST column: a mismatch

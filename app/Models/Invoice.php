@@ -39,6 +39,7 @@ class Invoice extends Model
         'verification_token',
         'quotation_id',
         'performa_id',
+        'delivery_note_id',
         'customer_id',
         'customer_name_snapshot',
         'customer_phone_snapshot',
@@ -111,6 +112,14 @@ class Invoice extends Model
     public function performa(): BelongsTo
     {
         return $this->belongsTo(Performa::class);
+    }
+
+    /**
+     * Source delivery note when this invoice closed an albarán.
+     */
+    public function deliveryNote(): BelongsTo
+    {
+        return $this->belongsTo(DeliveryNote::class);
     }
 
     /**

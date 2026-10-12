@@ -583,4 +583,54 @@ class PosTest extends TestCase
 
         $this->assertFalse(collect($catalog)->contains(fn ($row) => ($row['uuid'] ?? null) === $item->uuid));
     }
+
+    /**
+     * The ticket shows the next number of each series without using it up.
+     */
+    public function test_pos_shows_the_next_numbers_without_taking_them(): void
+    {
+        [, $admin] = $this->branchAdmin();
+
+        $first = $this->actingAs($admin)->getJson(route('branch.pos.numbers'))
+            ->assertOk()
+            ->json('data');
+        $again = $this->actingAs($admin)->getJson(route('branch.pos.numbers'))->json('data');
+
+        $this->assertSame($first, $again);
+        $this->assertMatchesRegularExpression('/000001$/', $first['invoice']);
+        $this->assertMatchesRegularExpression('/000001$/', $first['quotation']);
+        $this->assertNotSame($first['invoice'], $first['quotation']);
+
+        $this->actingAs($admin)->get(route('branch.pos.show'))
+            ->assertOk()
+            ->assertSee($first['invoice']);
+    }
+
+    /**
+     * What was shown is what the document gets, and the screen then moves on.
+     */
+    public function test_saved_documents_take_the_previewed_number_and_the_preview_moves_on(): void
+    {
+        [, $admin, $purity] = $this->branchAdmin();
+        $item = $this->piece($admin, $purity);
+        $second = $this->piece($admin, $purity);
+
+        $shown = $this->actingAs($admin)->getJson(route('branch.pos.numbers'))->json('data');
+
+        $quote = $this->actingAs($admin)
+            ->postJson(route('branch.quotations.store'), $this->posPayload($item))
+            ->assertOk();
+        $this->assertSame($shown['quotation'], $quote->json('data.number'));
+        $this->assertStringContainsString($shown['quotation'], $quote->json('message'));
+
+        $invoice = $this->actingAs($admin)
+            ->postJson(route('branch.quotations.invoice'), $this->posPayload($second, ['payment_method' => 'cash']))
+            ->assertOk();
+        // A direct invoice never uses a quotation number.
+        $this->assertSame($shown['invoice'], $invoice->json('data.number'));
+
+        $next = $this->actingAs($admin)->getJson(route('branch.pos.numbers'))->json('data');
+        $this->assertNotSame($shown['quotation'], $next['quotation']);
+        $this->assertNotSame($shown['invoice'], $next['invoice']);
+    }
 }

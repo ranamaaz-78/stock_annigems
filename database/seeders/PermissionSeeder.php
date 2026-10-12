@@ -78,6 +78,12 @@ class PermissionSeeder extends Seeder
             ['module' => 'quotations', 'name' => 'quotations.cancel', 'display_name' => 'Cancel Quotations'],
             ['module' => 'quotations', 'name' => 'quotations.convert', 'display_name' => 'Convert Quotations to Invoice'],
 
+            // Delivery notes (albarán): goods out now, price and discount, no tax
+            ['module' => 'delivery_notes', 'name' => 'delivery_notes.view', 'display_name' => 'View Delivery Notes'],
+            ['module' => 'delivery_notes', 'name' => 'delivery_notes.create', 'display_name' => 'Create Delivery Notes', 'description' => 'Issues an albarán and takes stock out at once'],
+            ['module' => 'delivery_notes', 'name' => 'delivery_notes.cancel', 'display_name' => 'Cancel Delivery Notes', 'description' => 'Returns the goods to stock'],
+            ['module' => 'delivery_notes', 'name' => 'delivery_notes.convert', 'display_name' => 'Convert Delivery Notes to Invoice'],
+
             // Performas (credit issue + settlement)
             ['module' => 'performas', 'name' => 'performas.view', 'display_name' => 'View Performas'],
             ['module' => 'performas', 'name' => 'performas.create', 'display_name' => 'Issue Performas'],

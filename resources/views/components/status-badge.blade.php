@@ -27,7 +27,7 @@
         'inactive', 'transferred', 'cancelled',
         'reserved', 'under_repair', 'draft',
         'sold', 'damaged', 'lost', 'voided',
-        'converted',
+        'converted', 'issued', 'invoiced', 'delivered',
         'open', 'partial', 'settled', 'on_memo',
         // Report export lifecycle (Module 6).
         'pending', 'processing', 'streamed', 'failed',

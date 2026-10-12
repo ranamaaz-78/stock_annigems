@@ -18,6 +18,7 @@ use App\Http\Controllers\Branch\QuotationController;
 use App\Http\Controllers\Branch\ReportController;
 use App\Http\Controllers\Branch\SettingController;
 use App\Http\Controllers\Branch\RoleReferenceController;
+use App\Http\Controllers\Branch\DeliveryNoteController;
 use App\Http\Controllers\Branch\StoneController;
 use App\Http\Controllers\Branch\StoneImportController;
 use App\Http\Controllers\Branch\StoneImportHistoryController;
@@ -38,6 +39,7 @@ Route::middleware(['auth', 'password.changed', 'branch.context', 'branch.member'
     ->group(function (): void {
         Route::get('/dashboard', [BranchDashboardController::class, 'index'])->name('dashboard');
         Route::get('/pos', [PosController::class, 'show'])->name('pos.show');
+        Route::get('/pos/numbers', [PosController::class, 'numbers'])->name('pos.numbers');
 
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -222,6 +224,14 @@ Route::middleware(['auth', 'password.changed', 'branch.context', 'branch.member'
             ->name('reports.export');
 
         // Invoices
+        // Delivery notes (albarán). Issued from the POS; static paths first.
+        Route::get('/delivery-notes', [DeliveryNoteController::class, 'index'])->name('delivery-notes.index');
+        Route::post('/delivery-notes', [DeliveryNoteController::class, 'store'])->name('delivery-notes.store');
+        Route::get('/delivery-notes/{deliveryNote}', [DeliveryNoteController::class, 'show'])->name('delivery-notes.show');
+        Route::get('/delivery-notes/{deliveryNote}/print', [DeliveryNoteController::class, 'print'])->name('delivery-notes.print');
+        Route::post('/delivery-notes/{deliveryNote}/cancel', [DeliveryNoteController::class, 'cancel'])->name('delivery-notes.cancel');
+        Route::post('/delivery-notes/{deliveryNote}/convert', [DeliveryNoteController::class, 'convert'])->name('delivery-notes.convert');
+
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
         Route::get('/invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print');

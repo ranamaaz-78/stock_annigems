@@ -66,6 +66,46 @@ class CodeSequenceService
     }
 
     /**
+     * The quotation number the next save would receive, without taking it.
+     *
+     * For showing "next no." on screen only. Nothing is reserved, so another
+     * till can save first; the number a document really gets is the one
+     * nextQuotationNumber() returns inside the save.
+     */
+    public function peekQuotationNumber(): string
+    {
+        return $this->peek('quotation');
+    }
+
+    /**
+     * The invoice number the next save would receive, without taking it.
+     *
+     * @see self::peekQuotationNumber()
+     */
+    public function peekInvoiceNumber(): string
+    {
+        return $this->peek('invoice');
+    }
+
+    /**
+     * Next delivery note (albarán) number, e.g. ALB-000125.
+     */
+    public function nextDeliveryNoteNumber(): string
+    {
+        return $this->next('delivery_note');
+    }
+
+    /**
+     * The delivery note number the next save would receive, without taking it.
+     *
+     * @see self::peekQuotationNumber()
+     */
+    public function peekDeliveryNoteNumber(): string
+    {
+        return $this->peek('delivery_note');
+    }
+
+    /**
      * Next performa number, e.g. PRF-000125.
      */
     public function nextPerformaNumber(): string
@@ -89,9 +129,6 @@ class CodeSequenceService
      */
     private function next(string $key): string
     {
-        $prefixKey = SettingCatalog::numberingPrefixMap()[$key] ?? null;
-        $prefix = $prefixKey ? (string) setting($prefixKey) : '';
-        $pad = max(3, (int) setting('numbering_padding', 6));
         $start = $this->configuredStart($key);
 
         $row = DB::table('code_sequences')->where('key', $key)->lockForUpdate()->first();
@@ -117,7 +154,29 @@ class CodeSequenceService
             'updated_at' => now(),
         ]);
 
-        return $prefix.str_pad((string) $next, $pad, '0', STR_PAD_LEFT);
+        return $this->format($key, $next);
+    }
+
+    /**
+     * Read the number that next() would issue, with no lock and no write.
+     */
+    private function peek(string $key): string
+    {
+        $last = (int) DB::table('code_sequences')->where('key', $key)->value('last_number');
+
+        return $this->format($key, max($last + 1, $this->configuredStart($key)));
+    }
+
+    /**
+     * Prefix and zero-padding around a sequence number, from settings.
+     */
+    private function format(string $key, int $number): string
+    {
+        $prefixKey = SettingCatalog::numberingPrefixMap()[$key] ?? null;
+        $prefix = $prefixKey ? (string) setting($prefixKey) : '';
+        $pad = max(3, (int) setting('numbering_padding', 6));
+
+        return $prefix.str_pad((string) $number, $pad, '0', STR_PAD_LEFT);
     }
 
     /**

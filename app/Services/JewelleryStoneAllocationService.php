@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\StoneMovementType;
+use App\Enums\StonePricingMode;
 use App\Models\JewelleryItem;
 use App\Models\JewelleryItemStone;
 use App\Models\Stone;
@@ -13,8 +14,13 @@ use Illuminate\Validation\ValidationException;
  * JewelleryStoneAllocationService
  *
  * Applies stone stock deltas when a jewellery piece is created, edited, or
- * deleted. Unchanged quantities produce no movement rows. Quantity is written
- * only through StoneStockService.
+ * deleted. Unchanged quantities produce no movement rows. Quantity and weight
+ * are written only through StoneStockService.
+ *
+ * A piece or carat lot is allocated in pieces; a per-gram lot is allocated in
+ * grams and its allocation row keeps quantity 1. Each row also keeps the
+ * lot's rate and the cost it comes to (StonePricingService), taken at
+ * allocation time like the other snapshots.
  *
  * Snapshots on jewellery_item_stones are taken from the live catalog at
  * allocation time (or kept for rows whose quantity did not increase).
@@ -24,13 +30,15 @@ class JewelleryStoneAllocationService
     public function __construct(
         private StoneStockService $stockService,
         private JewelleryWeightService $weightService,
+        private StonePricingService $pricingService,
     ) {}
 
     /**
-     * Merge duplicate stone UUIDs by summing quantity (scan-twice behaviour).
+     * Merge duplicate stone UUIDs by summing quantity and grams (scan-twice
+     * behaviour).
      *
-     * @param  list<array{uuid: string, quantity: int}>  $rows
-     * @return list<array{uuid: string, quantity: int}>
+     * @param  list<array{uuid: string, quantity?: int, weight_grams?: float|string|null}>  $rows
+     * @return list<array{uuid: string, quantity: int, weight_grams: float}>
      */
     public function mergeRows(array $rows): array
     {
@@ -39,15 +47,19 @@ class JewelleryStoneAllocationService
         foreach ($rows as $row) {
             $uuid = (string) ($row['uuid'] ?? '');
             $qty = (int) ($row['quantity'] ?? 0);
-            if ($uuid === '' || $qty < 1) {
+            $grams = round((float) ($row['weight_grams'] ?? 0), 3);
+            if ($uuid === '' || ($qty < 1 && $grams <= 0)) {
                 continue;
             }
-            $merged[$uuid] = ($merged[$uuid] ?? 0) + $qty;
+            $merged[$uuid] = [
+                'quantity' => ($merged[$uuid]['quantity'] ?? 0) + $qty,
+                'weight_grams' => round(($merged[$uuid]['weight_grams'] ?? 0) + $grams, 3),
+            ];
         }
 
         $out = [];
-        foreach ($merged as $uuid => $quantity) {
-            $out[] = ['uuid' => $uuid, 'quantity' => $quantity];
+        foreach ($merged as $uuid => $amount) {
+            $out[] = ['uuid' => $uuid, 'quantity' => $amount['quantity'], 'weight_grams' => $amount['weight_grams']];
         }
 
         return $out;
@@ -56,7 +68,7 @@ class JewelleryStoneAllocationService
     /**
      * Create allocations on a new item (all deltas are positive).
      *
-     * @param  list<array{uuid: string, quantity: int}>  $rows
+     * @param  list<array{uuid: string, quantity?: int, weight_grams?: float|string|null}>  $rows
      */
     public function allocateOnCreate(JewelleryItem $item, array $rows, User $actor): void
     {
@@ -66,7 +78,7 @@ class JewelleryStoneAllocationService
     /**
      * Apply delta between existing allocation and the submitted set.
      *
-     * @param  list<array{uuid: string, quantity: int}>  $rows
+     * @param  list<array{uuid: string, quantity?: int, weight_grams?: float|string|null}>  $rows
      */
     public function syncOnUpdate(JewelleryItem $item, array $rows, User $actor): bool
     {
@@ -74,7 +86,10 @@ class JewelleryStoneAllocationService
         foreach ($item->itemStones()->get() as $allocation) {
             $stone = Stone::query()->withoutGlobalScopes()->find($allocation->stone_id);
             if ($stone) {
-                $old[(string) $stone->uuid] = (int) $allocation->quantity;
+                $old[(string) $stone->uuid] = [
+                    'quantity' => (int) $allocation->quantity,
+                    'weight_grams' => round((float) $allocation->weight_grams, 3),
+                ];
             }
         }
 
@@ -83,6 +98,8 @@ class JewelleryStoneAllocationService
 
     /**
      * Return every allocated stone to inventory (item soft-delete).
+     *
+     * Counts pieces for piece lots and one for each gram lot.
      */
     public function returnAll(JewelleryItem $item, User $actor): int
     {
@@ -90,15 +107,28 @@ class JewelleryStoneAllocationService
 
         foreach ($item->itemStones()->with('stone')->get() as $allocation) {
             $qty = (int) $allocation->quantity;
+            $grams = round((float) $allocation->weight_grams, 3);
             $stone = Stone::query()->withoutGlobalScopes()->lockForUpdate()->find($allocation->stone_id);
-            if ($stone && $qty > 0) {
+            $note = 'Returned because jewellery item '.$item->item_code.' was deleted.';
+
+            if ($stone && $grams > 0) {
+                $this->stockService->applyWeight(
+                    $stone,
+                    StoneMovementType::RETURNED_FROM_ITEM,
+                    $grams,
+                    $actor,
+                    $item,
+                    $note
+                );
+                $returned += 1;
+            } elseif ($stone && $qty > 0) {
                 $this->stockService->apply(
                     $stone,
                     StoneMovementType::RETURNED_FROM_ITEM,
                     $qty,
                     $actor,
                     $item,
-                    'Returned because jewellery item '.$item->item_code.' was deleted.'
+                    $note
                 );
                 $returned += $qty;
             }
@@ -112,28 +142,20 @@ class JewelleryStoneAllocationService
      * Apply quantity deltas, then refresh stone carat/gram totals only.
      * Typed metal weight (net_weight) is left untouched.
      *
-     * @param  array<string, int>  $oldByUuid
-     * @param  list<array{uuid: string, quantity: int}>  $newRows
+     * @param  array<string, array{quantity: int, weight_grams: float}>  $oldByUuid
+     * @param  list<array{uuid: string, quantity: int, weight_grams: float}>  $newRows
      */
     private function applyDelta(JewelleryItem $item, array $oldByUuid, array $newRows, User $actor): bool
     {
         $newByUuid = [];
         foreach ($newRows as $row) {
-            $newByUuid[$row['uuid']] = $row['quantity'];
+            $newByUuid[$row['uuid']] = ['quantity' => $row['quantity'], 'weight_grams' => $row['weight_grams']];
         }
 
         $uuids = array_values(array_unique(array_merge(array_keys($oldByUuid), array_keys($newByUuid))));
         $changed = false;
 
         foreach ($uuids as $uuid) {
-            $oldQty = $oldByUuid[$uuid] ?? 0;
-            $newQty = $newByUuid[$uuid] ?? 0;
-            $delta = $newQty - $oldQty;
-
-            if ($delta === 0 && $newQty === 0) {
-                continue;
-            }
-
             $stone = Stone::query()
                 ->withoutGlobalScopes()
                 ->where('uuid', $uuid)
@@ -152,38 +174,103 @@ class JewelleryStoneAllocationService
                 ]);
             }
 
-            if ($delta > 0) {
+            $isGram = $stone->pricing_mode === StonePricingMode::PER_GRAM;
+            $present = isset($newByUuid[$uuid]);
+
+            // A gram lot is counted in grams only, a piece lot in pieces only.
+            $oldQty = $isGram ? (isset($oldByUuid[$uuid]) ? 1 : 0) : ($oldByUuid[$uuid]['quantity'] ?? 0);
+            $newQty = $isGram ? ($present ? 1 : 0) : ($newByUuid[$uuid]['quantity'] ?? 0);
+            $oldGrams = $isGram ? ($oldByUuid[$uuid]['weight_grams'] ?? 0.0) : 0.0;
+            $newGrams = $isGram ? ($newByUuid[$uuid]['weight_grams'] ?? 0.0) : 0.0;
+
+            if (isset($oldByUuid[$uuid]) && $isGram !== ($oldByUuid[$uuid]['weight_grams'] > 0)) {
+                throw ValidationException::withMessages([
+                    'stones' => "{$stone->stone_code} changed how it is counted since it was added. Remove it and add it again.",
+                ]);
+            }
+
+            if ($isGram && $present && $newGrams <= 0) {
+                throw ValidationException::withMessages([
+                    'stones' => "Enter the grams of {$stone->stone_code} used in this piece.",
+                ]);
+            }
+
+            if (! $isGram && $present && $newQty < 1) {
+                throw ValidationException::withMessages([
+                    'stones' => "Enter how many pieces of {$stone->stone_code} are used in this piece.",
+                ]);
+            }
+
+            $delta = $newQty - $oldQty;
+            $deltaGrams = round($newGrams - $oldGrams, 3);
+
+            if ($delta === 0 && $newQty === 0) {
+                continue;
+            }
+
+            $increased = $isGram ? $deltaGrams > 0 : $delta > 0;
+
+            if ($increased) {
                 if (! $stone->is_active) {
                     throw ValidationException::withMessages([
                         'stones' => "{$stone->stone_code} is deactivated and cannot be allocated.",
                     ]);
                 }
 
-                $available = (int) $stone->quantity;
-                if ($available < $delta) {
-                    throw ValidationException::withMessages([
-                        'stones' => "{$stone->stone_code} has only {$available} available; {$delta} more requested.",
-                    ]);
-                }
+                if ($isGram) {
+                    $availableGrams = round((float) ($stone->weight_grams ?? 0), 3);
+                    if ($availableGrams < $deltaGrams) {
+                        throw ValidationException::withMessages([
+                            'stones' => "{$stone->stone_code} has only {$availableGrams} g available; {$deltaGrams} g more requested.",
+                        ]);
+                    }
 
-                $this->stockService->apply(
-                    $stone,
-                    StoneMovementType::USED_IN_ITEM,
-                    -$delta,
-                    $actor,
-                    $item,
-                    'Allocated to '.$item->item_code
-                );
+                    $this->stockService->applyWeight(
+                        $stone,
+                        StoneMovementType::USED_IN_ITEM,
+                        -$deltaGrams,
+                        $actor,
+                        $item,
+                        'Allocated to '.$item->item_code
+                    );
+                } else {
+                    $available = (int) $stone->quantity;
+                    if ($available < $delta) {
+                        throw ValidationException::withMessages([
+                            'stones' => "{$stone->stone_code} has only {$available} available; {$delta} more requested.",
+                        ]);
+                    }
+
+                    $this->stockService->apply(
+                        $stone,
+                        StoneMovementType::USED_IN_ITEM,
+                        -$delta,
+                        $actor,
+                        $item,
+                        'Allocated to '.$item->item_code
+                    );
+                }
                 $changed = true;
-            } elseif ($delta < 0) {
-                $this->stockService->apply(
-                    $stone,
-                    StoneMovementType::RETURNED_FROM_ITEM,
-                    abs($delta),
-                    $actor,
-                    $item,
-                    'Returned from '.$item->item_code
-                );
+            } elseif ($isGram ? $deltaGrams < 0 : $delta < 0) {
+                if ($isGram) {
+                    $this->stockService->applyWeight(
+                        $stone,
+                        StoneMovementType::RETURNED_FROM_ITEM,
+                        abs($deltaGrams),
+                        $actor,
+                        $item,
+                        'Returned from '.$item->item_code
+                    );
+                } else {
+                    $this->stockService->apply(
+                        $stone,
+                        StoneMovementType::RETURNED_FROM_ITEM,
+                        abs($delta),
+                        $actor,
+                        $item,
+                        'Returned from '.$item->item_code
+                    );
+                }
                 $changed = true;
             }
 
@@ -198,7 +285,7 @@ class JewelleryStoneAllocationService
                 continue;
             }
 
-            $snapshot = $this->snapshotFrom($stone, $newQty, $existing, $delta > 0);
+            $snapshot = $this->snapshotFrom($stone, $newQty, $newGrams, $existing, $increased);
 
             if ($existing) {
                 $existing->fill($snapshot);
@@ -217,6 +304,7 @@ class JewelleryStoneAllocationService
             fn (JewelleryItemStone $row): array => [
                 'carat' => (float) $row->carat_snapshot,
                 'quantity' => (int) $row->quantity,
+                'grams' => (float) $row->weight_grams,
             ]
         )->all());
 
@@ -236,16 +324,40 @@ class JewelleryStoneAllocationService
      * Keep existing snapshots when quantity only decreased or stayed; refresh
      * from the live catalog when quantity increased or the row is new.
      *
+     * The cost follows the same rule: a refreshed row is priced at the lot's
+     * current rate, a kept row is re-costed at the rate it already holds. A
+     * row from before costs were kept has no rate to hold and is priced now.
+     *
      * @return array<string, mixed>
      */
-    private function snapshotFrom(Stone $stone, int $quantity, ?JewelleryItemStone $existing, bool $refresh): array
+    private function snapshotFrom(Stone $stone, int $quantity, float $grams, ?JewelleryItemStone $existing, bool $refresh): array
     {
         $carat = $refresh || ! $existing
             ? (float) $stone->carat
             : (float) $existing->carat_snapshot;
 
+        if ($refresh || ! $existing || $existing->pricing_mode === null) {
+            $cost = $this->pricingService->allocationCost($stone, $quantity, $grams);
+        } else {
+            $cost = [
+                'pricing_mode' => $existing->pricing_mode,
+                'unit_rate' => (float) $existing->unit_rate,
+                'line_cost' => $this->pricingService->costAtRate(
+                    $existing->pricing_mode,
+                    (float) $existing->unit_rate,
+                    $carat,
+                    $quantity,
+                    $grams
+                ),
+            ];
+        }
+
         return [
             'quantity' => $quantity,
+            'pricing_mode' => $cost['pricing_mode'],
+            'unit_rate' => number_format($cost['unit_rate'], 3, '.', ''),
+            'weight_grams' => $grams > 0 ? number_format($grams, 3, '.', '') : null,
+            'line_cost' => number_format($cost['line_cost'], 3, '.', ''),
             'stone_code_snapshot' => $refresh || ! $existing ? $stone->stone_code : $existing->stone_code_snapshot,
             'stone_name_snapshot' => $refresh || ! $existing ? $stone->name : $existing->stone_name_snapshot,
             'carat_snapshot' => number_format($carat, 3, '.', ''),

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\StoneOrigin;
+use App\Enums\StonePricingMode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -24,6 +25,10 @@ class JewelleryItemStone extends Model
         'jewellery_item_id',
         'stone_id',
         'quantity',
+        'pricing_mode',
+        'unit_rate',
+        'weight_grams',
+        'line_cost',
         'stone_code_snapshot',
         'stone_name_snapshot',
         'carat_snapshot',
@@ -43,6 +48,10 @@ class JewelleryItemStone extends Model
     {
         return [
             'quantity' => 'integer',
+            'pricing_mode' => StonePricingMode::class,
+            'unit_rate' => 'decimal:3',
+            'weight_grams' => 'decimal:3',
+            'line_cost' => 'decimal:3',
             'carat_snapshot' => 'decimal:3',
             'total_carat' => 'decimal:3',
         ];

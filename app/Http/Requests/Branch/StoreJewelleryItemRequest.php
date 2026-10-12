@@ -61,7 +61,11 @@ class StoreJewelleryItemRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:2000'],
             'stones' => ['nullable', 'array'],
             'stones.*.uuid' => ['required', 'uuid'],
-            'stones.*.quantity' => ['required', 'integer', 'min:1', 'max:'.$qtyMax],
+            // Pieces for a piece or carat lot, grams for a per-gram lot. Which
+            // one a lot needs depends on the lot, so the allocation service
+            // makes the final call; here at least one must be sent.
+            'stones.*.quantity' => ['required_without:stones.*.weight_grams', 'nullable', 'integer', 'min:1', 'max:'.$qtyMax],
+            'stones.*.weight_grams' => ['nullable', 'numeric', 'gt:0', 'decimal:0,3', 'max:9999999'],
             'images' => ['nullable', 'array', 'max:'.$imageCount],
             'images.*' => ['file', 'max:'.$imageMax],
             'primary_image_id' => ['nullable', 'integer'],
@@ -90,6 +94,9 @@ class StoreJewelleryItemRequest extends FormRequest
             'metal_weight.lte' => 'Metal weight cannot be greater than gross weight.',
             'status.in' => 'That status cannot be set from jewellery management.',
             'stones.*.quantity.min' => 'Stone quantity must be at least 1.',
+            'stones.*.quantity.required_without' => 'Enter the pieces or grams used for each stone.',
+            'stones.*.weight_grams.gt' => 'Stone grams must be greater than zero.',
+            'stones.*.weight_grams.decimal' => 'Stone grams allow at most three decimal places.',
         ];
     }
 }

@@ -322,6 +322,85 @@ class JewelleryItemService
     }
 
     /**
+     * Hand a piece to a client on a delivery note. Must be available; it
+     * leaves the shelf now and becomes sold only if the note is invoiced.
+     */
+    public function markDelivered(JewelleryItem $item, string $deliveryNoteNumber, User $actor): JewelleryItem
+    {
+        if ($item->status !== JewelleryItemStatus::AVAILABLE) {
+            throw ValidationException::withMessages([
+                'lines' => $item->item_code.' is not available.',
+            ]);
+        }
+
+        $old = $item->status;
+        $item->status = JewelleryItemStatus::DELIVERED;
+        $item->save();
+
+        $this->recordMovement(
+            $item,
+            JewelleryItemMovementType::DELIVERED,
+            $old,
+            JewelleryItemStatus::DELIVERED,
+            $actor,
+            'Delivered on delivery note '.$deliveryNoteNumber
+        );
+
+        return $item->fresh();
+    }
+
+    /**
+     * A cancelled delivery note puts the piece back on the shelf.
+     */
+    public function restoreFromDelivery(JewelleryItem $item, string $deliveryNoteNumber, User $actor): JewelleryItem
+    {
+        if ($item->status !== JewelleryItemStatus::DELIVERED) {
+            return $item;
+        }
+
+        $old = $item->status;
+        $item->status = JewelleryItemStatus::AVAILABLE;
+        $item->save();
+
+        $this->recordMovement(
+            $item,
+            JewelleryItemMovementType::RETURNED_FROM_DELIVERY,
+            $old,
+            JewelleryItemStatus::AVAILABLE,
+            $actor,
+            'Returned from delivery note '.$deliveryNoteNumber
+        );
+
+        return $item->fresh();
+    }
+
+    /**
+     * After an invoice made from a delivery note is voided, the piece is
+     * still with the client — back to delivered, not to the shelf.
+     */
+    public function restoreToDeliveredFromVoid(JewelleryItem $item, \App\Models\Invoice $invoice, User $actor): JewelleryItem
+    {
+        if ($item->status !== JewelleryItemStatus::SOLD) {
+            return $item;
+        }
+
+        $old = $item->status;
+        $item->status = JewelleryItemStatus::DELIVERED;
+        $item->save();
+
+        $this->recordMovement(
+            $item,
+            JewelleryItemMovementType::SALE_VOIDED,
+            $old,
+            JewelleryItemStatus::DELIVERED,
+            $actor,
+            'Invoice voided: '.$invoice->invoice_number
+        );
+
+        return $item->fresh();
+    }
+
+    /**
      * Restore item to available when an invoice is voided.
      */
     public function restoreFromVoid(JewelleryItem $item, \App\Models\Invoice $invoice, User $actor): JewelleryItem

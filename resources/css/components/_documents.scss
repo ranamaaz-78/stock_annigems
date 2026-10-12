@@ -180,6 +180,35 @@
   color: var(--color-primary);
 }
 
+/* Delivery note (albarán): the title is the header, in two languages. */
+.sheet__header--delivery-note {
+  align-items: flex-end;
+}
+
+.sheet__headline {
+  margin: 0;
+  font-family: var(--font-headline-sm);
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-on-surface);
+}
+
+.sheet__headline-alt {
+  margin: 0.25rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+}
+
+.sheet__parties--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 /* Label / value pairs (Invoice No, Date, Valid until…). */
 .sheet__meta {
   display: grid;

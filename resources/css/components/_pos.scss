@@ -162,6 +162,81 @@ html.pos-html body.pos-body {
   white-space: nowrap;
 }
 
+/* Which document this ticket will become. */
+.pos-chip--kind {
+  color: var(--color-primary);
+  background-color: var(--color-primary-fixed);
+  border-color: var(--color-primary-fixed);
+}
+
+/* Invoice / Quotation selector above the customer. */
+.pos-kind {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.5rem;
+  padding: 0.25rem;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius);
+  background-color: var(--color-surface-container-low);
+}
+
+.pos-kind__opt {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-on-surface-variant);
+  text-align: left;
+  cursor: pointer;
+}
+
+.pos-kind__opt:hover:not(:disabled):not(.is-on) {
+  background-color: var(--color-surface-container);
+}
+
+.pos-kind__opt:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pos-kind__opt.is-on {
+  background-color: var(--color-surface-container-lowest);
+  border-color: var(--color-primary);
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+  color: var(--color-on-surface);
+}
+
+.pos-kind__opt.is-on .icon {
+  color: var(--color-primary);
+}
+
+.pos-kind__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pos-kind__name {
+  font-size: var(--text-body-md);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.pos-kind__sub {
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: var(--color-on-surface-variant);
+}
+
+.pos-settle__note {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-variant);
+}
+
 .pos-chip--ok {
   color: var(--color-status-available);
   background-color: var(--color-status-available-bg);
@@ -661,10 +736,82 @@ html.pos-html body.pos-body {
 }
 
 .pos-line__stones {
+  margin-top: 0.5rem;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius);
+  background-color: var(--color-surface-container-lowest);
+  overflow: hidden;
+}
+
+.pos-line__desc > div:last-child {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.pos-line__desc {
+  align-items: flex-start;
+}
+
+/* Heading above the set stones of a jewellery piece. */
+.pos-stone__head {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-  margin-top: 0.25rem;
+  justify-content: space-between;
+  padding: 0.25rem 0.625rem;
+  background-color: var(--color-surface-container-low);
+  border-bottom: 1px solid var(--color-outline-variant);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+}
+
+/* One set stone: what it is on the left, the price to type on the right. */
+.pos-stone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.375rem 0.625rem;
+}
+
+.pos-stone + .pos-stone {
+  border-top: 1px solid color-mix(in srgb, var(--color-outline-variant) 55%, transparent);
+}
+
+.pos-stone__name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: var(--text-body-sm);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.pos-stone__name small {
+  font-size: 0.6875rem;
+  font-weight: 400;
+  color: var(--color-on-surface-variant);
+}
+
+/* Read-only figure on a breakdown row, aligned with the price inputs below it. */
+.pos-stone__value {
+  flex: 0 0 6.5rem;
+  padding-right: 0.5rem;
+  text-align: right;
+  font-size: var(--text-data-mono);
+  font-weight: var(--text-data-mono-weight);
+  font-variant-numeric: tabular-nums;
+}
+
+.pos-stone__value--missing {
+  color: var(--color-error);
+}
+
+.pos-stone .pos-cell-input {
+  flex: 0 0 6.5rem;
+  width: 6.5rem;
+  height: 2rem;
 }
 
 .pos-line__stock {

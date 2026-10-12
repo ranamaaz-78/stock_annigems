@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Branch;
 
+use App\Enums\StonePricingMode;
 use App\Http\Controllers\Concerns\RespondsWithJson;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Branch\LookupJewelleryStoneRequest;
@@ -11,6 +12,7 @@ use App\Http\Requests\Branch\UpdateJewelleryItemStatusRequest;
 use App\Models\Category;
 use App\Models\JewelleryItem;
 use App\Models\MetalType;
+use App\Models\Stone;
 use App\Models\SubCategory;
 use App\Services\BarcodeService;
 use App\Services\JewelleryItemService;
@@ -213,7 +215,7 @@ class JewelleryItemController extends Controller
 
         return match ($result['status']) {
             'found' => $this->jsonSuccess('Found.', [
-                'stone' => $this->stoneService->toScanPayload($result['stone']),
+                'stone' => $this->stonePayload($result['stone']),
             ]),
             'inactive' => $this->jsonFailure('This stone is deactivated.', ['code' => ['This stone is deactivated.']], 422),
             default => $this->jsonFailure('Barcode not found.', ['code' => ['Barcode not found.']], 404),
@@ -230,7 +232,33 @@ class JewelleryItemController extends Controller
         $stones = $this->stoneService->searchActive((string) $request->query('q', ''));
 
         return $this->jsonSuccess('OK.', [
-            'stones' => $stones->map(fn ($stone) => $this->stoneService->toScanPayload($stone))->values(),
+            'stones' => $stones->map(fn ($stone) => $this->stonePayload($stone))->values(),
+        ]);
+    }
+
+    /**
+     * Stone as the item form needs it: the scan payload plus, for users who
+     * may see cost, the lot's rate so the form can show the price as stones
+     * are added. The server prices the allocation again on save.
+     *
+     * @return array<string, mixed>
+     */
+    private function stonePayload(Stone $stone): array
+    {
+        $payload = $this->stoneService->toScanPayload($stone);
+
+        if (! request()->user()?->hasPermission('items.view_cost')) {
+            return $payload;
+        }
+
+        return array_merge($payload, [
+            'show_cost' => true,
+            'rate' => $stone->rate() === null ? null : (string) $stone->rate(),
+            'rate_unit' => match ($stone->pricing_mode) {
+                StonePricingMode::PER_CARAT => 'ct',
+                StonePricingMode::PER_GRAM => 'g',
+                default => 'pc',
+            },
         ]);
     }
 

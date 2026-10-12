@@ -28,6 +28,8 @@
 }
 
 .badge--reserved,
+.badge--issued,
+.badge--delivered,
 .badge--under_repair,
 .badge--draft,
 .badge--open,
@@ -61,6 +63,7 @@
 
 /* Quotation that has already become an invoice — informational, not a warning. */
 .badge--converted,
+.badge--invoiced,
 .badge--settled {
   background-color: var(--color-primary-container);
   color: var(--color-on-primary-container);

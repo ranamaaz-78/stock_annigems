@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Branch;
 
 use App\Enums\PaymentMethod;
 use App\Http\Controllers\Controller;
+use App\Models\DeliveryNote;
 use App\Models\Quotation;
 use App\Repositories\GoldRateRepository;
+use App\Services\CodeSequenceService;
 use App\Support\Settings\DocumentSettings;
+use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 
 /**
@@ -20,6 +23,7 @@ class PosController extends Controller
 {
     public function __construct(
         private GoldRateRepository $goldRateRepository,
+        private CodeSequenceService $codeSequence,
     ) {}
 
     /**
@@ -44,7 +48,33 @@ class PosController extends Controller
             'taxRate' => $tax['rate'],
             'taxLabel' => $tax['label'],
             'canConvert' => $user->hasPermission('quotations.convert'),
+            'canDeliver' => $user->can('create', DeliveryNote::class),
             'paymentMethods' => PaymentMethod::options(),
+            'documentNumbers' => $this->documentNumbers(),
         ]);
+    }
+
+    /**
+     * The numbers the next quotation and invoice will get, for the ticket's
+     * "Document no." field. Called again after every save so the screen moves
+     * on to the following number.
+     */
+    public function numbers(): JsonResponse
+    {
+        $this->authorize('create', Quotation::class);
+
+        return response()->json(['success' => true, 'data' => $this->documentNumbers()]);
+    }
+
+    /**
+     * @return array{quotation: string, invoice: string, delivery_note: string}
+     */
+    private function documentNumbers(): array
+    {
+        return [
+            'quotation' => $this->codeSequence->peekQuotationNumber(),
+            'invoice' => $this->codeSequence->peekInvoiceNumber(),
+            'delivery_note' => $this->codeSequence->peekDeliveryNoteNumber(),
+        ];
     }
 }

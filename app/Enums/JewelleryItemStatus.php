@@ -5,8 +5,8 @@ namespace App\Enums;
 /**
  * JewelleryItemStatus
  *
- * Lifecycle of one physical piece. sold, on_memo, and transferred are
- * set only by sales / performa / transfer services — jewellery screens
+ * Lifecycle of one physical piece. sold, on_memo, delivered, and transferred are
+ * set only by sales / performa / delivery note / transfer services — jewellery screens
  * must reject any attempt to assign them.
  */
 enum JewelleryItemStatus: string
@@ -18,6 +18,7 @@ enum JewelleryItemStatus: string
     case UNDER_REPAIR = 'under_repair';
     case SOLD = 'sold';
     case ON_MEMO = 'on_memo';
+    case DELIVERED = 'delivered';
     case TRANSFERRED = 'transferred';
 
     /**
@@ -33,6 +34,7 @@ enum JewelleryItemStatus: string
             self::UNDER_REPAIR => 'Under repair',
             self::SOLD => 'Sold',
             self::ON_MEMO => 'On memo',
+            self::DELIVERED => 'Delivered',
             self::TRANSFERRED => 'Transferred',
         };
     }

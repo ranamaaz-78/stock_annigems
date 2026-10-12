@@ -65,7 +65,19 @@ export function bindJewelleryItemForm() {
     const grossInput = root.querySelector('[data-gross-weight], [name="gross_weight"]');
     const metalInput = root.querySelector('[data-metal-weight], [name="metal_weight"]');
 
-    /** @type {Map<string, {stone: object, quantity: number}>} */
+    const showCost = root.dataset.showCost === '1';
+
+    /**
+     * Whether a lot is weighed in grams rather than counted in pieces.
+     *
+     * @param {object} stone
+     * @returns {boolean}
+     */
+    function isGramLot(stone) {
+        return stone.pricing_mode === 'per_gram';
+    }
+
+    /** @type {Map<string, {stone: object, quantity: number, grams: number, committed: number}>} */
     const rows = new Map();
 
     let scannerConfig = {};
@@ -81,6 +93,8 @@ export function bindJewelleryItemForm() {
             if (!row.uuid) {
                 return;
             }
+            const gram = row.mode === 'per_gram';
+            const grams = Number(row.grams || 0);
             rows.set(row.uuid, {
                 stone: {
                     uuid: row.uuid,
@@ -88,11 +102,16 @@ export function bindJewelleryItemForm() {
                     name: row.name,
                     carat: row.carat,
                     quantity: row.available,
+                    weight_grams: row.available_grams,
+                    pricing_mode: row.mode,
+                    // The rate this piece was costed at; the server re-prices on save.
+                    rate: row.rate,
                     type: row.type,
                     shape: row.shape,
                 },
-                quantity: Number(row.quantity || 1),
-                committed: Number(row.quantity || 0),
+                quantity: gram ? 1 : Number(row.quantity || 1),
+                grams,
+                committed: gram ? grams : Number(row.quantity || 0),
             });
         });
     } catch (error) {
@@ -134,11 +153,17 @@ export function bindJewelleryItemForm() {
      */
     function updateWeights() {
         let carat = 0;
+        let weighed = 0;
         rows.forEach((row) => {
+            if (isGramLot(row.stone)) {
+                // A lot priced per gram has no carat; its grams count as they are.
+                weighed += Number(row.grams || 0);
+                return;
+            }
             carat += Number(row.stone.carat || 0) * Number(row.quantity || 0);
         });
         carat = Math.round(carat * 1000) / 1000;
-        const grams = Math.round(carat * gramsPerCarat * 1000) / 1000;
+        const grams = Math.round((carat * gramsPerCarat + weighed) * 1000) / 1000;
         const gross = Number(grossInput?.value || 0);
         const stoneEl = root.querySelector('[data-stone-weight]');
         const warn = root.querySelector('[data-weight-warning]');
@@ -180,6 +205,37 @@ export function bindJewelleryItemForm() {
     }
 
     /**
+     * Round to the three decimals every stone figure is stored at.
+     *
+     * @param {number} value
+     * @returns {number}
+     */
+    function round3(value) {
+        return Math.round(value * 1000) / 1000;
+    }
+
+    /**
+     * Cost of one allocation row, mirroring StonePricingService::costAtRate.
+     * The server works the stored figure out again; this is only the preview.
+     *
+     * @param {{stone: object, quantity: number, grams: number}} row
+     * @returns {number|null} Null when the lot's rate is not known here
+     */
+    function rowCost(row) {
+        const rate = Number(row.stone.rate);
+        if (!showCost || row.stone.rate === undefined || row.stone.rate === null || Number.isNaN(rate)) {
+            return null;
+        }
+        if (row.stone.pricing_mode === 'per_carat') {
+            return round3(round3(Number(row.stone.carat || 0) * rate) * Number(row.quantity || 0));
+        }
+        if (isGramLot(row.stone)) {
+            return round3(rate * Number(row.grams || 0));
+        }
+        return round3(rate * Number(row.quantity || 0));
+    }
+
+    /**
      * Draw allocation rows and sync hidden inputs for submit.
      */
     function renderRows() {
@@ -191,32 +247,65 @@ export function bindJewelleryItemForm() {
             fieldsWrap.innerHTML = '';
         }
         let index = 0;
+        let costTotal = 0;
         rows.forEach((row) => {
-            const max = Number(row.stone.quantity || 0) + Number(row.committed || 0);
-            const over = Number(row.quantity) > max;
+            const gram = isGramLot(row.stone);
+            const max = gram
+                ? round3(Number(row.stone.weight_grams || 0) + Number(row.committed || 0))
+                : Number(row.stone.quantity || 0) + Number(row.committed || 0);
+            const over = (gram ? Number(row.grams) : Number(row.quantity)) > max;
+            const cost = rowCost(row);
+            costTotal += cost || 0;
+            const amountInput = gram
+                ? `<span class="stone-alloc__amount"><input type="number" min="0.001" step="0.001" class="input-field" data-grams="${row.stone.uuid}" value="${row.grams || ''}" placeholder="0.000" aria-label="Grams used"><span class="stone-alloc__unit">g</span></span>`
+                : `<span class="stone-alloc__amount"><input type="number" min="1" class="input-field" data-qty="${row.stone.uuid}" value="${row.quantity}" aria-label="Pieces used"><span class="stone-alloc__unit">pcs</span></span>`;
+            const missing = gram && !(Number(row.grams) > 0)
+                ? '<p class="form-error">Enter the grams used.</p>'
+                : '';
+            const unit = gram ? 'g' : (row.stone.pricing_mode === 'per_carat' ? 'ct' : 'pc');
+            const modeLabel = { per_carat: 'Per carat', per_piece: 'Per piece', per_gram: 'Per gram' }[row.stone.pricing_mode] || '';
+            const costCells = showCost
+                ? `<td class="table-admin__num">${row.stone.rate !== undefined && row.stone.rate !== null ? `${escapeHtml(String(row.stone.rate))} / ${unit}` : '—'}</td>
+                   <td class="table-admin__num font-data-mono">${cost === null ? '—' : cost.toFixed(3)}</td>`
+                : '';
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>
-                    <div class="font-data-mono">${escapeHtml(row.stone.stone_code || '')}</div>
+                    <div class="stone-alloc__lot">
+                        <span class="font-data-mono">${escapeHtml(row.stone.stone_code || '')}</span>
+                        ${modeLabel ? `<span class="stone-alloc__mode">${modeLabel}</span>` : ''}
+                    </div>
                     <div class="text-body-sm">${escapeHtml(row.stone.name || '')}</div>
                 </td>
-                <td class="font-data-mono">${escapeHtml(String(row.stone.carat || ''))}</td>
+                <td class="table-admin__num">${!gram && row.stone.carat ? escapeHtml(String(row.stone.carat)) : '—'}</td>
                 <td>
-                    <input type="number" min="1" class="input-field" data-qty="${row.stone.uuid}" value="${row.quantity}" style="width:4.5rem">
+                    ${amountInput}
                     ${over ? '<p class="form-error">More than available on hand.</p>' : ''}
+                    ${missing}
                 </td>
-                <td class="font-data-mono">${max}</td>
-                <td><button type="button" class="form-link text-body-sm" data-remove="${row.stone.uuid}">Remove</button></td>
+                <td class="table-admin__num">${gram ? `${max} g` : `${max} pcs`}</td>
+                ${costCells}
+                <td class="table-admin__num"><button type="button" class="form-link text-body-sm" data-remove="${row.stone.uuid}">Remove</button></td>
             `;
             rowsBody.appendChild(tr);
             if (fieldsWrap) {
-                fieldsWrap.insertAdjacentHTML('beforeend', `
+                // A gram lot posts its grams and a quantity of one; the server
+                // counts it by grams only.
+                fieldsWrap.insertAdjacentHTML('beforeend', gram ? `
+                    <input type="hidden" name="stones[${index}][uuid]" value="${row.stone.uuid}">
+                    <input type="hidden" name="stones[${index}][quantity]" value="1">
+                    <input type="hidden" name="stones[${index}][weight_grams]" value="${row.grams || ''}">
+                ` : `
                     <input type="hidden" name="stones[${index}][uuid]" value="${row.stone.uuid}">
                     <input type="hidden" name="stones[${index}][quantity]" value="${row.quantity}">
                 `);
             }
             index += 1;
         });
+        const costTotalEl = root.querySelector('[data-stone-cost-total]');
+        if (costTotalEl) {
+            costTotalEl.textContent = costTotal.toFixed(3);
+        }
         updateWeights();
     }
 
@@ -229,9 +318,12 @@ export function bindJewelleryItemForm() {
     function addStone(stone, qty = 1) {
         const existing = rows.get(stone.uuid);
         if (existing) {
-            existing.quantity += qty;
+            // A gram lot is weighed, so a second scan has nothing to add.
+            if (!isGramLot(existing.stone)) {
+                existing.quantity += qty;
+            }
         } else {
-            rows.set(stone.uuid, { stone, quantity: qty, committed: 0 });
+            rows.set(stone.uuid, { stone, quantity: isGramLot(stone) ? 1 : qty, grams: 0, committed: 0 });
         }
         setMessage('');
         renderRows();
@@ -277,40 +369,6 @@ export function bindJewelleryItemForm() {
         lookup(scanInput?.value || '');
     });
 
-    /**
-     * Dedicated 3-letter field. Looks up when three letters are typed or
-     * Enter is pressed. The USB wedge does not capture this input.
-     */
-    const shortCodeInput = root.querySelector('[data-short-code-input]');
-    if (shortCodeInput) {
-        const submitShortCode = () => {
-            const code = String(shortCodeInput.value || '').trim().toUpperCase();
-            if (code.length !== 3) {
-                return;
-            }
-            shortCodeInput.value = '';
-            lookup(code);
-        };
-
-        shortCodeInput.addEventListener('input', () => {
-            const next = String(shortCodeInput.value || '').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
-            if (shortCodeInput.value !== next) {
-                shortCodeInput.value = next;
-            }
-            if (next.length === 3) {
-                submitShortCode();
-            }
-        });
-
-        shortCodeInput.addEventListener('keydown', (event) => {
-            if (event.key !== 'Enter') {
-                return;
-            }
-            event.preventDefault();
-            submitShortCode();
-        });
-    }
-
     rowsBody?.addEventListener('click', (event) => {
         const button = event.target.closest('[data-remove]');
         if (!button) {
@@ -321,6 +379,16 @@ export function bindJewelleryItemForm() {
     });
 
     rowsBody?.addEventListener('change', (event) => {
+        const gramsInput = event.target.closest('[data-grams]');
+        if (gramsInput) {
+            const gramRow = rows.get(gramsInput.dataset.grams);
+            if (gramRow) {
+                gramRow.grams = Math.max(0, round3(Number(gramsInput.value || 0)));
+                renderRows();
+            }
+            return;
+        }
+
         const input = event.target.closest('[data-qty]');
         if (!input) {
             return;

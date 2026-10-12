@@ -28,6 +28,7 @@ class InvoiceService
         private StoneStockService $stoneStockService,
         private AuditLogService $auditLog,
         private PerformaSettlementService $performaSettlementService,
+        private DeliveryNoteService $deliveryNoteService,
     ) {}
 
     /**
@@ -81,6 +82,7 @@ class InvoiceService
             'creator',
             'quotation',
             'performa',
+            'deliveryNote',
             'items.itemStones',
         ]);
     }
@@ -111,6 +113,9 @@ class InvoiceService
             // Voiding them restores on-memo / outstanding qty — never shelf stock.
             if ($invoice->performa_id) {
                 $this->performaSettlementService->reverseVoid($invoice, $actor);
+            } elseif ($invoice->delivery_note_id) {
+                // The goods are still with the client: the delivery note opens again.
+                $this->deliveryNoteService->reopenAfterInvoiceVoid($invoice, $actor);
             } else {
                 foreach ($invoice->items as $line) {
                     if ($line->line_type === LineType::JEWELLERY_ITEM && $line->jewellery_item_id) {

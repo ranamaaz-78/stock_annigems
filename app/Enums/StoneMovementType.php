@@ -23,6 +23,8 @@ enum StoneMovementType: string
     case ISSUED_ON_CREDIT = 'issued_on_credit';
     case SETTLED_FROM_CREDIT = 'settled_from_credit';
     case RETURNED_FROM_CREDIT = 'returned_from_credit';
+    case DELIVERED = 'delivered';
+    case RETURNED_FROM_DELIVERY = 'returned_from_delivery';
     case ADJUSTED = 'adjusted';
     case TRANSFERRED_IN = 'transferred_in';
     case TRANSFERRED_OUT = 'transferred_out';
@@ -46,6 +48,8 @@ enum StoneMovementType: string
             self::ISSUED_ON_CREDIT => 'Issued on credit',
             self::SETTLED_FROM_CREDIT => 'Settled from credit',
             self::RETURNED_FROM_CREDIT => 'Returned from credit',
+            self::DELIVERED => 'Delivered on delivery note',
+            self::RETURNED_FROM_DELIVERY => 'Returned from delivery note',
             self::ADJUSTED => 'Adjusted',
             self::TRANSFERRED_IN => 'Transferred in',
             self::TRANSFERRED_OUT => 'Transferred out',
@@ -65,6 +69,7 @@ enum StoneMovementType: string
             self::RETURNED_FROM_ITEM,
             self::RETURNED_FROM_SALE,
             self::RETURNED_FROM_CREDIT,
+            self::RETURNED_FROM_DELIVERY,
             self::TRANSFERRED_IN,
             self::RELEASED_FROM_QUOTATION,
         ], true);
