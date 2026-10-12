@@ -1,0 +1,51 @@
+/**
+ * Typography utility classes — use these instead of Tailwind text-* for brand type.
+ */
+
+.text-display {
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  line-height: var(--text-display-line);
+  font-weight: var(--text-display-weight);
+  letter-spacing: var(--text-display-tracking);
+}
+
+.text-headline-sm {
+  font-family: var(--font-headline-sm);
+  font-size: var(--text-headline-sm);
+  line-height: var(--text-headline-sm-line);
+  font-weight: var(--text-headline-sm-weight);
+}
+
+.text-body-md {
+  font-family: var(--font-body-md);
+  font-size: var(--text-body-md);
+  line-height: var(--text-body-md-line);
+  font-weight: var(--text-body-md-weight);
+}
+
+.text-body-sm {
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm-line);
+  font-weight: var(--text-body-sm-weight);
+}
+
+.text-label-caps,
+.font-label-caps {
+  font-family: var(--font-label-caps);
+  font-size: var(--text-label-caps);
+  line-height: var(--text-label-caps-line);
+  font-weight: var(--text-label-caps-weight);
+  letter-spacing: var(--text-label-caps-tracking);
+  text-transform: uppercase;
+}
+
+.text-data-mono,
+.font-data-mono {
+  font-family: var(--font-data-mono);
+  font-size: var(--text-data-mono);
+  line-height: var(--text-data-mono-line);
+  font-weight: var(--text-data-mono-weight);
+  font-variant-numeric: tabular-nums;
+}

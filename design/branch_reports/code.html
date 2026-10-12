@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Annigems - Branch Reports</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#e0e9f2",
+                        "on-primary-fixed-variant": "#5d4200",
+                        "outline": "#817563",
+                        "inverse-primary": "#f7bd48",
+                        "primary-fixed-dim": "#f7bd48",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#293138",
+                        "on-surface": "#141d23",
+                        "on-secondary-container": "#636467",
+                        "outline-variant": "#d3c4af",
+                        "on-tertiary-fixed": "#191c1d",
+                        "surface-variant": "#dbe4ed",
+                        "on-tertiary-container": "#fcfdfe",
+                        "inverse-on-surface": "#e9f2fb",
+                        "on-secondary-fixed": "#1a1c1e",
+                        "on-tertiary-fixed-variant": "#454748",
+                        "surface": "#f6faff",
+                        "error-container": "#ffdad6",
+                        "secondary-container": "#e2e2e5",
+                        "surface-tint": "#7b5800",
+                        "tertiary-fixed-dim": "#c5c7c8",
+                        "background": "#f6faff",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#785600",
+                        "on-secondary": "#ffffff",
+                        "primary-container": "#986d00",
+                        "surface-bright": "#f6faff",
+                        "on-primary-container": "#fffbff",
+                        "tertiary-container": "#737576",
+                        "on-error-container": "#93000a",
+                        "tertiary": "#5a5c5d",
+                        "surface-container-low": "#ecf5fe",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed": "#e1e3e4",
+                        "secondary-fixed-dim": "#c6c6c9",
+                        "surface-container": "#e6eff8",
+                        "on-error": "#ffffff",
+                        "primary-fixed": "#ffdea6",
+                        "secondary": "#5d5e61",
+                        "on-primary-fixed": "#271900",
+                        "on-background": "#141d23",
+                        "secondary-fixed": "#e2e2e5",
+                        "surface-container-highest": "#dbe4ed",
+                        "surface-dim": "#d2dbe4",
+                        "on-secondary-fixed-variant": "#454749",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#4f4535"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "sidebar-width": "260px",
+                        "gutter": "1rem",
+                        "container-padding": "1.5rem",
+                        "topbar-height": "64px",
+                        "stack-compact": "0.5rem",
+                        "stack-dense": "0.25rem"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "data-mono": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "display": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "data-mono": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "display": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f6faff; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .filled-icon { font-variation-settings: 'FILL' 1; }
+        
+        /* Table specific styles for density */
+        .dense-table th { background-color: #F1F3F5; }
+        .dense-table tr:hover { background-color: #F8F9FA; }
+        
+        /* Custom scrollbar for sidebar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d3c4af; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #817563; }
+    </style>
+</head>
+<body class="text-on-surface flex w-full h-screen overflow-hidden bg-background">
+<!-- SideNavBar -->
+<nav class="h-screen w-sidebar-width fixed left-0 top-0 bg-inverse-surface dark:bg-inverse-surface flex flex-col h-full py-gutter px-4 z-20">
+<!-- Header -->
+<div class="mb-8 flex items-center space-x-3 mt-4">
+<img alt="Annigems Admin Profile" class="w-10 h-10 rounded-full bg-surface" data-alt="A small, professional circular avatar showing an abstract geometric gem logo in gold and dark grey, representing the Annigems brand. The lighting is studio quality, ensuring sharp, crisp vectors. Professional and modern." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3hILdinZnxFDtuFLSoq4yxmiYOpmejyEna6_3Fqc9NCy-Eon9ohkiasdd9WfzHfnfj_koO47u2QIEppGs47Y4vZrM1sAQmq1tAmiyWnd9ggtniaHfgSbnIACNFFS3SwkzIeJ8I4Ewo7TqZqcuOJDbd3qgcoZ7fJv0WelcDPpWuLM0VTcgFfsj9pJrFcz-MnE1_RT9bbsvL665AfJGCIDsuh5u4G_xWw9rS2SWlugrJ7twxfZuwTJOnQ"/>
+<div>
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary-fixed dark:text-primary-fixed-dim">Annigems</h1>
+<p class="font-label-caps text-label-caps text-surface-variant">SuperAdmin Suite</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<ul class="flex-1 space-y-2">
+<li>
+<a class="flex items-center space-x-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant/80 hover:text-on-surface-variant hover:bg-surface-container-highest/5 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-lg">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+</li>
+<li>
+<a class="flex items-center space-x-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant/80 hover:text-on-surface-variant hover:bg-surface-container-highest/5 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-lg">store</span>
+<span class="font-body-md text-body-md">Branches</span>
+</a>
+</li>
+<li>
+<a class="flex items-center space-x-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant/80 hover:text-on-surface-variant hover:bg-surface-container-highest/5 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-lg">group</span>
+<span class="font-body-md text-body-md">Users</span>
+</a>
+</li>
+<li>
+<a class="flex items-center space-x-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant/80 hover:text-on-surface-variant hover:bg-surface-container-highest/5 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-lg">settings</span>
+<span class="font-body-md text-body-md">Global Settings</span>
+</a>
+</li>
+<li>
+<a class="flex items-center space-x-3 px-3 py-2 rounded-DEFAULT bg-surface-container-highest/10 text-primary-fixed-dim font-bold border-r-4 border-primary transition-all opacity-90" href="#">
+<span class="material-symbols-outlined text-lg filled-icon">analytics</span>
+<span class="font-body-md text-body-md">Reports</span>
+</a>
+</li>
+</ul>
+<!-- Footer -->
+<div class="mt-auto border-t border-outline-variant/20 pt-4">
+<a class="flex items-center space-x-3 px-3 py-2 rounded-DEFAULT text-on-surface-variant/80 hover:text-on-surface-variant hover:bg-surface-container-highest/5 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-lg">logout</span>
+<span class="font-body-md text-body-md">Logout</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="ml-sidebar-width flex-1 flex flex-col h-full bg-background relative">
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-260px)] h-topbar-height bg-surface dark:bg-surface border-b border-outline-variant dark:border-outline flex justify-between items-center px-container-padding z-10">
+<div class="flex items-center space-x-4 w-1/3">
+<h2 class="font-headline-sm text-headline-sm text-on-surface dark:text-on-surface font-bold tracking-tight">Annigems Admin</h2>
+</div>
+<div class="flex items-center space-x-6">
+<div class="font-label-caps text-label-caps text-on-surface-variant border border-outline-variant px-3 py-1.5 rounded-DEFAULT bg-surface-container-lowest">
+                    Branch: All Locations
+                </div>
+<div class="flex items-center space-x-4 text-on-surface-variant">
+<button class="hover:text-primary dark:hover:text-primary-fixed-dim cursor-pointer transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="hover:text-primary dark:hover:text-primary-fixed-dim cursor-pointer transition-colors">
+<span class="material-symbols-outlined">help_outline</span>
+</button>
+<img alt="Administrator Avatar" class="w-8 h-8 rounded-full border border-outline-variant ml-2" data-alt="A small, professional headshot of an executive in a well-lit corporate office environment. The person looks confident and approachable, wearing sharp business attire. The image has a soft focus background to keep attention on the subject." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_-LVM4ALcrH6razsRn44KLsHU7AkSq6-Tju7yT_DLSmzPmtz2-MKtzW49wnVqRhDmWw9a0tYwGOQrROXBrDjFWpyi00KNkF8YemuLWhjuu8cLFJ42ouBEhvRLEbmHkcW51tL8z-9EmfiScy8jA5WgBirBinu2U6F3YTN1cyQnxBmZsJsuKJA5_or58Tkaud3F9EvcN3jktkOEZUQepy7ZvqbvhHgUZz_ghhA99jue-3_wtv-I-sY9yg"/>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<main class="flex-1 overflow-y-auto mt-topbar-height p-container-padding">
+<!-- Filter Bar -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 mb-6 shadow-sm flex items-end gap-6">
+<div class="flex-1">
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-stack-dense">Branch Selector</label>
+<div class="relative">
+<select class="w-full h-9 pl-3 pr-8 rounded-DEFAULT border-outline-variant bg-surface text-body-md font-body-md focus:border-primary focus:ring-1 focus:ring-primary appearance-none">
+<option>All Branches (Consolidated)</option>
+<option>Fifth Avenue Flagship</option>
+<option>London Mayfair</option>
+<option>Paris Vendôme</option>
+<option>Dubai Mall</option>
+<option>Tokyo Ginza</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-2 text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+<div class="flex-1">
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-stack-dense">Date Range</label>
+<div class="flex items-center space-x-2">
+<div class="relative flex-1">
+<input class="w-full h-9 pl-3 pr-3 rounded-DEFAULT border-outline-variant bg-surface text-body-md font-body-md focus:border-primary focus:ring-1 focus:ring-primary" type="date" value="2023-10-01"/>
+</div>
+<span class="text-on-surface-variant text-sm">to</span>
+<div class="relative flex-1">
+<input class="w-full h-9 pl-3 pr-3 rounded-DEFAULT border-outline-variant bg-surface text-body-md font-body-md focus:border-primary focus:ring-1 focus:ring-primary" type="date" value="2023-10-31"/>
+</div>
+</div>
+</div>
+<div class="flex-none">
+<button class="h-9 px-6 bg-primary text-on-primary font-label-caps text-label-caps rounded-DEFAULT hover:bg-primary-container transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                        Apply Filters
+                    </button>
+</div>
+</div>
+<!-- Summary Cards Row -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+<!-- Total Sales -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-5 shadow-sm relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+<div class="flex justify-between items-start mb-4 relative z-10">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Total Sales (Period)</p>
+<h3 class="font-display text-display text-on-surface">$2,450,890.00</h3>
+</div>
+<div class="p-2 bg-surface-container rounded-DEFAULT text-primary">
+<span class="material-symbols-outlined">payments</span>
+</div>
+</div>
+<div class="flex items-center space-x-2 relative z-10">
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-[11px] font-bold text-primary border border-primary/20 flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">trending_up</span> +12.5%
+                        </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-xs">vs previous period</span>
+</div>
+</div>
+<!-- Total Stock Value -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-5 shadow-sm relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 w-24 h-24 bg-surface-variant/30 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+<div class="flex justify-between items-start mb-4 relative z-10">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Total Stock Value</p>
+<h3 class="font-display text-display text-on-surface">$14,205,000.00</h3>
+</div>
+<div class="p-2 bg-surface-container rounded-DEFAULT text-secondary">
+<span class="material-symbols-outlined">diamond</span>
+</div>
+</div>
+<div class="flex items-center space-x-2 relative z-10">
+<span class="font-body-sm text-body-sm text-on-surface-variant text-xs">Across all selected branches</span>
+</div>
+</div>
+<!-- Items Sold -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-5 shadow-sm relative overflow-hidden group">
+<div class="absolute -right-4 -top-4 w-24 h-24 bg-surface-variant/30 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+<div class="flex justify-between items-start mb-4 relative z-10">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Items Sold (Units)</p>
+<h3 class="font-display text-display text-on-surface">342</h3>
+</div>
+<div class="p-2 bg-surface-container rounded-DEFAULT text-secondary">
+<span class="material-symbols-outlined">shopping_bag</span>
+</div>
+</div>
+<div class="flex items-center space-x-2 relative z-10">
+<span class="font-body-sm text-body-sm text-on-surface-variant text-xs">Avg. transaction value: $7,166</span>
+</div>
+</div>
+</div>
+<!-- Main Content Split -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Chart Area (Spans 2 cols on large) -->
+<div class="lg:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col shadow-sm">
+<div class="p-4 border-b border-outline-variant flex justify-between items-center bg-[#fdfdfd]">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Top 5 Branches Performance</h3>
+<button class="p-1 hover:bg-surface-container rounded transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<div class="p-6 flex-1 flex flex-col justify-center relative min-h-[300px]">
+<!-- Simulated Horizontal Bar Chart -->
+<div class="space-y-5 w-full">
+<!-- Bar 1 -->
+<div>
+<div class="flex justify-between font-body-sm text-body-sm mb-1">
+<span class="font-medium text-on-surface">Fifth Avenue Flagship</span>
+<span class="font-data-mono text-data-mono">$850,200</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-3">
+<div class="bg-primary h-3 rounded-full" style="width: 100%"></div>
+</div>
+</div>
+<!-- Bar 2 -->
+<div>
+<div class="flex justify-between font-body-sm text-body-sm mb-1">
+<span class="font-medium text-on-surface">London Mayfair</span>
+<span class="font-data-mono text-data-mono">$620,500</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-3">
+<div class="bg-primary/80 h-3 rounded-full" style="width: 73%"></div>
+</div>
+</div>
+<!-- Bar 3 -->
+<div>
+<div class="flex justify-between font-body-sm text-body-sm mb-1">
+<span class="font-medium text-on-surface">Dubai Mall</span>
+<span class="font-data-mono text-data-mono">$510,000</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-3">
+<div class="bg-primary/60 h-3 rounded-full" style="width: 60%"></div>
+</div>
+</div>
+<!-- Bar 4 -->
+<div>
+<div class="flex justify-between font-body-sm text-body-sm mb-1">
+<span class="font-medium text-on-surface">Paris Vendôme</span>
+<span class="font-data-mono text-data-mono">$290,190</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-3">
+<div class="bg-primary/40 h-3 rounded-full" style="width: 34%"></div>
+</div>
+</div>
+<!-- Bar 5 -->
+<div>
+<div class="flex justify-between font-body-sm text-body-sm mb-1">
+<span class="font-medium text-on-surface">Tokyo Ginza</span>
+<span class="font-data-mono text-data-mono">$180,000</span>
+</div>
+<div class="w-full bg-surface-container rounded-full h-3">
+<div class="bg-primary/30 h-3 rounded-full" style="width: 21%"></div>
+</div>
+</div>
+</div>
+<!-- X Axis Labels -->
+<div class="flex justify-between mt-4 border-t border-outline-variant/30 pt-2 font-data-mono text-[10px] text-on-surface-variant">
+<span>$0</span>
+<span>$200k</span>
+<span>$400k</span>
+<span>$600k</span>
+<span>$800k</span>
+</div>
+</div>
+</div>
+<!-- Insights Sidebar -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col shadow-sm">
+<div class="p-4 border-b border-outline-variant bg-[#fdfdfd]">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Key Insights</h3>
+</div>
+<div class="p-5 space-y-4">
+<div class="p-3 bg-surface rounded-DEFAULT border border-outline-variant/50">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary text-xl mt-0.5">diamond</span>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Top Performer</p>
+<p class="font-body-sm text-body-sm text-on-surface">High-Carat Diamond category drove 45% of sales in NY.</p>
+</div>
+</div>
+</div>
+<div class="p-3 bg-surface rounded-DEFAULT border border-outline-variant/50">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary text-xl mt-0.5">warning</span>
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Stock Alert</p>
+<p class="font-body-sm text-body-sm text-on-surface">London branch running low on bridal collection SKUs.</p>
+</div>
+</div>
+</div>
+<div class="mt-6">
+<div class="bg-cover bg-center w-full h-32 rounded-DEFAULT border border-outline-variant relative" data-alt="An abstract, modern macro photograph of a sparkling cut diamond resting on a dark slate surface, with subtle gold lighting reflecting off facets. Sophisticated, high-end, luxury commercial photography." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA3evrjZO88wCnHZVyNqKKGz64pjZEVALy6V8S268BnzIwiwF9cEBwhzsveEU9nYBkvnBEPKGByAtJ6wYaaSOUw_FDsZRLIkJed0Fe33uXnTZ0ARUbtUbmOVK0zT4RpFusgkTZPGvx7ihziEVH2gsOV1iJVl7NWTLrl8rzGwqtr3LzL3d9rSovma40gT0aBu_7tJY_EqUeVICajnBtxMWc7bPo92vx3F2BuZSjCvjHcQo12duAL9JL7Sw')">
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent rounded-DEFAULT"></div>
+<div class="absolute bottom-2 left-3 right-2">
+<p class="font-label-caps text-[9px] text-white/80">Featured Collection</p>
+<p class="font-body-sm text-white font-medium">Holiday Bridals '23</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Breakdown Table -->
+<div class="mt-6 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-sm overflow-hidden mb-8">
+<div class="p-4 border-b border-outline-variant bg-[#fdfdfd] flex justify-between items-center">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Branch Breakdown</h3>
+<button class="px-3 py-1.5 border border-outline-variant rounded bg-surface font-label-caps text-label-caps text-on-surface-variant hover:bg-surface-variant transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">download</span>
+                        Export CSV
+                    </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse dense-table">
+<thead>
+<tr class="border-b border-outline-variant bg-[#F1F3F5] font-label-caps text-label-caps text-on-surface-variant">
+<th class="p-3 font-medium border-r border-outline-variant/50">Branch Name</th>
+<th class="p-3 font-medium text-right border-r border-outline-variant/50">Items Sold</th>
+<th class="p-3 font-medium text-right border-r border-outline-variant/50">Gross Revenue</th>
+<th class="p-3 font-medium text-right border-r border-outline-variant/50">Discounts Applied</th>
+<th class="p-3 font-medium text-right border-r border-outline-variant/50">Net Revenue</th>
+<th class="p-3 font-medium text-right">Stock Value (End)</th>
+</tr>
+</thead>
+<tbody class="font-data-mono text-data-mono text-on-surface">
+<tr class="border-b border-outline-variant/50">
+<td class="p-3 font-body-sm font-medium border-r border-outline-variant/50">Fifth Avenue Flagship</td>
+<td class="p-3 text-right border-r border-outline-variant/50">112</td>
+<td class="p-3 text-right border-r border-outline-variant/50">$875,000</td>
+<td class="p-3 text-right border-r border-outline-variant/50 text-error/80">-$24,800</td>
+<td class="p-3 text-right border-r border-outline-variant/50 font-bold">$850,200</td>
+<td class="p-3 text-right text-on-surface-variant">$4,250,000</td>
+</tr>
+<tr class="border-b border-outline-variant/50">
+<td class="p-3 font-body-sm font-medium border-r border-outline-variant/50">London Mayfair</td>
+<td class="p-3 text-right border-r border-outline-variant/50">84</td>
+<td class="p-3 text-right border-r border-outline-variant/50">$640,000</td>
+<td class="p-3 text-right border-r border-outline-variant/50 text-error/80">-$19,500</td>
+<td class="p-3 text-right border-r border-outline-variant/50 font-bold">$620,500</td>
+<td class="p-3 text-right text-on-surface-variant">$3,800,000</td>
+</tr>
+<tr class="border-b border-outline-variant/50">
+<td class="p-3 font-body-sm font-medium border-r border-outline-variant/50">Dubai Mall</td>
+<td class="p-3 text-right border-r border-outline-variant/50">65</td>
+<td class="p-3 text-right border-r border-outline-variant/50">$525,000</td>
+<td class="p-3 text-right border-r border-outline-variant/50 text-error/80">-$15,000</td>
+<td class="p-3 text-right border-r border-outline-variant/50 font-bold">$510,000</td>
+<td class="p-3 text-right text-on-surface-variant">$2,950,000</td>
+</tr>
+<tr class="border-b border-outline-variant/50">
+<td class="p-3 font-body-sm font-medium border-r border-outline-variant/50">Paris Vendôme</td>
+<td class="p-3 text-right border-r border-outline-variant/50">45</td>
+<td class="p-3 text-right border-r border-outline-variant/50">$300,000</td>
+<td class="p-3 text-right border-r border-outline-variant/50 text-error/80">-$9,810</td>
+<td class="p-3 text-right border-r border-outline-variant/50 font-bold">$290,190</td>
+<td class="p-3 text-right text-on-surface-variant">$2,100,000</td>
+</tr>
+<tr>
+<td class="p-3 font-body-sm font-medium border-r border-outline-variant/50">Tokyo Ginza</td>
+<td class="p-3 text-right border-r border-outline-variant/50">36</td>
+<td class="p-3 text-right border-r border-outline-variant/50">$185,000</td>
+<td class="p-3 text-right border-r border-outline-variant/50 text-error/80">-$5,000</td>
+<td class="p-3 text-right border-r border-outline-variant/50 font-bold">$180,000</td>
+<td class="p-3 text-right text-on-surface-variant">$1,105,000</td>
+</tr>
+</tbody>
+<tfoot class="bg-surface-container font-data-mono text-data-mono font-bold text-on-surface border-t-2 border-outline-variant">
+<tr>
+<td class="p-3 border-r border-outline-variant/50 text-right">TOTAL</td>
+<td class="p-3 text-right border-r border-outline-variant/50">342</td>
+<td class="p-3 text-right border-r border-outline-variant/50">$2,525,000</td>
+<td class="p-3 text-right border-r border-outline-variant/50 text-error">-$74,110</td>
+<td class="p-3 text-right border-r border-outline-variant/50 text-primary">$2,450,890</td>
+<td class="p-3 text-right">$14,205,000</td>
+</tr>
+</tfoot>
+</table>
+</div>
+</div>
+</main>
+</div>
+</body></html>

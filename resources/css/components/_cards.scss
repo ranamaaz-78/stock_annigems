@@ -1,0 +1,85 @@
+/**
+ * Surface panels / cards — thin border, minimal elevation.
+ */
+
+.panel,
+.card-surface {
+  background-color: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-xl);
+}
+
+.panel--padded {
+  padding: 1rem;
+}
+
+.panel--shadow {
+  box-shadow: var(--shadow-float);
+}
+
+/**
+ * Panel sub-structure. Use these when a panel holds a full-bleed table:
+ * the header/footer carry the padding so table rows stay edge-to-edge.
+ */
+.panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gutter);
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-outline-variant);
+}
+
+.panel__title {
+  margin: 0;
+  font-family: var(--font-headline-sm);
+  font-size: var(--text-headline-sm);
+  font-weight: 600;
+  color: var(--color-on-surface);
+}
+
+.panel__subtitle {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.panel__body {
+  padding: 1rem;
+}
+
+/* Scroll container for wide tables inside a panel. */
+.panel__scroll {
+  overflow-x: auto;
+}
+
+.panel__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--gutter);
+  padding: 0.625rem 1rem;
+  border-top: 1px solid var(--color-outline-variant);
+  background-color: var(--color-surface);
+}
+
+.panel__footer nav {
+  width: 100%;
+}
+
+/* Bulk-action strip under a table (print selected labels). */
+.panel__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-top: 1px solid var(--color-outline-variant);
+}
+
+/* Vertical stack of panels at page level. */
+.panel-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gutter);
+}

@@ -1,0 +1,691 @@
+/**
+ * Stone lot form and Excel import.
+ *
+ * `.stone-fields` groups the inputs that belong to one pricing mode so the
+ * whole group can be hidden in a single toggle while still laying its
+ * children out on the parent grid.
+ */
+
+.stone-fields {
+  display: contents;
+
+  &.is-hidden {
+    display: none;
+  }
+}
+
+/* Read-only strip showing the formula and the calculated total. */
+.stone-calc {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-container-low);
+}
+
+.stone-calc__label {
+  font-family: var(--font-label-caps);
+  font-size: var(--text-label-caps);
+  font-weight: var(--text-label-caps-weight);
+  letter-spacing: var(--text-label-caps-tracking);
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+}
+
+.stone-calc__formula {
+  flex: 1 1 auto;
+  font-family: var(--font-data-mono);
+  font-size: var(--text-data-mono);
+  color: var(--color-on-surface);
+}
+
+.stone-calc__total {
+  font-family: var(--font-headline-sm);
+  font-size: var(--text-headline-sm);
+  font-weight: var(--text-headline-sm-weight);
+  color: var(--color-primary);
+}
+
+/* ---------------------------------------------------------------------
+   Material folders
+   --------------------------------------------------------------------- */
+
+/**
+ * Folder grid.
+ *
+ * Tiles are a fixed 150px square so a wall of materials reads as an evenly
+ * spaced grid however long the names are. `.is-list` swaps the same markup
+ * to full-width rows; the choice is remembered per browser.
+ */
+.folder-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 150px);
+  gap: var(--gutter);
+}
+
+.folder-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--stack-dense);
+  width: 150px;
+  height: 150px;
+  padding: 0.75rem;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-container-lowest);
+  color: var(--color-on-surface);
+  text-align: center;
+  text-decoration: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--color-primary);
+    background-color: var(--color-surface-container-low);
+  }
+}
+
+.folder-tile__icon {
+  color: var(--color-primary);
+}
+
+.folder-tile__name {
+  font-family: var(--font-body-md);
+  font-size: var(--text-body-md);
+  font-weight: 500;
+  /* Long material names wrap rather than spilling out of the square. */
+  overflow-wrap: anywhere;
+}
+
+.folder-tile__meta {
+  font-family: var(--font-data-mono);
+  font-size: var(--text-data-mono);
+  color: var(--color-on-surface-variant);
+}
+
+/* List view: the same tiles as single rows. */
+.folder-grid.is-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-dense);
+
+  .folder-tile {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    width: 100%;
+    height: auto;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
+
+  .folder-tile__name {
+    flex: 1 1 auto;
+  }
+}
+
+.folder-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gutter);
+}
+
+.folder-toolbar__pages {
+  min-width: 0;
+}
+
+/* Box / list switch, pushed to the bottom right of the folder panel. */
+.view-switch {
+  display: flex;
+  margin-left: auto;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.view-switch__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  background-color: var(--color-surface-container-lowest);
+  color: var(--color-on-surface-variant);
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--color-surface-container);
+  }
+
+  &.is-active {
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Stone detail
+   --------------------------------------------------------------------- */
+
+/* An empty tray is worth noticing while scanning the detail screen. */
+.stone-detail__value--empty {
+  color: var(--color-error);
+  font-weight: 600;
+}
+
+/* Packet code and barcode block on the detail screen. */
+.stone-packet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--stack-dense);
+  text-align: center;
+}
+
+.stone-packet__code {
+  margin: 0;
+  font-family: var(--font-data-mono);
+  font-size: var(--text-headline-sm);
+  color: var(--color-on-surface);
+}
+
+.stone-packet__barcode {
+  max-width: 100%;
+}
+
+.stone-packet__number {
+  margin: 0;
+  font-family: var(--font-data-mono);
+  font-size: var(--text-data-mono);
+  color: var(--color-on-surface-variant);
+}
+
+/* ---------------------------------------------------------------------
+   Excel import modal
+   --------------------------------------------------------------------- */
+
+.stone-import {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background-color: rgba(20, 29, 35, 0.55);
+
+  &.is-hidden {
+    display: none;
+  }
+}
+
+.stone-import__dialog {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1100px;
+  max-height: 90vh;
+  background-color: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-float);
+  overflow: hidden;
+}
+
+.stone-import__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--color-outline-variant);
+}
+
+.stone-import__title {
+  font-family: var(--font-headline-sm);
+  font-size: var(--text-headline-sm);
+  font-weight: var(--text-headline-sm-weight);
+}
+
+.stone-import__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--color-on-surface-variant);
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--color-surface-container);
+  }
+}
+
+.stone-import__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 1rem;
+}
+
+.stone-import__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--color-outline-variant);
+  background-color: var(--color-surface-container-low);
+}
+
+.stone-import__footer-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+/* Each wizard step is mounted at once; only the active one is shown. */
+.stone-import__step {
+  &.is-hidden {
+    display: none;
+  }
+}
+
+/* Step 1 — drop target */
+.stone-import__drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 220px;
+  padding: 2rem;
+  border: 2px dashed var(--color-outline-variant);
+  border-radius: var(--radius-xl);
+  background-color: var(--color-surface-container-low);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+
+  &:hover,
+  &.is-dragging {
+    border-color: var(--color-excel);
+    background-color: var(--color-row-ok-bg);
+  }
+}
+
+.stone-import__drop-title {
+  font-family: var(--font-body-md);
+  font-size: var(--text-body-md);
+  font-weight: 500;
+}
+
+.stone-import__drop-hint {
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.stone-import__file {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  font-family: var(--font-data-mono);
+  font-size: var(--text-data-mono);
+
+  &.is-hidden {
+    display: none;
+  }
+}
+
+/* Step 2 — column mapping */
+.stone-import__map {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.75rem;
+}
+
+.stone-import__map-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stone-import__map-label {
+  font-family: var(--font-label-caps);
+  font-size: var(--text-label-caps);
+  font-weight: var(--text-label-caps-weight);
+  letter-spacing: var(--text-label-caps-tracking);
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+}
+
+.stone-import__map-label--required::after {
+  content: ' *';
+  color: var(--color-error);
+}
+
+/* Step 3 — editable preview */
+.stone-import__summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  font-size: var(--text-body-sm);
+}
+
+.stone-import__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-full);
+  font-weight: 500;
+}
+
+.stone-import__chip--ok {
+  background-color: var(--color-row-ok-bg);
+  color: var(--color-status-available);
+}
+
+.stone-import__chip--error {
+  background-color: var(--color-row-error-bg);
+  color: var(--color-error);
+}
+
+.stone-import__grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-body-sm);
+
+  th,
+  td {
+    padding: 0.25rem 0.375rem;
+    border: 1px solid var(--color-outline-variant);
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: var(--color-surface-container-high);
+    font-family: var(--font-label-caps);
+    font-size: var(--text-label-caps);
+    font-weight: var(--text-label-caps-weight);
+    letter-spacing: var(--text-label-caps-tracking);
+    text-transform: uppercase;
+  }
+}
+
+/* Row colouring is the whole point of the preview: green passes, red needs a fix. */
+.stone-import__row--ok {
+  background-color: var(--color-row-ok-bg);
+}
+
+.stone-import__row--error {
+  background-color: var(--color-row-error-bg);
+}
+
+/* Cells are edited in place, spreadsheet style. */
+.stone-import__cell {
+  width: 100%;
+  min-width: 90px;
+  padding: 0.125rem 0.25rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: inherit;
+  font-family: var(--font-data-mono);
+  font-size: var(--text-data-mono);
+
+  &:hover {
+    border-color: var(--color-outline-variant);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    background-color: var(--color-surface-container-lowest);
+  }
+}
+
+.stone-import__cell--wide {
+  min-width: 170px;
+}
+
+.stone-import__issues {
+  max-width: 260px;
+  white-space: normal;
+  color: var(--color-error);
+  font-size: var(--text-body-sm);
+}
+
+.stone-import__calc {
+  font-family: var(--font-data-mono);
+  font-size: var(--text-data-mono);
+  white-space: normal;
+  min-width: 220px;
+}
+
+/* ---------------------------------------------------------------------
+   Progress bar, shared by the upload step and the insert progress dialog
+   --------------------------------------------------------------------- */
+
+.stone-bar {
+  position: relative;
+  width: 100%;
+  height: 0.625rem;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-container);
+  overflow: hidden;
+}
+
+.stone-bar__fill {
+  width: 0;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background-color: var(--color-excel);
+  transition: width 0.25s ease;
+}
+
+/* No known percentage: a block slides across instead of a fill growing. */
+.stone-bar--indeterminate .stone-bar__fill {
+  width: 35%;
+  transition: none;
+  animation: stone-bar-slide 1.1s ease-in-out infinite;
+}
+
+@keyframes stone-bar-slide {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(300%);
+  }
+}
+
+/* Upload / reading state inside the import dialog. */
+.stone-busy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 220px;
+  max-width: 28rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.stone-busy__icon {
+  color: var(--color-excel);
+}
+
+.stone-busy__title {
+  font-family: var(--font-body-md);
+  font-size: var(--text-body-md);
+  font-weight: 600;
+}
+
+.stone-busy__detail {
+  min-height: 1.25rem;
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-variant);
+  word-break: break-all;
+}
+
+/* Small insert-progress dialog. */
+.stone-progress {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background-color: rgba(20, 29, 35, 0.55);
+
+  &.is-hidden {
+    display: none;
+  }
+}
+
+.stone-progress__dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 26rem;
+  padding: 1.25rem;
+  background-color: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-float);
+}
+
+.stone-progress__title {
+  font-family: var(--font-headline-sm);
+  font-size: var(--text-headline-sm);
+  font-weight: var(--text-headline-sm-weight);
+}
+
+.stone-progress__percent {
+  font-family: var(--font-data-mono);
+  font-size: var(--text-headline-sm);
+  font-weight: 600;
+  text-align: center;
+}
+
+.stone-progress__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 0;
+
+  dt {
+    font-size: var(--text-body-sm);
+    color: var(--color-on-surface-variant);
+  }
+
+  dd {
+    margin: 0;
+    font-family: var(--font-data-mono);
+    font-size: var(--text-data-mono);
+    font-weight: 600;
+  }
+}
+
+.stone-progress__message {
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-variant);
+
+  &.is-error {
+    color: var(--color-error);
+  }
+}
+
+.stone-progress__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+
+  &.is-hidden {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Lot form sections (register, edit, intake "New lot" dialog)
+   --------------------------------------------------------------------- */
+
+.lot-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.lot-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.lot-section__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-outline-variant);
+  font-family: var(--font-label-caps);
+  font-size: var(--text-label-caps);
+  line-height: var(--text-label-caps-line);
+  font-weight: var(--text-label-caps-weight);
+  letter-spacing: var(--text-label-caps-tracking);
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+
+  .icon {
+    color: var(--color-primary);
+  }
+}
+
+/* Two columns on a phone, four from tablet up. */
+.lot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.lot-span-2 {
+  grid-column: span 2;
+}
+
+.lot-span-all {
+  grid-column: 1 / -1;
+}
+
+/* Stock line on a folder tile: pieces, carat and grams, wrapping if needed. */
+.folder-tile__stock {
+  margin-top: -0.25rem;
+  font-weight: 600;
+  color: var(--color-on-surface);
+  overflow-wrap: anywhere;
+}

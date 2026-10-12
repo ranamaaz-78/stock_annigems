@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Annigems - Branch Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-high": "#e0e9f2",
+                    "on-primary-fixed-variant": "#5d4200",
+                    "outline": "#817563",
+                    "inverse-primary": "#f7bd48",
+                    "primary-fixed-dim": "#f7bd48",
+                    "error": "#ba1a1a",
+                    "inverse-surface": "#293138",
+                    "on-surface": "#141d23",
+                    "on-secondary-container": "#636467",
+                    "outline-variant": "#d3c4af",
+                    "on-tertiary-fixed": "#191c1d",
+                    "surface-variant": "#dbe4ed",
+                    "on-tertiary-container": "#fcfdfe",
+                    "inverse-on-surface": "#e9f2fb",
+                    "on-secondary-fixed": "#1a1c1e",
+                    "on-tertiary-fixed-variant": "#454748",
+                    "surface": "#f6faff",
+                    "error-container": "#ffdad6",
+                    "secondary-container": "#e2e2e5",
+                    "surface-tint": "#7b5800",
+                    "tertiary-fixed-dim": "#c5c7c8",
+                    "background": "#f6faff",
+                    "surface-container-lowest": "#ffffff",
+                    "primary": "#785600",
+                    "on-secondary": "#ffffff",
+                    "primary-container": "#986d00",
+                    "surface-bright": "#f6faff",
+                    "on-primary-container": "#fffbff",
+                    "tertiary-container": "#737576",
+                    "on-error-container": "#93000a",
+                    "tertiary": "#5a5c5d",
+                    "surface-container-low": "#ecf5fe",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed": "#e1e3e4",
+                    "secondary-fixed-dim": "#c6c6c9",
+                    "surface-container": "#e6eff8",
+                    "on-error": "#ffffff",
+                    "primary-fixed": "#ffdea6",
+                    "secondary": "#5d5e61",
+                    "on-primary-fixed": "#271900",
+                    "on-background": "#141d23",
+                    "secondary-fixed": "#e2e2e5",
+                    "surface-container-highest": "#dbe4ed",
+                    "surface-dim": "#d2dbe4",
+                    "on-secondary-fixed-variant": "#454749",
+                    "on-tertiary": "#ffffff",
+                    "on-surface-variant": "#4f4535"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "sidebar-width": "260px",
+                    "gutter": "1rem",
+                    "container-padding": "1.5rem",
+                    "topbar-height": "64px",
+                    "stack-compact": "0.5rem",
+                    "stack-dense": "0.25rem"
+            },
+            "fontFamily": {
+                    "headline-sm": [
+                            "Inter"
+                    ],
+                    "label-caps": [
+                            "Inter"
+                    ],
+                    "data-mono": [
+                            "Inter"
+                    ],
+                    "body-sm": [
+                            "Inter"
+                    ],
+                    "display": [
+                            "Inter"
+                    ],
+                    "body-md": [
+                            "Inter"
+                    ]
+            },
+            "fontSize": {
+                    "headline-sm": [
+                            "18px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "label-caps": [
+                            "11px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "data-mono": [
+                            "13px",
+                            {
+                                    "lineHeight": "18px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "body-sm": [
+                            "13px",
+                            {
+                                    "lineHeight": "18px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "display": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "400"
+                            }
+                    ]
+            }
+        },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        /* Custom Scrollbar for side panel */
+        .side-panel-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .side-panel-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .side-panel-scroll::-webkit-scrollbar-thumb {
+            background-color: #dbe4ed;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md overflow-hidden antialiased">
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-full md:w-[calc(100%-260px)] h-topbar-height bg-surface dark:bg-surface text-primary dark:text-primary-fixed-dim font-label-caps text-label-caps border-b border-outline-variant dark:border-outline z-30 flex justify-between items-center px-container-padding">
+<div class="flex items-center gap-4">
+<button class="md:hidden text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<div class="hidden md:flex items-center gap-2 bg-surface-container-high px-3 py-1.5 rounded text-on-surface">
+<span class="material-symbols-outlined text-[18px]">store</span>
+<span class="font-data-mono text-data-mono">Branch: Head Office</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 text-on-surface-variant">
+<button aria-label="Notifications" class="hover:text-primary transition-colors cursor-pointer relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute -top-1 -right-1 w-2 h-2 bg-error rounded-full"></span>
+</button>
+<button aria-label="Help" class="hover:text-primary transition-colors cursor-pointer">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+</div>
+<div class="h-8 w-px bg-outline-variant mx-2"></div>
+<button class="flex items-center gap-3 hover:bg-surface-container-highest/50 p-1.5 rounded transition-colors">
+<div class="text-right hidden sm:block">
+<div class="font-data-mono text-data-mono text-on-surface">Admin User</div>
+<div class="font-label-caps text-label-caps text-on-surface-variant">SuperAdmin</div>
+</div>
+<img alt="Administrator Avatar" class="w-8 h-8 rounded-full object-cover border border-outline-variant" data-alt="A professional headshot of a corporate administrator in a bright, modern office setting. The lighting is soft and neutral, enhancing a clean, trustworthy corporate aesthetic. High resolution, shallow depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf3WRKMb4a7xTJq0O1Mk1yH5JajGkx7CjlM9no7K4bWGh1JV6dLHqq4jEvnqH5xMP9y23fKTV8lh9mFH-TxMU6sY8eNarKZ4ODKQ5S2u2e_ERug3SLfTos9Ypm_oaTiea-SsHmd2bvc9JWIzjYbmvgyjcz_2CXlKPmRAqdeQdZ-5lu539Hr6UGr4ZHfZPx1NaXt97trcj2vHJcRXHP8se4d6qIWe1KSdlqvc7fx6GvqdQSZwAuni95-g"/>
+</button>
+</div>
+</header>
+<!-- SideNavBar -->
+<nav class="bg-inverse-surface dark:bg-inverse-surface h-screen w-sidebar-width fixed left-0 top-0 flex flex-col py-gutter px-4 z-40 hidden md:flex transition-transform duration-300 shadow-none border-r border-inverse-surface/10">
+<div class="flex items-center gap-3 px-2 mb-8 mt-2">
+<div class="w-8 h-8 bg-primary rounded flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined fill text-[20px]">diamond</span>
+</div>
+<div>
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary-fixed dark:text-primary-fixed-dim">Annigems</h1>
+<p class="font-label-caps text-[10px] text-tertiary-fixed-dim mt-0.5 uppercase tracking-wider">SuperAdmin Suite</p>
+</div>
+</div>
+<div class="flex-1 flex flex-col gap-1 mt-4">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded font-body-md text-body-md text-on-surface-variant/80 hover:text-on-surface-variant hover:bg-surface-container-highest/5 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded font-body-md text-body-md bg-surface-container-highest/10 text-primary-fixed-dim font-bold border-r-4 border-primary opacity-90 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px] fill" data-icon="store">store</span>
+<span>Branches</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded font-body-md text-body-md text-on-surface-variant/80 hover:text-on-surface-variant hover:bg-surface-container-highest/5 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="group">group</span>
+<span>Users</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded font-body-md text-body-md text-on-surface-variant/80 hover:text-on-surface-variant hover:bg-surface-container-highest/5 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+<span>Global Settings</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded font-body-md text-body-md text-on-surface-variant/80 hover:text-on-surface-variant hover:bg-surface-container-highest/5 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="analytics">analytics</span>
+<span>Reports</span>
+</a>
+</div>
+<div class="mt-auto pt-4 border-t border-tertiary/20">
+<button class="w-full flex items-center gap-3 px-3 py-2.5 rounded font-body-md text-body-md text-error/80 hover:text-error hover:bg-error/10 transition-colors duration-200">
+<span class="material-symbols-outlined text-[20px]" data-icon="logout">logout</span>
+<span>Logout</span>
+</button>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="md:ml-[260px] pt-topbar-height min-h-screen bg-background relative z-10 flex flex-col">
+<!-- Page Header -->
+<div class="px-container-padding py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-outline-variant bg-surface-container-lowest">
+<div>
+<h2 class="font-display text-display text-on-surface mb-1">Branches</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Manage retail locations and warehouse facilities.</p>
+</div>
+<div class="flex items-center gap-3">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+<input class="pl-9 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary w-full sm:w-64 transition-shadow" placeholder="Search branches..." type="text"/>
+</div>
+<button class="bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded font-data-mono text-data-mono flex items-center gap-2 transition-colors h-[36px] whitespace-nowrap shadow-sm" onclick="toggleSidePanel()">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                    + Add Branch
+                </button>
+</div>
+</div>
+<!-- Content Canvas -->
+<div class="p-container-padding flex-1 overflow-auto relative">
+<!-- Bento-style Stats Row -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-4 flex items-center justify-between">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Total Branches</p>
+<p class="font-display text-display text-on-surface">12</p>
+</div>
+<div class="w-10 h-10 rounded bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">storefront</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-4 flex items-center justify-between">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Active Locations</p>
+<p class="font-display text-display text-on-surface">10</p>
+</div>
+<div class="w-10 h-10 rounded bg-surface-container flex items-center justify-center text-[#2e7d32]">
+<span class="material-symbols-outlined">check_circle</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded p-4 flex items-center justify-between">
+<div>
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-1">Pending Sync</p>
+<p class="font-display text-display text-on-surface">2</p>
+</div>
+<div class="w-10 h-10 rounded bg-surface-container flex items-center justify-center text-[#ed6c02]">
+<span class="material-symbols-outlined">sync</span>
+</div>
+</div>
+</div>
+<!-- Data Table Container -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded overflow-hidden shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-[#F1F3F5] border-b border-outline-variant font-label-caps text-label-caps text-on-surface-variant">
+<th class="py-3 px-4 w-[25%]">Branch Name</th>
+<th class="py-3 px-4 w-[25%]">Address</th>
+<th class="py-3 px-4 w-[15%]">Contact</th>
+<th class="py-3 px-4 w-[15%]">Admin Assigned</th>
+<th class="py-3 px-4 w-[10%]">Status</th>
+<th class="py-3 px-4 w-[10%] text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-on-surface divide-y divide-outline-variant">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container/30 transition-colors h-[48px]">
+<td class="py-2 px-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-container flex items-center justify-center text-primary text-[14px] font-bold">HO</div>
+<div>
+<div class="font-data-mono text-data-mono text-on-surface">Head Office</div>
+<div class="text-[11px] text-on-surface-variant">BR-001</div>
+</div>
+</div>
+</td>
+<td class="py-2 px-4 text-on-surface-variant truncate max-w-[200px]">123 Diamond District, NY 10036</td>
+<td class="py-2 px-4 font-data-mono text-data-mono">(555) 019-2834</td>
+<td class="py-2 px-4">
+<div class="flex items-center gap-2">
+<img class="w-6 h-6 rounded-full object-cover border border-outline-variant" data-alt="Small avatar photo of a professional woman with glasses, smiling slightly, clean bright background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDn5aEiBCgCOhlBS_wffMfjA0BE-9oIZma4iIXsV_tSoW_9DmdCioIFJdLvUAg4YUVU925zNeAwYPT0qNJBkNQ2Ae-MN-hdzBgXsTbi4yBUv3jrTwW3Nftt1tkKZdx3U6-0uwQqRvfG5S1xpTGXc_xPn0bOvLjXmNQWkpEPvgMW3n9LW9Ekf4_hBpscTDrwa3CLpQ0iKK-ybQWTLJt7y9bGlSZy_qarBIzKQWkuCws6G-0fwREldAQlJg"/>
+<span class="truncate">Sarah Jenkins</span>
+</div>
+</td>
+<td class="py-2 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-[#e8f5e9] text-[#2e7d32] border border-[#c8e6c9]">
+                                        Active
+                                    </span>
+</td>
+<td class="py-2 px-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1 rounded hover:bg-surface-container" title="Edit">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1 rounded hover:bg-error/10" title="Deactivate">
+<span class="material-symbols-outlined text-[18px]">block</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container/30 transition-colors h-[48px]">
+<td class="py-2 px-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-container flex items-center justify-center text-primary text-[14px] font-bold">BH</div>
+<div>
+<div class="font-data-mono text-data-mono text-on-surface">Beverly Hills Boutique</div>
+<div class="text-[11px] text-on-surface-variant">BR-002</div>
+</div>
+</div>
+</td>
+<td class="py-2 px-4 text-on-surface-variant truncate max-w-[200px]">456 Rodeo Drive, CA 90210</td>
+<td class="py-2 px-4 font-data-mono text-data-mono">(555) 837-1928</td>
+<td class="py-2 px-4">
+<div class="flex items-center gap-2">
+<img class="w-6 h-6 rounded-full object-cover border border-outline-variant" data-alt="Small avatar photo of a professional man in a suit, neutral expression, clean bright background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDlna4oxJWh8nbML76y0Yn-UEQKSpsPssExJefnO7Dvk70cWDr0Dm_5vzZcnhg3zIVaWwgvojYVARFo81Pw-HIDvqVh_ufwy3otKGPRtqwwHe1ZpiHbU0YuMfKdhRr6Far4TQWT0ueGC2KMrisEEMfUkQWVjcSaaqprR2aljZZ3So7mwyPhMArFfaH_OQducCQwn2hb7eV77yCMX17CFhI1GgJnsu6HgSjLpEIb4AhWASXWxh0CowV5Iw"/>
+<span class="truncate">Michael Chen</span>
+</div>
+</td>
+<td class="py-2 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-[#e8f5e9] text-[#2e7d32] border border-[#c8e6c9]">
+                                        Active
+                                    </span>
+</td>
+<td class="py-2 px-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1 rounded hover:bg-surface-container" title="Edit">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="text-on-surface-variant hover:text-error transition-colors p-1 rounded hover:bg-error/10" title="Deactivate">
+<span class="material-symbols-outlined text-[18px]">block</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container/30 transition-colors h-[48px]">
+<td class="py-2 px-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-container flex items-center justify-center text-on-surface-variant text-[14px] font-bold">WH</div>
+<div>
+<div class="font-data-mono text-data-mono text-on-surface">Central Warehouse</div>
+<div class="text-[11px] text-on-surface-variant">WH-001</div>
+</div>
+</div>
+</td>
+<td class="py-2 px-4 text-on-surface-variant truncate max-w-[200px]">789 Industrial Pkwy, NJ 07102</td>
+<td class="py-2 px-4 font-data-mono text-data-mono">(555) 203-9485</td>
+<td class="py-2 px-4">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-surface-container-high border border-outline-variant flex items-center justify-center text-[10px] font-bold text-on-surface-variant">UA</div>
+<span class="truncate text-on-surface-variant italic">Unassigned</span>
+</div>
+</td>
+<td class="py-2 px-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-surface-container-high text-on-surface-variant border border-outline-variant">
+                                        Inactive
+                                    </span>
+</td>
+<td class="py-2 px-4 text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1 rounded hover:bg-surface-container" title="Edit">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors p-1 rounded hover:bg-surface-container" title="Activate">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="px-4 py-3 border-t border-outline-variant bg-[#F8F9FA] flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Showing 1 to 3 of 12 branches</span>
+<div class="flex items-center gap-1">
+<button class="p-1 rounded text-on-surface-variant hover:bg-surface-container-high disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="w-7 h-7 rounded bg-primary text-on-primary font-data-mono text-[12px] flex items-center justify-center">1</button>
+<button class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface font-data-mono text-[12px] flex items-center justify-center">2</button>
+<button class="w-7 h-7 rounded hover:bg-surface-container-high text-on-surface font-data-mono text-[12px] flex items-center justify-center">3</button>
+<button class="p-1 rounded text-on-surface-variant hover:bg-surface-container-high">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Side Panel Overlay: Add Branch -->
+<div class="fixed inset-0 bg-[#141d23]/40 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300" id="addBranchOverlay">
+<!-- Overlay Background Click Area -->
+<div class="absolute inset-0" onclick="toggleSidePanel()"></div>
+<!-- Slide-out Panel -->
+<div class="absolute top-0 right-0 h-full w-full sm:w-[480px] bg-surface-container-lowest shadow-2xl border-l border-outline-variant transform translate-x-full transition-transform duration-300 flex flex-col" id="addBranchPanel">
+<!-- Panel Header -->
+<div class="px-6 py-5 border-b border-outline-variant flex items-center justify-between bg-surface">
+<div>
+<h3 class="font-display text-[20px] text-on-surface leading-tight">Add New Branch</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Enter details for the new location.</p>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface p-2 rounded-full hover:bg-surface-container-high transition-colors" onclick="toggleSidePanel()">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Panel Form Content -->
+<div class="flex-1 overflow-y-auto side-panel-scroll p-6">
+<form class="space-y-6">
+<!-- Form Section: Basic Info -->
+<div>
+<h4 class="font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant pb-2 mb-4">Basic Information</h4>
+<div class="space-y-4">
+<!-- Field: Branch Name -->
+<div class="flex flex-col gap-stack-dense">
+<label class="font-label-caps text-label-caps text-on-surface" for="branchName">Branch Name <span class="text-error">*</span></label>
+<input class="w-full h-10 px-3 bg-surface border border-outline-variant rounded font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" id="branchName" placeholder="e.g. Fifth Avenue Boutique" type="text"/>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<!-- Field: Branch Code -->
+<div class="flex flex-col gap-stack-dense">
+<label class="font-label-caps text-label-caps text-on-surface" for="branchCode">Branch Code</label>
+<input class="w-full h-10 px-3 bg-surface border border-outline-variant rounded font-data-mono text-data-mono text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" id="branchCode" placeholder="BR-003" type="text"/>
+</div>
+<!-- Field: Type -->
+<div class="flex flex-col gap-stack-dense">
+<label class="font-label-caps text-label-caps text-on-surface" for="branchType">Type</label>
+<select class="w-full h-10 px-3 bg-surface border border-outline-variant rounded font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors appearance-none" id="branchType">
+<option value="retail">Retail Boutique</option>
+<option value="warehouse">Warehouse</option>
+<option value="office">Corporate Office</option>
+</select>
+</div>
+</div>
+</div>
+</div>
+<!-- Form Section: Contact & Location -->
+<div>
+<h4 class="font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant pb-2 mb-4 mt-8">Contact &amp; Location</h4>
+<div class="space-y-4">
+<!-- Field: Address -->
+<div class="flex flex-col gap-stack-dense">
+<label class="font-label-caps text-label-caps text-on-surface" for="address">Street Address</label>
+<textarea class="w-full px-3 py-2 bg-surface border border-outline-variant rounded font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none" id="address" placeholder="Full street address..." rows="2"></textarea>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<!-- Field: Contact Number -->
+<div class="flex flex-col gap-stack-dense">
+<label class="font-label-caps text-label-caps text-on-surface" for="contactNum">Contact Number</label>
+<input class="w-full h-10 px-3 bg-surface border border-outline-variant rounded font-data-mono text-data-mono text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" id="contactNum" placeholder="(555) 000-0000" type="tel"/>
+</div>
+<!-- Field: Email -->
+<div class="flex flex-col gap-stack-dense">
+<label class="font-label-caps text-label-caps text-on-surface" for="contactEmail">Branch Email</label>
+<input class="w-full h-10 px-3 bg-surface border border-outline-variant rounded font-body-sm text-body-sm text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors" id="contactEmail" placeholder="branch@annigems.com" type="email"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Form Section: Settings -->
+<div>
+<h4 class="font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant pb-2 mb-4 mt-8">Settings</h4>
+<!-- Status Toggle -->
+<div class="flex items-center justify-between bg-surface-container-lowest border border-outline-variant p-4 rounded">
+<div>
+<p class="font-data-mono text-data-mono text-on-surface font-bold">Active Status</p>
+<p class="font-body-sm text-[12px] text-on-surface-variant mt-0.5">Allow inventory assignment to this branch.</p>
+</div>
+<!-- Toggle Switch UI -->
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-variant rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+</form>
+</div>
+<!-- Panel Footer Actions -->
+<div class="p-6 border-t border-outline-variant bg-surface flex justify-end gap-3">
+<button class="px-4 py-2 h-[36px] bg-surface-container-lowest border border-outline-variant rounded font-data-mono text-data-mono text-on-surface hover:bg-surface-container-high transition-colors" onclick="toggleSidePanel()" type="button">
+                    Cancel
+                </button>
+<button class="px-6 py-2 h-[36px] bg-primary hover:bg-primary-container text-on-primary rounded font-data-mono text-data-mono shadow-sm transition-colors flex items-center gap-2" type="button">
+<span class="material-symbols-outlined text-[18px]">save</span>
+                    Save Branch
+                </button>
+</div>
+</div>
+</div>
+<script>
+        function toggleSidePanel() {
+            const overlay = document.getElementById('addBranchOverlay');
+            const panel = document.getElementById('addBranchPanel');
+            const body = document.body;
+            
+            if (overlay.classList.contains('hidden')) {
+                // Open panel
+                overlay.classList.remove('hidden');
+                // Small delay to allow display:block to apply before animating opacity
+                setTimeout(() => {
+                    overlay.classList.remove('opacity-0');
+                    overlay.classList.add('opacity-100');
+                    panel.classList.remove('translate-x-full');
+                    panel.classList.add('translate-x-0');
+                }, 10);
+                body.style.overflow = 'hidden'; // Prevent main scrolling
+            } else {
+                // Close panel
+                overlay.classList.remove('opacity-100');
+                overlay.classList.add('opacity-0');
+                panel.classList.remove('translate-x-0');
+                panel.classList.add('translate-x-full');
+                
+                // Wait for animation to finish before hiding
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    body.style.overflow = ''; // Restore scrolling
+                }, 300);
+            }
+        }
+    </script>
+</body></html>

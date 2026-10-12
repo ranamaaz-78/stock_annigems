@@ -1,0 +1,140 @@
+/**
+ * Report charts — pure CSS bars.
+ *
+ * Every chart in the approved designs (design/branch_reports,
+ * design/superadmin_dashboard, design/branch_dashboard) is a div-based bar with
+ * an inline width. There is no charting library anywhere in the design folder,
+ * so none is added here.
+ *
+ * Bar length arrives as the `--bar-size` custom property, computed server-side
+ * by ReportResult::chart(). That keeps arithmetic out of Blade and keeps the
+ * only inline style on the element a single design-system variable rather than
+ * a hardcoded colour or an arbitrary Tailwind value.
+ */
+
+.chart-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  width: 100%;
+}
+
+.chart-bar__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.chart-bar__label {
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm-line);
+  font-weight: 500;
+  color: var(--color-on-surface);
+}
+
+.chart-bar__value {
+  font-family: var(--font-data-mono);
+  font-size: var(--text-data-mono);
+  line-height: var(--text-data-mono-line);
+  color: var(--color-on-surface-variant);
+  white-space: nowrap;
+}
+
+.chart-bar__track {
+  width: 100%;
+  height: 0.75rem;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-container);
+  overflow: hidden;
+}
+
+.chart-bar__fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary);
+  /* Falls back to an empty bar when the property is absent, which is the
+     honest rendering of a zero value. */
+  width: var(--bar-size, 0%);
+  transition: width 0.3s ease;
+}
+
+/* Zero-value bars keep the track visible but draw a hairline so the row does
+   not read as a rendering failure. */
+.chart-bar__fill--empty {
+  width: 2px;
+  background-color: var(--color-outline-variant);
+}
+
+/**
+ * Vertical column variant for the daily sales trend on the branch dashboard.
+ * Columns grow from the baseline, so height rather than width is driven.
+ */
+.chart-columns {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.375rem;
+  height: 12rem;
+  padding-top: 0.5rem;
+}
+
+.chart-column {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.375rem;
+  min-width: 0;
+  height: 100%;
+}
+
+.chart-column__track {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  height: 100%;
+}
+
+.chart-column__fill {
+  width: 100%;
+  min-height: 2px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background-color: var(--color-primary);
+  height: var(--bar-size, 0%);
+}
+
+.chart-column__label {
+  font-family: var(--font-data-mono);
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--color-on-surface-variant);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Axis strip under a chart, separated by a hairline. */
+.chart-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-outline-variant) 40%, transparent);
+  font-family: var(--font-data-mono);
+  font-size: 10px;
+  line-height: 14px;
+  color: var(--color-on-surface-variant);
+}
+
+/* Caption naming the unit a chart is measured in — required because a report
+   must never leave the reader guessing whether a bar is money or grams. */
+.chart-unit {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-variant);
+}

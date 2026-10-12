@@ -1,0 +1,175 @@
+/**
+ * Select2 skin — same compact chrome as .input-field.
+ *
+ * Select2 injects its own markup beside each native <select>. Default Select2
+ * colours are replaced with design tokens so the widget matches the rest of
+ * the admin forms. The vendor stylesheet is imported first from app.scss.
+ */
+
+.select2-container {
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm-line);
+  color: var(--color-on-surface);
+}
+
+/*
+ * The closed widget sits next to the native <select> and must fill its
+ * form cell. Do not put width: 100% on every .select2-container — Select2
+ * also appends an open-menu host to <body> with a left offset, and 100% of
+ * the viewport plus that offset creates a page-wide horizontal scrollbar.
+ */
+select.input-field + .select2-container,
+select[data-select-search] + .select2-container {
+  width: 100% !important;
+  max-width: 100%;
+}
+
+/* Floating menu host: auto width so it only spans the dropdown itself. */
+.select2-container.select2-container--open:has(> .select2-dropdown) {
+  width: auto !important;
+  max-width: none;
+}
+
+.select2-container--default .select2-selection--single {
+  height: var(--control-height);
+  padding: 0 0.75rem;
+  background-color: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-lg);
+  outline: none;
+  display: flex;
+  align-items: center;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+  padding: 0 1.5rem 0 0;
+  color: var(--color-on-surface);
+  line-height: calc(var(--control-height) - 2px);
+}
+
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+  color: var(--color-tertiary-fixed-dim);
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: calc(var(--control-height) - 2px);
+  width: 1.75rem;
+  right: 0.15rem;
+  top: 0;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+  border-color: var(--color-on-surface-variant) transparent transparent transparent;
+}
+
+.select2-container--default.select2-container--open .select2-selection--single .select2-selection__arrow b {
+  border-color: transparent transparent var(--color-on-surface-variant) transparent;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__clear {
+  margin-right: 0.35rem;
+  color: var(--color-on-surface-variant);
+  font-weight: 600;
+}
+
+.select2-container--default.select2-container--focus .select2-selection--single,
+.select2-container--default.select2-container--open .select2-selection--single {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+/* Inline validation: the native select keeps .is-invalid; the widget sits next to it. */
+select.input-field.is-invalid + .select2 .select2-selection--single,
+select.input-field.border-error + .select2 .select2-selection--single {
+  border-color: var(--color-error);
+}
+
+select.input-field.is-invalid + .select2.select2-container--focus .select2-selection--single,
+select.input-field.border-error + .select2.select2-container--focus .select2-selection--single {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 1px var(--color-error);
+}
+
+.select2-dropdown {
+  box-sizing: border-box;
+  background-color: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-float);
+  z-index: 80;
+}
+
+.select2-search--dropdown {
+  padding: 0.4rem;
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field {
+  height: var(--control-height);
+  padding: 0 0.75rem;
+  background-color: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface);
+  outline: none;
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+
+.select2-results__options {
+  max-height: 16rem;
+  overflow-x: hidden;
+}
+
+.select2-container--default .select2-results__option {
+  padding: 0.4rem 0.75rem;
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface);
+  overflow-wrap: anywhere;
+}
+
+.select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.select2-container--default .select2-results__option--selected {
+  background-color: var(--color-surface-container);
+  color: var(--color-on-surface);
+}
+
+.select2-container--default .select2-results__message {
+  color: var(--color-on-surface-variant);
+}
+
+.select2-container--default.select2-container--disabled .select2-selection--single {
+  background-color: var(--color-surface-container);
+  cursor: not-allowed;
+}
+
+/* Form cells: the widget fills the field. Filter-bar stays a compact 9.5rem. */
+.form-field .select2-container,
+.field-inline .select2-container {
+  width: 100% !important;
+  max-width: 100%;
+}
+
+/* width: 0 + flex:1 so 100% does not resolve against the whole bar. */
+.filter-bar > .select2-container {
+  flex: 1 1 0;
+  min-width: 0;
+  width: 0 !important;
+  max-width: none;
+}
+
+.form-field .select2-container.select2-container--open:has(> .select2-dropdown),
+.field-inline .select2-container.select2-container--open:has(> .select2-dropdown) {
+  width: auto !important;
+  max-width: none;
+}

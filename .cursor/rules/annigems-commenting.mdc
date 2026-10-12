@@ -1,0 +1,47 @@
+---
+description: Annigems mandatory commenting standards for PHP, Blade, JS, and migrations
+alwaysApply: true
+---
+
+# Annigems — Commenting Requirements
+
+The client requires thorough commenting. Every file must be self-explanatory to a first-time reader. **Never deliver uncommented code.**
+
+## Required minimum
+
+- **Every class:** top docblock — what it does and its responsibility in the system.
+- **Every method:** docblock — purpose, params, return, and side effects (e.g. "also writes a stock movement record").
+- **Non-obvious logic blocks:** inline comment explaining **why**, not just what.
+- **Every migration:** comment on table purpose and non-obvious columns.
+- **Every model relationship:** short comment.
+- **Form Request rules:** comment where a rule is not self-explanatory.
+- **Blade files:** top comment naming the screen; inline comments around complex sections.
+- **JavaScript:** comment every function and every AJAX call (endpoint + expected response).
+
+## Example quality bar
+
+```php
+/**
+ * BranchService
+ *
+ * Handles branch creation, updating, and deactivation. Branches are the
+ * top-level tenant boundary: every user (except SuperAdmin) belongs to
+ * exactly one branch; inventory, sales, and customers are scoped by branch_id.
+ */
+class BranchService
+{
+    /**
+     * Create a new branch.
+     *
+     * Wrapped in a transaction because creation also writes an audit log
+     * entry — both must succeed or neither should.
+     *
+     * @param  array  $data  Validated data from StoreBranchRequest
+     * @return Branch        The newly created branch
+     */
+    public function createBranch(array $data): Branch
+    {
+        // ...
+    }
+}
+```

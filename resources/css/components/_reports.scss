@@ -1,0 +1,272 @@
+/**
+ * Report shell chrome — the report-family switcher, the revenue notice, and
+ * the branch cell used in cross-branch tables.
+ *
+ * Everything visual for a report screen lives here or in the components it
+ * reuses (.panel, .filter-bar, .kpi-*, .table-admin, .empty-state, .chart-*).
+ * No report page carries its own CSS.
+ */
+
+/**
+ * Segmented control switching between report families, per the sub-tab row in
+ * design/branch_performance_reports. Rendered as links so a report is
+ * bookmarkable and so keyboard and screen-reader navigation work unaided.
+ */
+.report-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-self: flex-start;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  margin-bottom: var(--gutter);
+  background-color: var(--color-surface-container-high);
+  border-radius: var(--radius-xl);
+}
+
+.report-tabs__tab {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-lg);
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm-line);
+  color: var(--color-on-surface-variant);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background-color: var(--color-surface-container-highest);
+    color: var(--color-on-surface);
+  }
+}
+
+.report-tabs__tab--active {
+  background-color: var(--color-surface-container-lowest);
+  box-shadow: var(--shadow-float);
+  color: var(--color-primary);
+  font-weight: 500;
+
+  &:hover {
+    background-color: var(--color-surface-container-lowest);
+    color: var(--color-primary);
+  }
+}
+
+/**
+ * Standing notice above every money report.
+ *
+ * The system records no purchase cost, so no figure here is profit or margin.
+ * Saying so on the screen is a requirement, not decoration: an owner reading
+ * "Total Sales" as "money earned" would be reading it wrong.
+ */
+.report-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  margin-bottom: var(--gutter);
+  background-color: var(--color-surface-container-low);
+  border: 1px solid var(--color-outline-variant);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm-line);
+  color: var(--color-on-surface-variant);
+}
+
+.report-notice__icon {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+/* Self-describing header shown above a report and repeated at the top of every
+   export, so a printed or emailed page is never ambiguous about its scope. */
+.report-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: var(--gutter);
+  background-color: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-lg);
+}
+
+.report-meta__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+}
+
+.report-meta__label {
+  font-family: var(--font-label-caps);
+  font-size: var(--text-label-caps);
+  line-height: var(--text-label-caps-line);
+  font-weight: var(--text-label-caps-weight);
+  letter-spacing: var(--text-label-caps-tracking);
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+}
+
+.report-meta__value {
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm-line);
+  color: var(--color-on-surface);
+}
+
+/* Export and print buttons in the report page header. */
+.report-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Section wrapper letting one report screen stack several tables. */
+.report-section {
+  margin-bottom: var(--gutter);
+}
+
+/* Two-thirds chart plus one-third side panel, as in design/branch_reports. */
+.report-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--gutter);
+  margin-bottom: var(--gutter);
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+/**
+ * Three-letter branch avatar beside a branch name in the comparison table.
+ */
+.branch-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.branch-cell__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-lg);
+  background-color: var(--color-primary-fixed);
+  color: var(--color-on-primary-fixed);
+  font-family: var(--font-label-caps);
+  font-size: var(--text-label-caps);
+  font-weight: var(--text-label-caps-weight);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.branch-cell__name {
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  font-weight: 500;
+  color: var(--color-on-surface);
+}
+
+/**
+ * Standalone print page holding a report for PDF output.
+ *
+ * Mirrors .doc-page from _documents.scss, which the invoice and quotation
+ * sheets already use: a grey working surface on screen, a plain white sheet on
+ * paper. A report is landscape-leaning and column-heavy, so it gets its own
+ * page rather than borrowing the A4 portrait invoice sheet.
+ */
+.report-print {
+  min-height: 100vh;
+  padding: var(--gutter);
+  background-color: var(--color-surface-container);
+}
+
+.report-print__page {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+  background-color: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-lg);
+}
+
+.report-print__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--gutter);
+  padding-bottom: 0.75rem;
+  margin-bottom: var(--gutter);
+  border-bottom: 1px solid var(--color-outline-variant);
+}
+
+.report-print__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  margin-top: var(--gutter);
+  border-top: 1px solid var(--color-outline-variant);
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-variant);
+}
+
+/**
+ * Print rules for the PDF surface.
+ *
+ * The PDF export is this same page rendered through the browser's print
+ * pipeline — the convention already used by the invoice and quotation sheets.
+ * Chrome is hidden, tables are allowed to repeat their headers across pages,
+ * and rows are kept from splitting mid-height.
+ */
+@media print {
+  .report-print-hide {
+    display: none !important;
+  }
+
+  .report-print {
+    padding: 0;
+    background-color: transparent;
+  }
+
+  .report-print__page {
+    max-width: none;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .report-notice,
+  .report-meta {
+    break-inside: avoid;
+  }
+
+  .table-admin {
+    thead {
+      /* Repeats the header on every printed page natively. */
+      display: table-header-group;
+    }
+
+    tfoot {
+      display: table-footer-group;
+    }
+
+    tbody tr {
+      break-inside: avoid;
+    }
+
+    thead th {
+      /* Sticky positioning confuses paged media. */
+      position: static;
+    }
+  }
+}

@@ -1,0 +1,36 @@
+/**
+ * Inline alerts / banners.
+ */
+
+.alert {
+  border-radius: var(--radius);
+  border: 1px solid var(--color-outline-variant);
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm-line);
+}
+
+.alert--info {
+  background-color: var(--color-surface-container);
+  color: var(--color-on-surface);
+  border-color: var(--color-outline-variant);
+}
+
+.alert--success {
+  background-color: var(--color-status-available-bg);
+  color: var(--color-status-available);
+  border-color: color-mix(in srgb, var(--color-status-available) 30%, transparent);
+}
+
+.alert--error {
+  background-color: var(--color-error-container);
+  color: var(--color-on-error-container);
+  border-color: color-mix(in srgb, var(--color-error) 30%, transparent);
+}
+
+.alert--warning {
+  background-color: var(--color-status-reserved-bg);
+  color: var(--color-status-reserved);
+  border-color: color-mix(in srgb, var(--color-status-reserved) 30%, transparent);
+}

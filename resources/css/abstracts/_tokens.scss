@@ -1,0 +1,158 @@
+/**
+ * Annigems design tokens
+ *
+ * Single source for palette, type scale, spacing, and radii.
+ * Sourced from design/annigems_administrative_design_system/DESIGN.md.
+ * Components must use these variables — never hardcode hex in Blade.
+ */
+
+:root {
+  /* Typography families */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-headline-sm: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-body-md: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-body-sm: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-label-caps: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-data-mono: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  /* Type scale */
+  --text-display: 24px;
+  --text-display-line: 32px;
+  --text-display-weight: 600;
+  --text-display-tracking: -0.02em;
+
+  --text-headline-sm: 18px;
+  --text-headline-sm-line: 24px;
+  --text-headline-sm-weight: 600;
+
+  --text-body-md: 14px;
+  --text-body-md-line: 20px;
+  --text-body-md-weight: 400;
+
+  --text-body-sm: 13px;
+  --text-body-sm-line: 18px;
+  --text-body-sm-weight: 400;
+
+  --text-label-caps: 11px;
+  --text-label-caps-line: 16px;
+  --text-label-caps-weight: 700;
+  --text-label-caps-tracking: 0.05em;
+
+  --text-data-mono: 13px;
+  --text-data-mono-line: 18px;
+  --text-data-mono-weight: 500;
+
+  /* Surfaces */
+  --color-background: #f6faff;
+  --color-on-background: #141d23;
+  --color-surface: #f6faff;
+  --color-surface-dim: #d2dbe4;
+  --color-surface-bright: #f6faff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #ecf5fe;
+  --color-surface-container: #e6eff8;
+  --color-surface-container-high: #e0e9f2;
+  --color-surface-container-highest: #dbe4ed;
+  --color-surface-variant: #dbe4ed;
+  --color-on-surface: #141d23;
+  --color-on-surface-variant: #4f4535;
+  --color-inverse-surface: #293138;
+  --color-inverse-on-surface: #e9f2fb;
+  --color-outline: #817563;
+  --color-outline-variant: #d3c4af;
+  --color-surface-tint: #7b5800;
+
+  /* Brand */
+  --color-primary: #785600;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #986d00;
+  --color-on-primary-container: #fffbff;
+  --color-inverse-primary: #f7bd48;
+  --color-primary-fixed: #ffdea6;
+  --color-primary-fixed-dim: #f7bd48;
+  --color-on-primary-fixed: #271900;
+  --color-on-primary-fixed-variant: #5d4200;
+
+  --color-secondary: #5d5e61;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #e2e2e5;
+  --color-on-secondary-container: #636467;
+  --color-secondary-fixed: #e2e2e5;
+  --color-secondary-fixed-dim: #c6c6c9;
+  --color-on-secondary-fixed: #1a1c1e;
+  --color-on-secondary-fixed-variant: #454749;
+
+  --color-tertiary: #5a5c5d;
+  --color-on-tertiary: #ffffff;
+  --color-tertiary-container: #737576;
+  --color-on-tertiary-container: #fcfdfe;
+  --color-tertiary-fixed: #e1e3e4;
+  --color-tertiary-fixed-dim: #c5c7c8;
+  --color-on-tertiary-fixed: #191c1d;
+  --color-on-tertiary-fixed-variant: #454748;
+
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  /* Status */
+  --color-status-available: #1b7f4e;
+  --color-status-available-bg: #e6f5ee;
+  --color-status-reserved: #b45309;
+  --color-status-reserved-bg: #fef3c7;
+  --color-status-sold: #b91c1c;
+  --color-status-sold-bg: #fee2e2;
+  --color-status-inactive: #6b7280;
+  --color-status-inactive-bg: #f3f4f6;
+  --color-status-active: #1b7f4e;
+  --color-status-active-bg: #e6f5ee;
+
+  /* Spreadsheet import — Excel's own green, plus the row states used
+     in the import preview so a good row and a broken row read at a glance. */
+  --color-excel: #1d6f42;
+  --color-excel-hover: #175935;
+  --color-on-excel: #ffffff;
+  --color-row-ok-bg: #eaf7ef;
+  --color-row-error-bg: #fdecec;
+
+  /* Layout */
+  --sidebar-width: 260px;
+  --sidebar-width-mini: 4.5rem;
+  --topbar-height: 64px;
+  --gutter: 1rem;
+  --container-padding: 1.5rem;
+  --stack-compact: 0.5rem;
+  --stack-dense: 0.25rem;
+
+  /* Radii */
+  --radius-sm: 0.125rem;
+  --radius: 0.25rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.5rem;
+  --radius-full: 9999px;
+
+  /* Icons */
+  --icon-xs: 14px;
+  --icon-sm: 16px;
+  --icon-md: 20px;
+  --icon-lg: 24px;
+
+  /* Controls */
+  --control-height: 36px;
+  --shadow-float: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-card: 0 8px 30px rgb(0, 0, 0, 0.04);
+
+  /**
+   * Layering.
+   *
+   * The shell chrome (topbar 30, sidebar backdrop 35, sidebar 40) sits above
+   * page content, so anything that must cover the whole screen has to clear
+   * it. Overlays also have to be attached to <body>: the main column creates
+   * its own stacking context, and a z-index set inside it can never rise
+   * above the sidebar no matter how high the number.
+   */
+  --z-overlay: 100;
+  --z-overlay-content: 101;
+}

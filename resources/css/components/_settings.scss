@@ -1,0 +1,308 @@
+/**
+ * Settings screens — dense label | helper | control rows, compact toggle,
+ * and the live print-preview pane on the branch Settings page.
+ *
+ * Visual language follows design/global_settings. Per-group save (not one
+ * giant "Save Configuration") is a spec requirement, so each card is its
+ * own form.
+ */
+
+.settings-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gutter);
+}
+
+.settings-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.settings-card__icon {
+  color: var(--color-primary);
+}
+
+.settings-card__body {
+  padding: 0;
+}
+
+.settings-row {
+  display: grid;
+  grid-template-columns: minmax(10rem, 16rem) 1fr auto;
+  gap: 0.75rem 1rem;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--color-outline-variant);
+
+  &:first-child {
+    border-top: 0;
+  }
+}
+
+.settings-row--child {
+  background-color: var(--color-surface-container-low);
+  padding-left: 1.75rem;
+}
+
+.settings-row__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.settings-row__label {
+  margin: 0;
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  font-weight: 600;
+  color: var(--color-on-surface);
+}
+
+.settings-row__help {
+  margin: 0;
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm-line);
+  color: var(--color-on-surface-variant);
+}
+
+.settings-row__note {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.settings-row__control {
+  min-width: 11rem;
+  justify-self: end;
+}
+
+.settings-row__control .input-field,
+.settings-row__control .form-field {
+  min-width: 11rem;
+}
+
+.settings-row__preview {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.settings-row__preview-img {
+  max-width: 4.5rem;
+  max-height: 2.25rem;
+  object-fit: contain;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-surface-container-lowest);
+}
+
+.settings-card__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--color-outline-variant);
+}
+
+/**
+ * Compact switch from the settings mockup. Colours come from tokens —
+ * never hex in Blade.
+ */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+
+.toggle-switch__input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-switch__slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: var(--color-surface-container-highest);
+  border-radius: 20px;
+  transition: background-color 0.2s ease;
+}
+
+.toggle-switch__slider::before {
+  position: absolute;
+  content: '';
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: var(--color-surface-container-lowest);
+  border-radius: 50%;
+  box-shadow: var(--shadow-float);
+  transition: transform 0.2s ease;
+}
+
+.toggle-switch__input:checked + .toggle-switch__slider {
+  background-color: var(--color-primary);
+}
+
+.toggle-switch__input:checked + .toggle-switch__slider::before {
+  transform: translateX(16px);
+}
+
+.toggle-switch__input:disabled + .toggle-switch__slider {
+  cursor: default;
+  opacity: 0.65;
+}
+
+.settings-readonly {
+  font-family: var(--font-data-mono);
+  font-size: var(--text-data-mono);
+  color: var(--color-on-surface);
+}
+
+.settings-banner {
+  margin-bottom: var(--gutter);
+}
+
+.settings-numbering-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-outline-variant);
+  background-color: var(--color-surface-container-low);
+}
+
+.settings-numbering-preview__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.settings-numbering-preview__label {
+  color: var(--color-on-surface-variant);
+}
+
+.settings-numbering-preview__code {
+  color: var(--color-on-surface);
+}
+
+/**
+ * Live print preview — reuses the document sheet language at a reduced size
+ * so switching label_size / invoice_print_format is visible without a
+ * new PDF library.
+ */
+.settings-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.settings-preview__pane {
+  flex: 1 1 12rem;
+}
+
+.settings-preview__caption {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-label-caps);
+  font-size: var(--text-label-caps);
+  letter-spacing: var(--text-label-caps-tracking);
+  font-weight: var(--text-label-caps-weight);
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+}
+
+.settings-preview__label,
+.settings-preview__sheet {
+  border: 1px solid var(--color-outline-variant);
+  background-color: var(--color-surface-container-lowest);
+  padding: 0.35rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.settings-preview__code {
+  font-family: var(--font-data-mono);
+  font-size: var(--text-data-mono);
+}
+
+.settings-preview__meta {
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.settings-preview__label--small {
+  width: 4.5rem;
+  min-height: 3rem;
+}
+
+.settings-preview__label--medium {
+  width: 7.5rem;
+  min-height: 3.75rem;
+}
+
+.settings-preview__label--large {
+  width: 12rem;
+  min-height: 6rem;
+}
+
+.settings-preview__sheet--a4 {
+  width: 10rem;
+  min-height: 14rem;
+}
+
+.settings-preview__sheet--thermal_80mm {
+  width: 6rem;
+  min-height: 10rem;
+}
+
+.settings-preview__sheet--thermal_58mm {
+  width: 4.5rem;
+  min-height: 9rem;
+}
+
+.settings-rates {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.settings-rate {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.settings-rate__name {
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.settings-rate__value {
+  font-family: var(--font-data-mono);
+  font-size: var(--text-data-mono);
+}
+
+@media (max-width: 720px) {
+  .settings-row {
+    grid-template-columns: 1fr;
+    justify-items: stretch;
+  }
+
+  .settings-row__control {
+    justify-self: start;
+    min-width: 0;
+    width: 100%;
+  }
+}

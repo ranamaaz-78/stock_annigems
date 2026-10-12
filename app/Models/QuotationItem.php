@@ -1,0 +1,98 @@
+<?php
+
+namespace App\Models;
+
+use App\Enums\LineType;
+use App\Enums\MakingChargeType;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+/**
+ * QuotationItem
+ *
+ * One line on a quotation — either a jewellery piece or a loose stone packet.
+ * Snapshots preserve item facts at quote time; pricing fields are editable.
+ */
+class QuotationItem extends Model
+{
+    /**
+     * @var list<string>
+     */
+    protected $fillable = [
+        'quotation_id',
+        'line_type',
+        'jewellery_item_id',
+        'stone_id',
+        'item_code_snapshot',
+        'name_snapshot',
+        'category_snapshot',
+        'metal_snapshot',
+        'purity_snapshot',
+        'purity_id_snapshot',
+        'gross_weight_snapshot',
+        'net_weight_snapshot',
+        'quantity',
+        'gold_rate_applied',
+        'gold_value',
+        'making_charge_type',
+        'making_charge_value',
+        'making_charges',
+        'stone_value',
+        'line_total',
+        'sort_order',
+    ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'line_type' => LineType::class,
+            'gross_weight_snapshot' => 'decimal:3',
+            'net_weight_snapshot' => 'decimal:3',
+            'quantity' => 'integer',
+            'gold_rate_applied' => 'decimal:2',
+            'gold_value' => 'decimal:2',
+            'making_charge_type' => MakingChargeType::class,
+            'making_charge_value' => 'decimal:2',
+            'making_charges' => 'decimal:2',
+            'stone_value' => 'decimal:2',
+            'line_total' => 'decimal:2',
+            'sort_order' => 'integer',
+        ];
+    }
+
+    /**
+     * Parent quotation.
+     */
+    public function quotation(): BelongsTo
+    {
+        return $this->belongsTo(Quotation::class);
+    }
+
+    /**
+     * Source jewellery item when line_type is jewellery_item.
+     */
+    public function jewelleryItem(): BelongsTo
+    {
+        return $this->belongsTo(JewelleryItem::class);
+    }
+
+    /**
+     * Source stone when line_type is loose_stone.
+     */
+    public function stone(): BelongsTo
+    {
+        return $this->belongsTo(Stone::class);
+    }
+
+    /**
+     * Stone sub-rows for jewellery lines with multiple stones.
+     */
+    public function itemStones(): HasMany
+    {
+        return $this->hasMany(QuotationItemStone::class);
+    }
+}

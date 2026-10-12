@@ -1,0 +1,54 @@
+---
+description: Annigems project identity, stack, build order, and absolute rules
+alwaysApply: true
+---
+
+# Annigems — Project Overview
+
+**Project:** Annigems Stock & Invoicing Management System  
+**Type:** Jewellery inventory, POS, invoicing, and management panel  
+**Stack:** Laravel 12 + MySQL + Blade + Tailwind + JavaScript/AJAX  
+**Architecture:** Enterprise layered architecture — not a quick CRUD scaffold
+
+## Core domain rule
+
+Every **jewellery piece** is an **individual, uniquely identifiable inventory item**, NOT a quantity-based stock line. Two rings in the same category can differ in weight, purity, stones, cost, and sale price.
+
+- Never model **jewellery** inventory as `product + quantity`.
+
+**Stones are the exception.** Loose stones are fungible (fifty identical 0.20ct round VS1 G diamonds are interchangeable). Stone inventory is modelled as one row per stone **type** with a quantity. The barcode identifies the packet, not a single grain. Rescanning the same barcode increments quantity.
+
+## Multi-branch
+
+Built for multiple branches from day one (even if only one exists today). Branch scoping must be in the data model and auth layer — never retrofitted later.
+
+## Build order (do not skip ahead)
+
+1. SuperAdmin + Branches
+2. Branch-scoped Auth + Roles/Permissions
+3. Jewellery Items + Barcode/QR
+4. POS + Invoicing
+5. Customers
+6. Settings (global toggles, SuperAdmin)
+7. Reports (Admin only)
+8. Repairs / Transfers
+
+Complete and verify each step before the next. A separate module instruction file is provided per step.
+
+## Absolute rules (never violate)
+
+1. Never model jewellery-piece inventory as quantity-based — every piece is an individual record. Loose stones are quantity-based by type (see Core domain rule).
+2. Never let a user access data outside their branch — enforce at query level, not only UI.
+3. Never put business logic in a controller.
+4. Never skip validation on either frontend or backend.
+5. Never allow a double-click to create a duplicate record.
+6. Never show a raw error or stack trace to the end user.
+7. Never hardcode a status, role, or configurable value that belongs in an enum, config, or settings table.
+8. Never deliver uncommented code.
+9. Never deviate from the design in `design/`, and never duplicate CSS/JS that should be shared assets or Blade components.
+
+## Delivery quality
+
+- No TODOs, placeholders, or dummy data in delivered code.
+- Logic must live in testable service classes.
+- Edge cases handled explicitly — the client will independently test every path.

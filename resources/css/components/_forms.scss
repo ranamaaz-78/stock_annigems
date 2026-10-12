@@ -1,0 +1,297 @@
+/**
+ * Form controls — compact dense fields, labels, errors, icon inputs.
+ */
+
+.form-label {
+  display: block;
+  font-family: var(--font-label-caps);
+  font-size: var(--text-label-caps);
+  line-height: var(--text-label-caps-line);
+  font-weight: var(--text-label-caps-weight);
+  letter-spacing: var(--text-label-caps-tracking);
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+  margin-bottom: var(--stack-dense);
+}
+
+.form-label__required {
+  color: var(--color-error);
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-dense);
+}
+
+.form-error {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--color-error);
+
+  &.is-hidden,
+  &:empty {
+    display: none;
+  }
+}
+
+.form-help {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-on-surface-variant);
+}
+
+.input-field,
+.input-with-icon__field {
+  width: 100%;
+  height: var(--control-height);
+  padding: 0 0.75rem;
+  background-color: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm-line);
+  color: var(--color-on-surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &::placeholder {
+    color: var(--color-tertiary-fixed-dim);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 1px var(--color-primary);
+  }
+
+  &.is-invalid,
+  &.border-error {
+    border-color: var(--color-error);
+
+    &:focus {
+      border-color: var(--color-error);
+      box-shadow: 0 0 0 1px var(--color-error);
+    }
+  }
+}
+
+textarea.input-field {
+  height: auto;
+  padding: 0.5rem 0.75rem;
+  resize: vertical;
+}
+
+select.input-field {
+  appearance: auto;
+}
+
+/* Leading-icon input pattern (login and future forms) */
+.input-with-icon {
+  position: relative;
+  width: 100%;
+}
+
+.input-with-icon__icon {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  color: var(--color-secondary);
+}
+
+.input-with-icon__field {
+  padding-left: 2.25rem;
+}
+
+.form-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-variant);
+  cursor: pointer;
+
+  input[type='checkbox'],
+  input[type='radio'] {
+    width: 1rem;
+    height: 1rem;
+    accent-color: var(--color-primary);
+    border-radius: var(--radius-sm);
+  }
+}
+
+.form-link {
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: var(--color-primary-container);
+  }
+}
+
+/**
+ * Dense multi-column form body. Collapses to one column on small screens so
+ * every module form has identical column behaviour.
+ */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .form-grid--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .form-grid--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .form-grid--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .form-grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .form-grid--4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Field that must span the whole form grid (address, notes). */
+.form-grid__full {
+  grid-column: 1 / -1;
+}
+
+/* Right-aligned submit/cancel row divided from the fields above it. */
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-outline-variant);
+}
+
+/* One complete row: every field shares the bar, nothing wraps or goes 100%. */
+.filter-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: var(--gutter);
+  background-color: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-xl);
+  overflow-x: auto;
+}
+
+.filter-bar__wide,
+.filter-bar > .input-field,
+.filter-bar > select.input-field,
+.filter-bar > .select2-container,
+.filter-bar > div:not(.filter-bar__wide):not(.filter-bar__actions) {
+  flex: 1 1 0;
+  min-width: 0;
+  width: 0;
+  max-width: none;
+}
+
+.filter-bar__wide {
+  flex-grow: 1.4;
+}
+
+.filter-bar > select.select2-hidden-accessible {
+  position: absolute;
+  flex: none;
+  width: 1px;
+  min-width: 0;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+}
+
+.filter-bar .input-with-icon,
+.filter-bar .input-with-icon__field,
+.filter-bar > div:not(.filter-bar__wide):not(.filter-bar__actions) .input-field {
+  width: 100%;
+}
+
+/* Filter bar nested inside a panel body already has that padding below it. */
+.filter-bar--flush {
+  margin-bottom: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.filter-bar__actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/**
+ * USB-scanner field — the one allowed large input (POS / stone intake).
+ */
+.input-field--scan {
+  min-height: 3rem;
+  font-size: 1.25rem;
+  letter-spacing: 0.04em;
+}
+
+.scan-input-wrap.is-ready .input-field--scan {
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.scan-row--flash {
+  animation: scan-row-flash 0.55s ease;
+}
+
+@keyframes scan-row-flash {
+  from {
+    background-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+/* Quantity box in the intake list: narrow, selected on focus. */
+.intake-qty {
+  width: 6rem;
+  font-family: var(--font-data-mono);
+  font-weight: 600;
+}
+
+/* Gram rows in the intake list: the weight box and its g / kg unit. */
+.intake-weight {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.intake-unit {
+  width: 4.25rem;
+}

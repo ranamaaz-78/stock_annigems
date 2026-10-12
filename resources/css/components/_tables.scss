@@ -1,0 +1,318 @@
+/**
+ * Dense admin data tables — operational lists (invoices, customers, inventory).
+ */
+
+.table-admin {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: var(--color-surface-container-low);
+    font-family: var(--font-label-caps);
+    font-size: var(--text-label-caps);
+    line-height: var(--text-label-caps-line);
+    font-weight: var(--text-label-caps-weight);
+    letter-spacing: var(--text-label-caps-tracking);
+    text-transform: uppercase;
+    color: var(--color-on-surface-variant);
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--color-outline-variant);
+    white-space: nowrap;
+  }
+
+  tbody td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-outline-variant) 45%, transparent);
+    font-family: var(--font-body-sm);
+    font-size: var(--text-body-sm);
+    line-height: var(--text-body-sm-line);
+    color: var(--color-on-surface);
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  tbody tr:hover {
+    background-color: color-mix(in srgb, var(--color-surface-container-low) 80%, transparent);
+  }
+
+  tbody tr.table-admin__row--warn {
+    background-color: color-mix(in srgb, var(--color-error-container) 70%, transparent);
+  }
+}
+
+/* Name + code stacked in the leading column (design/customer_management). */
+.table-admin__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.table-admin__mark {
+  flex: 0 0 2rem;
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-family: var(--font-label-caps);
+  font-size: var(--text-label-caps);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.table-admin__mark--image {
+  flex-basis: 2.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  overflow: hidden;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius);
+  background-color: var(--color-surface);
+  box-sizing: border-box;
+  cursor: zoom-in;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.table-admin__copy {
+  min-width: 0;
+}
+
+.table-admin__title {
+  font-weight: 600;
+  color: var(--color-on-surface);
+
+  .form-link {
+    font-weight: 600;
+  }
+}
+
+/* Secondary line inside a cell (item code, stone breakdown). */
+.table-meta {
+  display: block;
+  margin-top: 0.125rem;
+  font-family: var(--font-data-mono);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--color-on-surface-variant);
+}
+
+/* Trailing icon actions — View / print, not a full button. */
+.table-admin__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.125rem;
+}
+
+th.table-admin__actions-col,
+td.table-admin__actions-col {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.table-admin__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-on-surface-variant);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--color-primary);
+    background-color: var(--color-surface-container-high);
+  }
+}
+
+/* Destructive row action (deactivate) — gold hover is replaced by error. */
+.table-admin__action--danger:hover {
+  color: var(--color-error);
+  background-color: var(--color-error-container);
+}
+
+/**
+ * Dense report variant — vertical cell rules and a totals footer, matching the
+ * breakdown table in design/branch_reports.
+ *
+ * A report table is read column-by-column rather than row-by-row, so the
+ * vertical rules genuinely help; they are deliberately absent from the
+ * operational listing tables.
+ */
+.table-admin--dense {
+  thead th,
+  tbody td,
+  tfoot td {
+    padding: 0.5rem 0.75rem;
+  }
+
+  thead th:not(:last-child),
+  tbody td:not(:last-child),
+  tfoot td:not(:last-child) {
+    border-right: 1px solid color-mix(in srgb, var(--color-outline-variant) 50%, transparent);
+  }
+
+  tbody td {
+    font-family: var(--font-data-mono);
+    font-size: var(--text-data-mono);
+    line-height: var(--text-data-mono-line);
+  }
+
+  tfoot {
+    background-color: var(--color-surface-container);
+
+    td {
+      border-top: 2px solid var(--color-outline-variant);
+      font-family: var(--font-data-mono);
+      font-size: var(--text-data-mono);
+      font-weight: 700;
+      color: var(--color-on-surface);
+    }
+  }
+}
+
+/* Numeric column: right-aligned so digits line up for scanning. */
+.table-admin__num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The row's headline figure. */
+.table-admin__num--strong {
+  font-weight: 700;
+}
+
+/* A deduction (discount, void) reads as a negative and is coloured as one. */
+.table-admin__num--negative {
+  color: var(--color-error);
+}
+
+/* Supporting figure that should not compete with the headline number. */
+.table-admin__num--muted {
+  color: var(--color-on-surface-variant);
+}
+
+/* First cell of a report row: the label, in body type rather than mono. */
+.table-admin__label {
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  font-weight: 500;
+}
+
+/* Horizontal scroll wrapper for wide report tables. */
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/**
+ * Stone lot table. A lot has many facts, so the table keeps every column at
+ * a readable width and scrolls sideways inside its panel instead of squeezing
+ * them. The checkbox and Stone columns stay pinned on the left and Actions on
+ * the right, so a row is never read without knowing which stone it is.
+ */
+.table-admin--lots {
+  /* Wide enough that no column is crushed; narrower panels scroll. */
+  min-width: 860px;
+  border-collapse: separate;
+  border-spacing: 0;
+
+  thead th,
+  tbody td {
+    padding: 0.5rem 0.625rem;
+    white-space: nowrap;
+  }
+
+  /* Rows are one line tall, so the figures line up across the screen. */
+  tbody td {
+    border-bottom: 1px solid color-mix(in srgb, var(--color-outline-variant) 45%, transparent);
+  }
+
+  /* The name may wrap; everything else stays on a single line. */
+  .lots-sticky--stone {
+    white-space: normal;
+    min-width: 13.5rem;
+    max-width: 16rem;
+  }
+
+  /* A small icon can sit in a meta line (image code). */
+  .table-meta .icon {
+    vertical-align: -2px;
+    margin-right: 0.125rem;
+  }
+}
+
+/* Pinned columns: opaque so scrolled cells never show through them. */
+.table-admin--lots .lots-sticky {
+  position: sticky;
+  z-index: 5;
+  background-color: var(--color-surface-container-lowest);
+}
+
+.table-admin--lots thead .lots-sticky {
+  z-index: 15;
+  background-color: var(--color-surface-container-low);
+}
+
+.table-admin--lots .lots-sticky--check {
+  left: 0;
+  width: 2.5rem;
+  min-width: 2.5rem;
+  padding-right: 0;
+}
+
+.table-admin--lots .lots-sticky--stone {
+  left: 2.5rem;
+  /* A thin edge shows where the pinned columns end. */
+  box-shadow: 1px 0 0 var(--color-outline-variant);
+}
+
+.table-admin--lots .lots-sticky--actions {
+  right: 0;
+  box-shadow: -1px 0 0 var(--color-outline-variant);
+}
+
+.table-admin--lots tbody tr:hover .lots-sticky {
+  background-color: var(--color-surface-container-low);
+}
+
+/* A sold-out lot is flagged lightly: a faint tint, with the red carried by its on-hand figure. */
+.table-admin--lots tbody tr.table-admin__row--warn {
+  background-color: color-mix(in srgb, var(--color-error-container) 30%, transparent);
+}
+
+.table-admin--lots tbody tr.table-admin__row--warn .lots-sticky {
+  background-color: color-mix(in srgb, var(--color-error-container) 30%, var(--color-surface-container-lowest));
+}
+
+/* Figures get room on their left, so neighbouring numbers never read as one. */
+.table-admin--lots .table-admin__num {
+  padding-left: 1.125rem;
+}
+
+.table-admin--lots tbody tr {
+  height: 3.5rem;
+}

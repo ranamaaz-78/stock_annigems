@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Annigems - Verified Invoice</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "primary-container": "#986d00",
+                  "secondary": "#5d5e61",
+                  "error": "#ba1a1a",
+                  "inverse-surface": "#293138",
+                  "on-background": "#141d23",
+                  "on-error-container": "#93000a",
+                  "on-primary-container": "#fffbff",
+                  "error-container": "#ffdad6",
+                  "surface-container": "#e6eff8",
+                  "surface-container-lowest": "#ffffff",
+                  "on-error": "#ffffff",
+                  "on-primary": "#ffffff",
+                  "on-tertiary-container": "#fcfdfe",
+                  "on-tertiary-fixed-variant": "#454748",
+                  "on-surface": "#141d23",
+                  "surface-variant": "#dbe4ed",
+                  "secondary-fixed-dim": "#c6c6c9",
+                  "surface-container-highest": "#dbe4ed",
+                  "on-secondary-fixed-variant": "#454749",
+                  "on-secondary-fixed": "#1a1c1e",
+                  "on-secondary-container": "#636467",
+                  "on-primary-fixed-variant": "#5d4200",
+                  "surface": "#f6faff",
+                  "outline-variant": "#d3c4af",
+                  "background": "#f6faff",
+                  "surface-container-low": "#ecf5fe",
+                  "inverse-on-surface": "#e9f2fb",
+                  "tertiary-fixed-dim": "#c5c7c8",
+                  "on-tertiary": "#ffffff",
+                  "primary-fixed-dim": "#f7bd48",
+                  "on-secondary": "#ffffff",
+                  "on-tertiary-fixed": "#191c1d",
+                  "on-primary-fixed": "#271900",
+                  "surface-tint": "#7b5800",
+                  "surface-bright": "#f6faff",
+                  "surface-dim": "#d2dbe4",
+                  "on-surface-variant": "#4f4535",
+                  "surface-container-high": "#e0e9f2",
+                  "primary-fixed": "#ffdea6",
+                  "outline": "#817563",
+                  "secondary-container": "#e2e2e5",
+                  "tertiary": "#5a5c5d",
+                  "tertiary-fixed": "#e1e3e4",
+                  "secondary-fixed": "#e2e2e5",
+                  "tertiary-container": "#737576",
+                  "primary": "#785600",
+                  "inverse-primary": "#f7bd48"
+          },
+          "borderRadius": {
+                  "DEFAULT": "0.125rem",
+                  "lg": "0.25rem",
+                  "xl": "0.5rem",
+                  "full": "0.75rem"
+          },
+          "spacing": {
+                  "stack-compact": "0.5rem",
+                  "topbar-height": "64px",
+                  "sidebar-width": "260px",
+                  "gutter": "1rem",
+                  "stack-dense": "0.25rem",
+                  "container-padding": "1.5rem"
+          },
+          "fontFamily": {
+                  "label-caps": ["Inter"],
+                  "display": ["Inter"],
+                  "data-mono": ["Inter"],
+                  "body-sm": ["Inter"],
+                  "body-md": ["Inter"],
+                  "headline-sm": ["Inter"]
+          },
+          "fontSize": {
+                  "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                  "display": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                  "data-mono": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+                  "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                  "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                  "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-surface min-h-screen flex items-center justify-center p-4 md:p-gutter font-sans">
+<main class="w-full max-w-lg bg-surface-container-lowest rounded-xl border border-outline-variant shadow-[0_4px_12px_rgba(0,0,0,0.05)] p-6 md:p-8 flex flex-col gap-8">
+<header class="flex flex-col items-center gap-5 text-center">
+<h1 class="font-headline-sm text-headline-sm text-primary tracking-tight font-bold uppercase">
+         Annigems
+       </h1>
+<div class="inline-flex items-center gap-2 bg-primary-container text-on-primary-container px-5 py-2.5 rounded-full shadow-sm">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="font-label-caps text-label-caps">Verified Invoice</span>
+</div>
+</header>
+<div class="w-full h-px bg-outline-variant/30"></div>
+<section class="flex flex-col sm:flex-row justify-between sm:items-center w-full gap-4 sm:gap-0">
+<div class="flex flex-col gap-stack-dense">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Invoice Number</span>
+<span class="font-data-mono text-data-mono text-on-surface">#INV-8492-AX</span>
+</div>
+<div class="flex flex-col gap-stack-dense sm:text-right">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Date Issued</span>
+<span class="font-body-md text-body-md text-on-surface">Oct 24, 2023</span>
+</div>
+</section>
+<section class="w-full border border-outline-variant rounded-lg overflow-hidden flex flex-col">
+<header class="bg-surface-container-high px-4 py-3 flex justify-between items-center font-label-caps text-label-caps text-on-surface-variant border-b border-outline-variant">
+<div class="flex-1">Item</div>
+<div class="w-24 text-right">Weight</div>
+<div class="w-24 text-right">Total</div>
+</header>
+<div class="px-4 py-4 flex justify-between items-center border-b border-outline-variant/40 bg-surface-container-lowest hover:bg-surface transition-colors duration-200">
+<div class="flex-1 flex flex-col gap-stack-dense pr-2">
+<span class="font-body-sm text-body-sm text-on-surface font-medium">Solitaire Diamond Ring</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant opacity-80">SKU: RG-1029</span>
+</div>
+<div class="w-24 text-right font-data-mono text-data-mono text-on-surface">1.24ct</div>
+<div class="w-24 text-right font-data-mono text-data-mono text-on-surface">$12,400</div>
+</div>
+<div class="px-4 py-4 flex justify-between items-center bg-surface-container-lowest hover:bg-surface transition-colors duration-200">
+<div class="flex-1 flex flex-col gap-stack-dense pr-2">
+<span class="font-body-sm text-body-sm text-on-surface font-medium">Gold Tennis Bracelet</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant opacity-80">SKU: BR-8831</span>
+</div>
+<div class="w-24 text-right font-data-mono text-data-mono text-on-surface">14g (18k)</div>
+<div class="w-24 text-right font-data-mono text-data-mono text-on-surface">$3,150</div>
+</div>
+<footer class="bg-surface-container px-4 py-5 flex justify-between items-center border-t border-outline-variant">
+<span class="font-headline-sm text-headline-sm text-on-surface">Total</span>
+<span class="font-headline-sm text-headline-sm text-primary">$15,550</span>
+</footer>
+</section>
+<footer class="text-center flex flex-col gap-3 items-center mt-2 px-4">
+<span class="material-symbols-outlined text-outline text-[24px]">shield_lock</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+        This document has been securely verified by the Annigems blockchain registry.
+      </p>
+</footer>
+</main>
+</body></html>

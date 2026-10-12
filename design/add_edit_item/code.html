@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Annigems - Add/Edit Jewellery Item</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#986d00",
+                        "secondary": "#5d5e61",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#293138",
+                        "on-background": "#141d23",
+                        "on-error-container": "#93000a",
+                        "on-primary-container": "#fffbff",
+                        "error-container": "#ffdad6",
+                        "surface-container": "#e6eff8",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-container": "#fcfdfe",
+                        "on-tertiary-fixed-variant": "#454748",
+                        "on-surface": "#141d23",
+                        "surface-variant": "#dbe4ed",
+                        "secondary-fixed-dim": "#c6c6c9",
+                        "surface-container-highest": "#dbe4ed",
+                        "on-secondary-fixed-variant": "#454749",
+                        "on-secondary-fixed": "#1a1c1e",
+                        "on-secondary-container": "#636467",
+                        "on-primary-fixed-variant": "#5d4200",
+                        "surface": "#f6faff",
+                        "outline-variant": "#d3c4af",
+                        "background": "#f6faff",
+                        "surface-container-low": "#ecf5fe",
+                        "inverse-on-surface": "#e9f2fb",
+                        "tertiary-fixed-dim": "#c5c7c8",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed-dim": "#f7bd48",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed": "#191c1d",
+                        "on-primary-fixed": "#271900",
+                        "surface-tint": "#7b5800",
+                        "surface-bright": "#f6faff",
+                        "surface-dim": "#d2dbe4",
+                        "on-surface-variant": "#4f4535",
+                        "surface-container-high": "#e0e9f2",
+                        "primary-fixed": "#ffdea6",
+                        "outline": "#817563",
+                        "secondary-container": "#e2e2e5",
+                        "tertiary": "#5a5c5d",
+                        "tertiary-fixed": "#e1e3e4",
+                        "secondary-fixed": "#e2e2e5",
+                        "tertiary-container": "#737576",
+                        "primary": "#785600",
+                        "inverse-primary": "#f7bd48"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "stack-compact": "0.5rem",
+                        "topbar-height": "64px",
+                        "sidebar-width": "260px",
+                        "gutter": "1rem",
+                        "stack-dense": "0.25rem",
+                        "container-padding": "1.5rem"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Inter"],
+                        "display": ["Inter"],
+                        "data-mono": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "display": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "data-mono": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for dense data panels */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #dbe4ed; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #817563; }
+        
+        .form-input {
+            @apply border border-outline-variant rounded px-2.5 py-1.5 font-body-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none text-on-surface bg-surface-container-lowest w-full transition-colors;
+        }
+        .form-input-numeric {
+            @apply form-input font-data-mono text-right;
+        }
+        .form-label {
+            @apply font-label-caps text-label-caps text-on-surface-variant flex items-center justify-between;
+        }
+        .input-group {
+            @apply flex flex-col gap-stack-dense;
+        }
+        .section-header {
+            @apply font-headline-sm text-headline-sm text-on-surface border-b border-outline-variant pb-2 mb-4;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-sm min-h-screen antialiased flex">
+<!-- SideNavBar -->
+<nav class="w-sidebar-width h-screen fixed left-0 top-0 bg-inverse-surface flex flex-col py-6 z-20 transition-all duration-200 ease-in-out hidden md:flex">
+<!-- Brand -->
+<div class="px-6 mb-8 flex flex-col gap-1">
+<h1 class="font-headline-sm text-headline-sm text-primary-fixed tracking-tight">Annigems</h1>
+<span class="font-label-caps text-label-caps text-tertiary-fixed-dim">Luxury Inventory</span>
+</div>
+<!-- Navigation Links -->
+<ul class="flex flex-col flex-1 w-full font-body-md text-body-md">
+<!-- Active Tab: Inventory -->
+<li>
+<a class="flex items-center gap-3 px-6 py-3 bg-primary-container text-on-primary-container border-r-4 border-primary-fixed transition-colors" href="#">
+<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+                    Inventory
+                </a>
+</li>
+<!-- Inactive Tabs -->
+<li>
+<a class="flex items-center gap-3 px-6 py-3 text-on-secondary-fixed-variant hover:text-primary-fixed hover:bg-surface-variant/10 transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+                    Customers
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-6 py-3 text-on-secondary-fixed-variant hover:text-primary-fixed hover:bg-surface-variant/10 transition-colors" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+                    Invoices
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-6 py-3 text-on-secondary-fixed-variant hover:text-primary-fixed hover:bg-surface-variant/10 transition-colors" href="#">
+<span class="material-symbols-outlined">build</span>
+                    Repairs
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-6 py-3 text-on-secondary-fixed-variant hover:text-primary-fixed hover:bg-surface-variant/10 transition-colors" href="#">
+<span class="material-symbols-outlined">analytics</span>
+                    Reports
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-6 py-3 text-on-secondary-fixed-variant hover:text-primary-fixed hover:bg-surface-variant/10 transition-colors mt-auto" href="#">
+<span class="material-symbols-outlined">settings</span>
+                    Settings
+                </a>
+</li>
+</ul>
+</nav>
+<!-- TopNavBar -->
+<header class="h-topbar-height fixed top-0 right-0 left-0 md:left-sidebar-width bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center px-container-padding z-10">
+<div class="flex items-center gap-4">
+<!-- Mobile Menu Toggle (hidden on md) -->
+<button class="md:hidden text-on-surface-variant p-2 -ml-2 rounded-full hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<span class="font-headline-sm text-headline-sm text-primary font-bold hidden sm:block">Annigems Admin</span>
+</div>
+<div class="flex items-center gap-4">
+<!-- Branch Selector -->
+<button class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded border border-outline-variant text-on-surface-variant hover:bg-surface-container-high transition-colors font-label-caps text-label-caps cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined text-[16px]">storefront</span>
+                Branch: Flagship Boutique
+                <span class="material-symbols-outlined text-[16px]">arrow_drop_down</span>
+</button>
+<div class="flex items-center gap-1 border-l border-outline-variant pl-4 ml-2">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-colors cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">help</span>
+</button>
+<div class="ml-2 w-8 h-8 rounded-full bg-surface-variant border border-outline-variant overflow-hidden cursor-pointer active:opacity-80">
+<img alt="Manager Profile" class="w-full h-full object-cover" data-alt="A professional headshot of a boutique manager in formal attire against a neutral gray background. Soft studio lighting. 8k resolution, photorealistic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvNY2510eKvfhniPFLiEpK4b7nJ5u3zGIAN8qJWMKbEJ8B5Dhll8vQSmIbukvaNsQYG92XIo85uKwp-GZPcFytseKhwW4_cmPYS-WIVD7LKmNCVa5aCySSo1j5EoQS5HgPGuC43yJjgplIrSI-JoJkNYnOau3h2QpTa1anXO0SJGKuBBms3OA355psSjgmPWxtQyJxMJTAevm1cUH1s5X9lzFld0aat3fM4jNh63rJjqX8VBQNZYWJNQ"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="w-full md:ml-sidebar-width pt-topbar-height p-container-padding flex flex-col gap-6">
+<!-- Page Header & Actions -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+<div>
+<div class="flex items-center gap-2 text-on-surface-variant mb-1">
+<a class="hover:text-primary flex items-center" href="#"><span class="material-symbols-outlined text-[16px]">arrow_back</span> <span class="font-label-caps text-label-caps ml-1">Back to Inventory</span></a>
+</div>
+<h2 class="font-display text-display text-on-background">Add New Item</h2>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-4 py-2 bg-surface-container-lowest border border-outline text-on-surface rounded font-body-sm font-medium hover:bg-surface-container-high transition-colors">Discard</button>
+<button class="px-4 py-2 bg-primary text-on-primary rounded font-body-sm font-medium hover:bg-primary/90 shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">save</span> Save Item
+                </button>
+</div>
+</div>
+<!-- Density Layout: Grid for Form + Sidebar -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<!-- Main Form Card (Left Col, 8/12) -->
+<div class="lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded shadow-sm p-6 flex flex-col gap-8">
+<!-- Section 1: Basic Info -->
+<section>
+<h3 class="section-header">Basic Info</h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+<div class="input-group">
+<label class="form-label">Category</label>
+<select class="form-input">
+<option>Rings</option>
+<option>Necklaces</option>
+<option>Earrings</option>
+<option>Bracelets</option>
+<option>Watches</option>
+</select>
+</div>
+<div class="input-group">
+<label class="form-label">Sub-Category</label>
+<select class="form-input">
+<option>Engagement</option>
+<option>Wedding Band</option>
+<option>Cocktail</option>
+<option>Solitaire</option>
+</select>
+</div>
+<div class="input-group">
+<label class="form-label">Item Code (SKU) <span class="text-tertiary material-symbols-outlined text-[14px]">info</span></label>
+<input class="form-input font-data-mono" placeholder="Auto-generated" type="text" value="RNG-24-091A"/>
+</div>
+<div class="input-group">
+<label class="form-label">Status</label>
+<select class="form-input text-on-primary-fixed-variant bg-primary-fixed/20 border-primary-fixed/50 font-medium">
+<option>In Stock - Available</option>
+<option>In Transit</option>
+<option>On Memo</option>
+<option>Reserved</option>
+<option>Sold</option>
+</select>
+</div>
+</div>
+</section>
+<!-- Section 2: Metal & Weight -->
+<section>
+<h3 class="section-header">Metal &amp; Weight</h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-gutter">
+<div class="input-group">
+<label class="form-label">Metal Type</label>
+<select class="form-input">
+<option>Gold</option>
+<option>Platinum</option>
+<option>Silver</option>
+<option>Mixed</option>
+</select>
+</div>
+<div class="input-group">
+<label class="form-label">Purity</label>
+<select class="form-input">
+<option>18K</option>
+<option>22K</option>
+<option>24K</option>
+<option>14K</option>
+<option>950 PT</option>
+</select>
+</div>
+<div class="input-group">
+<label class="form-label">Gross Weight <span class="text-[10px] font-normal text-tertiary">(g)</span></label>
+<input class="form-input-numeric" placeholder="0.000" type="text"/>
+</div>
+<div class="input-group">
+<label class="form-label">Stone Weight <span class="text-[10px] font-normal text-tertiary">(ct/g)</span></label>
+<input class="form-input-numeric" placeholder="0.000" type="text"/>
+</div>
+<div class="input-group">
+<label class="form-label text-primary font-bold">Net Weight <span class="text-[10px] font-normal text-tertiary">(g)</span></label>
+<input class="form-input-numeric bg-surface-container-high border-outline" placeholder="0.000" readonly="" type="text"/>
+</div>
+</div>
+</section>
+<!-- Section 3: Stone Details -->
+<section>
+<h3 class="section-header flex justify-between items-center border-b pb-2">
+                        Stone Details
+                        <button class="text-primary font-label-caps text-label-caps flex items-center gap-1 hover:underline"><span class="material-symbols-outlined text-[16px]">add</span> Add Stone</button>
+</h3>
+<div class="bg-surface border border-outline-variant/50 rounded p-4">
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-gutter mb-4">
+<div class="input-group">
+<label class="form-label">Stone Type</label>
+<select class="form-input">
+<option>Diamond (Natural)</option>
+<option>Diamond (Lab)</option>
+<option>Sapphire</option>
+<option>Ruby</option>
+<option>Emerald</option>
+</select>
+</div>
+<div class="input-group">
+<label class="form-label">Shape</label>
+<select class="form-input">
+<option>Round Brilliant</option>
+<option>Princess</option>
+<option>Emerald</option>
+<option>Oval</option>
+<option>Pear</option>
+<option>Cushion</option>
+</select>
+</div>
+<div class="input-group">
+<label class="form-label">Total Carat <span class="text-[10px] font-normal text-tertiary">(ct)</span></label>
+<input class="form-input-numeric" placeholder="0.00" type="text"/>
+</div>
+<div class="input-group">
+<label class="form-label">Stone Value <span class="text-[10px] font-normal text-tertiary">($)</span></label>
+<input class="form-input-numeric" placeholder="0.00" type="text"/>
+</div>
+</div>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-gutter pt-2 border-t border-outline-variant/30">
+<div class="input-group">
+<label class="form-label">Color</label>
+<input class="form-input" placeholder="e.g. D, E, F, G" type="text"/>
+</div>
+<div class="input-group">
+<label class="form-label">Clarity</label>
+<input class="form-input" placeholder="e.g. VVS1, VS2" type="text"/>
+</div>
+<div class="input-group">
+<label class="form-label">Cert. Authority</label>
+<select class="form-input">
+<option>GIA</option>
+<option>IGI</option>
+<option>HRD</option>
+<option>None</option>
+</select>
+</div>
+<div class="input-group">
+<label class="form-label">Certificate No.</label>
+<input class="form-input font-data-mono" placeholder="Enter ID" type="text"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 4: Pricing -->
+<section>
+<h3 class="section-header">Pricing &amp; Acquisition</h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter bg-surface-container-low p-4 rounded border border-outline-variant/30">
+<div class="input-group">
+<label class="form-label">Making Charges <span class="text-[10px] font-normal text-tertiary">($)</span></label>
+<input class="form-input-numeric" placeholder="0.00" type="text"/>
+</div>
+<div class="input-group">
+<label class="form-label">Purchase Cost <span class="text-[10px] font-normal text-tertiary">($)</span></label>
+<input class="form-input-numeric" placeholder="0.00" type="text"/>
+</div>
+<div class="input-group">
+<label class="form-label">Date of Entry</label>
+<input class="form-input text-on-surface-variant" type="date"/>
+</div>
+<div class="input-group">
+<label class="form-label text-primary-container font-bold">Base Sale Price <span class="text-[10px] font-normal text-tertiary">($)</span></label>
+<input class="form-input-numeric border-primary-fixed bg-surface-bright text-lg py-2" placeholder="0.00" type="text"/>
+</div>
+</div>
+</section>
+<div class="pt-4 mt-2 border-t border-outline-variant flex justify-end">
+<p class="font-data-mono text-data-mono text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">history</span> Last saved: Not saved yet
+                    </p>
+</div>
+</div>
+<!-- Media & Codes Card (Right Col, 4/12) -->
+<div class="lg:col-span-4 flex flex-col gap-6">
+<!-- Images Panel -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded shadow-sm p-6">
+<h3 class="section-header flex justify-between items-center">
+                        Media
+                        <span class="font-label-caps text-tertiary">Max 4</span>
+</h3>
+<div class="flex flex-col gap-4">
+<!-- Main Image Placeholder / Upload -->
+<div class="w-full aspect-square rounded border border-outline bg-surface overflow-hidden relative group cursor-pointer hover:border-primary transition-colors">
+<img alt="Main Item Image" class="w-full h-full object-cover" data-alt="A high-end macro photograph of a sparkling diamond engagement ring sitting on a pristine white marble surface. Studio lighting, soft reflections, extremely sharp focus on the central stone. Luxury jewelry advertising style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6L24ZecAhwtYoP5MWceF8jKM82lZ73mAjBhHik4RTFB18nGKi1SEXhgR5bWPA9-xgS2oOLF9pdvcHrXnNpo1ImuKJ1GeXOtpyVwYGXHEgk0ELoK1SDb8K1SW-BsDLWuEXcYoCifMG3gHraKg0iahVn-oNkDEmsxRWw7lOXvpY6sStOmYjHa1GFnFcQVdzzkNHIWXT0_SuDd-5u3SiTqSsVV7hDGC3exS8Iyf6kA_fp-8SkBNd8B9RMA"/>
+<div class="absolute inset-0 bg-inverse-surface/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="bg-surface-container-lowest text-on-surface px-3 py-1.5 rounded font-label-caps text-label-caps flex items-center gap-1 shadow-md">
+<span class="material-symbols-outlined text-[16px]">edit</span> Change Primary
+                                </span>
+</div>
+</div>
+<!-- Thumbnail Grid -->
+<div class="grid grid-cols-3 gap-2">
+<div class="aspect-square rounded border border-outline-variant bg-surface overflow-hidden cursor-pointer hover:border-primary">
+<img alt="Thumbnail 1" class="w-full h-full object-cover opacity-80" data-alt="A side profile view of a diamond engagement ring showing the intricate setting and band details. High key lighting, minimal grey background. Professional jewelry product shot." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNC7jldoOfjEnWFoxuKyLluMRCE_GPgj3Y1azaUcjGA7rlRmFkKLBj3pzeZ5ktjUt-FigLGjZJy8Uq8qZllJYfa61cyDsQNZ30vKbP9xLjZMNW8CEhqiY8NRF0YX7fraPkH0vnNM84KEkJmNIewEuhE9oH5R7ix3NsA1HBOZeHzFwv8DmbJZ2lqbg70o2R73NkbYzyPfgkqsVtt9OCbya17zK3YdIuqg6a2GwqkbrY_5isUgZ4s4ySpQ"/>
+</div>
+<div class="aspect-square rounded border-2 border-dashed border-outline-variant bg-surface-container-high flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-[20px]">add_photo_alternate</span>
+</div>
+<div class="aspect-square rounded border-2 border-dashed border-outline-variant bg-surface-container-high flex flex-col items-center justify-center text-on-surface-variant hover:bg-surface-variant transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-[20px]">add_photo_alternate</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Digital Tags Panel -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded shadow-sm p-6">
+<h3 class="section-header">Digital Tags</h3>
+<div class="flex flex-col gap-6">
+<!-- Barcode Readonly -->
+<div class="flex flex-col gap-2">
+<label class="form-label text-tertiary">Inventory Barcode</label>
+<div class="w-full h-16 bg-surface border border-outline-variant rounded flex items-center justify-center px-4 relative overflow-hidden">
+<!-- CSS mockup of barcode -->
+<div class="flex h-10 w-full justify-between items-end opacity-70">
+<div class="w-1 h-full bg-on-surface"></div><div class="w-0.5 h-full bg-on-surface"></div><div class="w-1 h-full bg-on-surface"></div><div class="w-2 h-full bg-on-surface"></div><div class="w-0.5 h-full bg-on-surface"></div><div class="w-1 h-full bg-on-surface"></div><div class="w-0.5 h-full bg-on-surface"></div><div class="w-1.5 h-full bg-on-surface"></div><div class="w-0.5 h-full bg-on-surface"></div><div class="w-1 h-full bg-on-surface"></div><div class="w-2 h-full bg-on-surface"></div><div class="w-0.5 h-full bg-on-surface"></div><div class="w-1 h-full bg-on-surface"></div><div class="w-1.5 h-full bg-on-surface"></div><div class="w-0.5 h-full bg-on-surface"></div><div class="w-1 h-full bg-on-surface"></div><div class="w-1 h-full bg-on-surface"></div><div class="w-0.5 h-full bg-on-surface"></div>
+</div>
+<div class="absolute inset-0 flex items-center justify-center bg-surface-container-lowest/50 backdrop-blur-[1px]">
+<span class="font-data-mono text-data-mono text-on-surface font-bold bg-surface-container-lowest px-2 py-0.5 rounded border border-outline-variant/30">RNG-24-091A</span>
+</div>
+</div>
+<div class="flex justify-end gap-2">
+<button class="text-primary hover:underline font-label-caps text-label-caps flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">print</span> Print Label</button>
+</div>
+</div>
+<!-- RFID / QR -->
+<div class="flex items-start gap-4 p-3 bg-surface-container-low border border-outline-variant/50 rounded">
+<div class="w-12 h-12 bg-white border border-outline-variant p-1 grid grid-cols-2 grid-rows-2 gap-[1px]">
+<!-- CSS mockup of QR -->
+<div class="bg-on-surface border-2 border-white"></div>
+<div class="bg-on-surface border-2 border-white"></div>
+<div class="bg-on-surface border-2 border-white"></div>
+<div class="bg-primary/80 grid grid-cols-2 gap-[1px]"><div class="bg-on-surface"></div><div class="bg-white"></div><div class="bg-white"></div><div class="bg-on-surface"></div></div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-on-surface">Smart Tag (RFID)</span>
+<span class="font-data-mono text-[11px] text-tertiary">0x89A2F...4B</span>
+<button class="text-primary font-body-sm text-left hover:underline mt-1">Assign Tag</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

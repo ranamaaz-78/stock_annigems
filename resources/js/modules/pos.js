@@ -1,0 +1,1800 @@
+/**
+ * Fullscreen POS: one single-column live document.
+ *
+ * Customer is picked from a typeahead (or typed as a walk-in), scanning or
+ * searching adds a line, qty / rate / making are typed on the sheet, and
+ * Amount is always calculated. Discount and tax live in the totals stack.
+ * Generate saves, prints in place (hidden iframe), and clears the ticket.
+ *
+ * Endpoints:
+ *   GET  customers.search?catalog=1 — customer registry, cached on page load
+ *   POST quotations.lookup         — barcode / short code / unique name
+ *   GET  quotations.search?catalog=1 — addable catalog, cached on page load
+ *   POST quotations.store          — generate quotation (JSON, print_url)
+ *   POST quotations.invoice        — generate invoice after payment modal
+ */
+
+import { attachBarcodeScanner } from './barcode-scanner';
+import { recalculate } from './pricing-calculator';
+import { destroySelects } from './select-search';
+
+/** Short month names for the "d M Y" date format. */
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/**
+ * CSRF token from the layout meta tag.
+ *
+ * @returns {string}
+ */
+function csrfToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+}
+
+/**
+ * JSON fetch with the shared AJAX envelope.
+ *
+ * @param {string} url
+ * @param {RequestInit} [options]
+ */
+async function fetchJson(url, options = {}) {
+    const headers = {
+        Accept: 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': csrfToken(),
+        ...(options.headers || {}),
+    };
+    if (options.body && !(options.body instanceof FormData) && !headers['Content-Type']) {
+        headers['Content-Type'] = 'application/json';
+    }
+    const response = await fetch(url, { ...options, headers });
+    const json = await response.json().catch(() => ({}));
+
+    return { ok: response.ok, status: response.status, json };
+}
+
+/**
+ * Bind the fullscreen POS page. No-op on every other screen.
+ */
+export function bindPos() {
+    const root = document.getElementById('pos-root');
+    if (!root) return;
+
+    /**
+     * Read a JSON data-attribute without letting bad data kill the module.
+     *
+     * @param {string} key
+     * @param {object} fallback
+     */
+    function readJsonDataset(key, fallback) {
+        try {
+            return JSON.parse(root.dataset[key] || 'null') ?? fallback;
+        } catch (error) {
+            console.error(`pos: could not parse data-${key}`, error);
+
+            return fallback;
+        }
+    }
+
+    const config = readJsonDataset('config', {});
+    const scannerConfig = readJsonDataset('scanner', {});
+    const currencySymbol = config.currencySymbol || '';
+    const currencyDecimals = Number(config.currencyDecimals ?? 2);
+    const routes = config.routes || {};
+    const validityDays = Number(config.validityDays ?? 0);
+
+    /**
+     * Format a money amount with the live currency symbol.
+     *
+     * @param {number|string} value
+     */
+    function formatMoney(value) {
+        const amount = Number(value || 0).toFixed(Number.isFinite(currencyDecimals) ? currencyDecimals : 2);
+
+        return `${currencySymbol} ${amount}`.trim();
+    }
+
+    /**
+     * Format without the currency prefix (sheet table cells).
+     *
+     * @param {number|string} value
+     */
+    function formatAmount(value) {
+        return Number(value || 0).toFixed(Number.isFinite(currencyDecimals) ? currencyDecimals : 2);
+    }
+
+    /**
+     * Render an ISO date with the configured date_format so the live sheet
+     * reads the same as the printed one.
+     *
+     * @param {string} iso YYYY-MM-DD
+     * @returns {string}
+     */
+    function formatDate(iso) {
+        const [year, month, day] = String(iso || '').split('-');
+        if (!year || !month || !day) {
+            return iso || '—';
+        }
+
+        if (config.dateFormat === 'Y-m-d') {
+            return `${year}-${month}-${day}`;
+        }
+        if (config.dateFormat === 'd M Y') {
+            return `${day} ${MONTH_NAMES[Number(month) - 1] || month} ${year}`;
+        }
+
+        return `${day}-${month}-${year}`;
+    }
+
+    /**
+     * Add days to an ISO date without drifting across timezones.
+     *
+     * @param {string} iso
+     * @param {number} days
+     * @returns {string}
+     */
+    function addDays(iso, days) {
+        const date = new Date(`${iso}T00:00:00`);
+        if (Number.isNaN(date.getTime())) {
+            return iso;
+        }
+        date.setDate(date.getDate() + days);
+
+        return [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, '0'),
+            String(date.getDate()).padStart(2, '0'),
+        ].join('-');
+    }
+
+    let state = emptyState();
+    let documentKind = 'quotation';
+
+    /**
+     * Fresh ticket: no customer, no lines, tax off, discount off.
+     *
+     * @returns {object}
+     */
+    function emptyState() {
+        return {
+            customer_uuid: null,
+            walkin_name: '',
+            walkin_phone: '',
+            walkin_email: '',
+            customerLocked: false,
+            customer_code: '',
+            quotation_date: config.quotationDate || new Date().toISOString().slice(0, 10),
+            discount_on: false,
+            discount_type: 'none',
+            discount_value: '0',
+            apply_tax: false,
+            notes: '',
+            lines: [],
+        };
+    }
+
+    const els = {
+        phone: root.querySelector('[data-pos-phone]'),
+        name: root.querySelector('[data-pos-name]'),
+        email: root.querySelector('[data-pos-email]'),
+        chip: root.querySelector('[data-customer-chip]'),
+        customerSuggest: root.querySelector('[data-customer-suggest]'),
+        customerWrap: root.querySelector('[data-customer-wrap]'),
+        customerClear: root.querySelector('[data-customer-clear]'),
+        issueDate: root.querySelector('[data-pos-date]'),
+        validUntil: root.querySelector('[data-preview-valid-until]'),
+        validUntilRows: root.querySelectorAll('[data-valid-until-row]'),
+        lines: root.querySelector('[data-lines]'),
+        clearLines: root.querySelector('[data-clear-lines]'),
+        scanInput: root.querySelector('[data-scan-input]'),
+        scanWrap: root.querySelector('[data-scan-wrap]'),
+        scanClear: root.querySelector('[data-scan-clear]'),
+        scanError: root.querySelector('[data-scan-error]'),
+        scanSuggest: root.querySelector('[data-scan-suggest]'),
+        purityNote: root.querySelector('[data-purity-note]'),
+        notes: root.querySelector('[data-doc-notes]'),
+        discountOff: root.querySelector('[data-discount-off]'),
+        toggleDiscount: root.querySelector('[data-toggle-discount]'),
+        discountFields: root.querySelector('[data-discount-fields]'),
+        discountType: root.querySelector('[data-discount-type]'),
+        discountValue: root.querySelector('[data-discount-value]'),
+        clearDiscount: root.querySelector('[data-clear-discount]'),
+        toggleTax: root.querySelector('[data-toggle-tax]'),
+        taxOff: root.querySelector('[data-tax-off]'),
+        taxApplied: root.querySelector('[data-tax-applied]'),
+        taxAppliedLabel: root.querySelector('[data-tax-applied-label]'),
+        clearTax: root.querySelector('[data-clear-tax]'),
+        generateQuote: root.querySelector('[data-generate-quotation]'),
+        generateInvoice: root.querySelector('[data-generate-invoice]'),
+        customerLocked: root.querySelector('[data-customer-locked]'),
+        previewNumber: root.querySelector('[data-preview-number]'),
+        previewCount: root.querySelector('[data-preview-count]'),
+        previewCountLines: root.querySelector('[data-preview-count-lines]'),
+        previewItemsNote: root.querySelector('[data-preview-items-note]'),
+        previewLinesTotal: root.querySelector('[data-preview-lines-total]'),
+        previewSubtotal: root.querySelector('[data-preview-subtotal]'),
+        previewDiscount: root.querySelector('[data-preview-discount]'),
+        previewTax: root.querySelector('[data-preview-tax]'),
+        previewTotalNote: root.querySelector('[data-preview-total-note]'),
+        previewGrandLabel: root.querySelector('[data-preview-grand-label]'),
+        previewGrand: root.querySelector('[data-preview-grand]'),
+        linesFoot: root.querySelector('[data-lines-foot]'),
+        payCustomer: document.querySelector('[data-pay-customer]'),
+        payTotal: document.querySelector('[data-pay-total]'),
+    };
+
+    /**
+     * Keep staff discounts inside the SuperAdmin ceiling before maths runs.
+     */
+    function clampDiscount() {
+        const max = config.maxDiscountPercentage;
+        if (max === null || max === undefined || !config.canDiscount || !state.discount_on) {
+            return;
+        }
+
+        if (state.discount_type === 'percentage' && Number(state.discount_value) > Number(max)) {
+            state.discount_value = String(max);
+            if (els.discountValue) els.discountValue.value = state.discount_value;
+        }
+    }
+
+    /**
+     * Recalc line amounts, then paint the live document (table + totals).
+     */
+    function render() {
+        clampDiscount();
+
+        const taxType = state.apply_tax && config.taxEnabled ? (config.taxType || 'none') : 'none';
+        const taxRate = state.apply_tax && config.taxEnabled ? String(config.taxRate ?? 0) : '0';
+
+        const result = recalculate(state.lines, {
+            discount_type: state.discount_on ? state.discount_type : 'none',
+            discount_value: state.discount_on ? state.discount_value : '0',
+            tax_type: taxType,
+            tax_rate: taxRate,
+        });
+        state.lines = result.lines;
+
+        renderLines();
+        renderPurityNote();
+        renderDates();
+        renderPreview(result.document);
+        renderAdjustButtons();
+        refreshSuggestionsIfOpen();
+    }
+
+    /**
+     * + Discount / + Tax stay visible until clicked; then the button hides
+     * and the live fields (or applied GST label) show with an X to remove.
+     */
+    function renderAdjustButtons() {
+        els.discountOff?.classList.toggle('is-hidden', state.discount_on);
+        els.discountFields?.classList.toggle('is-hidden', !state.discount_on);
+
+        els.taxOff?.classList.toggle('is-hidden', state.apply_tax);
+        els.taxApplied?.classList.toggle('is-hidden', !state.apply_tax);
+
+        if (els.taxAppliedLabel) {
+            const name = config.taxLabel || 'GST';
+            els.taxAppliedLabel.textContent = config.taxType === 'percentage' && Number(config.taxRate) > 0
+                ? `${name} ${config.taxRate}%`
+                : name;
+        }
+    }
+
+    /**
+     * Issue date drives the quotation validity label. Invoices have no
+     * validity window, so those rows are hidden by setDocumentKind().
+     */
+    function renderDates() {
+        if (els.issueDate && els.issueDate.value !== state.quotation_date) {
+            els.issueDate.value = state.quotation_date;
+        }
+        if (els.validUntil) {
+            els.validUntil.textContent = formatDate(addDays(state.quotation_date, validityDays));
+        }
+    }
+
+    /**
+     * Mixed-purity warning so gold rates are not silently mixed.
+     */
+    function renderPurityNote() {
+        if (!els.purityNote) return;
+        const purities = [...new Set(state.lines.filter((l) => l.line_type === 'jewellery_item').map((l) => l.purity_snapshot).filter(Boolean))];
+        els.purityNote.classList.toggle('hidden', purities.length <= 1);
+        if (purities.length > 1) {
+            els.purityNote.textContent = `This ticket has ${purities.length} different purities (${purities.join(', ')}). Adjust gold rates per line as needed.`;
+        }
+    }
+
+    /**
+     * Escape interpolated snapshot text so item names cannot inject markup.
+     *
+     * @param {unknown} value
+     */
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+        })[char]);
+    }
+
+    /**
+     * Zero is left blank so an unpriced line does not show a dummy 0.00.
+     *
+     * @param {number|string} value
+     * @returns {string}
+     */
+    function amountOrEmpty(value) {
+        const amount = Number(value);
+
+        if (!Number.isFinite(amount) || amount === 0) {
+            return '';
+        }
+
+        return String(value);
+    }
+
+    /**
+     * Compact right-aligned amount field used inside invoice table cells.
+     *
+     * @param {object} attrs
+     */
+    function cellInput({ type = 'number', step = '0.01', min = '0', value, placeholder = '0.00', extra = '', aria }) {
+        return `<input type="${type}" step="${step}" min="${min}" class="pos-cell-input" value="${escapeHtml(value)}" placeholder="${placeholder}" ${extra} aria-label="${escapeHtml(aria)}" />`;
+    }
+
+    /**
+     * Remaining-stock cell. Jewellery pieces are unique, so they only say so;
+     * loose stones show what is left once this ticket is accounted for.
+     *
+     * @param {object} line
+     * @param {number} index
+     * @returns {string}
+     */
+    function stockCell(line, index) {
+        if (line.line_type === 'jewellery_item') {
+            return '<span class="pos-stock__note">Unique piece</span>';
+        }
+
+        const onHand = stoneOnHand(line.stone_id, line.available_quantity);
+        const left = Math.max(0, onHand - ticketStoneQty(line.stone_id));
+
+        return `<span class="pos-line__stock${left < 1 ? ' pos-line__stock--low' : ''}" data-stock-line="${index}">${left}</span>`;
+    }
+
+    /**
+     * Quantity cell. Loose stones get a minus/value/plus stepper capped at the
+     * cached on-hand figure; a jewellery piece is always exactly one.
+     *
+     * @param {object} line
+     * @param {number} index
+     * @returns {string}
+     */
+    function quantityCell(line, index) {
+        if (line.line_type === 'jewellery_item') {
+            return '<span class="pos-chip"><span class="pos-num">1</span> · Unique piece</span>';
+        }
+
+        const qty = parseInt(line.quantity, 10) || 1;
+        const onHand = stoneOnHand(line.stone_id, line.available_quantity);
+        const canAdd = onHand < 1 || qty < onHand;
+
+        return `<span class="pos-qty-step">
+            <button type="button" class="pos-qty-step__btn" data-qty-step="-1" data-line="${index}" aria-label="Decrease quantity" ${qty <= 1 ? 'disabled' : ''}>
+                <span class="material-symbols-outlined icon icon--xs">remove</span>
+            </button>
+            ${cellInput({
+                type: 'number',
+                step: '1',
+                min: '1',
+                value: qty,
+                placeholder: '1',
+                extra: `data-field="quantity" data-line="${index}"${onHand > 0 ? ` max="${onHand}"` : ''}`,
+                aria: 'Quantity',
+            })}
+            <button type="button" class="pos-qty-step__btn" data-qty-step="1" data-line="${index}" aria-label="Increase quantity" ${canAdd ? '' : 'disabled'}>
+                <span class="material-symbols-outlined icon icon--xs">add</span>
+            </button>
+        </span>`;
+    }
+
+    /**
+     * Paint the document line table. Qty / Rate / Making are typed in-cell;
+     * Amount is always calculated (qty × rate + making).
+     */
+    function renderLines() {
+        if (!els.lines) return;
+
+        destroySelects(els.lines);
+        els.clearLines?.classList.toggle('is-hidden', state.lines.length === 0);
+
+        const emptyTicket = state.lines.length === 0;
+        els.linesFoot?.classList.toggle('is-hidden', emptyTicket);
+        els.generateQuote?.toggleAttribute('disabled', emptyTicket);
+        els.generateInvoice?.toggleAttribute('disabled', emptyTicket);
+
+        if (emptyTicket) {
+            els.lines.innerHTML = `<div class="pos-lines__empty">
+                <span class="pos-lines__empty-icon" aria-hidden="true"><span class="material-symbols-outlined icon icon--lg">barcode_scanner</span></span>
+                <p class="pos-lines__empty-title">Scan or search to add the first line.</p>
+                <p class="pos-lines__empty-copy">Jewellery adds as a single unique piece. Loose stones add by quantity.</p>
+            </div>`;
+            return;
+        }
+
+        els.lines.innerHTML = state.lines.map((line, index) => {
+            const isJewellery = line.line_type === 'jewellery_item';
+            const weight = Number(line.net_weight_snapshot);
+            const weightLabel = isJewellery && Number.isFinite(weight) && weight > 0
+                ? `${weight.toFixed(3)}g`
+                : '—';
+
+            // Rate is per unit (qty × rate = amount). Jewellery qty is always 1,
+            // so the rate is the gold + set-stone total for that piece.
+            const rateValue = isJewellery
+                ? (Number(line.gold_value) || 0) + (Number(line.stone_value) || 0)
+                : Number(line.price_per_piece) || 0;
+
+            const stonesHtml = isJewellery
+                ? (line.stones || []).map((stone, stoneIndex) => {
+                    const parts = [stone.stone_name_snapshot || stone.stone_type_snapshot];
+                    if (Number(stone.carat_snapshot) > 0) {
+                        parts.push(`${stone.carat_snapshot}ct`);
+                    }
+
+                    return `<span class="sheet-table__sub pos-qty">
+                        ${escapeHtml(parts.filter(Boolean).join(' · '))} × ${escapeHtml(stone.quantity)}
+                        ${cellInput({
+                            value: amountOrEmpty(stone.price_per_piece),
+                            extra: `data-stone-price data-line="${index}" data-stone="${stoneIndex}"`,
+                            aria: 'Stone price per piece',
+                        })}
+                    </span>`;
+                }).join('')
+                : '';
+
+            const makingCell = isJewellery
+                ? cellInput({
+                    value: amountOrEmpty(line.making_charges),
+                    extra: `data-making data-line="${index}"`,
+                    aria: 'Making charges',
+                })
+                : '<span class="pos-line__weight">—</span>';
+
+            const meta = isJewellery
+                ? [line.purity_snapshot, line.metal_snapshot, 'Jewellery'].filter(Boolean).join(' · ')
+                : [line.category_snapshot, 'Loose stone'].filter(Boolean).join(' · ');
+
+            return `<div class="pos-line" data-line-index="${index}">
+                <span class="pos-line__n">${index + 1}</span>
+                <div class="pos-line__desc">
+                    <span class="pos-thumb" aria-hidden="true"><span class="material-symbols-outlined icon icon--sm">${isJewellery ? 'diamond' : 'grain'}</span></span>
+                    <div>
+                        <p class="pos-line__name">${escapeHtml(line.name_snapshot)}</p>
+                        <p class="pos-line__meta"><span class="pos-line__code">${escapeHtml(line.item_code_snapshot)}</span><span>|</span>${escapeHtml(meta)}</p>
+                        ${stonesHtml ? `<div class="pos-line__stones">${stonesHtml}</div>` : ''}
+                    </div>
+                </div>
+                ${isJewellery ? '<span class="pos-line__stock">Unique</span>' : stockCell(line, index)}
+                <div class="pos-lines__center">${quantityCell(line, index)}</div>
+                <span class="pos-line__weight">${weightLabel}</span>
+                ${cellInput({
+                    value: amountOrEmpty(rateValue),
+                    extra: `data-material data-line="${index}"`,
+                    aria: 'Rate',
+                })}
+                ${makingCell}
+                <span class="pos-line__amount">${escapeHtml(formatAmount(line.line_total))}</span>
+                <button type="button" class="pos-icon-btn" data-remove-line="${index}" aria-label="Remove line">
+                    <span class="material-symbols-outlined icon icon--xs">close</span>
+                </button>
+            </div>`;
+        }).join('');
+
+        bindLineEvents();
+    }
+
+    /**
+     * Qty, rate, making, set-stone price, and remove.
+     * Loose-stone rate is price per piece — Amount is qty × rate.
+     * Jewellery rate is the gold/stone total for that unique piece (qty is 1);
+     * we reverse it into gold_rate so PricingCalculationService still owns the maths.
+     */
+    function bindLineEvents() {
+        els.lines.querySelectorAll('[data-remove-line]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                state.lines.splice(parseInt(btn.dataset.removeLine, 10), 1);
+                render();
+            });
+        });
+
+        els.lines.querySelectorAll('[data-qty-step]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const index = parseInt(btn.dataset.line, 10);
+                const line = state.lines[index];
+                if (!line) return;
+                const next = (parseInt(line.quantity, 10) || 1) + parseInt(btn.dataset.qtyStep, 10);
+                line.quantity = clampStoneQuantity(line, next);
+                render();
+                // The row was re-rendered, so put the cursor back on this stepper.
+                els.lines.querySelector(`[data-qty-step="${btn.dataset.qtyStep}"][data-line="${index}"]`)?.focus();
+            });
+        });
+
+        els.lines.querySelectorAll('[data-field]').forEach((input) => {
+            input.addEventListener('change', () => {
+                const line = state.lines[parseInt(input.dataset.line, 10)];
+                if (input.dataset.field === 'quantity') {
+                    line.quantity = clampStoneQuantity(line, input.value);
+                } else {
+                    line[input.dataset.field] = input.value;
+                }
+                render();
+            });
+        });
+
+        els.lines.querySelectorAll('[data-material]').forEach((input) => {
+            input.addEventListener('change', () => {
+                const line = state.lines[parseInt(input.dataset.line, 10)];
+                const amount = Number(input.value) || 0;
+
+                if (line.line_type === 'loose_stone') {
+                    line.price_per_piece = amount;
+                } else {
+                    const stoneTotal = (line.stones || []).reduce(
+                        (sum, stone) => sum + (Number(stone.total_price) || 0),
+                        0
+                    );
+                    const goldPart = Math.max(0, amount - stoneTotal);
+                    const weight = Number(line.net_weight_snapshot) || 0;
+                    line.gold_rate_applied = weight > 0 ? goldPart / weight : goldPart;
+                }
+
+                render();
+            });
+        });
+
+        els.lines.querySelectorAll('[data-making]').forEach((input) => {
+            input.addEventListener('change', () => {
+                const line = state.lines[parseInt(input.dataset.line, 10)];
+                const value = Number(input.value) || 0;
+                line.making_charge_value = value;
+                line.making_charge_type = value > 0 ? 'fixed' : 'none';
+                render();
+            });
+        });
+
+        els.lines.querySelectorAll('[data-stone-price]').forEach((input) => {
+            input.addEventListener('change', () => {
+                const line = state.lines[parseInt(input.dataset.line, 10)];
+                line.stones[parseInt(input.dataset.stone, 10)].price_per_piece = input.value;
+                render();
+            });
+        });
+    }
+
+    /**
+     * Fill item count and the totals stack. Line rows are owned by
+     * renderLines — this is the same document, not a second preview.
+     *
+     * @param {object} documentTotals
+     */
+    /**
+     * "2 pieces · 3 stones", or "0" when the ticket is empty.
+     *
+     * @returns {string}
+     */
+    function itemsSummary() {
+        let pieces = 0;
+        let stones = 0;
+        state.lines.forEach((line) => {
+            if (line.line_type === 'jewellery_item') {
+                pieces += 1;
+            } else {
+                stones += parseInt(line.quantity, 10) || 0;
+            }
+        });
+        if (!state.lines.length) {
+            return '0';
+        }
+
+        return [
+            pieces ? `${pieces} ${pieces === 1 ? 'piece' : 'pieces'}` : null,
+            stones ? `${stones} ${stones === 1 ? 'stone' : 'stones'}` : null,
+        ].filter(Boolean).join(' · ');
+    }
+
+    function renderPreview(documentTotals) {
+        const summary = itemsSummary();
+        const lineCount = state.lines.length;
+        const money = formatMoney(documentTotals.grand_total);
+
+        if (els.previewCount) els.previewCount.textContent = summary;
+        if (els.previewCountLines) {
+            els.previewCountLines.textContent = `${lineCount} ${lineCount === 1 ? 'line' : 'lines'}`;
+        }
+        if (els.previewItemsNote) els.previewItemsNote.textContent = `${summary} on this ticket`;
+        if (els.previewNumber) els.previewNumber.textContent = 'Draft';
+
+        if (els.previewSubtotal) els.previewSubtotal.textContent = formatMoney(documentTotals.subtotal);
+        if (els.previewLinesTotal) els.previewLinesTotal.textContent = formatMoney(documentTotals.subtotal);
+
+        const discountAmount = Number(documentTotals.discount_amount || 0);
+        if (els.previewDiscount) {
+            els.previewDiscount.textContent = discountAmount > 0 ? `− ${formatMoney(discountAmount)}` : formatMoney(0);
+        }
+
+        const taxAmount = Number(documentTotals.tax_amount || 0);
+        if (els.previewTax) {
+            els.previewTax.textContent = taxAmount > 0 ? `+ ${formatMoney(taxAmount)}` : formatMoney(0);
+        }
+
+        if (els.previewTotalNote) {
+            const notes = [
+                discountAmount > 0 ? `After ${formatMoney(discountAmount)} discount` : null,
+                taxAmount > 0 ? `incl. ${config.taxLabel || 'tax'}` : null,
+            ].filter(Boolean);
+            els.previewTotalNote.textContent = notes.join(', ') || 'No discount or tax applied';
+        }
+
+        if (els.previewGrand) els.previewGrand.textContent = money;
+        if (els.payTotal) els.payTotal.textContent = money;
+        if (els.payCustomer) els.payCustomer.textContent = (els.name?.value || '').trim() || 'Customer';
+    }
+
+    /**
+     * Switch the live totals between a quotation and an invoice.
+     * Invoices carry no validity window, so those meta rows are hidden.
+     *
+     * @param {'quotation'|'invoice'} kind
+     */
+    function setDocumentKind(kind) {
+        documentKind = kind;
+        const isInvoice = kind === 'invoice';
+        if (els.previewGrandLabel) els.previewGrandLabel.textContent = isInvoice ? 'Grand Total' : 'Quotation Total';
+        els.validUntilRows?.forEach((row) => row.classList.toggle('is-hidden', isInvoice));
+    }
+
+    /**
+     * POST a scan, short code, or unique name to quotations.lookup.
+     *
+     * @param {string} code
+     */
+    async function lookupCode(code) {
+        hideSuggestions();
+        const { ok, json } = await fetchJson(routes.lookup, {
+            method: 'POST',
+            body: JSON.stringify({ code }),
+        });
+        if (!ok) {
+            showScanError(json.message || 'Not found');
+            return;
+        }
+        clearScanError();
+        addLine(json.data.line);
+    }
+
+    function showScanError(message) {
+        hideSuggestions();
+        if (!els.scanError) return;
+        els.scanError.textContent = message;
+        els.scanError.classList.remove('is-hidden');
+    }
+
+    function clearScanError() {
+        if (!els.scanError) return;
+        els.scanError.textContent = '';
+        els.scanError.classList.add('is-hidden');
+    }
+
+    /**
+     * Jewellery is unique per ticket; rescanning a stone packet increments qty.
+     *
+     * @param {object} line
+     */
+    function addLine(line) {
+        if (line.line_type === 'jewellery_item') {
+            const exists = state.lines.some((l) => l.jewellery_item_id === line.jewellery_item_id);
+            if (exists) {
+                showScanError(`${line.item_code_snapshot} is already on this ticket.`);
+                return;
+            }
+            const rate = config.rateMap?.[line.purity_id_snapshot];
+            if (rate) line.gold_rate_applied = rate;
+            line.making_charge_type = line.making_charge_type || 'none';
+            line.making_charge_value = line.making_charge_value || '0';
+            state.lines.push(line);
+        } else {
+            if (remainingForStone(line.stone_id, line.available_quantity) < 1) {
+                showScanError(`${line.item_code_snapshot} has no remaining stock on this ticket.`);
+                return;
+            }
+            const idx = state.lines.findIndex((l) => Number(l.stone_id) === Number(line.stone_id));
+            if (idx >= 0) {
+                state.lines[idx].quantity = (parseInt(state.lines[idx].quantity, 10) || 1) + 1;
+            } else {
+                state.lines.push(line);
+            }
+        }
+        render();
+    }
+
+    /**
+     * Fill the customer fields from a registry row and lock the identity so a
+     * cashier cannot silently rename an existing customer from POS.
+     *
+     * @param {{uuid: string, name?: string, phone?: string, email?: string}} customer
+     */
+    function applyCustomer(customer) {
+        state.customer_uuid = customer.uuid;
+        state.customerLocked = true;
+        state.customer_code = customer.customer_code || '';
+        state.walkin_name = customer.name || '';
+        state.walkin_phone = customer.phone || '';
+        state.walkin_email = customer.email || '';
+
+        if (els.phone) {
+            els.phone.value = state.walkin_phone;
+            els.phone.readOnly = true;
+        }
+        if (els.name) {
+            els.name.value = state.walkin_name;
+            els.name.readOnly = true;
+            els.name.required = false;
+        }
+        if (els.email) {
+            els.email.value = state.walkin_email;
+            els.email.readOnly = true;
+        }
+
+        setCustomerChip('existing');
+    }
+
+    /**
+     * Unlock every customer field so the next number can start a new record.
+     *
+     * @param {'idle'|'new'} mode
+     */
+    function unlockCustomer(mode = 'idle') {
+        state.customer_uuid = null;
+        state.customerLocked = false;
+        state.customer_code = '';
+
+        [els.phone, els.name, els.email].forEach((field) => {
+            if (!field) return;
+            field.readOnly = false;
+            field.value = '';
+            field.classList.remove('is-invalid');
+        });
+
+        if (els.name) els.name.required = mode === 'new';
+        state.walkin_name = '';
+        state.walkin_phone = '';
+        state.walkin_email = '';
+
+        hideCustomerSuggestions();
+        setCustomerChip(mode === 'new' ? 'new' : 'idle');
+        render();
+    }
+
+    /**
+     * Status chip next to the customer fields.
+     *
+     * @param {'idle'|'existing'|'new'} kind
+     */
+    function setCustomerChip(kind) {
+        if (!els.chip) return;
+        els.chip.classList.remove('pos-chip--existing', 'pos-chip--new');
+        els.customerLocked?.classList.toggle('is-hidden', kind !== 'existing');
+        if (kind === 'existing') {
+            const code = state.customer_code ? ` · ${state.customer_code}` : '';
+            els.chip.textContent = `Existing${code}`;
+            els.chip.classList.add('pos-chip--existing');
+        } else if (kind === 'new') {
+            els.chip.textContent = 'New customer';
+            els.chip.classList.add('pos-chip--new');
+        } else {
+            els.chip.textContent = 'No customer';
+        }
+    }
+
+    /**
+     * Payload for store / invoice. Snapshots are rebuilt server-side.
+     *
+     * @returns {object}
+     */
+    function buildFormPayload() {
+        const existing = Boolean(state.customer_uuid);
+
+        return {
+            customer_uuid: existing ? state.customer_uuid : null,
+            customer_id: null,
+            walkin_name: existing ? '' : (els.name?.value || '').trim(),
+            walkin_phone: existing ? '' : (els.phone?.value || '').trim(),
+            walkin_email: existing ? '' : (els.email?.value || '').trim(),
+            quotation_date: state.quotation_date,
+            discount_type: state.discount_on ? state.discount_type : 'none',
+            discount_value: state.discount_on ? state.discount_value : '0',
+            tax_type: 'none',
+            tax_rate: 0,
+            apply_tax: Boolean(state.apply_tax),
+            notes: state.notes,
+            lines: state.lines.map((line) => serializeLine(line)),
+        };
+    }
+
+    /**
+     * Strip display-only snapshot fields from one ticket line.
+     *
+     * @param {object} line
+     * @returns {object}
+     */
+    function serializeLine(line) {
+        if (line.line_type === 'loose_stone') {
+            return {
+                line_type: line.line_type,
+                stone_id: Number.isFinite(Number(line.stone_id)) ? Number(line.stone_id) : null,
+                stone_uuid: line.stone_uuid || null,
+                quantity: line.quantity,
+                price_per_piece: line.price_per_piece,
+            };
+        }
+
+        return {
+            line_type: line.line_type,
+            jewellery_item_id: Number.isFinite(Number(line.jewellery_item_id)) ? Number(line.jewellery_item_id) : null,
+            jewellery_item_uuid: line.jewellery_item_uuid || null,
+            quantity: line.quantity,
+            gold_rate_applied: line.gold_rate_applied,
+            making_charge_type: line.making_charge_type,
+            making_charge_value: line.making_charge_value,
+            stones: (line.stones || []).map((stone) => ({
+                jewellery_item_stone_id: stone.jewellery_item_stone_id,
+                price_per_piece: stone.price_per_piece,
+            })),
+        };
+    }
+
+    /**
+     * Phone + name (new) or a looked-up uuid. Email is optional.
+     *
+     * @returns {boolean}
+     */
+    function validateCustomer() {
+        if (!els.phone || !(window.AnnigemsForm?.validateField?.(els.phone) ?? Boolean(els.phone.value.trim()))) {
+            els.phone?.focus();
+            return false;
+        }
+
+        if (state.customer_uuid) {
+            return true;
+        }
+
+        if (els.name) {
+            els.name.required = true;
+            if (!(window.AnnigemsForm?.validateField?.(els.name) ?? Boolean(els.name.value.trim()))) {
+                els.name.focus();
+                return false;
+            }
+        }
+
+        if (els.email && els.email.value.trim()) {
+            if (!(window.AnnigemsForm?.validateField?.(els.email) ?? true)) {
+                els.email.focus();
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Map Laravel field errors onto the customer card. Line errors go to a toast.
+     *
+     * @param {Record<string, string[]|string>} errors
+     * @param {string} [fallback]
+     */
+    function showErrors(errors, fallback) {
+        const map = {
+            walkin_phone: els.phone,
+            walkin_name: els.name,
+            walkin_email: els.email,
+            discount_value: els.discountValue,
+        };
+
+        let mapped = false;
+        Object.entries(errors || {}).forEach(([name, messages]) => {
+            const field = map[name];
+            const message = Array.isArray(messages) ? messages[0] : messages;
+            if (field && message) {
+                window.AnnigemsForm?.validateField?.(field);
+                field.classList.add('is-invalid');
+                const container = field.closest('[data-field]') || field.parentElement;
+                const errorEl = container?.querySelector(`[data-error-for="${field.name}"]`);
+                if (errorEl) {
+                    errorEl.textContent = message;
+                    errorEl.classList.remove('is-hidden', 'hidden');
+                }
+                mapped = true;
+            }
+        });
+
+        const leftover = Object.entries(errors || {})
+            .filter(([name]) => !map[name])
+            .flatMap(([, messages]) => (Array.isArray(messages) ? messages : [messages]))
+            .filter(Boolean);
+
+        if (leftover.length) {
+            window.AnnigemsAlert?.notifyError([...new Set(leftover)].join(' '));
+        } else if (!mapped) {
+            window.AnnigemsAlert?.notifyError(fallback || 'Please check the highlighted fields.');
+        }
+    }
+
+    let printGeneration = 0;
+
+    /**
+     * Hidden iframe that loads quotations.print / invoices.print.
+     *
+     * @returns {HTMLIFrameElement|null}
+     */
+    function printFrame() {
+        return document.getElementById('pos-print-frame');
+    }
+
+    /**
+     * Wait for stylesheet fonts and images inside the print document.
+     *
+     * @param {Document} doc
+     * @returns {Promise<void>}
+     */
+    function waitForPrintAssets(doc) {
+        const fonts = doc.fonts?.ready ?? Promise.resolve();
+        const images = [...doc.images].map((img) => {
+            if (img.complete) {
+                return Promise.resolve();
+            }
+
+            return new Promise((resolve) => {
+                img.addEventListener('load', resolve, { once: true });
+                img.addEventListener('error', resolve, { once: true });
+            });
+        });
+
+        return Promise.all([fonts, ...images]).then(() => undefined);
+    }
+
+    /**
+     * Load the saved document into the hidden iframe and open the print dialog.
+     * GET quotations.print or invoices.print — HTML sheet, same origin.
+     *
+     * @param {string} printUrl
+     */
+    function printDocument(printUrl) {
+        const frame = printFrame();
+        if (!frame) {
+            window.AnnigemsAlert?.notifyError('Document saved. Print could not start.');
+            return;
+        }
+
+        const generation = ++printGeneration;
+        frame.onload = async () => {
+            if (generation !== printGeneration) {
+                return;
+            }
+
+            const win = frame.contentWindow;
+            const doc = frame.contentDocument;
+            if (!win || !doc) {
+                window.AnnigemsAlert?.notifyError('Document saved. Print could not start.');
+                return;
+            }
+
+            try {
+                await waitForPrintAssets(doc);
+                win.focus();
+                win.print();
+            } catch (error) {
+                console.error('pos: print failed', error);
+                window.AnnigemsAlert?.notifyError('Document saved. Print could not start.');
+            }
+        };
+
+        frame.src = printUrl;
+    }
+
+    /**
+     * Print the saved document in place, then clear the ticket. POS never
+     * navigates away and never opens a new tab.
+     *
+     * @param {string} printUrl
+     * @param {string} message
+     */
+    function finishAndPrint(printUrl, message) {
+        window.AnnigemsAlert?.notifySuccess(message);
+        resetTicket();
+        if (printUrl) {
+            printDocument(printUrl);
+        }
+    }
+
+    /**
+     * Clear customer + lines without leaving POS. Also refreshes the catalog
+     * so the saved document's stock is gone from the next ticket's dropdown.
+     */
+    function resetTicket() {
+        state = emptyState();
+        [els.phone, els.name, els.email].forEach((field) => {
+            if (!field) return;
+            field.value = '';
+            field.readOnly = false;
+            field.classList.remove('is-invalid');
+        });
+        if (els.name) els.name.required = false;
+        if (els.discountType) els.discountType.value = 'percentage';
+        if (els.discountValue) els.discountValue.value = '';
+        if (els.notes) els.notes.value = '';
+        hideCustomerSuggestions();
+        setDocumentKind('quotation');
+        setCustomerChip('idle');
+        clearScanError();
+        render();
+        loadCatalog();
+        loadCustomers();
+        els.phone?.focus();
+    }
+
+    /**
+     * POST quotations.store as JSON and print.
+     *
+     * @param {HTMLButtonElement} button
+     */
+    async function generateQuotation(button) {
+        if (!validateCustomer()) return;
+        if (!state.lines.length) {
+            window.AnnigemsAlert?.notifyError('Add at least one item to the quotation.');
+            return;
+        }
+
+        setDocumentKind('quotation');
+
+        const loading = window.AnnigemsButton?.startButtonLoading(button, 'Saving…');
+        const { ok, json } = await fetchJson(routes.store, {
+            method: 'POST',
+            body: JSON.stringify(buildFormPayload()),
+        });
+        loading?.restore();
+
+        if (ok) {
+            finishAndPrint(json.data?.print_url, json.message || 'Quotation saved.');
+        } else if (json.errors && Object.keys(json.errors).length) {
+            showErrors(json.errors, json.message);
+        } else {
+            window.AnnigemsAlert?.notifyError(json.message || 'The quotation could not be saved.');
+        }
+    }
+
+    /**
+     * POST quotations.invoice after payment is chosen.
+     *
+     * @param {HTMLFormElement} form
+     */
+    async function generateInvoice(form) {
+        if (!validateCustomer()) {
+            window.AnnigemsModal?.closeModal('pos-invoice-modal');
+            return;
+        }
+        if (!state.lines.length) {
+            window.AnnigemsModal?.closeModal('pos-invoice-modal');
+            window.AnnigemsAlert?.notifyError('Add at least one item to the invoice.');
+            return;
+        }
+
+        const paymentSelect = form.querySelector('[name="payment_method"]');
+        const paymentOk = paymentSelect
+            ? (window.AnnigemsForm?.validateField?.(paymentSelect) ?? Boolean(paymentSelect.value))
+            : false;
+        if (!paymentOk) {
+            return;
+        }
+
+        setDocumentKind('invoice');
+
+        const submitBtn = form.querySelector('[type="submit"]');
+        const loading = window.AnnigemsButton?.startButtonLoading(submitBtn, 'Saving…');
+        const payload = {
+            ...buildFormPayload(),
+            payment_method: paymentSelect.value,
+            payment_reference: form.querySelector('[name="payment_reference"]')?.value || '',
+        };
+        const { ok, json } = await fetchJson(routes.invoice, {
+            method: 'POST',
+            body: JSON.stringify(payload),
+        });
+        loading?.restore();
+
+        if (ok) {
+            window.AnnigemsModal?.closeModal('pos-invoice-modal');
+            form.reset();
+            finishAndPrint(json.data?.print_url, json.message || 'Invoice created.');
+        } else if (json.errors && Object.keys(json.errors).length) {
+            showErrors(json.errors, json.message);
+        } else {
+            window.AnnigemsAlert?.notifyError(json.message || 'The invoice could not be created.');
+        }
+    }
+
+    els.phone?.addEventListener('input', () => {
+        // Editing the number drops the previous match. The list is filtered
+        // from the page-load cache, so this does not call the server.
+        state.customer_uuid = null;
+        state.customerLocked = false;
+        state.customer_code = '';
+        if (els.name) {
+            els.name.readOnly = false;
+            els.name.required = true;
+        }
+        if (els.email) els.email.readOnly = false;
+        els.customerLocked?.classList.add('is-hidden');
+        state.walkin_phone = els.phone.value;
+        filterCustomers(els.phone.value);
+    });
+
+    els.name?.addEventListener('input', () => {
+        state.walkin_name = els.name.value;
+    });
+    els.email?.addEventListener('input', () => {
+        state.walkin_email = els.email.value;
+    });
+
+    els.customerClear?.addEventListener('click', () => {
+        unlockCustomer('idle');
+        els.phone?.focus();
+    });
+
+    els.issueDate?.addEventListener('change', () => {
+        state.quotation_date = els.issueDate.value || state.quotation_date;
+        render();
+    });
+
+    els.clearLines?.addEventListener('click', () => {
+        if (!state.lines.length) return;
+        state.lines = [];
+        clearScanError();
+        render();
+    });
+
+    els.notes?.addEventListener('input', () => {
+        state.notes = els.notes.value;
+    });
+
+    els.toggleDiscount?.addEventListener('click', () => {
+        state.discount_on = true;
+        state.discount_type = els.discountType?.value || 'percentage';
+        state.discount_value = els.discountValue?.value || '0';
+        render();
+        els.discountValue?.focus();
+    });
+
+    els.clearDiscount?.addEventListener('click', () => {
+        state.discount_on = false;
+        state.discount_type = 'none';
+        state.discount_value = '0';
+        if (els.discountValue) els.discountValue.value = '';
+        render();
+    });
+
+    els.discountType?.addEventListener('change', () => {
+        state.discount_type = els.discountType.value;
+        render();
+    });
+    els.discountValue?.addEventListener('change', () => {
+        state.discount_value = els.discountValue.value || '0';
+        render();
+    });
+
+    els.toggleTax?.addEventListener('click', () => {
+        state.apply_tax = true;
+        render();
+    });
+
+    els.clearTax?.addEventListener('click', () => {
+        state.apply_tax = false;
+        render();
+    });
+
+    els.generateQuote?.addEventListener('click', (event) => {
+        event.preventDefault();
+        generateQuotation(els.generateQuote);
+    });
+
+    els.generateInvoice?.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (!validateCustomer()) return;
+        if (!state.lines.length) {
+            window.AnnigemsAlert?.notifyError('Add at least one item to the invoice.');
+            return;
+        }
+        setDocumentKind('invoice');
+        window.AnnigemsModal?.openModal('pos-invoice-modal');
+    });
+
+    document.querySelector('#pos-invoice-modal [data-modal-close]')?.addEventListener('click', () => {
+        setDocumentKind('quotation');
+    });
+
+    const invoiceForm = document.getElementById('pos-invoice-modal-form');
+    invoiceForm?.addEventListener('submit', (event) => {
+        event.preventDefault();
+        generateInvoice(invoiceForm);
+    });
+
+    // Payment cards write the hidden select the invoice request already reads.
+    document.querySelectorAll('[data-pay-method]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const select = invoiceForm?.querySelector('[name="payment_method"]');
+            if (select) select.value = button.dataset.payMethod || '';
+            document.querySelectorAll('[data-pay-method]').forEach((other) => {
+                const on = other === button;
+                other.classList.toggle('is-on', on);
+                other.setAttribute('aria-pressed', on ? 'true' : 'false');
+            });
+        });
+    });
+
+    /**
+     * Rate, quantity, and customer fields must keep their own keystrokes.
+     *
+     * @param {EventTarget|null} el
+     */
+    function isProtectedTarget(el) {
+        if (!(el instanceof HTMLElement)) return false;
+        if (el === els.scanInput) return false;
+
+        return el.matches('input, textarea, select, [contenteditable="true"]');
+    }
+
+    let catalog = [];
+    let suggestions = [];
+    let activeSuggest = 0;
+    let catalogSeq = 0;
+
+    /**
+     * On-hand qty from the page-load catalog (fallback: the line snapshot).
+     *
+     * @param {number|string} stoneId
+     * @param {number|string} [fallback]
+     * @returns {number}
+     */
+    function stoneOnHand(stoneId, fallback) {
+        const row = catalog.find((item) => (
+            item.line_type === 'loose_stone' && Number(item.line?.stone_id) === Number(stoneId)
+        ));
+
+        return Number(row?.line?.available_quantity ?? fallback ?? 0);
+    }
+
+    /**
+     * How many of this stone are already on the live ticket.
+     *
+     * @param {number|string} stoneId
+     * @returns {number}
+     */
+    function ticketStoneQty(stoneId) {
+        return state.lines
+            .filter((line) => Number(line.stone_id) === Number(stoneId))
+            .reduce((sum, line) => sum + (parseInt(line.quantity, 10) || 0), 0);
+    }
+
+    /**
+     * Catalog on-hand minus qty already on this ticket.
+     *
+     * @param {number|string} stoneId
+     * @param {number|string} [fallback]
+     * @returns {number}
+     */
+    function remainingForStone(stoneId, fallback) {
+        return Math.max(0, stoneOnHand(stoneId, fallback) - ticketStoneQty(stoneId));
+    }
+
+    /**
+     * Keep a typed stone qty between 1 and what the cache still has.
+     *
+     * @param {object} line
+     * @param {string|number} value
+     * @returns {number}
+     */
+    function clampStoneQuantity(line, value) {
+        const max = stoneOnHand(line.stone_id, line.available_quantity);
+        let qty = Math.max(1, parseInt(value, 10) || 1);
+        if (max > 0 && qty > max) {
+            qty = max;
+            showScanError(`${line.item_code_snapshot} has only ${max} in stock.`);
+        }
+
+        return qty;
+    }
+
+    /**
+     * Remaining units that can still be added from this catalog row.
+     * Jewellery is unique — 0 once it is already a line.
+     *
+     * @param {object} row
+     * @returns {number}
+     */
+    function remainingForRow(row) {
+        const line = row?.line || {};
+        if (row.line_type === 'jewellery_item') {
+            const id = Number(line.jewellery_item_id);
+
+            return state.lines.some((item) => Number(item.jewellery_item_id) === id) ? 0 : 1;
+        }
+
+        return remainingForStone(line.stone_id, line.available_quantity);
+    }
+
+    /**
+     * Position a fixed dropdown under its field. Fixed placement keeps the
+     * panel out of the scrolling canvas so it is never clipped.
+     *
+     * @param {HTMLElement|null} wrap
+     * @param {HTMLElement|null} panel
+     */
+    function positionPanel(wrap, panel) {
+        if (!wrap || !panel) return;
+        const rect = wrap.getBoundingClientRect();
+        panel.style.left = `${rect.left}px`;
+        panel.style.width = `${rect.width}px`;
+        panel.style.top = `${rect.bottom + 4}px`;
+    }
+
+    /**
+     * Show or hide a dropdown panel and keep aria-expanded truthful.
+     *
+     * @param {HTMLElement|null} panel
+     * @param {HTMLInputElement|null} input
+     * @param {boolean} open
+     */
+    function togglePanel(panel, input, open) {
+        if (!panel) return;
+        panel.classList.toggle('is-hidden', !open);
+        panel.hidden = !open;
+        if (!open) panel.innerHTML = '';
+        input?.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    /**
+     * One typeahead row: bold title, mono meta line, trailing badge.
+     *
+     * @param {object} row
+     * @param {number} index
+     * @param {number} active
+     * @returns {string}
+     */
+    /**
+     * Up to two initials for a customer row avatar.
+     *
+     * @param {string} name
+     * @returns {string}
+     */
+    function initials(name) {
+        const letters = String(name || '').trim().split(/\s+/).filter(Boolean).slice(0, 2);
+
+        return letters.map((word) => word.charAt(0)).join('').toUpperCase() || '—';
+    }
+
+    function suggestRow(row, index, active) {
+        const lead = row.initials
+            ? `<span class="pos-suggest__lead">${escapeHtml(row.initials)}</span>`
+            : (row.icon
+                ? `<span class="pos-thumb"><span class="material-symbols-outlined icon icon--sm">${escapeHtml(row.icon)}</span></span>`
+                : '');
+        const code = row.code && row.icon
+            ? `<span class="pos-suggest__code">${escapeHtml(row.code)}</span>`
+            : '';
+        const badge = row.badge
+            ? `<span class="pos-chip${row.badgeStrong ? ' pos-chip--existing' : ''}">${row.phoneBadge ? '<span class="material-symbols-outlined icon icon--xs">call</span>' : ''}${escapeHtml(row.badge)}</span>`
+            : '';
+
+        return `<li class="pos-suggest__item${row.icon ? ' pos-suggest__cols' : ''}${index === active ? ' is-active' : ''}" role="option" aria-selected="${index === active}" data-suggest-index="${index}">
+            ${lead}
+            ${code}
+            <span class="pos-suggest__main">
+                <span class="pos-suggest__title">${escapeHtml(row.title)}</span>
+                <span class="pos-suggest__meta">${escapeHtml(row.meta)}</span>
+            </span>
+            ${badge}
+        </li>`;
+    }
+
+    /* ------------------------------------------------------ item typeahead ---- */
+
+    /**
+     * Re-filter the open item list so remaining counts stay in sync with the ticket.
+     */
+    function refreshSuggestionsIfOpen() {
+        const term = els.scanInput?.value || '';
+        if (term.trim().length < 1) {
+            return;
+        }
+
+        filterCatalog(term);
+    }
+
+    /**
+     * Close the item typeahead.
+     */
+    function hideSuggestions() {
+        suggestions = [];
+        activeSuggest = 0;
+        togglePanel(els.scanSuggest, els.scanInput, false);
+    }
+
+    /**
+     * Describe one catalog row for the dropdown: code + name on top, the facts
+     * a cashier picks on below, and what is left in stock as a badge.
+     * A jewellery piece is unique, so it only ever reads "Available".
+     *
+     * @param {object} row
+     * @param {number} remaining
+     * @returns {object}
+     */
+    function itemSuggestion(row, remaining) {
+        const line = row.line || {};
+        const code = row.code || line.item_code_snapshot || '';
+        const name = row.title || line.name_snapshot || '';
+        const isJewellery = row.line_type === 'jewellery_item';
+
+        return {
+            ...row,
+            icon: isJewellery ? 'diamond' : 'grain',
+            code,
+            title: name,
+            meta: row.meta || String(row.label || ''),
+            badge: isJewellery ? 'In stock' : `${remaining} in stock`,
+            badgeStrong: true,
+        };
+    }
+
+    /**
+     * Paint the item typeahead. The first row is active so Enter adds it.
+     */
+    function renderSuggestions() {
+        if (!els.scanSuggest) return;
+
+        if (!suggestions.length) {
+            const term = (els.scanInput?.value || '').trim();
+            if (!term) {
+                hideSuggestions();
+                return;
+            }
+            els.scanSuggest.innerHTML = '<li class="pos-suggest__empty">No in-stock item matches. Reserved, sold and sold-out items are hidden.</li>';
+            togglePanel(els.scanSuggest, els.scanInput, true);
+            positionPanel(els.scanWrap, els.scanSuggest);
+            return;
+        }
+
+        els.scanSuggest.innerHTML = suggestions
+            .map((row, index) => suggestRow(row, index, activeSuggest))
+            .join('');
+        togglePanel(els.scanSuggest, els.scanInput, true);
+        positionPanel(els.scanWrap, els.scanSuggest);
+    }
+
+    /**
+     * Add the highlighted (or clicked) search hit, then clear the field and
+     * close the list — a picked option always closes the dropdown.
+     *
+     * @param {number} index
+     */
+    function pickSuggestion(index) {
+        const row = suggestions[index];
+        if (!row?.line) return;
+        clearScanError();
+        hideSuggestions();
+        if (els.scanInput) els.scanInput.value = '';
+        els.scanClear?.classList.add('is-hidden');
+        addLine(JSON.parse(JSON.stringify(row.line)));
+        els.scanInput?.focus();
+    }
+
+    /**
+     * GET quotations.search?catalog=1 — cache every addable jewellery + stone.
+     */
+    async function loadCatalog() {
+        const seq = ++catalogSeq;
+        const { ok, json } = await fetchJson(`${routes.search}?catalog=1`);
+        if (seq !== catalogSeq) return;
+        catalog = ok && Array.isArray(json.data?.items) ? json.data.items : [];
+    }
+
+    /**
+     * Filter the cached catalog in the browser — no request per keystroke.
+     *
+     * @param {string} term
+     * @returns {number} How many rows matched
+     */
+    function filterCatalog(term) {
+        const needle = term.trim().toLowerCase();
+        if (needle.length < 1) {
+            hideSuggestions();
+            return 0;
+        }
+
+        suggestions = catalog.filter((row) => {
+            const haystack = String(row.haystack || row.label || '').toLowerCase();
+
+            return haystack.includes(needle);
+        }).map((row) => {
+            const remaining = remainingForRow(row);
+            if (remaining < 1) {
+                return null;
+            }
+
+            return itemSuggestion(row, remaining);
+        }).filter(Boolean).slice(0, 20);
+        activeSuggest = 0;
+        renderSuggestions();
+
+        return suggestions.length;
+    }
+
+    /**
+     * Enter / Add: pick the focused suggestion, otherwise lookup the typed code.
+     */
+    function submitScan() {
+        if (suggestions.length) {
+            pickSuggestion(activeSuggest);
+            return;
+        }
+        if (!els.scanInput) return;
+
+        if (scannerApi) {
+            scannerApi.submitManual();
+            return;
+        }
+
+        const code = els.scanInput.value.trim();
+        if (code === '') return;
+        lookupCode(code);
+        els.scanInput.value = '';
+    }
+
+    let scannerApi = null;
+
+    if (els.scanInput) {
+        scannerApi = attachBarcodeScanner({
+            input: els.scanInput,
+            config: scannerConfig,
+            onScan: (code) => lookupCode(code),
+            isProtectedTarget,
+            readyWrap: els.scanWrap,
+            enabled: true,
+            allowManualTyping: true,
+            shouldSubmitScan: () => suggestions.length === 0,
+        });
+
+        els.scanInput.addEventListener('input', () => {
+            els.scanClear?.classList.toggle('is-hidden', els.scanInput.value === '');
+            filterCatalog(els.scanInput.value);
+        });
+
+        els.scanInput.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowDown' && suggestions.length) {
+                event.preventDefault();
+                activeSuggest = (activeSuggest + 1) % suggestions.length;
+                renderSuggestions();
+                return;
+            }
+            if (event.key === 'ArrowUp' && suggestions.length) {
+                event.preventDefault();
+                activeSuggest = (activeSuggest - 1 + suggestions.length) % suggestions.length;
+                renderSuggestions();
+                return;
+            }
+            if (event.key === 'Escape') {
+                hideSuggestions();
+                return;
+            }
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            submitScan();
+        });
+
+        els.scanSuggest?.addEventListener('mousedown', (event) => {
+            const item = event.target.closest('[data-suggest-index]');
+            if (!item) return;
+            event.preventDefault();
+            pickSuggestion(parseInt(item.dataset.suggestIndex, 10));
+        });
+
+        els.scanClear?.addEventListener('click', () => {
+            els.scanInput.value = '';
+            els.scanClear.classList.add('is-hidden');
+            hideSuggestions();
+            clearScanError();
+            els.scanInput.focus();
+        });
+
+        root.querySelector('[data-scan-submit]')?.addEventListener('click', submitScan);
+    }
+
+    /* -------------------------------------------------- customer typeahead ---- */
+
+    let customerCatalog = [];
+    let customerHits = [];
+    let activeCustomer = 0;
+    let customerSeq = 0;
+
+    /**
+     * Close the list under the phone field.
+     */
+    function hideCustomerSuggestions() {
+        customerHits = [];
+        activeCustomer = 0;
+        togglePanel(els.customerSuggest, els.phone, false);
+    }
+
+    /**
+     * One cached customer as a dropdown row.
+     *
+     * @param {object} customer
+     * @returns {object}
+     */
+    function customerRow(customer) {
+        return {
+            customer,
+            initials: initials(customer.name),
+            title: customer.name || '—',
+            meta: [customer.customer_code, customer.email].filter(Boolean).join(' · '),
+            badge: customer.phone || '',
+            phoneBadge: Boolean(customer.phone),
+        };
+    }
+
+    /**
+     * Paint matches under the phone field. No matches means a new customer:
+     * the list closes and name plus email stay editable.
+     */
+    function renderCustomerSuggestions() {
+        if (!els.customerSuggest) return;
+
+        if (!customerHits.length) {
+            hideCustomerSuggestions();
+            return;
+        }
+
+        els.customerSuggest.innerHTML = customerHits
+            .map((row, index) => suggestRow(row, index, activeCustomer))
+            .join('');
+        togglePanel(els.customerSuggest, els.phone, true);
+        positionPanel(els.phone, els.customerSuggest);
+    }
+
+    /**
+     * Filter the page-load registry. Digits match the phone even when the
+     * stored number contains spaces.
+     *
+     * @param {string} term
+     */
+    function filterCustomers(term) {
+        const needle = term.trim().toLowerCase();
+        const digits = needle.replace(/\D/g, '');
+        if (needle.length < 2) {
+            hideCustomerSuggestions();
+            setCustomerChip(needle.length ? 'new' : 'idle');
+            return;
+        }
+
+        customerHits = customerCatalog.filter((row) => (
+            row.haystack.includes(needle) || (digits.length >= 2 && row.haystack.includes(digits))
+        )).slice(0, 8).map((row) => customerRow(row));
+        activeCustomer = 0;
+        renderCustomerSuggestions();
+        setCustomerChip(customerHits.length ? 'idle' : 'new');
+    }
+
+    /**
+     * GET customers.search?catalog=1 — one registry payload, then local filter.
+     */
+    async function loadCustomers() {
+        const seq = ++customerSeq;
+        const { ok, json } = await fetchJson(`${routes.customerSearch}?catalog=1`);
+        if (seq !== customerSeq) return;
+
+        const rows = ok && Array.isArray(json.data?.customers) ? json.data.customers : [];
+        customerCatalog = rows.map((customer) => ({
+            ...customer,
+            haystack: [
+                customer.name,
+                customer.phone,
+                String(customer.phone || '').replace(/\D/g, ''),
+                customer.customer_code,
+                customer.email,
+                customer.city,
+            ].filter(Boolean).join(' ').toLowerCase(),
+        }));
+    }
+
+    /**
+     * Fill the card from the highlighted (or clicked) customer, then close.
+     *
+     * @param {number} index
+     */
+    function pickCustomer(index) {
+        const hit = customerHits[index];
+        if (!hit?.customer) return;
+        applyCustomer(hit.customer);
+        hideCustomerSuggestions();
+        render();
+    }
+
+    if (els.phone) {
+        els.phone.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowDown' && customerHits.length) {
+                event.preventDefault();
+                activeCustomer = (activeCustomer + 1) % customerHits.length;
+                renderCustomerSuggestions();
+                return;
+            }
+            if (event.key === 'ArrowUp' && customerHits.length) {
+                event.preventDefault();
+                activeCustomer = (activeCustomer - 1 + customerHits.length) % customerHits.length;
+                renderCustomerSuggestions();
+                return;
+            }
+            if (event.key === 'Escape') {
+                hideCustomerSuggestions();
+                return;
+            }
+            if (event.key !== 'Enter' || !customerHits.length) return;
+            event.preventDefault();
+            pickCustomer(activeCustomer);
+        });
+
+        els.customerSuggest?.addEventListener('mousedown', (event) => {
+            const item = event.target.closest('[data-suggest-index]');
+            if (!item) return;
+            event.preventDefault();
+            pickCustomer(parseInt(item.dataset.suggestIndex, 10));
+        });
+    }
+
+    /* --------------------------------------------- shared dropdown plumbing ---- */
+
+    // Fixed panels must follow their field when the canvas scrolls or resizes.
+    ['resize', 'scroll'].forEach((event) => {
+        window.addEventListener(event, () => {
+            if (suggestions.length) positionPanel(els.scanWrap, els.scanSuggest);
+            if (customerHits.length) positionPanel(els.phone, els.customerSuggest);
+        }, true);
+    });
+
+    // Clicking anywhere outside a field + its panel closes that panel.
+    document.addEventListener('click', (event) => {
+        if (suggestions.length
+            && !els.scanWrap?.contains(event.target)
+            && !els.scanSuggest?.contains(event.target)) {
+            hideSuggestions();
+        }
+        if (customerHits.length
+            && !els.customerWrap?.contains(event.target)
+            && !els.customerSuggest?.contains(event.target)) {
+            hideCustomerSuggestions();
+        }
+    });
+
+    window.addEventListener('beforeunload', (event) => {
+        if (!state.lines.length) return;
+        event.preventDefault();
+        event.returnValue = '';
+    });
+
+    setDocumentKind(documentKind);
+    render();
+    loadCatalog();
+    loadCustomers();
+}

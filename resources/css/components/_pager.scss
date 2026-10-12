@@ -1,0 +1,116 @@
+/**
+ * Pagination (resources/views/vendor/pagination/annigems*.blade.php).
+ * Brand gold for the current page, neutral borders for the rest.
+ */
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.pager--simple {
+  justify-content: flex-end;
+}
+
+.pager__summary {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-variant);
+
+  strong {
+    font-weight: 600;
+    color: var(--color-on-surface);
+  }
+}
+
+.pager__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0 0 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.pager__item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius);
+  background-color: var(--color-surface-container-lowest);
+  font-size: var(--text-body-sm);
+  font-weight: 500;
+  color: var(--color-on-surface);
+  text-decoration: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  &:hover:not(.is-current):not(.is-disabled):not(.pager__item--gap) {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary-fixed);
+    color: var(--color-on-primary-fixed);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  &.is-current {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+    font-weight: 600;
+  }
+
+  &.is-disabled {
+    background-color: var(--color-surface-container-low);
+    color: var(--color-outline);
+    cursor: not-allowed;
+  }
+}
+
+.pager__item--gap {
+  min-width: 1.5rem;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-on-surface-variant);
+}
+
+/* Page links and the "Show" size choice sit together on the right. */
+.pager__tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+.pager__tools .pager__list {
+  margin-left: 0;
+}
+
+.pager__size {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.pager__select {
+  width: auto;
+  min-width: 4.5rem;
+  height: 2rem;
+  padding-top: 0;
+  padding-bottom: 0;
+}

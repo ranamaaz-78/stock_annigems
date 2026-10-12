@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Annigems - Product Details</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-container": "#986d00",
+                      "secondary": "#5d5e61",
+                      "error": "#ba1a1a",
+                      "inverse-surface": "#293138",
+                      "on-background": "#141d23",
+                      "on-error-container": "#93000a",
+                      "on-primary-container": "#fffbff",
+                      "error-container": "#ffdad6",
+                      "surface-container": "#e6eff8",
+                      "surface-container-lowest": "#ffffff",
+                      "on-error": "#ffffff",
+                      "on-primary": "#ffffff",
+                      "on-tertiary-container": "#fcfdfe",
+                      "on-tertiary-fixed-variant": "#454748",
+                      "on-surface": "#141d23",
+                      "surface-variant": "#dbe4ed",
+                      "secondary-fixed-dim": "#c6c6c9",
+                      "surface-container-highest": "#dbe4ed",
+                      "on-secondary-fixed-variant": "#454749",
+                      "on-secondary-fixed": "#1a1c1e",
+                      "on-secondary-container": "#636467",
+                      "on-primary-fixed-variant": "#5d4200",
+                      "surface": "#f6faff",
+                      "outline-variant": "#d3c4af",
+                      "background": "#f6faff",
+                      "surface-container-low": "#ecf5fe",
+                      "inverse-on-surface": "#e9f2fb",
+                      "tertiary-fixed-dim": "#c5c7c8",
+                      "on-tertiary": "#ffffff",
+                      "primary-fixed-dim": "#f7bd48",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-fixed": "#191c1d",
+                      "on-primary-fixed": "#271900",
+                      "surface-tint": "#7b5800",
+                      "surface-bright": "#f6faff",
+                      "surface-dim": "#d2dbe4",
+                      "on-surface-variant": "#4f4535",
+                      "surface-container-high": "#e0e9f2",
+                      "primary-fixed": "#ffdea6",
+                      "outline": "#817563",
+                      "secondary-container": "#e2e2e5",
+                      "tertiary": "#5a5c5d",
+                      "tertiary-fixed": "#e1e3e4",
+                      "secondary-fixed": "#e2e2e5",
+                      "tertiary-container": "#737576",
+                      "primary": "#785600",
+                      "inverse-primary": "#f7bd48"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.125rem",
+                      "lg": "0.25rem",
+                      "xl": "0.5rem",
+                      "full": "0.75rem"
+              },
+              "spacing": {
+                      "stack-compact": "0.5rem",
+                      "topbar-height": "64px",
+                      "sidebar-width": "260px",
+                      "gutter": "1rem",
+                      "stack-dense": "0.25rem",
+                      "container-padding": "1.5rem"
+              },
+              "fontFamily": {
+                      "label-caps": [
+                              "Inter"
+                      ],
+                      "display": [
+                              "Inter"
+                      ],
+                      "data-mono": [
+                              "Inter"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "headline-sm": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "label-caps": [
+                              "11px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "display": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "data-mono": [
+                              "13px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-sm": [
+                              "13px",
+                              {
+                                      "lineHeight": "18px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-sm": [
+                              "18px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen antialiased flex flex-col">
+<!-- Minimalist Header -->
+<header class="bg-surface-container-lowest border-b border-outline-variant h-topbar-height flex items-center justify-center px-container-padding sticky top-0 z-50">
+<h1 class="font-headline-sm text-headline-sm text-primary tracking-tight">Annigems</h1>
+</header>
+<main class="flex-1 w-full max-w-md mx-auto bg-surface-container-lowest">
+<!-- Featured Image -->
+<div class="w-full aspect-square bg-surface-variant relative">
+<img class="w-full h-full object-cover" data-alt="A macro studio photograph of an exquisite emerald-cut diamond ring set in polished 18k yellow gold. The lighting is crisp, cool, and highly controlled, creating sharp, brilliant reflections on the diamond facets and a soft, pristine glow on the gold band. The background is a seamless, pure white void, emphasizing the absolute purity, high value, and luxurious corporate aesthetic of the jewelry piece. The mood is clinical, objective, and deeply trustworthy." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3V8iVFya9xKjaKmMGRFmHqrdnfJItd8TPxtaQ-Q0hILcBEgyCr8iSRR9tWRwpj62SZ6whKKS6flbqAMNG7FXCDPA2PXP3OSMnKVXoRI7ISB0GEdB_0nyHSBJ1c-yQHrbrFRzofEAAmXcRdMjV00AhuC3fJKCfqY6DIiKWCRFy76cbhR8B9yDrcKId0JOo_vdVf_VcwldguEu5SuJjLniwQQAay9ZCUJ9Ava9n0cFzFM2Y7sieRDCbpw"/>
+<!-- Status Badge -->
+<div class="absolute top-4 right-4 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full font-label-caps text-label-caps border border-emerald-200 shadow-sm flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                Available
+            </div>
+</div>
+<!-- Product Header Info -->
+<div class="p-container-padding border-b border-outline-variant">
+<h2 class="font-display text-display text-on-surface mb-2">Emerald Cut Solitaire</h2>
+<div class="flex items-center justify-between">
+<span class="font-data-mono text-data-mono text-on-surface-variant">SKU: AG-8472-E</span>
+<span class="font-headline-sm text-headline-sm text-primary-fixed-variant">$14,500</span>
+</div>
+</div>
+<!-- Attributes List -->
+<div class="p-container-padding">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant mb-4 uppercase">Item Specifications</h3>
+<dl class="flex flex-col gap-4">
+<div class="flex justify-between items-center py-2 border-b border-surface-variant/50">
+<dt class="font-body-sm text-body-sm text-on-surface-variant">Category</dt>
+<dd class="font-body-md text-body-md text-on-surface font-medium">Ring</dd>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-surface-variant/50">
+<dt class="font-body-sm text-body-sm text-on-surface-variant">Metal</dt>
+<dd class="font-body-md text-body-md text-on-surface font-medium">Yellow Gold</dd>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-surface-variant/50">
+<dt class="font-body-sm text-body-sm text-on-surface-variant">Purity</dt>
+<dd class="font-body-md text-body-md text-on-surface font-medium">18k</dd>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-surface-variant/50">
+<dt class="font-body-sm text-body-sm text-on-surface-variant">Total Weight</dt>
+<dd class="font-body-md text-body-md text-on-surface font-medium">4.2g</dd>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-surface-variant/50">
+<dt class="font-body-sm text-body-sm text-on-surface-variant">Main Stone</dt>
+<dd class="font-body-md text-body-md text-on-surface font-medium">Diamond (Natural)</dd>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-surface-variant/50">
+<dt class="font-body-sm text-body-sm text-on-surface-variant">Carat Weight</dt>
+<dd class="font-body-md text-body-md text-on-surface font-medium">1.50ct</dd>
+</div>
+<div class="flex justify-between items-center py-2 border-b border-surface-variant/50">
+<dt class="font-body-sm text-body-sm text-on-surface-variant">Color / Clarity</dt>
+<dd class="font-body-md text-body-md text-on-surface font-medium">G / VS1</dd>
+</div>
+</dl>
+</div>
+<!-- Trust / Verification Section -->
+<div class="p-container-padding bg-surface-container-low mt-4 border-t border-outline-variant flex gap-4 items-start">
+<span class="material-symbols-outlined text-primary text-2xl shrink-0" style="font-variation-settings: 'FILL' 1;">verified</span>
+<div>
+<h4 class="font-body-md text-body-md font-medium text-on-surface mb-1">Authenticity Guaranteed</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">This item has been professionally inspected and verified by Annigems certified gemologists. Certificate available upon request.</p>
+</div>
+</div>
+</main>
+<!-- Sticky Bottom Action (Optional for public page, but good for mobile) -->
+<div class="sticky bottom-0 w-full max-w-md mx-auto bg-surface-container-lowest border-t border-outline-variant p-4 flex gap-4 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+<button class="flex-1 bg-white border border-outline text-on-surface font-body-md text-body-md h-10 rounded-DEFAULT hover:bg-surface-variant transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">chat</span>
+            Inquire
+        </button>
+</div>
+</body></html>

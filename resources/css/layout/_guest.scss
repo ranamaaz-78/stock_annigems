@@ -1,0 +1,49 @@
+/**
+ * Guest auth cards (forgot / change / reset password).
+ */
+
+.guest-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background-color: var(--color-background);
+}
+
+.guest-card {
+  width: 100%;
+  max-width: 28rem;
+  background-color: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-xl);
+  padding: 2rem;
+  box-shadow: var(--shadow-float);
+}
+
+.guest-card__title {
+  margin: 0;
+  color: var(--color-on-surface);
+}
+
+.guest-card__subtitle {
+  margin: 0.25rem 0 1.5rem;
+  color: var(--color-on-surface-variant);
+}
+
+.guest-card__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.guest-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.guest-card__header-text .guest-card__subtitle {
+  margin: 0;
+}

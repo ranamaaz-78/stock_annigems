@@ -1,0 +1,293 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Customer;
+use App\Models\Invoice;
+use App\Models\Quotation;
+use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+
+/**
+ * CustomerService
+ *
+ * Global customer master data. Deliberately not branch-scoped — any branch
+ * may create, search, and edit any customer. Phone uniqueness is system-wide.
+ */
+class CustomerService
+{
+    public function __construct(
+        private CodeSequenceService $codeSequence,
+        private AuditLogService $auditLog,
+    ) {}
+
+    /**
+     * Paginated list with search and counts.
+     *
+     * @param  array{search?: string, status?: string}  $filters
+     */
+    public function paginate(array $filters): LengthAwarePaginator
+    {
+        $query = Customer::query()
+            ->withCount(['quotations', 'invoices'])
+            ->orderByDesc('created_at');
+
+        $this->applySearch($query, $filters);
+
+        if (($filters['status'] ?? '') === 'active') {
+            $query->where('status', true);
+        } elseif (($filters['status'] ?? '') === 'inactive') {
+            $query->where('status', false);
+        }
+
+        return $query->paginate(per_page())->withQueryString();
+    }
+
+    /**
+     * Fast search for quotation customer picker (AJAX).
+     *
+     * @return Collection<int, Customer>
+     */
+    public function search(string $term, int $limit = 15): Collection
+    {
+        $query = Customer::query()->active()->orderBy('name')->limit($limit);
+
+        if (trim($term) !== '') {
+            $this->applySearch($query, ['search' => $term]);
+        }
+
+        return $query->get(['id', 'uuid', 'customer_code', 'name', 'phone', 'email', 'city']);
+    }
+
+    /**
+     * Every active customer for the POS phone field.
+     *
+     * POS loads this once and filters in the browser, the same way the item
+     * catalog works, so typing a phone number does not send a request.
+     *
+     * @return Collection<int, Customer>
+     */
+    public function catalog(int $limit = 2000): Collection
+    {
+        return Customer::query()
+            ->active()
+            ->orderBy('name')
+            ->limit($limit)
+            ->get(['id', 'uuid', 'customer_code', 'name', 'phone', 'email', 'city']);
+    }
+
+    /**
+     * Exact phone match after trim. Used by POS before a document is saved
+     * so an existing name/email can fill the strip without creating a row.
+     */
+    public function findByPhone(string $phone): ?Customer
+    {
+        $phone = trim($phone);
+
+        if ($phone === '') {
+            return null;
+        }
+
+        return Customer::query()->where('phone', $phone)->first();
+    }
+
+    /**
+     * Reuse the customer with this phone, or register a new one.
+     *
+     * Walk-in quotation capture must not duplicate the unique phone index:
+     * the same number always maps to the same customer row. The existing
+     * name is left unchanged when a match is found.
+     *
+     * Unique-constraint races (two cashiers saving the same number together)
+     * are treated as a hit on the row the other request inserted.
+     *
+     * @param  string  $name  Used only when inserting a new customer
+     * @param  string  $phone  Matched exactly after trim (system-wide unique)
+     * @param  string|null  $email  Stored only on insert; existing rows keep theirs
+     */
+    public function findOrCreateByPhone(string $name, string $phone, User $actor, ?string $email = null): Customer
+    {
+        $phone = trim($phone);
+        $name = trim($name);
+        $email = $email !== null ? trim($email) : null;
+        $email = $email === '' ? null : $email;
+
+        $existing = Customer::query()->where('phone', $phone)->first();
+        if ($existing) {
+            return $existing;
+        }
+
+        try {
+            return $this->create([
+                'name' => $name,
+                'phone' => $phone,
+                'email' => $email,
+            ], $actor);
+        } catch (UniqueConstraintViolationException $exception) {
+            $raced = Customer::query()->where('phone', $phone)->first();
+            if ($raced) {
+                return $raced;
+            }
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * Create a new global customer.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function create(array $data, User $actor): Customer
+    {
+        return DB::transaction(function () use ($data, $actor): Customer {
+            $customer = Customer::query()->create([
+                'customer_code' => $this->codeSequence->nextCustomerCode(),
+                'name' => $data['name'],
+                'phone' => $data['phone'],
+                'alternate_phone' => $data['alternate_phone'] ?? null,
+                'email' => $data['email'] ?? null,
+                'cnic' => $data['cnic'] ?? null,
+                'address' => $data['address'] ?? null,
+                'city' => $data['city'] ?? null,
+                'notes' => $data['notes'] ?? null,
+                'status' => true,
+            ]);
+
+            $this->auditLog->log('customer.created', $customer, null, $this->auditPayload($customer), $actor);
+
+            return $customer;
+        });
+    }
+
+    /**
+     * Update customer details.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function update(Customer $customer, array $data, User $actor): Customer
+    {
+        return DB::transaction(function () use ($customer, $data, $actor): Customer {
+            $old = $this->auditPayload($customer);
+
+            $customer->update([
+                'name' => $data['name'],
+                'phone' => $data['phone'],
+                'alternate_phone' => $data['alternate_phone'] ?? null,
+                'email' => $data['email'] ?? null,
+                'cnic' => $data['cnic'] ?? null,
+                'address' => $data['address'] ?? null,
+                'city' => $data['city'] ?? null,
+                'notes' => $data['notes'] ?? null,
+            ]);
+
+            $this->auditLog->log('customer.updated', $customer, $old, $this->auditPayload($customer), $actor);
+
+            return $customer->fresh();
+        });
+    }
+
+    /**
+     * Deactivate when no quotations or invoices exist.
+     */
+    public function deactivate(Customer $customer, User $actor): Customer
+    {
+        if (! $this->canDeactivate($customer)) {
+            throw ValidationException::withMessages([
+                'customer' => 'This customer has quotations or invoices and cannot be deleted. Deactivate only when they have no history, or leave them active.',
+            ]);
+        }
+
+        return DB::transaction(function () use ($customer, $actor): Customer {
+            $old = $this->auditPayload($customer);
+            $customer->update(['status' => false]);
+            $this->auditLog->log('customer.deactivated', $customer, $old, $this->auditPayload($customer), $actor);
+
+            return $customer->fresh();
+        });
+    }
+
+    /**
+     * Whether the customer can be deactivated (always allowed) vs has history.
+     * Spec: cannot delete with history; deactivate is always allowed.
+     */
+    public function hasHistory(Customer $customer): bool
+    {
+        return Quotation::query()->where('customer_id', $customer->id)->exists()
+            || Invoice::query()->where('customer_id', $customer->id)->exists();
+    }
+
+    /**
+     * @deprecated Use hasHistory — deactivation is always permitted per spec.
+     */
+    public function canDeactivate(Customer $customer): bool
+    {
+        return true;
+    }
+
+    /**
+     * Quotation history across all branches for customer detail.
+     */
+    public function quotationHistory(Customer $customer, int $limit = 50): Collection
+    {
+        return Quotation::query()
+            ->withoutGlobalScopes()
+            ->with(['branch:id,name', 'creator'])
+            ->where('customer_id', $customer->id)
+            ->orderByDesc('quotation_date')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Invoice history across all branches for customer detail.
+     */
+    public function invoiceHistory(Customer $customer, int $limit = 50): Collection
+    {
+        return Invoice::query()
+            ->withoutGlobalScopes()
+            ->with(['branch:id,name', 'creator'])
+            ->where('customer_id', $customer->id)
+            ->orderByDesc('invoice_date')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * @param  Builder<Customer>  $query
+     * @param  array{search?: string}  $filters
+     */
+    private function applySearch(Builder $query, array $filters): void
+    {
+        $search = trim((string) ($filters['search'] ?? ''));
+
+        if ($search === '') {
+            return;
+        }
+
+        $query->where(function (Builder $inner) use ($search): void {
+            $inner->where('name', 'like', "%{$search}%")
+                ->orWhere('phone', 'like', "%{$search}%")
+                ->orWhere('customer_code', 'like', "%{$search}%")
+                ->orWhere('cnic', 'like', "%{$search}%");
+        });
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function auditPayload(Customer $customer): array
+    {
+        return [
+            'customer_code' => $customer->customer_code,
+            'name' => $customer->name,
+            'phone' => $customer->phone,
+            'status' => $customer->status,
+        ];
+    }
+}

@@ -1,0 +1,41 @@
+/**
+ * Empty state block for lists/tables with no data.
+ */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3rem 1rem;
+  border: 1px dashed var(--color-outline-variant);
+  border-radius: var(--radius);
+  background-color: var(--color-surface-container-lowest);
+}
+
+.empty-state__icon {
+  margin-bottom: 0.5rem;
+  color: var(--color-on-surface-variant);
+}
+
+.empty-state__title {
+  margin: 0;
+  font-family: var(--font-headline-sm);
+  font-size: var(--text-headline-sm);
+  line-height: var(--text-headline-sm-line);
+  font-weight: var(--text-headline-sm-weight);
+  color: var(--color-on-surface);
+}
+
+.empty-state__message {
+  margin: 0.25rem 0 0;
+  max-width: 28rem;
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.empty-state__actions {
+  margin-top: 1rem;
+}

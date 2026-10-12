@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>401 Unauthorized - Annigems Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-fixed-dim": "#f7bd48",
+                        "tertiary": "#5a5c5d",
+                        "on-primary-container": "#fffbff",
+                        "secondary-container": "#e2e2e5",
+                        "background": "#f6faff",
+                        "surface-container": "#e6eff8",
+                        "on-error-container": "#93000a",
+                        "primary-fixed": "#ffdea6",
+                        "inverse-primary": "#f7bd48",
+                        "surface": "#f6faff",
+                        "surface-container-high": "#e0e9f2",
+                        "surface-tint": "#7b5800",
+                        "on-background": "#141d23",
+                        "outline-variant": "#d3c4af",
+                        "surface-variant": "#dbe4ed",
+                        "on-tertiary-container": "#fcfdfe",
+                        "secondary": "#5d5e61",
+                        "tertiary-fixed-dim": "#c5c7c8",
+                        "inverse-on-surface": "#e9f2fb",
+                        "primary": "#785600",
+                        "surface-container-highest": "#dbe4ed",
+                        "on-secondary": "#ffffff",
+                        "inverse-surface": "#293138",
+                        "primary-container": "#986d00",
+                        "secondary-fixed": "#e2e2e5",
+                        "tertiary-fixed": "#e1e3e4",
+                        "surface-bright": "#f6faff",
+                        "secondary-fixed-dim": "#c6c6c9",
+                        "on-surface-variant": "#4f4535",
+                        "outline": "#817563",
+                        "on-tertiary-fixed": "#191c1d",
+                        "on-surface": "#141d23",
+                        "error": "#ba1a1a",
+                        "on-primary": "#ffffff",
+                        "surface-container-low": "#ecf5fe",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#737576",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#1a1c1e",
+                        "on-secondary-fixed-variant": "#454749",
+                        "on-primary-fixed": "#271900",
+                        "on-tertiary-fixed-variant": "#454748",
+                        "surface-dim": "#d2dbe4",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed-variant": "#5d4200",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-container": "#636467"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    spacing: {
+                        "topbar-height": "64px",
+                        "sidebar-width": "260px",
+                        "stack-dense": "0.25rem",
+                        "gutter": "1rem",
+                        "container-padding": "1.5rem",
+                        "stack-compact": "0.5rem"
+                    },
+                    fontFamily: {
+                        "body-md": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "display": ["Inter"],
+                        "data-mono": ["Inter"]
+                    },
+                    fontSize: {
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                        "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "display": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "data-mono": ["13px", {"lineHeight": "18px", "fontWeight": "500"}]
+                    }
+                }
+            }
+        };
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col relative overflow-hidden">
+<!-- Branding Header -->
+<header class="absolute top-0 w-full h-topbar-height flex items-center justify-center z-50">
+<div class="font-headline-sm text-headline-sm text-primary font-bold tracking-tight">Annigems</div>
+</header>
+<!-- Main Content Area - Takeover Template -->
+<main class="flex-grow flex items-center justify-center px-4 w-full h-full min-h-screen relative z-10">
+<!-- Content Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/30 p-8 md:p-12 w-full max-w-lg flex flex-col items-center text-center">
+<!-- SVG Illustration -->
+<div class="w-48 h-48 mb-8 text-surface-tint opacity-80">
+<svg class="w-full h-full" fill="currentColor" viewbox="0 0 24 24">
+<path d="M4 6V20H20V6H4ZM2 4H22V22H2V4Z" opacity="0.3"></path>
+<path d="M4 6H20V12H4V6Z"></path>
+<path d="M6 14H18V16H6V14Z"></path>
+<path d="M9 18H15V20H9V18Z"></path>
+<!-- Small lock icon overlaid -->
+<circle cx="12" cy="12" fill="white" r="4"></circle>
+<path d="M12 9C10.9 9 10 9.9 10 11V12H9V15H15V12H14V11C14 9.9 13.1 9 12 9ZM11 11C11 10.45 11.45 10 12 10C12.55 10 13 10.45 13 11V12H11V11Z" fill="#7b5800"></path>
+</svg>
+</div>
+<!-- Typography -->
+<div class="text-[64px] font-bold text-primary leading-none mb-4">401</div>
+<h1 class="font-display text-display text-on-surface mb-2">You're Not Logged In</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mb-8 max-w-sm mx-auto">
+                Please log in to access this page and view your dashboard.
+            </p>
+<!-- Actions -->
+<button class="bg-primary text-on-primary font-label-caps text-label-caps uppercase px-8 py-3.5 rounded-lg hover:bg-primary-container transition-colors duration-200 shadow-sm flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">login</span>
+                Go to Login
+            </button>
+</div>
+</main>
+</body></html>

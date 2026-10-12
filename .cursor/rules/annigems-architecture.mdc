@@ -1,0 +1,54 @@
+---
+description: Annigems layered architecture, naming, auth, and data conventions
+alwaysApply: true
+---
+
+# Annigems — Architecture
+
+## Layered structure
+
+```
+Controller      -> HTTP only: receive request, call service, return response/view
+Form Request    -> all validation; never inline in controller
+Service Class   -> all business logic
+Repository      -> non-trivial database queries
+Model           -> relationships, scopes, casts, accessors only
+Helper          -> small reusable pure functions
+Resource        -> API response shaping (where APIs exist)
+Enum            -> fixed value sets (statuses, roles, purities, payment methods)
+Event/Listener  -> side effects (audit logging, stock movement recording)
+```
+
+## Mandatory rules
+
+- Controllers stay thin (~15 lines max per method). Longer logic belongs in a service.
+- Every module gets its own Service (e.g. `BranchService`, `JewelleryItemService`).
+- Never raw validation in controllers — always Form Request classes.
+- Never hardcode status/role strings — use PHP Enums (e.g. `ItemStatus::AVAILABLE`, `UserRole::CASHIER`).
+- Multi-table writes must use database transactions; roll back on any failure.
+- Authorize with Policies/Gates — never scattered `if ($user->role == 'admin')`.
+- Use Route Model Binding where appropriate.
+- Group routes by role/middleware; split into `routes/superadmin.php`, `routes/admin.php`, etc. when large.
+- All schema changes via migrations; seeders for SuperAdmin, roles, permissions, categories, purities.
+- Follow PSR-12.
+
+## Naming
+
+| Kind | Pattern | Example |
+|------|---------|---------|
+| Controller | Singular + Controller | `BranchController` |
+| Service | Singular + Service | `BranchService` |
+| Form Request | Store/Update + Model | `StoreBranchRequest` |
+| Model | Singular | `JewelleryItem` |
+| Table | plural snake_case | `jewellery_items` |
+| Blade | module folders | `resources/views/superadmin/branches/index.blade.php` |
+| Enum | `App\Enums\*` | `UserRole`, `ItemStatus` |
+
+## Cross-cutting quality
+
+- **No duplicate code** — extract to service, helper, trait, or Blade component.
+- **AJAX JSON shape:** `{ success: bool, message: string, data: mixed, errors: object }`.
+- **Audit logging** on create/update/delete of important records (items, invoices, users, branches, settings): who, what changed, when.
+- **Soft deletes** on items, invoices, customers, users (and similar never-truly-lost records).
+- **Timezone and currency** defined once in config — never hardcoded in views.
+- **Secrets** only via `.env` — nothing sensitive hardcoded.

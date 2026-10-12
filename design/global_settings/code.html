@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Global Settings - Annigems SuperAdmin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#e0e9f2",
+                        "on-primary-fixed-variant": "#5d4200",
+                        "outline": "#817563",
+                        "inverse-primary": "#f7bd48",
+                        "primary-fixed-dim": "#f7bd48",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#293138",
+                        "on-surface": "#141d23",
+                        "on-secondary-container": "#636467",
+                        "outline-variant": "#d3c4af",
+                        "on-tertiary-fixed": "#191c1d",
+                        "surface-variant": "#dbe4ed",
+                        "on-tertiary-container": "#fcfdfe",
+                        "inverse-on-surface": "#e9f2fb",
+                        "on-secondary-fixed": "#1a1c1e",
+                        "on-tertiary-fixed-variant": "#454748",
+                        "surface": "#f6faff",
+                        "error-container": "#ffdad6",
+                        "secondary-container": "#e2e2e5",
+                        "surface-tint": "#7b5800",
+                        "tertiary-fixed-dim": "#c5c7c8",
+                        "background": "#f6faff",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#785600",
+                        "on-secondary": "#ffffff",
+                        "primary-container": "#986d00",
+                        "surface-bright": "#f6faff",
+                        "on-primary-container": "#fffbff",
+                        "tertiary-container": "#737576",
+                        "on-error-container": "#93000a",
+                        "tertiary": "#5a5c5d",
+                        "surface-container-low": "#ecf5fe",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed": "#e1e3e4",
+                        "secondary-fixed-dim": "#c6c6c9",
+                        "surface-container": "#e6eff8",
+                        "on-error": "#ffffff",
+                        "primary-fixed": "#ffdea6",
+                        "secondary": "#5d5e61",
+                        "on-primary-fixed": "#271900",
+                        "on-background": "#141d23",
+                        "secondary-fixed": "#e2e2e5",
+                        "surface-container-highest": "#dbe4ed",
+                        "surface-dim": "#d2dbe4",
+                        "on-secondary-fixed-variant": "#454749",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#4f4535"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "sidebar-width": "260px",
+                        "gutter": "1rem",
+                        "container-padding": "1.5rem",
+                        "topbar-height": "64px",
+                        "stack-compact": "0.5rem",
+                        "stack-dense": "0.25rem"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "data-mono": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "display": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "data-mono": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "display": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .icon-fill { font-variation-settings: 'FILL' 1; }
+        
+        /* Minimalist Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #dbe4ed; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #c6c6c9; }
+
+        /* Custom Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 20px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #dbe4ed;
+            transition: .3s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px; width: 16px;
+            left: 2px; bottom: 2px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        input:checked + .slider { background-color: #785600; }
+        input:checked + .slider:before { transform: translateX(16px); }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased flex h-screen overflow-hidden">
+<!-- SideNavBar -->
+<nav class="h-screen w-sidebar-width fixed left-0 top-0 bg-inverse-surface dark:bg-inverse-surface flex flex-col h-full py-gutter px-4 z-20">
+<!-- Brand/Header -->
+<div class="flex items-center gap-3 mb-8 px-2">
+<div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden shrink-0">
+<img alt="Annigems Admin Profile" class="w-full h-full object-cover" data-alt="A macro photograph of a sparkling diamond set in a modern gold bezel, brightly lit against a crisp white background. The image evokes precision, luxury, and clarity, fitting for a high-end jewelry administration interface. Subtle studio reflections enhance the multifaceted brilliance of the gemstone." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCn-CSIYpjbHkipAvEs331GfQn9-XOM1Pl49LBISss1LwYEh53B0qqshHgR69o9eDNNsJZWJrD4b7rAYQ8Sx0WjbczI3RKz6jXfaU_EdT0qwg4aCW0_Aum2PuKt_w5Pi_-sVogLXp9UrJMIN0WMgENcB4TmTRe1NiH8hEAzuby33UUhzNVwmMXOKF8Jznmz_I5ExucAT6KNyJ_3jNB75AQVMy4R9rg6ejTcUTdb_nAoNDd_BMsrGXZjgg"/>
+</div>
+<div>
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary-fixed dark:text-primary-fixed-dim">Annigems</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant/70 uppercase">SuperAdmin Suite</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<div class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant/80 hover:text-on-surface-variant hover:bg-surface-container-highest/5 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="font-body-md text-body-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant/80 hover:text-on-surface-variant hover:bg-surface-container-highest/5 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]">store</span>
+<span class="font-body-md text-body-md">Branches</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant/80 hover:text-on-surface-variant hover:bg-surface-container-highest/5 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span class="font-body-md text-body-md">Users</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-surface-container-highest/10 text-primary-fixed-dim font-bold border-r-4 border-primary opacity-90 transition-all" href="#">
+<span class="material-symbols-outlined text-[20px] icon-fill">settings</span>
+<span class="font-body-md text-body-md">Global Settings</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant/80 hover:text-on-surface-variant hover:bg-surface-container-highest/5 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]">analytics</span>
+<span class="font-body-md text-body-md">Reports</span>
+</a>
+</div>
+<!-- Footer Link -->
+<div class="mt-auto pt-4 border-t border-outline-variant/20">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant/80 hover:text-on-surface-variant hover:bg-surface-container-highest/5 transition-colors duration-200" href="#">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+<span class="font-body-md text-body-md">Logout</span>
+</a>
+</div>
+</nav>
+<!-- TopNavBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-260px)] h-topbar-height bg-surface dark:bg-surface border-b border-outline-variant dark:border-outline flex justify-between items-center px-container-padding z-10">
+<!-- Search/Context -->
+<div class="flex items-center gap-4 flex-1">
+<h2 class="font-headline-sm text-headline-sm text-on-surface dark:text-on-surface font-bold">Annigems Admin</h2>
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2 px-3 py-1.5 bg-surface-container-low rounded-DEFAULT border border-outline-variant/50">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">storefront</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Branch: Head Office</span>
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant cursor-pointer ml-1">expand_more</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim cursor-pointer transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary dark:hover:text-primary-fixed-dim cursor-pointer transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container">
+<span class="material-symbols-outlined text-[20px]">help_outline</span>
+</button>
+<div class="w-8 h-8 rounded-full bg-surface-container-high border border-outline-variant ml-2 overflow-hidden cursor-pointer">
+<img alt="Administrator Avatar" class="w-full h-full object-cover" data-alt="A professional headshot of an executive administrator in a well-lit, modern office environment. The lighting is soft and flattering, emphasizing approachability and competence. The background is slightly blurred out to keep focus on the subject. High quality, corporate style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKoB-TRBdSfVzTKOgzWlg8lheFg8EK2NQ0dsBaeYr8ix_nhAfzTOV5YSRYMIC8rFda61Hh_AxhzmeOV2zEY6H3Zft-CkfQOjMQKCyaPe0Y_FHrVNJgV2bfQ6_88XU6aVf94NfgvnVAg2fn98-py1I1T1Qu7RYCfXIMEiTnMV5vlLajUJ2Zqa-VBy23PIZKbkq5jJv3FZnU-hfgTMwwZfoOTRD0cPlmti8ZPf3TAb9NNWF_1PL3S-inLA"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="ml-[260px] mt-[64px] w-[calc(100%-260px)] h-[calc(100vh-64px)] overflow-y-auto bg-background p-container-padding">
+<!-- Page Header -->
+<div class="flex justify-between items-end mb-6">
+<div>
+<h2 class="font-display text-display text-on-surface mb-1">Global Settings</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Manage organization-wide configurations, rates, and operational flags.</p>
+</div>
+<div class="flex gap-3">
+<button class="h-9 px-4 rounded-DEFAULT border border-outline bg-surface-container-lowest text-on-surface font-body-sm text-body-sm font-medium hover:bg-surface-container-low transition-colors">Discard Changes</button>
+<button class="h-9 px-4 rounded-DEFAULT bg-primary text-on-primary font-body-sm text-body-sm font-medium hover:bg-primary-container transition-colors shadow-sm">Save Configuration</button>
+</div>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+<!-- Left Column: Gold Rates -->
+<div class="xl:col-span-4 flex flex-col gap-6">
+<!-- Gold Rates Card -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-sm">
+<div class="flex justify-between items-center mb-5 border-b border-outline-variant/30 pb-3">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Gold Rates <span class="text-on-surface-variant font-normal text-[14px]">(/g)</span></h3>
+<div class="flex items-center gap-1.5 text-on-surface-variant bg-surface-container-low px-2 py-1 rounded-DEFAULT border border-outline-variant/50">
+<span class="material-symbols-outlined text-[14px]">update</span>
+<span class="font-label-caps text-label-caps uppercase">Updated: 10:45 AM</span>
+</div>
+</div>
+<div class="space-y-4">
+<!-- 24K -->
+<div class="flex items-center justify-between">
+<label class="font-data-mono text-data-mono text-primary font-bold w-12 shrink-0">24K</label>
+<div class="relative w-full ml-4">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 font-data-mono text-data-mono text-on-surface-variant">$</span>
+<input class="w-full h-9 pl-7 pr-3 bg-surface-container-lowest border border-outline-variant rounded-DEFAULT font-data-mono text-data-mono text-right text-on-surface focus:border-primary focus:ring-1 focus:ring-primary transition-colors" type="text" value="82.45"/>
+</div>
+</div>
+<!-- 22K -->
+<div class="flex items-center justify-between">
+<label class="font-data-mono text-data-mono text-on-surface-variant font-semibold w-12 shrink-0">22K</label>
+<div class="relative w-full ml-4">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 font-data-mono text-data-mono text-on-surface-variant">$</span>
+<input class="w-full h-9 pl-7 pr-3 bg-surface-container-lowest border border-outline-variant rounded-DEFAULT font-data-mono text-data-mono text-right text-on-surface focus:border-primary focus:ring-1 focus:ring-primary transition-colors" type="text" value="75.58"/>
+</div>
+</div>
+<!-- 21K -->
+<div class="flex items-center justify-between">
+<label class="font-data-mono text-data-mono text-on-surface-variant font-semibold w-12 shrink-0">21K</label>
+<div class="relative w-full ml-4">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 font-data-mono text-data-mono text-on-surface-variant">$</span>
+<input class="w-full h-9 pl-7 pr-3 bg-surface-container-lowest border border-outline-variant rounded-DEFAULT font-data-mono text-data-mono text-right text-on-surface focus:border-primary focus:ring-1 focus:ring-primary transition-colors" type="text" value="72.14"/>
+</div>
+</div>
+<!-- 18K -->
+<div class="flex items-center justify-between">
+<label class="font-data-mono text-data-mono text-on-surface-variant font-semibold w-12 shrink-0">18K</label>
+<div class="relative w-full ml-4">
+<span class="absolute inset-y-0 left-0 flex items-center pl-3 font-data-mono text-data-mono text-on-surface-variant">$</span>
+<input class="w-full h-9 pl-7 pr-3 bg-surface-container-lowest border border-outline-variant rounded-DEFAULT font-data-mono text-data-mono text-right text-on-surface focus:border-primary focus:ring-1 focus:ring-primary transition-colors" type="text" value="61.83"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Currency & Format Settings -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-xl p-5 shadow-sm">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-4 pb-2 border-b border-outline-variant/30">Localization</h3>
+<div class="space-y-4">
+<div class="flex flex-col gap-stack-dense">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase">Base Currency</label>
+<select class="w-full h-9 px-3 bg-surface border border-outline-variant rounded-DEFAULT font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-0">
+<option>USD - US Dollar</option>
+<option>EUR - Euro</option>
+<option>AED - UAE Dirham</option>
+</select>
+</div>
+<div class="flex flex-col gap-stack-dense">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase">Weight Unit</label>
+<select class="w-full h-9 px-3 bg-surface border border-outline-variant rounded-DEFAULT font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-0">
+<option>Grams (g)</option>
+<option>Ounces (oz)</option>
+<option>Carats (ct)</option>
+</select>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: System Configuration -->
+<div class="xl:col-span-8">
+<section class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+<div class="p-5 border-b border-outline-variant bg-surface-container-low/50">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">System Configuration</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Enable or disable core operational features across all branches.</p>
+</div>
+<div class="divide-y divide-outline-variant/50">
+<!-- Row 1: Barcode -->
+<div class="flex items-center px-5 py-4 hover:bg-surface-container-lowest/50 transition-colors">
+<div class="w-1/3 pr-4">
+<h4 class="font-body-md text-body-md font-medium text-on-surface">Barcode Generation</h4>
+</div>
+<div class="w-1/2 pr-4">
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1">Automatically generate SKUs and barcodes for new inventory items.</p>
+</div>
+<div class="w-1/6 flex justify-end">
+<label class="toggle-switch">
+<input checked="" type="checkbox"/>
+<span class="slider"></span>
+</label>
+</div>
+</div>
+<!-- Row 2: QR Invoice -->
+<div class="flex items-center px-5 py-4 hover:bg-surface-container-lowest/50 transition-colors">
+<div class="w-1/3 pr-4">
+<h4 class="font-body-md text-body-md font-medium text-on-surface">QR on Invoice</h4>
+</div>
+<div class="w-1/2 pr-4">
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1">Print scannable QR codes on customer receipts for verification.</p>
+</div>
+<div class="w-1/6 flex justify-end">
+<label class="toggle-switch">
+<input checked="" type="checkbox"/>
+<span class="slider"></span>
+</label>
+</div>
+</div>
+<!-- Row 3: QR Product Detail -->
+<div class="flex items-center px-5 py-4 hover:bg-surface-container-lowest/50 transition-colors">
+<div class="w-1/3 pr-4">
+<h4 class="font-body-md text-body-md font-medium text-on-surface">QR on Product Detail</h4>
+</div>
+<div class="w-1/2 pr-4">
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1">Display QR codes on internal product cards for quick mobile scanning.</p>
+</div>
+<div class="w-1/6 flex justify-end">
+<label class="toggle-switch">
+<input type="checkbox"/>
+<span class="slider"></span>
+</label>
+</div>
+</div>
+<!-- Row 4: Taxes (Complex Row) -->
+<div class="flex items-center px-5 py-4 bg-surface-variant/20 hover:bg-surface-variant/30 transition-colors">
+<div class="w-1/3 pr-4">
+<h4 class="font-body-md text-body-md font-medium text-on-surface">Tax Calculation</h4>
+</div>
+<div class="w-1/2 pr-4 flex items-center gap-3">
+<p class="font-body-sm text-body-sm text-on-surface-variant shrink-0">Default VAT Rate:</p>
+<div class="relative w-24">
+<input class="w-full h-8 pr-6 pl-2 bg-surface-container-lowest border border-outline-variant rounded-DEFAULT font-data-mono text-data-mono text-right text-on-surface focus:border-primary focus:ring-1 focus:ring-primary" type="text" value="5.00"/>
+<span class="absolute inset-y-0 right-0 flex items-center pr-2 font-data-mono text-data-mono text-on-surface-variant">%</span>
+</div>
+</div>
+<div class="w-1/6 flex justify-end">
+<label class="toggle-switch">
+<input checked="" type="checkbox"/>
+<span class="slider"></span>
+</label>
+</div>
+</div>
+<!-- Row 5: Sales Discounts -->
+<div class="flex items-center px-5 py-4 hover:bg-surface-container-lowest/50 transition-colors">
+<div class="w-1/3 pr-4">
+<h4 class="font-body-md text-body-md font-medium text-on-surface">Sales Discounts</h4>
+</div>
+<div class="w-1/2 pr-4">
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1">Allow staff to apply manual discounts at the Point of Sale.</p>
+</div>
+<div class="w-1/6 flex justify-end">
+<label class="toggle-switch">
+<input checked="" type="checkbox"/>
+<span class="slider"></span>
+</label>
+</div>
+</div>
+<!-- Row 6: Coupons -->
+<div class="flex items-center px-5 py-4 hover:bg-surface-container-lowest/50 transition-colors">
+<div class="w-1/3 pr-4">
+<h4 class="font-body-md text-body-md font-medium text-on-surface">Promotional Coupons</h4>
+</div>
+<div class="w-1/2 pr-4">
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-1">Enable coupon code redemption system for marketing campaigns.</p>
+</div>
+<div class="w-1/6 flex justify-end">
+<label class="toggle-switch">
+<input type="checkbox"/>
+<span class="slider"></span>
+</label>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+</body></html>

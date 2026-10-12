@@ -1,0 +1,216 @@
+<?php
+
+namespace App\Services\Reports\SuperAdmin;
+
+use App\Repositories\Reports\CustomerReportRepository;
+use App\Support\Reports\ReportFilter;
+use App\Support\Reports\ReportFormatter;
+use App\Support\Reports\ReportResult;
+
+/**
+ * AggregateCustomerReportService
+ *
+ * SuperAdmin customer reporting.
+ *
+ * A customer is a person, not a branch transaction, and the top-customer and
+ * cross-branch views are inherently about individuals — so unlike the other
+ * families this one does name customers. What it never exposes is a purchase:
+ * there is no purchase-history method here, no invoice number appears in any
+ * column, and contact details are omitted. The SuperAdmin sees who the
+ * business's largest customers are, not what any of them bought.
+ */
+class AggregateCustomerReportService extends AggregateReportService
+{
+    public function __construct(
+        private CustomerReportRepository $customers,
+    ) {}
+
+    /**
+     * Highest-spending customers across the selected scope.
+     */
+    public function topCustomers(ReportFilter $filter): ReportResult
+    {
+        $rows = $this->customers->topCustomers($filter, $this->limit())
+            ->map(fn (array $row): array => [
+                'name' => $row['name'],
+                'invoice_count' => $row['invoice_count'],
+                'average_sale' => $row['average_sale'],
+                'total_spent' => $row['total_spent'],
+            ]);
+
+        $rate = $this->customers->repeatRate($filter);
+
+        return new ReportResult(
+            key: 'top-customers',
+            title: 'Top Customers',
+            summary: [
+                $this->card('buyers', 'Customers Who Bought', ReportFormatter::count($rate['buyers']), 'group'),
+                $this->card('spend', 'Attributed Spend', ReportFormatter::money($rows->sum('total_spent')), 'payments'),
+                $this->card('walk_ins', 'Walk-in Invoices', ReportFormatter::count($rate['walk_in_invoices']), 'directions_walk'),
+            ],
+            rows: $rows,
+            columns: [
+                ['key' => 'name', 'label' => 'Customer'],
+                ['key' => 'invoice_count', 'label' => 'Invoices', 'align' => 'right', 'format' => 'count'],
+                ['key' => 'average_sale', 'label' => 'Average Sale', 'align' => 'right', 'format' => 'money'],
+                ['key' => 'total_spent', 'label' => 'Total Spent', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+            ],
+            totals: [
+                'name' => 'Total',
+                'invoice_count' => $rows->sum('invoice_count'),
+                'total_spent' => $rows->sum('total_spent'),
+            ],
+            chart: ReportResult::chart('Spend by customer', 'revenue', $rows->take(10)->map(fn (array $row): array => [
+                'label' => $row['name'],
+                'value' => $row['total_spent'],
+                'display' => ReportFormatter::moneyCompact($row['total_spent']),
+            ])->all()),
+            meta: $this->meta(['table_title' => 'Top customers by spend', 'money' => true]),
+        );
+    }
+
+    /**
+     * Customers who shop at more than one branch.
+     *
+     * The report that most justifies customers being global: only an actor
+     * looking across branches can act on it.
+     */
+    public function crossBranch(ReportFilter $filter): ReportResult
+    {
+        $rows = $this->customers->crossBranchCustomers($this->limit())
+            ->map(fn (array $row): array => [
+                'name' => $row['name'],
+                'branch_count' => $row['branch_count'],
+                'branches' => $row['branches'],
+                'invoice_count' => $row['invoice_count'],
+                'total_spent' => $row['total_spent'],
+            ]);
+
+        return new ReportResult(
+            key: 'cross-branch-customers',
+            title: 'Cross-Branch Customers',
+            summary: [
+                $this->card('customers', 'Cross-Branch Customers', ReportFormatter::count($rows->count()), 'hub'),
+                $this->card('spend', 'Combined Spend', ReportFormatter::money($rows->sum('total_spent')), 'payments'),
+                $this->card('invoices', 'Combined Invoices', ReportFormatter::count($rows->sum('invoice_count')), 'receipt_long'),
+            ],
+            rows: $rows,
+            columns: [
+                ['key' => 'name', 'label' => 'Customer'],
+                ['key' => 'branch_count', 'label' => 'Branches', 'align' => 'right', 'format' => 'count'],
+                ['key' => 'branches', 'label' => 'Visited'],
+                ['key' => 'invoice_count', 'label' => 'Invoices', 'align' => 'right', 'format' => 'count'],
+                ['key' => 'total_spent', 'label' => 'Total Spent', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+            ],
+            meta: $this->meta([
+                'table_title' => 'Customers active at more than one branch',
+                'money' => true,
+                'ignores_date_range' => true,
+                'empty_title' => 'No customer has purchased at more than one branch',
+            ]),
+        );
+    }
+
+    /**
+     * New customer registrations, and how many of them have already bought.
+     */
+    public function newCustomers(ReportFilter $filter): ReportResult
+    {
+        $rows = $this->customers->newCustomers($filter, $this->limit())
+            ->map(fn (array $row): array => [
+                'name' => $row['name'],
+                'registered_on' => $row['registered_on'],
+                'invoice_count' => $row['invoice_count'],
+                'total_spent' => $row['total_spent'],
+            ]);
+
+        $total = $this->customers->newCustomerCount($filter);
+        $previous = $this->customers->newCustomerCount($filter->previousPeriod());
+        $converted = $rows->where('invoice_count', '>', 0)->count();
+
+        return new ReportResult(
+            key: 'new-customers',
+            title: 'New Customers',
+            summary: [
+                $this->card('new', 'New Customers', ReportFormatter::count($total), 'person_add',
+                    trend: ReportFormatter::trend($total, $previous)),
+                $this->card('bought', 'Bought Already', ReportFormatter::count($converted), 'task_alt'),
+                $this->card('spend', 'Spend From New Customers', ReportFormatter::money($rows->sum('total_spent')), 'payments'),
+            ],
+            rows: $rows,
+            columns: [
+                ['key' => 'name', 'label' => 'Customer'],
+                ['key' => 'registered_on', 'label' => 'Registered'],
+                ['key' => 'invoice_count', 'label' => 'Invoices', 'align' => 'right', 'format' => 'count'],
+                ['key' => 'total_spent', 'label' => 'Total Spent', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+            ],
+            totals: [
+                'name' => 'Total',
+                'invoice_count' => $rows->sum('invoice_count'),
+                'total_spent' => $rows->sum('total_spent'),
+            ],
+            meta: $this->meta([
+                'table_title' => 'Registered in this period',
+                'money' => true,
+                'empty_title' => 'No new customers registered in this period',
+            ]),
+        );
+    }
+
+    /**
+     * Retention per branch: how much of each branch's business comes back.
+     */
+    public function repeatCustomers(ReportFilter $filter): ReportResult
+    {
+        $rows = $this->perBranch($filter, function (ReportFilter $scoped): array {
+            $rate = $this->customers->repeatRate($scoped);
+
+            return [
+                'buyers' => $rate['buyers'],
+                'repeat_buyers' => $rate['repeat_buyers'],
+                'repeat_rate' => $rate['repeat_rate'],
+                'walk_in_invoices' => $rate['walk_in_invoices'],
+            ];
+        });
+
+        $overall = $this->customers->repeatRate($filter);
+
+        return new ReportResult(
+            key: 'repeat-customers',
+            title: 'Repeat Customers',
+            summary: [
+                $this->card('repeat', 'Repeat Customers', ReportFormatter::count($overall['repeat_buyers']), 'repeat'),
+                $this->card('rate', 'Repeat Rate', ReportFormatter::percent($overall['repeat_rate']), 'percent',
+                    hint: 'of '.ReportFormatter::count($overall['buyers']).' customers who bought'),
+                $this->card('walk_ins', 'Walk-in Invoices', ReportFormatter::count($overall['walk_in_invoices']), 'directions_walk',
+                    hint: 'Not attributable, so not counted in the rate'),
+            ],
+            rows: $rows,
+            columns: [
+                $this->branchColumn(),
+                ['key' => 'buyers', 'label' => 'Customers', 'align' => 'right', 'format' => 'count'],
+                ['key' => 'repeat_buyers', 'label' => 'Returned', 'align' => 'right', 'format' => 'count'],
+                ['key' => 'repeat_rate', 'label' => 'Repeat Rate', 'align' => 'right', 'format' => 'percent', 'emphasis' => 'strong'],
+                ['key' => 'walk_in_invoices', 'label' => 'Walk-ins', 'align' => 'right', 'format' => 'count'],
+            ],
+            totals: [
+                'branch' => 'All Branches',
+                'buyers' => $rows->sum('buyers'),
+                'repeat_buyers' => $rows->sum('repeat_buyers'),
+                'walk_in_invoices' => $rows->sum('walk_in_invoices'),
+            ],
+            meta: $this->meta([
+                'table_title' => 'Retention by branch',
+                'empty_title' => 'No customer purchases in this period',
+            ]),
+        );
+    }
+
+    /**
+     * Row cap shared by every customer listing.
+     */
+    private function limit(): int
+    {
+        return (int) config('annigems.reports.top_list_limit', 25);
+    }
+}

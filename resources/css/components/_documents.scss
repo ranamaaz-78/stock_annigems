@@ -1,0 +1,659 @@
+/**
+ * Document sheet — quotations and invoices.
+ *
+ * Implements design/invoice_view: a bordered A4-proportioned sheet with a
+ * branded header, two party columns, an itemised table, a right-aligned totals
+ * stack, and a footer carrying terms plus verification codes. Quotations reuse
+ * the same sheet through the .sheet--quotation modifier.
+ *
+ * Print views load app.scss only (no Tailwind), so every rule needed by a
+ * printed document must live here.
+ */
+
+/* Standalone page wrapper for the print views, which have no app shell. */
+.doc-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 2rem 1rem;
+  background-color: var(--color-background);
+  color: var(--color-on-surface);
+  font-family: var(--font-body-md);
+  font-size: var(--text-body-md);
+  line-height: var(--text-body-md-line);
+}
+
+.doc-page__toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--stack-compact);
+  width: 100%;
+  max-width: 56rem;
+  margin-bottom: var(--gutter);
+}
+
+/* Branch invoice_print_format / quotation_print_format. */
+.doc-page--thermal_80mm {
+  .sheet,
+  .doc-page__toolbar {
+    max-width: 80mm;
+  }
+
+  .sheet--a4 {
+    min-height: 0;
+  }
+
+  .sheet__header,
+  .sheet__parties,
+  .sheet__items,
+  .sheet__footer {
+    padding: 0.75rem;
+  }
+}
+
+.doc-page--thermal_58mm {
+  .sheet,
+  .doc-page__toolbar {
+    max-width: 58mm;
+  }
+
+  .sheet--a4 {
+    min-height: 0;
+  }
+
+  .sheet__header,
+  .sheet__parties,
+  .sheet__items,
+  .sheet__footer {
+    padding: 0.5rem;
+  }
+}
+
+/* ---------------------------------------------------------------- sheet ---- */
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 56rem;
+  margin: 0 auto;
+  background-color: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-outline-variant);
+  box-shadow: var(--shadow-card);
+}
+
+/* Only the printable page forces full A4 height; in-app detail views size to
+   their content so a two-line invoice does not leave a metre of whitespace. */
+.sheet--a4 {
+  min-height: 1122px;
+}
+
+.sheet__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--gutter);
+  padding: 2rem;
+  border-bottom: 1px solid var(--color-outline-variant);
+}
+
+.sheet__identity {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sheet__logo {
+  flex: 0 0 auto;
+  width: 4rem;
+  height: 4rem;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
+/* Square brand tile carrying the single-letter mark. */
+.sheet__mark {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 4rem;
+  height: 4rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  font-weight: var(--text-display-weight);
+  line-height: 1;
+}
+
+.sheet__brand {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  font-weight: var(--text-display-weight);
+  letter-spacing: var(--text-display-tracking);
+  line-height: var(--text-display-line);
+  color: var(--color-primary);
+}
+
+.sheet__tagline {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm-line);
+  color: var(--color-on-surface-variant);
+}
+
+.sheet__branch {
+  margin: var(--stack-dense) 0 0;
+  font-family: var(--font-label-caps);
+  font-size: var(--text-label-caps);
+  font-weight: var(--text-label-caps-weight);
+  letter-spacing: var(--text-label-caps-tracking);
+  line-height: var(--text-label-caps-line);
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+}
+
+.sheet__docinfo {
+  text-align: right;
+}
+
+.sheet__doctype {
+  margin: 0 0 var(--stack-compact);
+  font-family: var(--font-headline-sm);
+  font-size: var(--text-headline-sm);
+  font-weight: var(--text-headline-sm-weight);
+  line-height: var(--text-headline-sm-line);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-on-surface);
+}
+
+/* Quotations wear an outlined pill so a quote is never mistaken for a bill. */
+.sheet__doctype--outlined {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  color: var(--color-primary);
+}
+
+/* Label / value pairs (Invoice No, Date, Valid until…). */
+.sheet__meta {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: var(--stack-dense) 1rem;
+  justify-content: end;
+  margin: 0;
+}
+
+.sheet__meta-label {
+  margin: 0;
+  font-family: var(--font-label-caps);
+  font-size: var(--text-label-caps);
+  font-weight: var(--text-label-caps-weight);
+  letter-spacing: var(--text-label-caps-tracking);
+  line-height: var(--text-label-caps-line);
+  text-transform: uppercase;
+  text-align: right;
+  color: var(--color-on-surface-variant);
+  align-self: center;
+}
+
+.sheet__meta-value {
+  margin: 0;
+  font-family: var(--font-data-mono);
+  font-size: var(--text-data-mono);
+  font-weight: var(--text-data-mono-weight);
+  line-height: var(--text-data-mono-line);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--color-on-surface);
+}
+
+/* ---------------------------------------------------------- party blocks ---- */
+
+.sheet__parties {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: var(--container-padding) 2rem;
+}
+
+.sheet__party {
+  padding-right: 1rem;
+}
+
+/* Right-hand column is separated by a rule, per the approved design. */
+.sheet__party--divided {
+  padding-right: 0;
+  padding-left: 1rem;
+  border-left: 1px solid var(--color-outline-variant);
+}
+
+.sheet__party-label {
+  margin: 0 0 var(--stack-compact);
+  font-family: var(--font-label-caps);
+  font-size: var(--text-label-caps);
+  font-weight: var(--text-label-caps-weight);
+  letter-spacing: var(--text-label-caps-tracking);
+  line-height: var(--text-label-caps-line);
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+}
+
+.sheet__party-name {
+  margin: 0;
+  font-size: var(--text-body-md);
+  font-weight: 600;
+  line-height: var(--text-body-md-line);
+  color: var(--color-on-surface);
+}
+
+.sheet__party-lines {
+  margin: var(--stack-dense) 0 0;
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm-line);
+  color: var(--color-on-surface-variant);
+}
+
+/* Full-width strip for a voided banner or a validity callout. */
+.sheet__notice {
+  padding: 0 2rem;
+}
+
+.sheet__notice + .sheet__parties {
+  padding-top: var(--stack-compact);
+}
+
+/* ---------------------------------------------------------------- table ---- */
+
+/* flex-grow pushes the totals and footer to the bottom of a tall sheet. */
+.sheet__items {
+  flex: 1 1 auto;
+  padding: var(--stack-compact) 2rem 1rem;
+}
+
+.sheet-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.sheet-table th {
+  padding: var(--stack-compact) 1rem;
+  background-color: var(--color-surface-variant);
+  border-top: 1px solid var(--color-outline-variant);
+  border-bottom: 1px solid var(--color-outline-variant);
+  font-family: var(--font-label-caps);
+  font-size: var(--text-label-caps);
+  font-weight: var(--text-label-caps-weight);
+  letter-spacing: var(--text-label-caps-tracking);
+  line-height: var(--text-label-caps-line);
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+  white-space: nowrap;
+}
+
+.sheet-table td {
+  height: 48px;
+  padding: var(--stack-compact) 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-outline-variant) 50%, transparent);
+  font-family: var(--font-data-mono);
+  font-size: var(--text-data-mono);
+  font-weight: var(--text-data-mono-weight);
+  line-height: var(--text-data-mono-line);
+  font-variant-numeric: tabular-nums;
+  vertical-align: middle;
+}
+
+/* Item description reads as prose, not tabular data. */
+.sheet-table__desc {
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  font-weight: var(--text-body-sm-weight);
+  font-variant-numeric: normal;
+}
+
+.sheet-table__sub {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-data-mono);
+  font-size: 11px;
+  line-height: 14px;
+  color: var(--color-on-surface-variant);
+}
+
+.sheet-table__num {
+  text-align: right;
+}
+
+.sheet-table__muted {
+  text-align: right;
+  color: var(--color-on-surface-variant);
+}
+
+.sheet-table__total {
+  text-align: right;
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------- totals ---- */
+
+/* Wraps totals + footer so mt-auto keeps them pinned to the sheet bottom. */
+.sheet__closing {
+  margin-top: auto;
+}
+
+.sheet__totals {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--container-padding) 2rem;
+}
+
+.sheet-totals {
+  width: 100%;
+  max-width: 300px;
+}
+
+.sheet-totals__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: var(--stack-compact) 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-outline-variant) 50%, transparent);
+}
+
+.sheet-totals__label {
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm-line);
+  color: var(--color-on-surface-variant);
+}
+
+.sheet-totals__value {
+  font-family: var(--font-data-mono);
+  font-size: var(--text-data-mono);
+  font-weight: var(--text-data-mono-weight);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--color-on-surface);
+}
+
+.sheet-totals__grand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: var(--stack-compact);
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-container-low);
+}
+
+.sheet-totals__grand-label {
+  font-family: var(--font-headline-sm);
+  font-size: var(--text-headline-sm);
+  font-weight: var(--text-headline-sm-weight);
+  line-height: var(--text-headline-sm-line);
+  color: var(--color-on-surface);
+}
+
+.sheet-totals__grand-value {
+  font-family: var(--font-display);
+  font-size: var(--text-display);
+  font-weight: var(--text-display-weight);
+  letter-spacing: var(--text-display-tracking);
+  line-height: var(--text-display-line);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--color-primary);
+}
+
+/* --------------------------------------------------------------- footer ---- */
+
+.sheet__footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--container-padding);
+  padding: 2rem;
+  border-top: 1px solid var(--color-outline-variant);
+  background-color: var(--color-surface);
+}
+
+.sheet__terms-label {
+  margin: 0 0 var(--stack-dense);
+  font-family: var(--font-label-caps);
+  font-size: var(--text-label-caps);
+  font-weight: var(--text-label-caps-weight);
+  letter-spacing: var(--text-label-caps-tracking);
+  line-height: var(--text-label-caps-line);
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+}
+
+.sheet__terms {
+  max-width: 28rem;
+  margin: 0;
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm-line);
+  color: var(--color-on-surface-variant);
+}
+
+.sheet__terms + .sheet__terms {
+  margin-top: var(--stack-compact);
+}
+
+/* QR / code column on the right of the footer. */
+.sheet__codes {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 0 0 auto;
+}
+
+.sheet__qr {
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  padding: 2px;
+  border: 1px solid var(--color-outline);
+  background-color: var(--color-surface-container-lowest);
+}
+
+.sheet__qr img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sheet__code {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--stack-dense);
+  width: 8rem;
+  height: 4rem;
+  border: 1px solid var(--color-outline);
+  background-color: var(--color-surface-variant);
+}
+
+.sheet__code-label {
+  font-family: var(--font-label-caps);
+  font-size: var(--text-label-caps);
+  font-weight: var(--text-label-caps-weight);
+  letter-spacing: var(--text-label-caps-tracking);
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+}
+
+.sheet__code-value {
+  font-family: var(--font-data-mono);
+  font-size: 11px;
+  line-height: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-on-surface);
+}
+
+/* Attribution / links printed under the sheet on the in-app detail screens. */
+.doc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--stack-compact) var(--gutter);
+  width: 100%;
+  max-width: 56rem;
+  margin: var(--gutter) auto 0;
+}
+
+.doc-meta__link {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-variant);
+
+  a {
+    color: var(--color-primary);
+    text-decoration: underline;
+  }
+}
+
+/* ---------------------------------------------------------------- print ---- */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .doc-page {
+    min-height: 0;
+    padding: 0;
+    background-color: #fff;
+  }
+
+  /* Paper already frames the document; borders and shadows only waste ink. */
+  .sheet {
+    max-width: none;
+    min-height: 0;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .sheet__footer {
+    background-color: transparent;
+  }
+
+  /* Sticky headers repeat oddly on paper. */
+  .table-admin thead th {
+    position: static;
+  }
+}
+
+/* Verification QR shown beside the in-app invoice summary. */
+.qr-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--stack-compact);
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-outline-variant);
+  text-align: center;
+}
+
+.qr-block__caption {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-variant);
+}
+
+/**
+ * Public invoice verification card (design/public_invoice_verification).
+ */
+
+.verify-card {
+  margin: 1.5rem;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.verify-card__brand {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-headline-sm);
+  font-size: var(--text-headline-sm);
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.verify-card__number {
+  margin: 0.75rem 0 var(--stack-dense);
+  font-family: var(--font-data-mono);
+  font-size: var(--text-headline-sm);
+  font-weight: 600;
+  color: var(--color-on-surface);
+}
+
+.verify-card__meta {
+  margin: 0 0 1rem;
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.verify-card__customer {
+  margin: 0 0 1rem;
+  font-size: var(--text-body-md);
+  font-weight: 500;
+  color: var(--color-on-surface);
+}
+
+.verify-card__items {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  text-align: left;
+}
+
+.verify-card__item {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-outline-variant) 60%, transparent);
+  font-size: var(--text-body-sm);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.verify-card__item-weight {
+  color: var(--color-on-surface-variant);
+}
+
+.verify-card__item-total {
+  font-family: var(--font-data-mono);
+  font-size: var(--text-data-mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.verify-card__total {
+  margin: 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-outline-variant);
+  font-family: var(--font-data-mono);
+  font-size: var(--text-headline-sm);
+  font-weight: 600;
+  color: var(--color-on-surface);
+}
+
+.verify-card__message {
+  margin: 0;
+  font-size: var(--text-body-md);
+  color: var(--color-on-surface);
+}

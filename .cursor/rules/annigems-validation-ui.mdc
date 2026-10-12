@@ -1,0 +1,52 @@
+---
+description: Annigems dual validation, SweetAlert2, and button loading states
+alwaysApply: true
+---
+
+# Annigems — Validation & UI Feedback
+
+## Dual validation (both required)
+
+### Backend
+
+- Every form submission uses a dedicated Form Request.
+- Strict rules: types, lengths, formats, uniqueness, ranges, date logic — not only `required`.
+- Custom messages in `messages()` — clear and human-readable.
+- Backend is the source of truth; frontend is convenience only.
+
+### Frontend
+
+- Client-side validation before submit.
+- Field-level errors inline below the field; red border on invalid fields.
+- Validate on **blur** and **submit** — not on every keystroke.
+- Never use browser `alert()` or `confirm()`.
+
+### Error display
+
+- Map backend validation errors to specific fields in the UI.
+- Never show raw JSON dumps or exception messages to users.
+- Unexpected errors → friendly SweetAlert message; technical detail → log only.
+
+## SweetAlert2 (required)
+
+- **Before destructive actions** (delete, deactivate, void): confirmation dialog; proceed only on confirm. State clearly what will happen.
+- **After success** (create/update/delete): success toast/popup.
+- **After failure**: error popup with a friendly explanation.
+
+## Button loading states (required on every submit/action)
+
+Build as a **reusable JS helper** — do not re-implement per page.
+
+1. On click: **immediately disable** the button (prevent double submit).
+2. Show loading: spinner + label change (e.g. "Save" → "Saving...").
+3. Stay disabled until the request finishes.
+4. On success: re-enable, or redirect/close modal as the flow requires.
+5. On failure: re-enable and restore original label so the user can retry.
+
+No duplicate records or invoices from double-clicks — ever.
+
+## Modals
+
+- Use for quick create/edit when a full page is unnecessary.
+- Close cleanly; reset form state; no stale data on reopen.
+- Validation errors display **inside** the modal — never behind it or on another page.

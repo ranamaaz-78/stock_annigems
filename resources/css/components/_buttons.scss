@@ -1,0 +1,118 @@
+/**
+ * Buttons — compact admin controls.
+ */
+
+%btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: var(--control-height);
+  padding: 0 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid transparent;
+  font-family: var(--font-body-sm);
+  font-size: var(--text-body-sm);
+  font-weight: 500;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+
+  &:disabled,
+  &[disabled],
+  &[aria-busy='true'] {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.btn {
+  @extend %btn-base;
+}
+
+.btn--primary,
+.btn-primary {
+  @extend %btn-base;
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-primary-container);
+  }
+}
+
+.btn--secondary,
+.btn-secondary {
+  @extend %btn-base;
+  background-color: var(--color-surface-container-lowest);
+  color: var(--color-on-surface);
+  border-color: var(--color-outline-variant);
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-surface-container-low);
+  }
+
+  &.is-active {
+    border-color: var(--color-primary);
+    background-color: var(--color-surface-container-low);
+  }
+}
+
+.btn--danger,
+.btn-danger {
+  @extend %btn-base;
+  background-color: var(--color-error);
+  color: var(--color-on-error);
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+}
+
+.btn--block {
+  width: 100%;
+}
+
+/* Compact row action (table "View" / "Remove" buttons). */
+.btn--sm {
+  height: 1.75rem;
+  padding: 0 0.625rem;
+  font-size: 12px;
+}
+
+.btn--label-caps {
+  font-family: var(--font-label-caps);
+  font-size: var(--text-label-caps);
+  font-weight: var(--text-label-caps-weight);
+  letter-spacing: var(--text-label-caps-tracking);
+  text-transform: uppercase;
+}
+
+/* Spreadsheet import trigger — Excel green so it is recognisable at a glance. */
+.btn--excel {
+  @extend %btn-base;
+  background-color: var(--color-excel);
+  color: var(--color-on-excel);
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-excel-hover);
+  }
+}
+
+/* Tall checkout control used on the POS / quotation workspace. */
+.btn--tall {
+  height: 3rem;
+  font-family: var(--font-headline-sm);
+  font-size: var(--text-headline-sm);
+  font-weight: 600;
+}
+
+/* "Log in as" on the Super Admin users list: a named button, so it is not
+   lost among the quiet icon actions beside it. */
+.btn--login-as {
+  gap: 0.25rem;
+  margin-right: 0.5rem;
+  white-space: nowrap;
+}

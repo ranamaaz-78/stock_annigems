@@ -1,0 +1,133 @@
+{{--
+    Stone lot table.
+
+    Shown when a material folder is open, or when a filter narrows individual
+    lots rather than folders. Selecting rows here feeds the bulk label print.
+--}}
+<div class="panel">
+    @if($stones->isEmpty())
+        <div class="panel__body">
+            <x-empty-state title="No stones match" message="Clear the filters, or upload the inventory sheet with Upload Excel." icon="diamond">
+                <x-slot:actions>
+                    <a href="{{ route('branch.stones.index') }}" class="btn btn--secondary">Back to folders</a>
+                </x-slot:actions>
+            </x-empty-state>
+        </div>
+    @else
+        <form method="GET" action="{{ route('branch.stones.labels.bulk') }}" target="_blank" id="bulk-label-form">
+            <div class="panel__scroll">
+                <table class="table-admin table-admin--lots">
+                    <thead>
+                        <tr>
+                            <th class="lots-sticky lots-sticky--check">
+                                {{-- Ticks every lot on this page for "Print selected labels". --}}
+                                <input type="checkbox" class="form-check" data-select-all="uuids[]" aria-label="Select all lots on this page" title="Select all">
+                            </th>
+                            <th class="lots-sticky lots-sticky--stone">Stone</th>
+                            <th>Shape &middot; size</th>
+                            <th class="table-admin__num">On hand</th>
+                            <th class="table-admin__num">Rate</th>
+                            <th class="table-admin__num">Total cost</th>
+                            <th>Status</th>
+                            <th class="table-admin__actions-col lots-sticky lots-sticky--actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($stones as $stone)
+                            @php
+                                $shapeSize = collect([$stone->shape, $stone->dimension])
+                                    ->filter(fn ($part) => filled($part) && ! in_array($part, ['N/A', '0x0', '0X0'], true))
+                                    ->implode(' · ');
+                                // Carat (per-carat lots) and tray sit under the shape instead of taking a column each.
+                                $facts = array_filter([
+                                    $stone->carat !== null ? $stone->caratLabel().' ct' : null,
+                                    filled($stone->tray_no) ? 'Tray '.$stone->tray_no : null,
+                                ]);
+                                // One status: an inactive lot reads as inactive, otherwise the lot's own state.
+                                $isPending = $stone->status === \App\Enums\StoneStatus::PENDING;
+                            @endphp
+                            <tr class="{{ $stone->isOutOfStock() ? 'table-admin__row--warn' : '' }}">
+                                <td class="lots-sticky lots-sticky--check">
+                                    @if($stone->hasPacketBarcode())
+                                        <input type="checkbox" name="uuids[]" value="{{ $stone->uuid }}" class="form-check">
+                                    @endif
+                                </td>
+                                <td class="lots-sticky lots-sticky--stone">
+                                    <x-table.identity
+                                        :href="route('branch.stones.show', $stone)"
+                                        :title="$stone->name"
+                                        :meta="$stone->stone_code"
+                                        icon="diamond"
+                                        :image-url="$stone->image && auth()->user()->can('view', $stone->image) ? $stone->image->url() : null"
+                                        :image-alt="$stone->image?->name ?? ''"
+                                    >
+                                        @if($stone->image_code)
+                                            {{-- Muted when no picture with that name is in the image folder yet. --}}
+                                            <span class="table-meta" @if(! $stone->image) title="No image named {{ $stone->image_code }} yet" @endif>
+                                                <span class="material-symbols-outlined icon icon--xs">image</span>
+                                                {{ $stone->image_code }}
+                                            </span>
+                                        @endif
+                                    </x-table.identity>
+                                </td>
+                                <td>
+                                    <div>{{ $shapeSize !== '' ? $shapeSize : '—' }}</div>
+                                    @if($facts)
+                                        <span class="table-meta">{{ implode(' · ', $facts) }}</span>
+                                    @endif
+                                </td>
+                                {{-- Gram lots report weight; everything else reports pieces. --}}
+                                <td class="table-admin__num {{ $stone->isOutOfStock() ? 'table-admin__num--negative' : 'table-admin__num--strong' }}">
+                                    {{ $stone->onHandLabel() }}
+                                </td>
+                                {{-- The rate (its unit says how it is priced), and under it the price before its latest change. --}}
+                                <td class="table-admin__num">
+                                    <div>{{ $stone->rateLabel() }}</div>
+                                    @if($stone->last_rate !== null)
+                                        <span class="table-meta" @if($stone->rate_changed_at) title="Changed {{ setting_datetime($stone->rate_changed_at) }}" @endif>was {{ $stone->lastRateLabel() }}</span>
+                                    @endif
+                                </td>
+                                {{-- The stored formula explains the figure on hover. --}}
+                                <td class="table-admin__num" title="{{ $stone->cost_formula }}">{{ setting_money($stone->total_cost) }}</td>
+                                <td>
+                                    @if(! $stone->is_active)
+                                        <x-status-badge status="inactive" />
+                                    @elseif($isPending)
+                                        <x-status-badge status="reserved" label="Pending" />
+                                    @else
+                                        <x-status-badge status="available" label="In stock" />
+                                    @endif
+                                </td>
+                                <td class="table-admin__actions-col lots-sticky lots-sticky--actions">
+                                    <x-table.actions>
+                                        <x-table.action :href="route('branch.stones.show', $stone)" />
+                                        @can('update', $stone)
+                                            <x-table.action :href="route('branch.stones.edit', $stone)" icon="edit" label="Edit" />
+                                        @endcan
+                                        @can('printLabel', $stone)
+                                            {{-- Opens the print dialog over this page; the link is the no-script fallback. --}}
+                                            <x-table.action :href="route('branch.stones.label', $stone)" icon="print" label="Print label" data-label-open="{{ $stone->uuid }}" />
+                                        @endcan
+                                    </x-table.actions>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @if(auth()->user()->hasPermission('stones.barcode'))
+                <div class="panel__toolbar">
+                    <x-btn type="button" variant="secondary" data-label-selected>
+                        <span class="material-symbols-outlined icon icon--sm">print</span>
+                        Print selected labels
+                    </x-btn>
+                </div>
+            @endif
+        </form>
+        @if($stones->total() > 0)
+            <div class="panel__footer">
+                {{ $stones->withQueryString()->links() }}
+            </div>
+        @endif
+    @endif
+</div>

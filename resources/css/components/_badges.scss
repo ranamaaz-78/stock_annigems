@@ -1,0 +1,67 @@
+/**
+ * Status badges / pills.
+ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.badge--active,
+.badge--available,
+.badge--completed {
+  background-color: var(--color-status-available-bg);
+  color: var(--color-status-available);
+}
+
+.badge--inactive,
+.badge--transferred,
+.badge--cancelled {
+  background-color: var(--color-status-inactive-bg);
+  color: var(--color-status-inactive);
+}
+
+.badge--reserved,
+.badge--under_repair,
+.badge--draft,
+.badge--open,
+.badge--on_memo,
+.badge--partial {
+  background-color: var(--color-status-reserved-bg);
+  color: var(--color-status-reserved);
+}
+
+.badge--sold,
+.badge--damaged,
+.badge--lost,
+.badge--voided,
+.badge--failed {
+  background-color: var(--color-status-sold-bg);
+  color: var(--color-status-sold);
+}
+
+/* Report export lifecycle: queued work in progress reads as "wait", finished
+   work reuses the available/completed green above. */
+.badge--pending,
+.badge--processing {
+  background-color: var(--color-status-reserved-bg);
+  color: var(--color-status-reserved);
+}
+
+.badge--streamed {
+  background-color: var(--color-status-available-bg);
+  color: var(--color-status-available);
+}
+
+/* Quotation that has already become an invoice — informational, not a warning. */
+.badge--converted,
+.badge--settled {
+  background-color: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+}

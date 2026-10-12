@@ -1,0 +1,97 @@
+/**
+ * Detail lists and money totals.
+ *
+ * .detail-list  — label/value pairs on a record detail screen (customer
+ *                 profile, invoice header).
+ * .totals       — right-hand money summary (subtotal / discount / tax /
+ *                 grand total) shared by quotations, invoices, and prints.
+ */
+
+.detail-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+  margin: 0;
+}
+
+.detail-list__item {
+  margin: 0;
+  min-width: 0;
+}
+
+/* Address / notes need the full row. */
+.detail-list__item--full {
+  grid-column: 1 / -1;
+}
+
+.detail-list__term {
+  margin: 0 0 var(--stack-dense);
+  font-family: var(--font-label-caps);
+  font-size: var(--text-label-caps);
+  line-height: var(--text-label-caps-line);
+  font-weight: var(--text-label-caps-weight);
+  letter-spacing: var(--text-label-caps-tracking);
+  text-transform: uppercase;
+  color: var(--color-on-surface-variant);
+}
+
+.detail-list__value {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  line-height: var(--text-body-sm-line);
+  color: var(--color-on-surface);
+  overflow-wrap: anywhere;
+}
+
+.totals {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-compact);
+  margin: 0;
+}
+
+.totals__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gutter);
+  margin: 0;
+}
+
+.totals__label {
+  margin: 0;
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.totals__value {
+  margin: 0;
+  font-family: var(--font-data-mono);
+  font-size: var(--text-data-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-on-surface);
+}
+
+/* Grand total is separated by a rule and reads at headline weight. */
+.totals__row--grand {
+  margin-top: var(--stack-dense);
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-outline-variant);
+
+  .totals__label {
+    font-size: var(--text-headline-sm);
+    font-weight: 600;
+    color: var(--color-on-surface);
+  }
+
+  .totals__value {
+    font-size: var(--text-headline-sm);
+    font-weight: 600;
+  }
+}
+
+/* Constrain the summary block when it sits under a wide table (print views). */
+.totals--narrow {
+  max-width: 20rem;
+  margin-left: auto;
+}

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Annigems">
+  <!-- Dark slate background -->
+  <rect width="64" height="64" rx="12" fill="#293138"/>
+  <!-- Diamond facets  brand gold -->
+  <path d="M32 8 L52 24 L32 56 L12 24 Z" fill="#f7bd48"/>
+  <path d="M32 8 L42 24 L32 56 L22 24 Z" fill="#ffdea6"/>
+  <path d="M12 24 L32 24 L32 56 Z" fill="#986d00"/>
+  <path d="M52 24 L32 24 L32 56 Z" fill="#785600"/>
+  <path d="M12 24 L22 24 L32 8 Z" fill="#ffdea6" opacity="0.9"/>
+  <path d="M52 24 L42 24 L32 8 Z" fill="#f7bd48" opacity="0.85"/>
+  <!-- Top facet highlight -->
+  <path d="M22 24 L32 8 L42 24 Z" fill="#fffbff" opacity="0.35"/>
+</svg>

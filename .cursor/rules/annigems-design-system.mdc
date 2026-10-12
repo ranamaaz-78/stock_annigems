@@ -1,0 +1,77 @@
+---
+description: Annigems UI must follow design/ via reusable SCSS classes; Tailwind layout-only
+alwaysApply: true
+---
+
+# Annigems — Design System
+
+## Source of truth
+
+1. **Look:** the `design/` folder (approved HTML screens + `design/annigems_administrative_design_system/DESIGN.md`)
+2. **Implementation:** reusable SCSS under `resources/css/` — not one-off Tailwind visual utilities in Blade
+
+Before frontend work: study the relevant design page, then implement with existing SCSS classes / Blade components. If a pattern is missing, **add a shared SCSS class (and Blade component if repeated) first**, then use it.
+
+## SCSS library (canonical)
+
+```
+resources/css/app.scss
+resources/css/abstracts/_tokens.scss      # colors, type, spacing, radii, icon sizes
+resources/css/base/_reset.scss
+resources/css/base/_typography.scss       # .text-display, .text-headline-sm, .text-body-*, .text-label-caps, .text-data-mono
+resources/css/base/_icons.scss            # .icon, .icon--xs|sm|md|lg, color modifiers
+resources/css/components/_buttons.scss    # .btn, .btn--primary|secondary|danger|block
+resources/css/components/_forms.scss      # .form-label, .input-field, .input-with-icon*, .form-error
+resources/css/components/_tables.scss     # .table-admin
+resources/css/components/_badges.scss     # .badge, .badge--active|inactive
+resources/css/components/_alerts.scss     # .alert, .alert--*
+resources/css/components/_cards.scss      # .panel, .card-surface
+resources/css/components/_empty-state.scss
+resources/css/layout/_shell.scss          # .login-*, .sa-sidebar, .sa-topbar, .sa-main
+```
+
+## Rules (mandatory)
+
+### Visual styles → SCSS only
+
+- Colors, typography scale, icon size, input height, borders, radii, shadows, button/badge/table/alert look: **only via SCSS classes** (or Blade components that wrap those classes).
+- **Never** hardcode hex colors in Blade.
+- **Never** size Material Symbols with Tailwind (`text-sm`, `text-[20px]`, `!text-*`) or inline `font-size` / `font-variation-settings`.
+- Icons: always `material-symbols-outlined icon icon--{xs|sm|md|lg}` (+ optional `.icon--secondary` etc.).
+  - Input leading icons: **`icon--sm` (16px)** inside `.input-with-icon`.
+  - Nav/chrome: `icon--md`. Table actions: `icon--xs`. Brand/empty: `icon--lg`.
+
+### Tailwind — layout only
+
+Allowed: `flex`, `grid`, `gap-*`, `hidden`, `md:flex`, width fractions for page structure, `min-h-screen`, simple spacing for page composition when no SCSS layout class exists yet.
+
+Forbidden for component chrome: Tailwind color utilities, arbitrary values for type/icon size, per-page one-off visual hacks.
+
+### Forms with leading icons
+
+Use the shared pattern:
+
+```html
+<div class="input-with-icon">
+  <span class="input-with-icon__icon">
+    <span class="material-symbols-outlined icon icon--sm icon--secondary">person</span>
+  </span>
+  <input class="input-with-icon__field" ...>
+</div>
+```
+
+### Blade components
+
+Prefer existing components (`x-form.input`, `x-btn`, `x-status-badge`, `x-alert`, `x-empty-state`, etc.) which already map to SCSS. Do not re-style them with Tailwind overrides.
+
+### Design constraints (preserve)
+
+- Sharp, compact admin-tool feel; small inputs; dense multi-column forms
+- Small base font; smaller in tables
+- Small radius, minimal shadows, thin borders
+- Palette: brand gold/bronze + neutrals + status colors only
+- Error/auth pages use the same system
+
+### Consistency
+
+Same button / table / input / badge appearing on multiple screens = **one** SCSS class (and one Blade component). No duplicated page-level CSS.

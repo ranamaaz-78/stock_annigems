@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Annigems - Inventory Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#986d00",
+                        "secondary": "#5d5e61",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#293138",
+                        "on-background": "#141d23",
+                        "on-error-container": "#93000a",
+                        "on-primary-container": "#fffbff",
+                        "error-container": "#ffdad6",
+                        "surface-container": "#e6eff8",
+                        "surface-container-lowest": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-container": "#fcfdfe",
+                        "on-tertiary-fixed-variant": "#454748",
+                        "on-surface": "#141d23",
+                        "surface-variant": "#dbe4ed",
+                        "secondary-fixed-dim": "#c6c6c9",
+                        "surface-container-highest": "#dbe4ed",
+                        "on-secondary-fixed-variant": "#454749",
+                        "on-secondary-fixed": "#1a1c1e",
+                        "on-secondary-container": "#636467",
+                        "on-primary-fixed-variant": "#5d4200",
+                        "surface": "#f6faff",
+                        "outline-variant": "#d3c4af",
+                        "background": "#f6faff",
+                        "surface-container-low": "#ecf5fe",
+                        "inverse-on-surface": "#e9f2fb",
+                        "tertiary-fixed-dim": "#c5c7c8",
+                        "on-tertiary": "#ffffff",
+                        "primary-fixed-dim": "#f7bd48",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed": "#191c1d",
+                        "on-primary-fixed": "#271900",
+                        "surface-tint": "#7b5800",
+                        "surface-bright": "#f6faff",
+                        "surface-dim": "#d2dbe4",
+                        "on-surface-variant": "#4f4535",
+                        "surface-container-high": "#e0e9f2",
+                        "primary-fixed": "#ffdea6",
+                        "outline": "#817563",
+                        "secondary-container": "#e2e2e5",
+                        "tertiary": "#5a5c5d",
+                        "tertiary-fixed": "#e1e3e4",
+                        "secondary-fixed": "#e2e2e5",
+                        "tertiary-container": "#737576",
+                        "primary": "#785600",
+                        "inverse-primary": "#f7bd48"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "stack-compact": "0.5rem",
+                        "topbar-height": "64px",
+                        "sidebar-width": "260px",
+                        "gutter": "1rem",
+                        "stack-dense": "0.25rem",
+                        "container-padding": "1.5rem"
+                    },
+                    "fontFamily": {
+                        "label-caps": ["Inter"],
+                        "display": ["Inter"],
+                        "data-mono": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "display": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "data-mono": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+                        "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .icon-fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen font-sans">
+<!-- TopNavBar -->
+<header class="h-topbar-height fixed top-0 right-0 left-sidebar-width bg-surface-container-lowest dark:bg-surface-container-low border-b border-outline-variant flex justify-between items-center px-container-padding z-30 hidden md:flex">
+<div class="flex items-center gap-4">
+<h1 class="font-headline-sm text-headline-sm text-primary">Annigems Admin</h1>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2 cursor-pointer active:opacity-80 hover:bg-surface-container-high transition-colors p-2 rounded">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Branch: Flagship Boutique</span>
+<span class="material-symbols-outlined text-on-surface-variant text-sm">expand_more</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-full flex items-center justify-center cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-full flex items-center justify-center cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant cursor-pointer active:opacity-80">
+<img alt="Manager Profile" class="w-full h-full object-cover" data-alt="A professional headshot of a boutique manager, well-lit, corporate modern aesthetic, subtle grey background, high resolution, soft lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9H3W1mb2bpuHBWYKjca8UMu145kUUMWVprqERh3IMG78scIR4yFIxs7xIkJ9FDDz6f9HXB7X8kY-y4e1cHBpvQrgO-wZO49EsZxGR9xr4-p_kNilBt-2ovqsnv_YkyMGIYW-EE0Dj6jHLtJVtK5XTCZ9dNtz9Jc8bXC680ngQ8cG2EuzEBU85V1el6cB8nXJLUiXXiT9j2vcwW2GzloshGiW4PtfxyeS8VuwgVzoVo_OmlwK_fCqx-A"/>
+</div>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<nav class="w-sidebar-width h-screen fixed left-0 top-0 bg-inverse-surface dark:bg-inverse-surface flex flex-col h-full py-6 z-40 hidden md:flex">
+<div class="px-6 mb-8 flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-container-lowest flex items-center justify-center flex-shrink-0">
+<img alt="Annigems Corporate Logo" class="w-8 h-8 object-contain" data-alt="A minimalist, high-end luxury jewelry brand logo featuring a stylized gemstone or geometric A, rendered in deep gold on a crisp white background. Professional, elegant, corporate modern style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWafY1Kv2I_rVydUeH4c-2j3VkAIXr_WVl1baNHwrtxWzea9OIzkgU2V2IXLW-1nxSU5K1ZbNFGzlGQDpSp5h6uKF_k0C7nZzTIQxntyk_0BSX0IKxNK2_HXCjJqqCF2A9NoHp7M77KJAOa291pPeRBBF37E3nbV9ul6CHV3NE0oB1J7lYxLow3alNUbY8aEphC3N0h5efZdY3IDsx_mwUV7mXi97ekLs_bJtnBnXATqbKrA9F89SzhA"/>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-primary-fixed">Annigems</h2>
+<p class="font-body-sm text-body-sm text-primary-fixed-dim opacity-80">Luxury Inventory</p>
+</div>
+</div>
+<ul class="flex flex-col flex-1 px-4 gap-1">
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT bg-primary-container text-on-primary-container border-r-4 border-primary-fixed transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined icon-fill" data-icon="inventory_2">inventory_2</span>
+<span class="font-body-md text-body-md font-medium">Inventory</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-on-secondary-fixed-variant hover:text-primary-fixed hover:bg-surface-variant/10 transition-colors transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="font-body-md text-body-md">Customers</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-on-secondary-fixed-variant hover:text-primary-fixed hover:bg-surface-variant/10 transition-colors transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-body-md text-body-md">Invoices</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-on-secondary-fixed-variant hover:text-primary-fixed hover:bg-surface-variant/10 transition-colors transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="build">build</span>
+<span class="font-body-md text-body-md">Repairs</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-on-secondary-fixed-variant hover:text-primary-fixed hover:bg-surface-variant/10 transition-colors transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="font-body-md text-body-md">Reports</span>
+</a>
+</li>
+<li class="mt-auto">
+<a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT text-on-secondary-fixed-variant hover:text-primary-fixed hover:bg-surface-variant/10 transition-colors transition-all duration-200 ease-in-out" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-body-md text-body-md">Settings</span>
+</a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Canvas -->
+<main class="md:ml-sidebar-width md:pt-topbar-height p-container-padding max-w-[1600px] mx-auto">
+<!-- Breadcrumbs & Actions -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+<div>
+<div class="flex items-center text-secondary font-body-sm text-body-sm gap-2 mb-1">
+<a class="hover:text-primary transition-colors" href="#">Inventory</a>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<a class="hover:text-primary transition-colors" href="#">Rings</a>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="text-on-surface">SKU: RNG-782-991A</span>
+</div>
+<div class="flex items-center gap-3">
+<h2 class="font-display text-display text-on-background">Solitaire Diamond Engagement Ring</h2>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-label-caps text-label-caps">Available</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex flex-col items-end mr-4">
+<img alt="Barcode" class="h-8 w-auto object-contain opacity-80" data-alt="A clean, crisp black and white barcode specifically designed for luxury retail scanning, high contrast, professional corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCldrxsp-1FyHykhyUGVu5V8Sb7AAVrL0oNzgzH0FedQ7v7bn4FWIVobBVHOBD31DP759ai_1u4fYzRkiufjLeKG7ExWFlcUi_kD_Ktnuwy2bhcsXeEcXn97MgbjHv2AFgp3uJfckRVvyU4g33QF2Gk6uQ7n3SMYsF5mw6P-U6xjh-5n7jwTA0P059tRAyvBJTvYBuk_oaiAtkTH8OnX6rO1bddNIr97wpeVmMD7Bk0Ge8RuzQwL5EXsA"/>
+<span class="font-data-mono text-[10px] text-secondary mt-1">RNG-782-991A</span>
+</div>
+<button class="flex items-center gap-2 px-4 py-2 border border-outline-variant bg-surface-container-lowest text-on-surface font-body-sm text-body-sm rounded-DEFAULT hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-sm">edit</span>
+                    Edit
+                </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary font-body-sm text-body-sm rounded-DEFAULT hover:bg-surface-tint transition-colors shadow-sm">
+<span class="material-symbols-outlined text-sm">print</span>
+                    Print Label
+                </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<!-- Left Column: Gallery (4 cols) -->
+<div class="lg:col-span-4 flex flex-col gap-4">
+<!-- Main Image -->
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-DEFAULT relative aspect-square flex items-center justify-center overflow-hidden">
+<img alt="Main Item Image" class="w-full h-full object-contain" data-alt="A stunning, highly detailed macro photograph of a solitaire diamond engagement ring set in platinum. The lighting is pristine and analytical, capturing the brilliance of the stone against a pure white background. Corporate modern style, ultra-high resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvPm5ucBhCp2W_JlZ5iUvOjQRa5hRhYe-BNvusH9EtSA6z5IOZwpv1n5zirUzwQcaoTB8MLQoDWEeE4iXRCjwsyo3avMwtrTsSyGkI4n7KRXLK_vgffpcuv6HptO6BPyz8_yIHqK6e-UHqTJe1pmuFn3_rV-tMoOSWZaU0Qc7jksAdvvcUFhofnhiBQZXHx-t5hfwxTlNMUccB8QSD3BZwVBLyNtKmW-66yB40Sc5qgkFBePWFsufqjg"/>
+<button class="absolute top-2 right-2 p-1.5 bg-surface/80 rounded border border-outline-variant text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm">zoom_in</span>
+</button>
+</div>
+<!-- Thumbnails -->
+<div class="grid grid-cols-4 gap-2">
+<div class="aspect-square bg-surface-container-lowest border-2 border-primary rounded-DEFAULT overflow-hidden cursor-pointer">
+<img alt="Thumbnail 1" class="w-full h-full object-cover" data-alt="Thumbnail macro shot of the diamond engagement ring from the top down, white background, brilliant lighting, professional jewelry photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbEMK7hDhs4J24DA4S3d3TJFFuRXicZBJh3iwe6mKPOvxK5mxDfUri5swGAwul3PXty91Jxs7GsS89_CiYnbM7iNG2kcnGnjptcTwNthtkz0UkNcO6q9KRVTOIx3XEKyCgF0XGWmYFJze59sUIyQFb14R2fYb6QpV-0qRmVzkW-z8uOF98O0g7te1iN3OMaPd4220SiD9iGH4oUUOo_WoOFhPTGHn7pht0P-4VXoJBSuqszWs7LJnXdA"/>
+</div>
+<div class="aspect-square bg-surface-container-lowest border border-outline-variant rounded-DEFAULT overflow-hidden cursor-pointer hover:border-primary transition-colors opacity-70 hover:opacity-100">
+<img alt="Thumbnail 2" class="w-full h-full object-cover" data-alt="Thumbnail macro shot of the diamond engagement ring showing the side profile and gallery setting, white background, brilliant lighting, professional jewelry photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUESRAMcpA53GawGHYRcvT4pnDHV9PGHKhcaFYjQVGGf_jzxVdjxVldK6T11ae5G76IEgbFuFhTspAXp_JbhrfVRFzGkw6HZZWO0d40-4HvDtB6b1hwtvXPPVIPIL_lCVDgNVH6-XJWUbLoHmZAgrqR2s_kR46Ixu4FUecVXCBQ4JUv6FYVunW8Al-rpDYGhy7rbdD-Qg_vJnWxKI_F4lWodCS64ZR0ndNicKVpWOKJLGk98nhVfrYVg"/>
+</div>
+<div class="aspect-square bg-surface-container-lowest border border-outline-variant rounded-DEFAULT overflow-hidden cursor-pointer hover:border-primary transition-colors opacity-70 hover:opacity-100">
+<img alt="Thumbnail 3" class="w-full h-full object-cover" data-alt="Thumbnail macro shot of the diamond engagement ring showing the hallmark and inner band engraving, white background, brilliant lighting, professional jewelry photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3b7JGpnKNnXZFaXRRL7iePjOT9qZCTy9TN5jboxF54-5swUrqnQJES0R9uxzp7k7hmPNQvWeMQboj5QfeNihu_XejgI7Jq8mhUqHRlfwa686pcPJnJ5VbLRTBWmJ9ruPQcbovF6-uBEW9zhGbbgw33b1qC6LqNGjsx3gykilLpQnQ64dzvnoLi01hR_U8PhSES6S1RQcs1ucSV0pkRpxyKR3TRNQygoESea6vhnIiNZVAZhEzqcJgOQ"/>
+</div>
+<div class="aspect-square bg-surface-container-low border border-outline-variant rounded-DEFAULT flex items-center justify-center cursor-pointer hover:bg-surface-variant transition-colors text-secondary">
+<span class="material-symbols-outlined">add_a_photo</span>
+</div>
+</div>
+</div>
+<!-- Right Column: Details (8 cols) -->
+<div class="lg:col-span-8 flex flex-col gap-6">
+<!-- Data Sections Container -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT overflow-hidden">
+<!-- Basic Info -->
+<div class="p-6 border-b border-outline-variant">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">info</span>
+                            Basic Info
+                        </h3>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-6">
+<div class="flex flex-col gap-stack-dense">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Category</span>
+<span class="font-body-sm text-body-sm text-on-surface">Rings &gt; Engagement</span>
+</div>
+<div class="flex flex-col gap-stack-dense">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Brand/Designer</span>
+<span class="font-body-sm text-body-sm text-on-surface">Annigems Collection</span>
+</div>
+<div class="flex flex-col gap-stack-dense">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Retail Price</span>
+<span class="font-data-mono text-data-mono text-on-surface">$12,500.00</span>
+</div>
+<div class="flex flex-col gap-stack-dense">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Cost Price</span>
+<span class="font-data-mono text-data-mono text-secondary blur-[4px] hover:blur-none transition-all cursor-help" title="Hover to reveal">$6,200.00</span>
+</div>
+</div>
+</div>
+<!-- Metal & Weight -->
+<div class="p-6 border-b border-outline-variant bg-surface">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">weight</span>
+                            Metal &amp; Weight
+                        </h3>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-6">
+<div class="flex flex-col gap-stack-dense">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Metal Type</span>
+<span class="font-body-sm text-body-sm text-on-surface">Platinum</span>
+</div>
+<div class="flex flex-col gap-stack-dense">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Purity</span>
+<span class="font-body-sm text-body-sm text-on-surface">950</span>
+</div>
+<div class="flex flex-col gap-stack-dense">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Total Weight (g)</span>
+<span class="font-data-mono text-data-mono text-on-surface">4.2g</span>
+</div>
+<div class="flex flex-col gap-stack-dense">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Size</span>
+<span class="font-body-sm text-body-sm text-on-surface">US 6.5 (Resizable)</span>
+</div>
+</div>
+</div>
+<!-- Stone Details -->
+<div class="p-6">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">diamond</span>
+                            Stone Details (Center)
+                        </h3>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-6">
+<div class="flex flex-col gap-stack-dense">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Stone Type</span>
+<span class="font-body-sm text-body-sm text-on-surface">Natural Diamond</span>
+</div>
+<div class="flex flex-col gap-stack-dense">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Carat Weight</span>
+<span class="font-data-mono text-data-mono text-on-surface">1.20 ct</span>
+</div>
+<div class="flex flex-col gap-stack-dense">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Color Grade</span>
+<span class="font-body-sm text-body-sm text-on-surface">F</span>
+</div>
+<div class="flex flex-col gap-stack-dense">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Clarity Grade</span>
+<span class="font-body-sm text-body-sm text-on-surface">VVS2</span>
+</div>
+<div class="flex flex-col gap-stack-dense">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Cut</span>
+<span class="font-body-sm text-body-sm text-on-surface">Excellent</span>
+</div>
+<div class="flex flex-col gap-stack-dense">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Certificate</span>
+<a class="font-data-mono text-data-mono text-primary hover:underline flex items-center gap-1" href="#">
+                                    GIA-8891234
+                                    <span class="material-symbols-outlined text-[12px]">open_in_new</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+<!-- Status Timeline -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-6">
+<h3 class="font-headline-sm text-headline-sm text-on-surface mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">history</span>
+                        Stock Movement
+                    </h3>
+<div class="relative border-l border-outline-variant ml-3 space-y-6 pb-2">
+<!-- Event 1 -->
+<div class="relative pl-6">
+<div class="absolute w-2.5 h-2.5 bg-emerald-500 rounded-full -left-[5px] top-1 ring-4 ring-surface-container-lowest"></div>
+<div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1">
+<div>
+<p class="font-body-sm text-body-sm font-medium text-on-surface">Received into Inventory</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-xs mt-0.5">By: Sarah Jenkins (Manager)</p>
+</div>
+<span class="font-data-mono text-data-mono text-secondary text-xs">Oct 12, 2023 - 09:15 AM</span>
+</div>
+</div>
+<!-- Event 2 -->
+<div class="relative pl-6">
+<div class="absolute w-2.5 h-2.5 bg-surface-variant border border-outline rounded-full -left-[5px] top-1 ring-4 ring-surface-container-lowest"></div>
+<div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1">
+<div>
+<p class="font-body-sm text-body-sm font-medium text-on-surface opacity-60">Reserved for Customer</p>
+</div>
+<span class="font-data-mono text-data-mono text-secondary text-xs opacity-60">--</span>
+</div>
+</div>
+<!-- Event 3 -->
+<div class="relative pl-6">
+<div class="absolute w-2.5 h-2.5 bg-surface-variant border border-outline rounded-full -left-[5px] top-1 ring-4 ring-surface-container-lowest"></div>
+<div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1">
+<div>
+<p class="font-body-sm text-body-sm font-medium text-on-surface opacity-60">Sold</p>
+</div>
+<span class="font-data-mono text-data-mono text-secondary text-xs opacity-60">--</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

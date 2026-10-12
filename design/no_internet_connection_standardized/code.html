@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>No Internet Connection - Annigems</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#dbe4ed",
+                    "on-surface": "#141d23",
+                    "error-container": "#ffdad6",
+                    "tertiary-fixed-dim": "#c5c7c8",
+                    "tertiary": "#5a5c5d",
+                    "on-tertiary-fixed-variant": "#454748",
+                    "background": "#f6faff",
+                    "on-surface-variant": "#4f4535",
+                    "on-error-container": "#93000a",
+                    "on-primary-fixed-variant": "#5d4200",
+                    "secondary-container": "#e2e2e5",
+                    "surface-bright": "#f6faff",
+                    "outline-variant": "#d3c4af",
+                    "surface-container-lowest": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "outline": "#817563",
+                    "on-error": "#ffffff",
+                    "surface-container-high": "#e0e9f2",
+                    "on-tertiary-container": "#fcfdfe",
+                    "on-primary-fixed": "#271900",
+                    "surface": "#f6faff",
+                    "on-secondary-container": "#636467",
+                    "inverse-primary": "#f7bd48",
+                    "on-primary-container": "#fffbff",
+                    "surface-tint": "#7b5800",
+                    "on-secondary-fixed": "#1a1c1e",
+                    "on-tertiary-fixed": "#191c1d",
+                    "secondary-fixed": "#e2e2e5",
+                    "surface-container": "#e6eff8",
+                    "error": "#ba1a1a",
+                    "on-background": "#141d23",
+                    "on-secondary-fixed-variant": "#454749",
+                    "primary-fixed": "#ffdea6",
+                    "secondary": "#5d5e61",
+                    "inverse-surface": "#293138",
+                    "surface-variant": "#dbe4ed",
+                    "surface-dim": "#d2dbe4",
+                    "secondary-fixed-dim": "#c6c6c9",
+                    "tertiary-fixed": "#e1e3e4",
+                    "surface-container-low": "#ecf5fe",
+                    "on-primary": "#ffffff",
+                    "inverse-on-surface": "#e9f2fb",
+                    "primary": "#785600",
+                    "on-secondary": "#ffffff",
+                    "tertiary-container": "#737576",
+                    "primary-fixed-dim": "#f7bd48",
+                    "primary-container": "#986d00"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "stack-dense": "0.25rem",
+                    "stack-compact": "0.5rem",
+                    "container-padding": "1.5rem",
+                    "topbar-height": "64px",
+                    "gutter": "1rem",
+                    "sidebar-width": "260px"
+            },
+            "fontFamily": {
+                    "headline-sm": [
+                            "Inter"
+                    ],
+                    "body-md": [
+                            "Inter"
+                    ],
+                    "data-mono": [
+                            "Inter"
+                    ],
+                    "label-caps": [
+                            "Inter"
+                    ],
+                    "body-sm": [
+                            "Inter"
+                    ],
+                    "display": [
+                            "Inter"
+                    ]
+            },
+            "fontSize": {
+                    "headline-sm": [
+                            "18px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "data-mono": [
+                            "13px",
+                            {
+                                    "lineHeight": "18px",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "label-caps": [
+                            "11px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-sm": [
+                            "13px",
+                            {
+                                    "lineHeight": "18px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "display": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "600"
+                            }
+                    ]
+            }
+          },
+        },
+      }
+    </script>
+</head>
+<body class="bg-[#f6faff] h-full flex flex-col font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- Fixed Header Logo -->
+<header class="absolute top-8 left-0 w-full flex items-center justify-center z-50">
+<div class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="diamond" style="font-variation-settings: 'FILL' 1;">diamond</span>
+            Annigems
+        </div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex items-center justify-center p-container-padding">
+<div class="max-w-md w-full bg-surface-container-lowest border border-outline-variant/40 rounded-2xl shadow-sm p-10 text-center flex flex-col items-center gap-6">
+<!-- Illustration -->
+<div class="w-40 h-40 flex items-center justify-center mb-2">
+<svg class="w-full h-full text-outline-variant/60" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.163a1.5 1.5 0 112.121 2.121 1.5 1.5 0 01-2.121-2.121z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"></path>
+</svg>
+</div>
+<!-- Typography -->
+<div class="flex flex-col gap-stack-compact items-center">
+<h1 class="font-display text-[28px] font-bold text-on-surface">No Internet Connection</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-sm mt-1">
+                    Please check your connection. The system will reconnect automatically.
+                </p>
+</div>
+<!-- Action -->
+<button class="mt-6 bg-primary text-on-primary font-label-caps text-label-caps px-8 py-3 rounded-full flex items-center justify-center gap-2 hover:bg-primary-container hover:text-on-primary-container transition-colors duration-200 shadow-sm" onclick="window.location.reload()">
+<span class="material-symbols-outlined text-[16px]" data-icon="refresh">refresh</span>
+                Retry
+            </button>
+<!-- Status Indicator -->
+<div class="mt-2 flex items-center gap-2 font-data-mono text-data-mono text-error">
+<span class="w-2 h-2 rounded-full bg-error animate-pulse"></span>
+                Offline
+            </div>
+</div>
+</main>
+<script>
+        // Simple logic to detect when internet returns and automatically reload
+        window.addEventListener('online', () => {
+            // Optional: Show a brief "Reconnecting..." state before reloading
+            document.querySelector('button').innerHTML = '<span class="material-symbols-outlined text-[16px] animate-spin" data-icon="progress_activity">progress_activity</span> Reconnecting...';
+            document.querySelector('button').classList.add('opacity-75', 'cursor-not-allowed');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        });
+    </script>
+</body></html>

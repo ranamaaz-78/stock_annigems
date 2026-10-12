@@ -1,0 +1,35 @@
+/**
+ * Base document reset / density for the admin tool.
+ */
+
+html {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--color-on-surface);
+  background-color: var(--color-background);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--color-background);
+  color: var(--color-on-surface);
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/**
+ * Shared visibility utility.
+ *
+ * Every module toggles `.is-hidden` from JavaScript to show and hide steps,
+ * rows, and buttons. Defining it once here means a component cannot forget
+ * to declare it and end up rendering an element that should be hidden.
+ */
+.is-hidden {
+  display: none !important;
+}

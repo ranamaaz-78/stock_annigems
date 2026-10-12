@@ -1,0 +1,35 @@
+/**
+ * Annigems SCSS design system entry.
+ * Visual styles only — Tailwind lives in tailwind.css (separate Vite input).
+ */
+
+@import './abstracts/tokens';
+@import './base/reset';
+@import './base/typography';
+@import './base/icons';
+@import './components/buttons';
+@import './components/forms';
+@import '../../node_modules/select2/dist/css/select2.css';
+@import './components/select2';
+@import './components/tables';
+@import './components/badges';
+@import './components/alerts';
+@import './components/cards';
+@import './components/empty-state';
+@import './components/attribution';
+@import './components/kpi';
+@import './components/detail-list';
+@import './components/sales';
+@import './components/pos';
+@import './components/documents';
+@import './components/charts';
+@import './components/reports';
+@import './components/settings';
+@import './components/labels';
+@import './components/stone-images';
+@import './components/stone-form';
+@import './components/stone-intake';
+@import './components/dialog';
+@import './components/pager';
+@import './layout/shell';
+@import './layout/guest';

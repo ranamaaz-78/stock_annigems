@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Annigems Admin - Branch Reports</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "primary-container": "#986d00",
+                            "secondary": "#5d5e61",
+                            "error": "#ba1a1a",
+                            "inverse-surface": "#293138",
+                            "on-background": "#141d23",
+                            "on-error-container": "#93000a",
+                            "on-primary-container": "#fffbff",
+                            "error-container": "#ffdad6",
+                            "surface-container": "#e6eff8",
+                            "surface-container-lowest": "#ffffff",
+                            "on-error": "#ffffff",
+                            "on-primary": "#ffffff",
+                            "on-tertiary-container": "#fcfdfe",
+                            "on-tertiary-fixed-variant": "#454748",
+                            "on-surface": "#141d23",
+                            "surface-variant": "#dbe4ed",
+                            "secondary-fixed-dim": "#c6c6c9",
+                            "surface-container-highest": "#dbe4ed",
+                            "on-secondary-fixed-variant": "#454749",
+                            "on-secondary-fixed": "#1a1c1e",
+                            "on-secondary-container": "#636467",
+                            "on-primary-fixed-variant": "#5d4200",
+                            "surface": "#f6faff",
+                            "outline-variant": "#d3c4af",
+                            "background": "#f6faff",
+                            "surface-container-low": "#ecf5fe",
+                            "inverse-on-surface": "#e9f2fb",
+                            "tertiary-fixed-dim": "#c5c7c8",
+                            "on-tertiary": "#ffffff",
+                            "primary-fixed-dim": "#f7bd48",
+                            "on-secondary": "#ffffff",
+                            "on-tertiary-fixed": "#191c1d",
+                            "on-primary-fixed": "#271900",
+                            "surface-tint": "#7b5800",
+                            "surface-bright": "#f6faff",
+                            "surface-dim": "#d2dbe4",
+                            "on-surface-variant": "#4f4535",
+                            "surface-container-high": "#e0e9f2",
+                            "primary-fixed": "#ffdea6",
+                            "outline": "#817563",
+                            "secondary-container": "#e2e2e5",
+                            "tertiary": "#5a5c5d",
+                            "tertiary-fixed": "#e1e3e4",
+                            "secondary-fixed": "#e2e2e5",
+                            "tertiary-container": "#737576",
+                            "primary": "#785600",
+                            "inverse-primary": "#f7bd48"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.125rem",
+                            "lg": "0.25rem",
+                            "xl": "0.5rem",
+                            "full": "0.75rem"
+                    },
+                    "spacing": {
+                            "stack-compact": "0.5rem",
+                            "topbar-height": "64px",
+                            "sidebar-width": "260px",
+                            "gutter": "1rem",
+                            "stack-dense": "0.25rem",
+                            "container-padding": "1.5rem"
+                    },
+                    "fontFamily": {
+                            "label-caps": ["Inter"],
+                            "display": ["Inter"],
+                            "data-mono": ["Inter"],
+                            "body-sm": ["Inter"],
+                            "body-md": ["Inter"],
+                            "headline-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                            "label-caps": ["11px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                            "display": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                            "data-mono": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+                            "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+                            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f6faff; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .material-symbols-outlined.filled { font-variation-settings: 'FILL' 1; }
+        
+        /* Chart specific styles */
+        .chart-container { position: relative; height: 300px; width: 100%; }
+        .bar { transition: height 0.3s ease; }
+        .bar:hover { opacity: 0.8; }
+        
+        /* Table styles */
+        .table-row-hover:hover { background-color: #f8f9fa; }
+    </style>
+</head>
+<body class="text-on-surface antialiased flex">
+<!-- SideNavBar (Shared Component) -->
+<nav class="w-sidebar-width h-screen fixed left-0 top-0 bg-inverse-surface dark:bg-inverse-surface flex flex-col h-full py-6 z-20">
+<!-- Brand Header -->
+<div class="px-6 mb-8 flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-primary-fixed filled">diamond</span>
+</div>
+<div>
+<h1 class="font-headline-sm text-headline-sm text-primary-fixed tracking-tight">Annigems</h1>
+<p class="font-label-caps text-label-caps text-secondary-fixed-dim uppercase tracking-wider">Luxury Inventory</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<div class="flex-1 overflow-y-auto mt-4 px-3 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-secondary-fixed-variant hover:text-primary-fixed hover:bg-surface-variant/10 transition-colors duration-200 ease-in-out group font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span>Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-secondary-fixed-variant hover:text-primary-fixed hover:bg-surface-variant/10 transition-colors duration-200 ease-in-out group font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">group</span>
+<span>Customers</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-secondary-fixed-variant hover:text-primary-fixed hover:bg-surface-variant/10 transition-colors duration-200 ease-in-out group font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span>Invoices</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-secondary-fixed-variant hover:text-primary-fixed hover:bg-surface-variant/10 transition-colors duration-200 ease-in-out group font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">build</span>
+<span>Repairs</span>
+</a>
+<!-- Active State -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary-container text-on-primary-container border-r-4 border-primary-fixed transition-colors duration-200 ease-in-out font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined filled">analytics</span>
+<span class="font-medium">Reports</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-secondary-fixed-variant hover:text-primary-fixed hover:bg-surface-variant/10 transition-colors duration-200 ease-in-out group font-body-md text-body-md" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="ml-sidebar-width flex-1 flex flex-col min-h-screen">
+<!-- TopNavBar (Shared Component) -->
+<header class="h-topbar-height fixed top-0 right-0 left-sidebar-width bg-surface-container-lowest dark:bg-surface-container-low border-b border-outline-variant flex justify-between items-center px-container-padding z-10">
+<div class="flex items-center gap-4">
+<h2 class="font-headline-sm text-headline-sm text-primary dark:text-primary-fixed-dim font-bold tracking-tight">Annigems Admin</h2>
+<div class="h-6 w-px bg-outline-variant mx-2"></div>
+<!-- Navigation Links (Branch Selector) -->
+<div class="relative group cursor-pointer">
+<div class="flex items-center gap-2 text-primary font-bold border-b-2 border-primary pb-1">
+<span class="font-label-caps text-label-caps">Branch: Flagship Boutique</span>
+<span class="material-symbols-outlined text-sm">keyboard_arrow_down</span>
+</div>
+</div>
+</div>
+<!-- Trailing Actions & Profile -->
+<div class="flex items-center gap-6">
+<!-- Search Bar (on_left in JSON, but placed here based on standard UX flow if needed, omitting full bar for simplicity in topbar right now as per JSON array just having trailing icons) -->
+<div class="flex items-center gap-3">
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer active:opacity-80">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant cursor-pointer">
+<img alt="Manager Profile" class="w-full h-full object-cover" data-alt="A professional headshot portrait of a mature female boutique manager. She is wearing a tailored charcoal grey blazer over a crisp white blouse. The background is softly blurred showing elegant jewelry display cases in a high-end, brightly lit luxury store. The lighting is flattering and high-key, conveying trust and sophisticated competence." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPwZAIzh-0wxPCu1A3iQ8UyuxN2FqO5VzSIyjYZD46Wwc06mdIV9fAs04Rd7JOBf1h3Vkc_SqUqoVabEZ4n_o5-ENv1yxFUZ6JIv0vStxkAYoTsU_l4vn3J90kuBFVTGKD8va0f2qqUzAkoO6Ev3cC3xuK8HZ2oYPeD_YpzFLpkMl6BFAQFrBC6wRoAVmsYNh-vFZwFMnlJJnXzYuMsBMGdCqKibBtiSpEKEGWRAqaIaN0ii6okV4y0w"/>
+</div>
+</div>
+</header>
+<!-- Main Workspace -->
+<main class="mt-[64px] p-container-padding flex-1 flex flex-col gap-6 max-w-[1600px] mx-auto w-full">
+<!-- Page Header & Global Actions -->
+<div class="flex justify-between items-end border-b border-outline-variant pb-4">
+<div>
+<h1 class="font-display text-display text-on-surface mb-2">Branch Reports</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Comprehensive performance analytics for Flagship Boutique.</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded text-on-surface font-body-sm text-body-sm hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined text-[18px]">print</span>
+                        Print View
+                    </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded font-body-sm text-body-sm font-medium hover:bg-primary/90 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                        Export CSV
+                    </button>
+</div>
+</div>
+<!-- Report Type Navigation (Sub-tabs) -->
+<div class="flex items-center gap-1 p-1 bg-surface-container-high rounded-lg inline-flex self-start">
+<button class="px-4 py-2 rounded-md bg-surface-container-lowest shadow-sm text-primary font-body-sm text-body-sm font-medium transition-all">
+                    Sales Performance
+                </button>
+<button class="px-4 py-2 rounded-md text-on-surface-variant font-body-sm text-body-sm hover:text-on-surface hover:bg-surface-container-highest transition-all">
+                    Inventory Turnover
+                </button>
+<button class="px-4 py-2 rounded-md text-on-surface-variant font-body-sm text-body-sm hover:text-on-surface hover:bg-surface-container-highest transition-all">
+                    Profit Margins
+                </button>
+<button class="px-4 py-2 rounded-md text-on-surface-variant font-body-sm text-body-sm hover:text-on-surface hover:bg-surface-container-highest transition-all">
+                    Customer Analytics
+                </button>
+</div>
+<!-- Filter Bar -->
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-xl flex flex-wrap items-end gap-4 shadow-sm">
+<div class="flex flex-col gap-stack-dense">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase">Date Range</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">calendar_today</span>
+<select class="pl-9 pr-8 py-2 border border-outline-variant rounded bg-surface-container-lowest font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer min-w-[200px]">
+<option>This Month (Oct 2023)</option>
+<option>Last Month</option>
+<option>This Quarter</option>
+<option>Year to Date</option>
+<option>Custom Range...</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] pointer-events-none">arrow_drop_down</span>
+</div>
+</div>
+<div class="flex flex-col gap-stack-dense">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase">Staff Member</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">person</span>
+<select class="pl-9 pr-8 py-2 border border-outline-variant rounded bg-surface-container-lowest font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer min-w-[160px]">
+<option>All Staff</option>
+<option>Eleanor Vance</option>
+<option>James H. Sterling</option>
+<option>Sophia Chen</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] pointer-events-none">arrow_drop_down</span>
+</div>
+</div>
+<div class="flex flex-col gap-stack-dense">
+<label class="font-label-caps text-label-caps text-on-surface-variant uppercase">Category</label>
+<div class="relative">
+<select class="pl-3 pr-8 py-2 border border-outline-variant rounded bg-surface-container-lowest font-body-sm text-body-sm text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none cursor-pointer min-w-[140px]">
+<option>All Categories</option>
+<option>Rings</option>
+<option>Necklaces</option>
+<option>Watches</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] pointer-events-none">arrow_drop_down</span>
+</div>
+</div>
+<div class="flex-1"></div> <!-- Spacer -->
+<button class="px-4 py-2 bg-surface-variant text-on-surface-variant rounded font-body-sm text-body-sm font-medium hover:bg-surface-container-high transition-colors">
+                    Reset Filters
+                </button>
+<button class="px-4 py-2 bg-primary text-on-primary rounded font-body-sm text-body-sm font-medium hover:bg-primary/90 transition-colors">
+                    Apply Filters
+                </button>
+</div>
+<!-- KPI Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+<!-- KPI 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-xl shadow-sm flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Gross Sales</span>
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">payments</span>
+</div>
+</div>
+<div class="mt-1">
+<div class="font-display text-display text-on-surface">$428,550</div>
+<div class="flex items-center gap-1 mt-1 text-sm">
+<span class="text-green-700 font-medium flex items-center"><span class="material-symbols-outlined text-[16px]">arrow_upward</span> 12.4%</span>
+<span class="text-on-surface-variant text-xs">vs last month</span>
+</div>
+</div>
+</div>
+<!-- KPI 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-xl shadow-sm flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Units Sold</span>
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">shopping_bag</span>
+</div>
+</div>
+<div class="mt-1">
+<div class="font-display text-display text-on-surface">142</div>
+<div class="flex items-center gap-1 mt-1 text-sm">
+<span class="text-green-700 font-medium flex items-center"><span class="material-symbols-outlined text-[16px]">arrow_upward</span> 4.2%</span>
+<span class="text-on-surface-variant text-xs">vs last month</span>
+</div>
+</div>
+</div>
+<!-- KPI 3 -->
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-xl shadow-sm flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Avg. Ticket Size</span>
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">sell</span>
+</div>
+</div>
+<div class="mt-1">
+<div class="font-display text-display text-on-surface">$3,018</div>
+<div class="flex items-center gap-1 mt-1 text-sm">
+<span class="text-error font-medium flex items-center"><span class="material-symbols-outlined text-[16px]">arrow_downward</span> 1.5%</span>
+<span class="text-on-surface-variant text-xs">vs last month</span>
+</div>
+</div>
+</div>
+<!-- KPI 4 -->
+<div class="bg-surface-container-lowest border border-outline-variant p-4 rounded-xl shadow-sm flex flex-col gap-2">
+<div class="flex justify-between items-start">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase">Returns / Exchanges</span>
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">assignment_return</span>
+</div>
+</div>
+<div class="mt-1">
+<div class="font-display text-display text-on-surface">$12,400</div>
+<div class="flex items-center gap-1 mt-1 text-sm">
+<span class="text-on-surface-variant font-medium flex items-center"><span class="material-symbols-outlined text-[16px]">horizontal_rule</span> 0.0%</span>
+<span class="text-on-surface-variant text-xs">vs last month</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>
