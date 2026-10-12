@@ -120,12 +120,7 @@ class DeliveryNoteTest extends TestCase
 
     private function enableTax(): void
     {
-        app(SettingService::class)->setGroup(SettingGroup::TAX, [
-            'tax_enabled' => true,
-            'tax_type' => 'percentage',
-            'tax_rate' => 18,
-            'tax_label' => 'GST',
-        ], User::factory()->create());
+        $this->useTax(true, 18);
     }
 
     public function test_issuing_takes_loose_stone_out_and_uses_the_alb_series(): void
@@ -236,7 +231,7 @@ class DeliveryNoteTest extends TestCase
             ->getContent();
 
         $this->assertStringContainsString('Delivery Note', $html);
-        $this->assertStringContainsString('Albarán', $html);
+        $this->assertStringNotContainsString('Albarán', $html);
         $this->assertStringContainsString($note->delivery_note_number, $html);
         $this->assertStringContainsString('Maria Garcia', $html);
         $this->assertStringContainsString('03001234567', $html);

@@ -95,7 +95,11 @@ class PerformaController extends Controller
         }
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Performa issued.', ['uuid' => $performa->uuid]);
+            return $this->jsonSuccess('Performa '.$performa->performa_number.' issued.', [
+                'uuid' => $performa->uuid,
+                'number' => $performa->performa_number,
+                'print_url' => route('branch.performas.print', $performa),
+            ]);
         }
 
         return redirect()->route('branch.performas.show', $performa)->with('success', 'Performa issued.');

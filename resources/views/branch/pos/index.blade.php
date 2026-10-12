@@ -31,7 +31,10 @@
         'taxEnabled' => $taxEnabled ?? false,
         'taxType' => $taxType ?? 'none',
         'taxRate' => $taxRate ?? 0,
-        'taxLabel' => $taxLabel ?? 'GST',
+        'taxLabel' => $taxLabel ?? 'IVA',
+        'ivaRates' => $ivaRates,
+        'recargoRates' => $recargoRates,
+        'defaultIvaUuid' => $defaultIvaUuid,
         'currencySymbol' => $currency,
         'currencyDecimals' => (int) setting('currency_decimals', 2),
         'quotationDate' => now()->toDateString(),
@@ -42,6 +45,7 @@
         // Invoice when the cashier may convert, otherwise only quotations exist.
         'defaultKind' => $canConvert ? 'invoice' : 'quotation',
         'canDeliver' => $canDeliver,
+        'canPerforma' => $canPerforma,
         'documentNumbers' => $documentNumbers,
         'routes' => [
             'lookup' => route('branch.quotations.lookup'),
@@ -49,6 +53,8 @@
             'store' => route('branch.quotations.store'),
             'invoice' => route('branch.quotations.invoice'),
             'deliveryNote' => route('branch.delivery-notes.store'),
+            'performa' => route('branch.performas.store'),
+            'creditorSearch' => route('branch.creditors.search'),
             'numbers' => route('branch.pos.numbers'),
             'customerLookup' => route('branch.customers.lookup'),
             'customerSearch' => route('branch.customers.search'),
@@ -175,15 +181,30 @@
                             >
                                 <span class="material-symbols-outlined icon icon--md" aria-hidden="true">local_shipping</span>
                                 <span class="pos-kind__text">
-                                    <span class="pos-kind__name">Delivery Note · Albarán</span>
+                                    <span class="pos-kind__name">Delivery Note</span>
                                     <span class="pos-kind__sub">No tax · takes stock now</span>
+                                </span>
+                            </button>
+                            <button
+                                type="button"
+                                class="pos-kind__opt"
+                                role="radio"
+                                aria-checked="false"
+                                data-kind="performa"
+                                @disabled(! $canPerforma)
+                                @if(! $canPerforma) title="You are not allowed to issue performas" @endif
+                            >
+                                <span class="material-symbols-outlined icon icon--md" aria-hidden="true">assignment</span>
+                                <span class="pos-kind__text">
+                                    <span class="pos-kind__name">Performa</span>
+                                    <span class="pos-kind__sub">To a creditor · no discount, no tax</span>
                                 </span>
                             </button>
                         </div>
 
                         <div class="pos-section__head">
                             <span class="pos-secno">01</span>
-                            <h2 class="pos-section__title">Billed to</h2>
+                            <h2 class="pos-section__title" data-billto-title>Billed to</h2>
                             <span data-customer-chip class="pos-chip">No customer</span>
                             <span class="pos-section__spacer"></span>
                             <button type="button" class="pos-ghost" data-customer-clear>
@@ -380,16 +401,41 @@
                                     <div class="pos-totals__adders" data-tax-off>
                                         <button type="button" class="pos-dashed" data-toggle-tax>
                                             <span class="material-symbols-outlined icon icon--xs">add</span>
-                                            {{ $taxLabel ?? 'Tax' }}
+                                            IVA
                                         </button>
                                     </div>
                                     <div class="pos-totals__row is-hidden" data-tax-applied>
-                                        <span data-tax-applied-label>{{ $taxLabel ?? 'GST' }}</span>
+                                        <select class="pos-discount-type pos-tax-select" data-no-select2 data-iva-select aria-label="IVA rate">
+                                            @foreach($ivaRates as $rate)
+                                                <option value="{{ $rate['uuid'] }}" @selected($rate['uuid'] === $defaultIvaUuid)>{{ $rate['name'] }}</option>
+                                            @endforeach
+                                        </select>
                                         <span class="pos-num" data-preview-tax>0.00</span>
-                                        <button type="button" class="pos-icon-btn" data-clear-tax aria-label="Remove {{ $taxLabel ?? 'tax' }}">
+                                        <button type="button" class="pos-icon-btn" data-clear-tax aria-label="Remove IVA">
                                             <span class="material-symbols-outlined icon icon--xs">close</span>
                                         </button>
                                     </div>
+
+                                    {{-- Recargo de equivalencia: offered once IVA is on. --}}
+                                    @if(count($recargoRates))
+                                        <div class="pos-totals__adders is-hidden" data-recargo-off>
+                                            <button type="button" class="pos-dashed" data-toggle-recargo>
+                                                <span class="material-symbols-outlined icon icon--xs">add</span>
+                                                Recargo de equivalencia
+                                            </button>
+                                        </div>
+                                        <div class="pos-totals__row is-hidden" data-recargo-applied>
+                                            <select class="pos-discount-type pos-tax-select" data-no-select2 data-recargo-select aria-label="Recargo de equivalencia rate">
+                                                @foreach($recargoRates as $rate)
+                                                    <option value="{{ $rate['uuid'] }}">{{ $rate['name'] }}</option>
+                                                @endforeach
+                                            </select>
+                                            <span class="pos-num" data-preview-recargo>0.00</span>
+                                            <button type="button" class="pos-icon-btn" data-clear-recargo aria-label="Remove recargo">
+                                                <span class="material-symbols-outlined icon icon--xs">close</span>
+                                            </button>
+                                        </div>
+                                    @endif
                                 @endif
 
                                 <div class="pos-totals__grand">
@@ -418,6 +464,13 @@
                                     Generate Delivery Note &amp; Deduct Stock
                                 </x-btn>
                             @endif
+                            @if($canPerforma)
+                                <x-btn type="button" block data-generate-performa data-kind-only="performa" loading-text="Saving…">
+                                    <span class="material-symbols-outlined icon icon--sm">assignment</span>
+                                    Generate Performa &amp; Deduct Stock
+                                </x-btn>
+                            @endif
+
                             <p class="pos-settle__note" data-kind-note></p>
                         </div>
                     </section>

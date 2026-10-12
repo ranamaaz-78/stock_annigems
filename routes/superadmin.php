@@ -5,6 +5,7 @@ use App\Http\Controllers\SuperAdmin\BranchController;
 use App\Http\Controllers\SuperAdmin\DashboardController;
 use App\Http\Controllers\SuperAdmin\ReportController;
 use App\Http\Controllers\SuperAdmin\SettingController;
+use App\Http\Controllers\SuperAdmin\TaxRateController;
 use App\Http\Controllers\SuperAdmin\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -40,6 +41,14 @@ Route::middleware(['auth', 'password.changed', 'superadmin', 'branch.context'])
         Route::post('/users/{user}/activate', [UserController::class, 'activate'])->withTrashed()->name('users.activate');
         Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->withTrashed()->name('users.reset-password');
         Route::post('/users/{user}/login-as', [LoginAsController::class, 'store'])->name('users.login-as');
+
+        // Tax rates: the IVA and Recargo de equivalencia lists.
+        Route::get('/tax-rates', [TaxRateController::class, 'index'])->name('tax-rates.index');
+        Route::post('/tax-rates', [TaxRateController::class, 'store'])->name('tax-rates.store');
+        Route::put('/tax-rates/{taxRate}', [TaxRateController::class, 'update'])->name('tax-rates.update');
+        Route::post('/tax-rates/{taxRate}/default', [TaxRateController::class, 'makeDefault'])->name('tax-rates.default');
+        Route::post('/tax-rates/{taxRate}/toggle', [TaxRateController::class, 'toggle'])->name('tax-rates.toggle');
+        Route::delete('/tax-rates/{taxRate}', [TaxRateController::class, 'destroy'])->name('tax-rates.destroy');
 
         Route::get('/gold-rates', [\App\Http\Controllers\SuperAdmin\GoldRateController::class, 'index'])->name('gold-rates.index');
         Route::post('/gold-rates', [\App\Http\Controllers\SuperAdmin\GoldRateController::class, 'store'])->name('gold-rates.store');

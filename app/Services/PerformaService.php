@@ -13,17 +13,19 @@ use App\Models\Performa;
 use App\Models\PerformaItem;
 use App\Models\Stone;
 use App\Models\User;
+use App\Repositories\GoldRateRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
 /**
  * PerformaService
  *
  * Issues and returns credit ledgers. Stock leaves on issue (jewellery on
- * memo, loose stones ISSUED_ON_CREDIT). Prices are never written here —
- * settlement invoices own the money.
+ * memo, loose stones ISSUED_ON_CREDIT). Prices are only a printed memo of
+ * what each line was worth at issue — settlement invoices own the money.
  */
 class PerformaService
 {
@@ -33,6 +35,9 @@ class PerformaService
         private JewelleryItemService $jewelleryItemService,
         private StoneStockService $stoneStockService,
         private AuditLogService $auditLog,
+        private GoldRateRepository $goldRateRepository,
+        private PricingCalculationService $pricing,
+        private CreditorService $creditorService,
     ) {}
 
     /**
@@ -123,8 +128,10 @@ class PerformaService
                 'notes' => $data['notes'] ?? null,
             ]);
 
+            $rates = $this->goldRateRepository->currentRateMap();
+
             foreach ($lines as $index => $line) {
-                $this->writeLine($performa, $line, $index);
+                $this->writeLine($performa, $line, $index, $this->unitPrice($line, $rates));
                 $this->applyIssueStock($line, $performa, $actor);
             }
 
@@ -352,17 +359,53 @@ class PerformaService
     public function resolveCreditorId(array $data, User $actor): ?int
     {
         $uuid = trim((string) ($data['creditor_uuid'] ?? ''));
-        if ($uuid === '') {
+
+        if ($uuid !== '') {
+            $id = Creditor::query()
+                ->active()
+                ->where('uuid', $uuid)
+                ->where('branch_id', $actor->branch_id)
+                ->value('id');
+
+            return $id ? (int) $id : null;
+        }
+
+        return $this->creditorFromWalkin($data, $actor);
+    }
+
+    /**
+     * Someone the POS has not seen before becomes a creditor, so performas
+     * only ever hang off a registered creditor. A phone already on the
+     * branch's creditors is reused rather than registered twice.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function creditorFromWalkin(array $data, User $actor): ?int
+    {
+        $phone = trim((string) ($data['walkin_phone'] ?? ''));
+        $name = trim((string) ($data['walkin_name'] ?? ''));
+
+        if ($phone === '' || $name === '') {
             return null;
         }
 
-        $id = Creditor::query()
+        $existing = Creditor::query()
             ->active()
-            ->where('uuid', $uuid)
             ->where('branch_id', $actor->branch_id)
+            ->where('phone', $phone)
             ->value('id');
 
-        return $id ? (int) $id : null;
+        if ($existing) {
+            return (int) $existing;
+        }
+
+        Gate::forUser($actor)->authorize('create', Creditor::class);
+
+        return (int) $this->creditorService->create([
+            'name' => $name,
+            'phone' => $phone,
+            'email' => trim((string) ($data['walkin_email'] ?? '')) ?: null,
+        ], $actor)->id;
     }
 
     /**
@@ -422,7 +465,7 @@ class PerformaService
     /**
      * @param  array<string, mixed>  $line
      */
-    private function writeLine(Performa $performa, array $line, int $index): PerformaItem
+    private function writeLine(Performa $performa, array $line, int $index, float $unitPrice = 0.0): PerformaItem
     {
         $type = LineType::from((string) $line['line_type']);
         $qty = $type === LineType::JEWELLERY_ITEM ? 1 : max(1, (int) ($line['quantity'] ?? 1));
@@ -442,8 +485,36 @@ class PerformaService
             'quantity_issued' => $qty,
             'quantity_settled' => 0,
             'quantity_returned' => 0,
+            'unit_price' => $unitPrice,
             'sort_order' => $index,
         ]);
+    }
+
+    /**
+     * What one piece of a line was worth at issue, through the same pricing
+     * as a sale: a jewellery piece is metal at today's rate for its purity
+     * plus its set stones; a loose stone is its price per piece. Zero when
+     * there is nothing to price it from (no gold rate, cost not visible).
+     *
+     * @param  array<string, mixed>  $line  Hydrated line
+     * @param  array<int|string, string>  $rates  Current gold rate per purity id
+     */
+    private function unitPrice(array $line, array $rates): float
+    {
+        if (LineType::from((string) $line['line_type']) === LineType::LOOSE_STONE) {
+            return $this->pricing->money($line['price_per_piece'] ?? 0);
+        }
+
+        $stones = $line['stones'] ?? [];
+        unset($line['stones']);
+
+        // A rate typed on the POS ticket wins; otherwise today's rate for the purity.
+        if ($this->pricing->money($line['gold_rate_applied'] ?? 0) <= 0) {
+            $line['gold_rate_applied'] = $rates[$line['purity_id_snapshot'] ?? 0] ?? 0;
+        }
+        $line['making_charge_type'] = $line['making_charge_type'] ?? MakingChargeType::NONE->value;
+
+        return (float) $this->pricing->calculateLine($line, $stones)['line_total'];
     }
 
     /**

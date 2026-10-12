@@ -1,55 +1,84 @@
 {{--
-    Document sheet shell — design/invoice_view.
+    Document sheet shell — one design for invoice, quotation, delivery note and
+    performa (see _documents.scss). Callers fill the slots; the structure and
+    every visual rule stay here so the four documents cannot drift apart, and
+    the printed page is the same sheet the screen shows.
 
-    Shared frame for quotations and invoices: branded header, party columns,
-    itemised table, totals, and footer. Callers fill the slots; the structure
-    and every visual rule stay here so both documents cannot drift apart.
-
-    Slots: meta (required), parties, items, totals, footer, notice (optional).
+    Props: docType (title), number (document no.), branch (null = no company
+    block, as on a delivery note), a4 (print views only).
+    Slots: meta (tiles), notice, parties, extras (e.g. performa stats), items,
+    totals, terms (card beside the totals), footer (strip). All optional.
 --}}
 @props([
-    'docType' => null,      // Heading text, e.g. "Invoice" / "Quotation". Omitted on the live POS sheet.
-    'branch',               // Branch model — its name prints under the brand
-    'outlinedType' => false, // Renders the heading as an outlined pill
-    'a4' => false,           // Forces full page height (print views only)
+    'docType' => null,
+    'number' => null,
+    'branch' => null,      // Branch model; its name prints under the brand. null hides the company block.
+    'a4' => false,         // Forces full page height (print views only)
 ])
 
 <article {{ $attributes->class(['sheet', 'sheet--a4' => $a4]) }}>
-    <header class="sheet__header">
-        <div class="sheet__identity">
-            @if(brand_asset_url('company_logo'))
-                <img class="sheet__logo" src="{{ brand_asset_url('company_logo') }}" alt="{{ setting('company_name') }}">
-            @else
-                <div class="sheet__mark" aria-hidden="true">{{ config('annigems.documents.brand_mark') }}</div>
-            @endif
-            <div>
-                <p class="sheet__brand">{{ setting('company_name', config('annigems.documents.brand_name')) }}</p>
-                <p class="sheet__tagline">{{ config('annigems.documents.brand_tagline') }}</p>
-                <p class="sheet__branch">{{ $branch->name }}</p>
+    <header @class(['sheet__header', 'sheet__header--title-only' => $branch === null])>
+        @if($branch !== null)
+            <div class="sheet__identity">
+                @if(brand_asset_url('company_logo'))
+                    <img class="sheet__logo" src="{{ brand_asset_url('company_logo') }}" alt="{{ setting('company_name') }}">
+                @else
+                    <div class="sheet__mark" aria-hidden="true">{{ config('annigems.documents.brand_mark') }}</div>
+                @endif
+                <div>
+                    <p class="sheet__brand">{{ setting('company_name', config('annigems.documents.brand_name')) }}</p>
+                    <p class="sheet__tagline">{{ config('annigems.documents.brand_tagline') }}</p>
+                    <p class="sheet__branch">{{ $branch->name }}</p>
+                </div>
             </div>
-        </div>
+        @elseif(filled($docType))
+            <h2 class="sheet__doctype">{{ $docType }}</h2>
+        @endif
 
         <div class="sheet__docinfo">
-            {{-- Printed documents name themselves; the live POS sheet does not. --}}
-            @if(filled($docType))
-                <h2 @class(['sheet__doctype', 'sheet__doctype--outlined' => $outlinedType])>{{ $docType }}</h2>
+            @if($branch !== null && filled($docType))
+                <h2 class="sheet__doctype">{{ $docType }}</h2>
             @endif
-            <dl class="sheet__meta">{{ $meta }}</dl>
+            @if(filled($number))
+                <p class="sheet__number">{{ $number }}</p>
+            @endif
         </div>
     </header>
 
-    {{-- Void banner / validity callout sits above the party columns. --}}
+    <div class="sheet__rule" aria-hidden="true"></div>
+
+    @isset($meta)
+        <div class="sheet__tiles">{{ $meta }}</div>
+    @endisset
+
+    {{-- Void banner / validity callout sits above the party card. --}}
     @isset($notice)
         <div class="sheet__notice">{{ $notice }}</div>
     @endisset
 
-    <section class="sheet__parties">{{ $parties }}</section>
+    @isset($parties)
+        <section class="sheet__parties">{{ $parties }}</section>
+    @endisset
 
-    <section class="sheet__items">{{ $items }}</section>
+    @isset($extras)
+        {{ $extras }}
+    @endisset
 
-    {{-- Grouped so margin-top:auto pins both blocks to the foot of the sheet. --}}
+    @isset($items)
+        <section class="sheet__items">{{ $items }}</section>
+    @endisset
+
+    {{-- margin-top:auto pins terms and totals to the foot of the page. --}}
     <div class="sheet__closing">
-        <section class="sheet__totals">{{ $totals }}</section>
-        <footer class="sheet__footer">{{ $footer }}</footer>
+        @isset($terms)
+            <div class="sheet__terms-card">{{ $terms }}</div>
+        @endisset
+        @isset($totals)
+            <section class="sheet__totals">{{ $totals }}</section>
+        @endisset
     </div>
+
+    @isset($footer)
+        <footer class="sheet__footer">{{ $footer }}</footer>
+    @endisset
 </article>

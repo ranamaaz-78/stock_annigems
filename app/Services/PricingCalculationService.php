@@ -122,7 +122,11 @@ class PricingCalculationService
             default => 0.0,
         };
 
-        $grandTotal = round($afterDiscount + $taxAmount, 2);
+        // Recargo de equivalencia is charged on the same discounted base as IVA.
+        $recargoRate = $this->money($document['recargo_rate'] ?? 0);
+        $recargoAmount = round($afterDiscount * min(100, $recargoRate) / 100, 2);
+
+        $grandTotal = round($afterDiscount + $taxAmount + $recargoAmount, 2);
 
         return [
             'subtotal' => $this->formatMoney($subtotal),
@@ -132,6 +136,10 @@ class PricingCalculationService
             'tax_type' => $taxType->value,
             'tax_rate' => $this->formatMoney($taxRate),
             'tax_amount' => $this->formatMoney($taxAmount),
+            'tax_name' => $document['tax_name'] ?? null,
+            'recargo_rate' => number_format($recargoRate, 3, '.', ''),
+            'recargo_amount' => $this->formatMoney($recargoAmount),
+            'recargo_name' => $document['recargo_name'] ?? null,
             'grand_total' => $this->formatMoney($grandTotal),
         ];
     }

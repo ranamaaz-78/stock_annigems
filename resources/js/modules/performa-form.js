@@ -251,6 +251,7 @@ export function bindPerformaForm() {
         el.addEventListener('change', sync);
     });
 
+
     workspaceForm?.addEventListener('submit', async (event) => {
         event.preventDefault();
         if (!validateCreditor()) return;

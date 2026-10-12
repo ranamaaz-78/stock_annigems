@@ -25,7 +25,9 @@
         'taxEnabled' => $taxEnabled ?? true,
         'taxType' => $taxType ?? 'none',
         'taxRate' => $taxRate ?? 0,
-        'taxLabel' => $taxLabel ?? 'GST',
+        'taxLabel' => $taxLabel ?? 'IVA',
+        'ivaRates' => $ivaRates ?? [],
+        'recargoRates' => $recargoRates ?? [],
         'currencySymbol' => setting('currency_symbol', 'Rs'),
         'currencyDecimals' => (int) setting('currency_decimals', 2),
         'routes' => [
@@ -249,9 +251,32 @@
                         <input type="hidden" data-doc="discount_value" value="0">
                     @endif
 
-                    {{-- Tax is SuperAdmin-owned. Hidden fields keep the JS payload in sync. --}}
+                    {{-- Tax rates are SuperAdmin's lists; the percentage is looked up on the server. --}}
                     <input type="hidden" data-doc="tax_type" value="{{ $taxType ?? 'none' }}">
                     <input type="hidden" data-doc="tax_rate" value="{{ $taxRate ?? 0 }}">
+                    @if($taxEnabled ?? false)
+                        <div class="form-grid">
+                            <div>
+                                <label class="form-label" for="tax_rate_uuid">IVA</label>
+                                <select id="tax_rate_uuid" class="input-field" data-no-select2 data-doc="tax_rate_uuid">
+                                    @foreach($ivaRates as $rate)
+                                        <option value="{{ $rate['uuid'] }}" @selected($rate['uuid'] === ($payload['tax_rate_uuid'] ?? null))>{{ $rate['name'] }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            @if(count($recargoRates))
+                                <div>
+                                    <label class="form-label" for="recargo_rate_uuid">Recargo de equivalencia</label>
+                                    <select id="recargo_rate_uuid" class="input-field" data-no-select2 data-doc="recargo_rate_uuid">
+                                        <option value="">None</option>
+                                        @foreach($recargoRates as $rate)
+                                            <option value="{{ $rate['uuid'] }}" @selected($rate['uuid'] === ($payload['recargo_rate_uuid'] ?? null))>{{ $rate['name'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
 
                     <dl class="totals">
                         <div class="totals__row">
@@ -278,8 +303,12 @@
                         @endif
                         @if($taxEnabled ?? true)
                             <div class="totals__row totals__row--rule">
-                                <dt class="totals__label">{{ $taxLabel ?? 'Tax' }}</dt>
+                                <dt class="totals__label">IVA</dt>
                                 <dd class="totals__value" data-tax-amount>0.00</dd>
+                            </div>
+                            <div class="totals__row">
+                                <dt class="totals__label">Recargo de equivalencia</dt>
+                                <dd class="totals__value" data-recargo-amount>0.00</dd>
                             </div>
                         @endif
                         <div class="totals__row totals__row--grand">
@@ -289,15 +318,7 @@
                     </dl>
 
                     @if($taxEnabled ?? false)
-                        <p class="form-help">
-                            {{ $taxLabel ?? 'GST' }}
-                            @if(($taxType ?? '') === 'percentage')
-                                {{ rtrim(rtrim(number_format((float) $taxRate, 2), '0'), '.') }}%
-                            @else
-                                {{ setting_money($taxRate) }}
-                            @endif
-                            — applied after discount, set by SuperAdmin.
-                        </p>
+                        <p class="form-help">IVA and recargo are charged on the discounted total, from the rates SuperAdmin keeps.</p>
                     @endif
                 </div>
             </section>

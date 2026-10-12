@@ -12,8 +12,9 @@ use Illuminate\Validation\Rule;
 /**
  * StorePerformaRequest
  *
- * Issue payload: an existing creditor + scanned lines. No prices — those
- * are captured only when the creditor pays. Walk-in / sales-customer
+ * Issue payload: an existing creditor (or a new one's details) + scanned
+ * lines. Prices are worked out on the server for the printed memo; the
+ * settlement invoice still owns the money. Walk-in / sales-customer
  * attach is not accepted.
  */
 class StorePerformaRequest extends FormRequest
@@ -45,8 +46,20 @@ class StorePerformaRequest extends FormRequest
         $branchId = (int) $this->user()?->branch_id;
 
         return [
+            // An existing creditor, or the details of a new one (the POS saves
+            // someone it has not seen before as a creditor).
+            'walkin_name' => ['nullable', 'string', 'max:150', 'required_without:creditor_uuid'],
+            'walkin_phone' => [
+                'nullable',
+                'string',
+                'max:30',
+                'required_without:creditor_uuid',
+                'regex:/^[0-9+\-\s()]{7,30}$/',
+            ],
+            'walkin_email' => ['nullable', 'email', 'max:150'],
             'creditor_uuid' => [
-                'required',
+                'nullable',
+                'required_without:walkin_phone',
                 'uuid',
                 // Active creditors on this branch only — never a sales customer.
                 Rule::exists('creditors', 'uuid')->where(
@@ -71,6 +84,14 @@ class StorePerformaRequest extends FormRequest
                 'integer',
             ],
             'lines.*.quantity' => ['required', 'integer', 'min:1'],
+            // Optional pricing, used only when the performa prints its prices.
+            'lines.*.price_per_piece' => ['nullable', 'numeric', 'min:0'],
+            'lines.*.gold_rate_applied' => ['nullable', 'numeric', 'min:0'],
+            'lines.*.making_charge_type' => ['nullable', 'string', 'max:20'],
+            'lines.*.making_charge_value' => ['nullable', 'numeric', 'min:0'],
+            'lines.*.stones' => ['nullable', 'array'],
+            'lines.*.stones.*.jewellery_item_stone_id' => ['nullable', 'integer'],
+            'lines.*.stones.*.price_per_piece' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 

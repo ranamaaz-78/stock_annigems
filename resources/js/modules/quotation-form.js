@@ -106,6 +106,7 @@ export function bindQuotationForm() {
         subtotal: root.querySelector('[data-subtotal]'),
         discountAmount: root.querySelector('[data-discount-amount]'),
         taxAmount: root.querySelector('[data-tax-amount]'),
+        recargoAmount: root.querySelector('[data-recargo-amount]'),
         grandTotal: root.querySelector('[data-grand-total]'),
         purityNote: root.querySelector('[data-purity-note]'),
         customerSelect: root.querySelector('[data-customer-select]'),
@@ -135,8 +136,12 @@ export function bindQuotationForm() {
     }
 
     function render() {
-        state.tax_type = config.taxEnabled ? (config.taxType || 'none') : 'none';
-        state.tax_rate = config.taxEnabled ? String(config.taxRate ?? 0) : '0';
+        // The chosen IVA / recargo come from SuperAdmin's lists. The percentage
+        // here is a preview; the server looks the rate up again from the uuid.
+        const iva = config.taxEnabled ? (config.ivaRates || []).find((r) => r.uuid === state.tax_rate_uuid) : null;
+        const recargo = config.taxEnabled ? (config.recargoRates || []).find((r) => r.uuid === state.recargo_rate_uuid) : null;
+        state.tax_type = iva ? 'percentage' : 'none';
+        state.tax_rate = iva ? String(iva.rate) : '0';
         clampDiscount();
 
         const result = recalculate(state.lines, {
@@ -144,12 +149,14 @@ export function bindQuotationForm() {
             discount_value: state.discount_value,
             tax_type: state.tax_type,
             tax_rate: state.tax_rate,
+            recargo_rate: recargo ? String(recargo.rate) : '0',
         });
         state.lines = result.lines;
 
         if (els.subtotal) els.subtotal.textContent = formatMoney(result.document.subtotal);
         if (els.discountAmount) els.discountAmount.textContent = formatMoney(result.document.discount_amount);
         if (els.taxAmount) els.taxAmount.textContent = formatMoney(result.document.tax_amount);
+        if (els.recargoAmount) els.recargoAmount.textContent = formatMoney(result.document.recargo_amount);
         if (els.grandTotal) els.grandTotal.textContent = formatMoney(result.document.grand_total);
 
         renderBreakdown(state.lines);

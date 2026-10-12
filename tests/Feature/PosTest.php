@@ -347,12 +347,7 @@ class PosTest extends TestCase
         $item = $this->piece($admin, $purity);
         $super = User::factory()->create();
 
-        app(SettingService::class)->setGroup(SettingGroup::TAX, [
-            'tax_enabled' => true,
-            'tax_type' => 'percentage',
-            'tax_rate' => 18,
-            'tax_label' => 'GST',
-        ], $super);
+        $this->useTax(true, 18);
 
         $this->actingAs($admin)
             ->postJson(route('branch.quotations.store'), $this->posPayload($item, [
@@ -385,12 +380,7 @@ class PosTest extends TestCase
         $item = $this->piece($admin, $purity);
         $super = User::factory()->create();
 
-        app(SettingService::class)->setGroup(SettingGroup::TAX, [
-            'tax_enabled' => true,
-            'tax_type' => 'percentage',
-            'tax_rate' => 18,
-            'tax_label' => 'GST',
-        ], $super);
+        $this->useTax(true, 18);
 
         $payload = $this->posPayload($item);
         unset($payload['apply_tax']);

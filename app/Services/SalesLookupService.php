@@ -378,9 +378,13 @@ class SalesLookupService
                     ]);
                 }
 
-                $hydrated[] = array_merge($this->stonePayload($stone), [
+                $payload = $this->stonePayload($stone);
+
+                // A price typed on the ticket wins; otherwise the lot's own price
+                // (for users who may see cost) is where the line starts.
+                $hydrated[] = array_merge($payload, [
                     'quantity' => max(1, (int) ($line['quantity'] ?? 1)),
-                    'price_per_piece' => $line['price_per_piece'] ?? '0.00',
+                    'price_per_piece' => $line['price_per_piece'] ?? $payload['price_per_piece'],
                 ]);
 
                 continue;

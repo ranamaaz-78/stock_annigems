@@ -51,7 +51,7 @@ class CreditorController extends Controller
         return $this->jsonSuccess('OK', [
             // values() so JSON is a list. Eloquent map() keeps row ids as
             // keys; that encodes as an object and Select2's .map() throws.
-            'creditors' => $this->creditorService->search($term)->map(fn (Creditor $c): array => [
+            'creditors' => ($request->boolean('catalog') ? $this->creditorService->catalog() : $this->creditorService->search($term))->map(fn (Creditor $c): array => [
                 'uuid' => $c->uuid,
                 'creditor_code' => $c->creditor_code,
                 'name' => $c->name,

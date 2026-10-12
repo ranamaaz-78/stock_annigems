@@ -63,6 +63,21 @@ class CreditorService
     }
 
     /**
+     * Every active creditor of the branch, for the POS to filter locally
+     * the way it does with customers.
+     *
+     * @return Collection<int, Creditor>
+     */
+    public function catalog(int $limit = 5000): Collection
+    {
+        return Creditor::query()
+            ->active()
+            ->orderBy('name')
+            ->limit($limit)
+            ->get(['id', 'uuid', 'creditor_code', 'name', 'phone', 'email', 'city']);
+    }
+
+    /**
      * Register a new creditor on the actor's branch.
      *
      * Wrapped in a transaction because creation also writes an audit log

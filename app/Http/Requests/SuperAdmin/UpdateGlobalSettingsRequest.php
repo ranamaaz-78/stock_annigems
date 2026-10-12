@@ -65,7 +65,7 @@ class UpdateGlobalSettingsRequest extends FormRequest
         return [
             '*.required' => 'This setting is required.',
             '*.boolean' => 'That must be yes or no.',
-            'tax_rate.max' => 'A percentage tax cannot exceed 100.',
+
             'max_discount_percentage.max' => 'The discount ceiling cannot exceed 100%.',
             'numbering_jewellery_prefix.regex' => 'Use uppercase letters, numbers and an optional trailing dash. No spaces.',
             'numbering_stone_prefix.regex' => 'Use uppercase letters, numbers and an optional trailing dash. No spaces.',
@@ -83,14 +83,6 @@ class UpdateGlobalSettingsRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator): void {
-            if ($this->group() === SettingGroup::TAX && $this->boolean('tax_enabled')) {
-                $type = (string) $this->input('tax_type');
-                $rate = (float) $this->input('tax_rate');
-
-                if ($type === TaxType::PERCENTAGE->value && $rate > 100) {
-                    $validator->errors()->add('tax_rate', 'A percentage tax cannot exceed 100.');
-                }
-            }
 
             $allowed = array_column(SettingCatalog::forGroup($this->group()), 'key');
             $ignored = ['_token', '_method'];

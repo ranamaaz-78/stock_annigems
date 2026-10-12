@@ -76,13 +76,9 @@ class SettingCatalog
             self::toggle('public_product_page_enabled', SettingGroup::FEATURES, true, 'New jewellery pieces become reachable on the public product page.'),
             self::toggle('public_invoice_verification_enabled', SettingGroup::FEATURES, true, 'New invoices become reachable on the public verification page.'),
 
-            self::toggle('tax_enabled', SettingGroup::TAX, true, 'Show tax on quotations and invoices. Existing invoices keep the tax they stored.'),
-            self::select('tax_type', SettingGroup::TAX, TaxType::PERCENTAGE->value, 'How the tax amount is calculated.', [
-                TaxType::PERCENTAGE->value => TaxType::PERCENTAGE->label(),
-                TaxType::FIXED->value => TaxType::FIXED->label(),
-            ], ['required', 'in:percentage,fixed'], parent: 'tax_enabled'),
-            self::decimal('tax_rate', SettingGroup::TAX, '0', 'The tax value. A percentage cannot exceed 100.', ['required', 'numeric', 'min:0'], parent: 'tax_enabled'),
-            self::string('tax_label', SettingGroup::TAX, 'GST', 'Label printed next to the tax line, e.g. GST or Sales Tax.', ['required', 'string', 'max:40'], parent: 'tax_enabled'),
+            // The rates themselves (IVA, Recargo de equivalencia) are managed
+            // under Tax Rates; this switch turns tax on or off everywhere.
+            self::toggle('tax_enabled', SettingGroup::TAX, true, 'Apply tax on quotations and invoices. The IVA and Recargo rates are managed under Tax Rates. Existing invoices keep the tax they stored.'),
 
             self::toggle('discount_enabled', SettingGroup::DISCOUNT, true, 'Show the discount control on quotations and invoices.'),
             self::decimal('max_discount_percentage', SettingGroup::DISCOUNT, '100', 'Maximum discount on any quotation or invoice, including Admin.', ['required', 'numeric', 'min:0', 'max:100'], parent: 'discount_enabled'),

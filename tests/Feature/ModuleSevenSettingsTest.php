@@ -274,12 +274,7 @@ class ModuleSevenSettingsTest extends TestCase
         ]);
 
         $this->actingAs($this->superAdmin);
-        app(SettingService::class)->setGroup(SettingGroup::TAX, [
-            'tax_enabled' => true,
-            'tax_type' => 'percentage',
-            'tax_rate' => 17,
-            'tax_label' => 'GST',
-        ], $this->superAdmin);
+        $this->useTax(true, 17);
 
         $this->actingAs($this->admin)
             ->get(route('branch.invoices.show', $invoice))
@@ -341,12 +336,7 @@ class ModuleSevenSettingsTest extends TestCase
     public function test_settings_tax_is_applied_and_cannot_be_overridden(): void
     {
         $this->actingAs($this->superAdmin);
-        app(SettingService::class)->setGroup(SettingGroup::TAX, [
-            'tax_enabled' => true,
-            'tax_type' => 'percentage',
-            'tax_rate' => 18,
-            'tax_label' => 'GST',
-        ], $this->superAdmin);
+        $this->useTax(true, 18);
 
         $item = JewelleryItem::factory()->create([
             'branch_id' => $this->branch->id,
@@ -374,7 +364,7 @@ class ModuleSevenSettingsTest extends TestCase
         $this->actingAs($this->admin)
             ->get(route('branch.pos.show'))
             ->assertOk()
-            ->assertSee('GST')
+            ->assertSee('IVA 18%')
             ->assertDontSee('id="tax-type"', false);
     }
 
@@ -384,12 +374,7 @@ class ModuleSevenSettingsTest extends TestCase
     public function test_disabled_tax_is_stripped_from_quotation(): void
     {
         $this->actingAs($this->superAdmin);
-        app(SettingService::class)->setGroup(SettingGroup::TAX, [
-            'tax_enabled' => false,
-            'tax_type' => 'percentage',
-            'tax_rate' => 18,
-            'tax_label' => 'GST',
-        ], $this->superAdmin);
+        $this->useTax(false, 18);
 
         $item = JewelleryItem::factory()->create([
             'branch_id' => $this->branch->id,

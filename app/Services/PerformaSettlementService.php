@@ -80,6 +80,7 @@ class PerformaSettlementService
                 'discount_value' => 0,
                 'tax_type' => $tax['enabled'] ? $tax['type'] : TaxType::NONE->value,
                 'tax_rate' => $tax['enabled'] ? $tax['rate'] : 0,
+                'tax_name' => $tax['enabled'] ? $tax['name'] : null,
             ]);
 
             $invoice = Invoice::query()->create([
@@ -103,6 +104,7 @@ class PerformaSettlementService
                 'tax_type' => TaxType::from((string) $result['document']['tax_type']),
                 'tax_rate' => $result['document']['tax_rate'],
                 'tax_amount' => $result['document']['tax_amount'],
+                'tax_name' => $result['document']['tax_name'],
                 'grand_total' => $result['document']['grand_total'],
                 'payment_method' => PaymentMethod::from((string) $data['payment_method']),
                 'payment_reference' => $data['payment_reference'] ?? null,

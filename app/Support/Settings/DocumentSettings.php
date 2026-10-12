@@ -5,6 +5,7 @@ namespace App\Support\Settings;
 use App\Enums\DiscountType;
 use App\Enums\TaxType;
 use App\Models\User;
+use App\Services\TaxRateService;
 
 /**
  * DocumentSettings
@@ -12,31 +13,31 @@ use App\Models\User;
  * SuperAdmin tax and discount rules as they apply to a live quotation
  * (and therefore to the invoice converted from it).
  *
- * Tax type, rate and label are not cashier choices — the catalog is the
- * only source. Discount stays an operator control when enabled, and
- * max_discount_percentage caps every role including Admin.
+ * The tax rates (IVA, Recargo de equivalencia) are SuperAdmin's lists. A
+ * cashier chooses one of them by uuid but never types a percentage: the
+ * rate always comes from the list. Discount stays an operator control when
+ * enabled, and max_discount_percentage caps every role including Admin.
  */
 class DocumentSettings
 {
     /**
-     * Current tax rule for new and draft quotations.
+     * The tax a new document starts with: the default IVA rate when tax is
+     * switched on and a default exists, otherwise none.
      *
-     * @return array{enabled: bool, type: string, rate: float, label: string}
+     * @return array{enabled: bool, type: string, rate: float, label: string, name: ?string, uuid: ?string}
      */
     public static function tax(): array
     {
         $enabled = (bool) setting('tax_enabled');
-        $type = (string) setting('tax_type', TaxType::PERCENTAGE->value);
-
-        if (! in_array($type, [TaxType::PERCENTAGE->value, TaxType::FIXED->value], true)) {
-            $type = TaxType::PERCENTAGE->value;
-        }
+        $default = $enabled ? app(TaxRateService::class)->defaultIva() : null;
 
         return [
             'enabled' => $enabled,
-            'type' => $enabled ? $type : TaxType::NONE->value,
-            'rate' => $enabled ? (float) setting('tax_rate', 0) : 0.0,
-            'label' => (string) setting('tax_label', 'GST'),
+            'type' => $default ? TaxType::PERCENTAGE->value : TaxType::NONE->value,
+            'rate' => $default ? (float) $default->rate : 0.0,
+            'label' => $default?->name ?? 'IVA',
+            'name' => $default?->name,
+            'uuid' => $default?->uuid,
         ];
     }
 
@@ -53,16 +54,31 @@ class DocumentSettings
      */
     public static function applyToPayload(array $data, ?User $actor = null): array
     {
-        $tax = self::tax();
         $applyTax = self::shouldApplyTax($data);
 
-        if ($tax['enabled'] && $applyTax) {
-            $data['tax_type'] = $tax['type'];
-            $data['tax_rate'] = $tax['rate'];
+        if ((bool) setting('tax_enabled') && $applyTax) {
+            // A tax_rate_uuid key that is present but empty means "no IVA on
+            // this ticket" (the POS sends it that way); an absent key means the
+            // default IVA, which is what the quotation workspace relies on.
+            $withoutIva = array_key_exists('tax_rate_uuid', $data) && blank($data['tax_rate_uuid']);
+
+            $resolved = app(TaxRateService::class)->resolve(
+                $data['tax_rate_uuid'] ?? null,
+                $data['recargo_rate_uuid'] ?? null,
+                $withoutIva
+            );
         } else {
-            $data['tax_type'] = TaxType::NONE->value;
-            $data['tax_rate'] = 0;
+            $resolved = [
+                'tax_type' => TaxType::NONE->value,
+                'tax_rate' => 0,
+                'tax_name' => null,
+                'recargo_rate' => 0,
+                'recargo_name' => null,
+            ];
         }
+
+        // Whatever the browser sent for the figures is replaced by the list's.
+        $data = array_merge($data, $resolved);
 
         if (! setting('discount_enabled')) {
             $data['discount_type'] = DiscountType::NONE->value;

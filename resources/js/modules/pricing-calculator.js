@@ -94,7 +94,11 @@ export function calculateDocument(lines, document) {
     if (taxType === 'fixed') taxAmount = taxRate;
     if (taxType === 'percentage') taxAmount = money(afterDiscount * Math.min(100, taxRate) / 100);
 
-    const grandTotal = money(afterDiscount + taxAmount);
+    // Recargo de equivalencia is charged on the same discounted base as IVA.
+    const recargoRate = money(document.recargo_rate ?? 0);
+    const recargoAmount = money(afterDiscount * Math.min(100, recargoRate) / 100);
+
+    const grandTotal = money(afterDiscount + taxAmount + recargoAmount);
 
     return {
         subtotal: subtotal.toFixed(2),
@@ -104,6 +108,8 @@ export function calculateDocument(lines, document) {
         tax_type: taxType,
         tax_rate: taxRate.toFixed(2),
         tax_amount: taxAmount.toFixed(2),
+        recargo_rate: recargoRate.toFixed(3),
+        recargo_amount: recargoAmount.toFixed(2),
         grand_total: grandTotal.toFixed(2),
     };
 }

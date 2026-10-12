@@ -331,6 +331,13 @@ return [
             'enabled' => true,
         ],
         [
+            'id' => 'tax-rates',
+            'label' => 'Tax Rates',
+            'route' => 'superadmin.tax-rates.index',
+            'icon' => 'percent',
+            'enabled' => true,
+        ],
+        [
             'id' => 'reports',
             'label' => 'Reports',
             'route' => 'superadmin.reports.index',

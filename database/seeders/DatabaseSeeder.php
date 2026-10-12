@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             BackfillUserRoleIdsSeeder::class,
             MetalPuritySeeder::class,
             SettingSeeder::class,
+            TaxRateSeeder::class,
         ]);
     }
 }

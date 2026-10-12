@@ -33,6 +33,7 @@ class PerformaItem extends Model
         'quantity_issued',
         'quantity_settled',
         'quantity_returned',
+        'unit_price',
         'sort_order',
     ];
 
@@ -48,6 +49,7 @@ class PerformaItem extends Model
             'quantity_issued' => 'integer',
             'quantity_settled' => 'integer',
             'quantity_returned' => 'integer',
+            'unit_price' => 'decimal:2',
             'sort_order' => 'integer',
         ];
     }
@@ -74,6 +76,15 @@ class PerformaItem extends Model
     public function stone(): BelongsTo
     {
         return $this->belongsTo(Stone::class);
+    }
+
+    /**
+     * Worth of a number of pieces at the price fixed when the performa was
+     * issued. Zero when the line was never priced.
+     */
+    public function valueOf(int $quantity): float
+    {
+        return round((float) $this->unit_price * max(0, $quantity), 2);
     }
 
     /**

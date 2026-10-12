@@ -1066,6 +1066,16 @@ html.pos-html body.pos-body {
   color: var(--color-on-surface);
 }
 
+/* IVA / recargo row: the rate list at one end, its amount at the other. */
+.pos-tax-select {
+  flex: 0 1 13rem;
+  min-width: 0;
+}
+
+.pos-totals__row .pos-tax-select + .pos-num {
+  margin-left: auto;
+}
+
 .pos-totals .pos-cell-input {
   width: 6.5rem;
 }

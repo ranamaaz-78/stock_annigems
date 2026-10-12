@@ -146,9 +146,21 @@ export function bindPos() {
         ].join('-');
     }
 
+    /**
+     * A SuperAdmin rate by its uuid, from the lists the page was given.
+     *
+     * @param {Array<{uuid: string, name: string, rate: number}>|undefined} rates
+     * @param {string} uuid
+     */
+    function rateByUuid(rates, uuid) {
+        return (rates || []).find((rate) => rate.uuid === uuid) || null;
+    }
+
     let state = emptyState();
     // Invoice when the cashier may convert, otherwise only quotations exist.
     let documentKind = config.defaultKind === 'invoice' ? 'invoice' : 'quotation';
+    // Which registry the phone field searches: customers, or creditors on a performa.
+    let identityGroup = 'customer';
     // Next number of each series, as last read from the server.
     let documentNumbers = { ...(config.documentNumbers || {}) };
 
@@ -165,6 +177,9 @@ export function bindPos() {
             walkin_email: '',
             customerLocked: false,
             customer_code: '',
+            // The rates SuperAdmin keeps: the chosen IVA (default preselected) and an optional recargo.
+            iva_uuid: config.defaultIvaUuid || '',
+            recargo_uuid: '',
             quotation_date: config.quotationDate || new Date().toISOString().slice(0, 10),
             discount_on: false,
             discount_type: 'none',
@@ -206,6 +221,13 @@ export function bindPos() {
         taxApplied: root.querySelector('[data-tax-applied]'),
         taxAppliedLabel: root.querySelector('[data-tax-applied-label]'),
         clearTax: root.querySelector('[data-clear-tax]'),
+        ivaSelect: root.querySelector('[data-iva-select]'),
+        recargoOff: root.querySelector('[data-recargo-off]'),
+        recargoApplied: root.querySelector('[data-recargo-applied]'),
+        recargoSelect: root.querySelector('[data-recargo-select]'),
+        toggleRecargo: root.querySelector('[data-toggle-recargo]'),
+        clearRecargo: root.querySelector('[data-clear-recargo]'),
+        previewRecargo: root.querySelector('[data-preview-recargo]'),
         generateQuote: root.querySelector('[data-generate-quotation]'),
         generateInvoice: root.querySelector('[data-generate-invoice]'),
         customerLocked: root.querySelector('[data-customer-locked]'),
@@ -224,6 +246,8 @@ export function bindPos() {
         kindChip: root.querySelector('[data-kind-chip]'),
         kindNote: root.querySelector('[data-kind-note]'),
         generateDeliveryNote: root.querySelector('[data-generate-delivery-note]'),
+        generatePerforma: root.querySelector('[data-generate-performa]'),
+        billtoTitle: root.querySelector('[data-billto-title]'),
         actionHelp: root.querySelector('[data-action-help]'),
         previewGrand: root.querySelector('[data-preview-grand]'),
         linesFoot: root.querySelector('[data-lines-foot]'),
@@ -252,16 +276,24 @@ export function bindPos() {
     function render() {
         clampDiscount();
 
-        // A delivery note never carries tax, whatever the ticket's tax toggle says.
-        const taxed = state.apply_tax && config.taxEnabled && documentKind !== 'delivery_note';
-        const taxType = taxed ? (config.taxType || 'none') : 'none';
-        const taxRate = taxed ? String(config.taxRate ?? 0) : '0';
+        // A delivery note never carries tax and a performa neither tax nor discount,
+        // whatever the ticket's toggles say.
+        const taxed = state.apply_tax && config.taxEnabled && !['delivery_note', 'performa'].includes(documentKind);
+        const discounted = state.discount_on && documentKind !== 'performa';
+        // IVA and recargo are separate: either, both or neither can be on.
+        const taxAllowed = config.taxEnabled && !['delivery_note', 'performa'].includes(documentKind);
+        const iva = taxAllowed && state.apply_tax ? rateByUuid(config.ivaRates, state.iva_uuid) : null;
+        const recargo = taxAllowed && state.recargo_uuid ? rateByUuid(config.recargoRates, state.recargo_uuid) : null;
+        // The percentage shown here is a preview; the server looks the rate up again from the uuid.
+        const taxType = iva ? 'percentage' : 'none';
+        const taxRate = iva ? String(iva.rate) : '0';
 
         const result = recalculate(state.lines, {
-            discount_type: state.discount_on ? state.discount_type : 'none',
-            discount_value: state.discount_on ? state.discount_value : '0',
+            discount_type: discounted ? state.discount_type : 'none',
+            discount_value: discounted ? state.discount_value : '0',
             tax_type: taxType,
             tax_rate: taxRate,
+            recargo_rate: recargo ? String(recargo.rate) : '0',
         });
         state.lines = result.lines;
 
@@ -278,19 +310,22 @@ export function bindPos() {
      * and the live fields (or applied GST label) show with an X to remove.
      */
     function renderAdjustButtons() {
-        els.discountOff?.classList.toggle('is-hidden', state.discount_on);
-        els.discountFields?.classList.toggle('is-hidden', !state.discount_on);
+        const noDiscount = documentKind === 'performa';
+        els.discountOff?.classList.toggle('is-hidden', state.discount_on || noDiscount);
+        els.discountFields?.classList.toggle('is-hidden', !state.discount_on || noDiscount);
 
         // No tax controls on a delivery note: it is issued without tax.
-        const noTax = documentKind === 'delivery_note';
+        const noTax = ['delivery_note', 'performa'].includes(documentKind);
         els.taxOff?.classList.toggle('is-hidden', state.apply_tax || noTax);
         els.taxApplied?.classList.toggle('is-hidden', !state.apply_tax || noTax);
 
-        if (els.taxAppliedLabel) {
-            const name = config.taxLabel || 'GST';
-            els.taxAppliedLabel.textContent = config.taxType === 'percentage' && Number(config.taxRate) > 0
-                ? `${name} ${config.taxRate}%`
-                : name;
+        // Recargo is its own control: it does not need IVA, and removing IVA leaves it.
+        const recargoOn = !noTax && Boolean(state.recargo_uuid);
+        els.recargoOff?.classList.toggle('is-hidden', noTax || recargoOn);
+        els.recargoApplied?.classList.toggle('is-hidden', !recargoOn);
+        if (els.ivaSelect && els.ivaSelect.value !== state.iva_uuid) els.ivaSelect.value = state.iva_uuid;
+        if (els.recargoSelect && state.recargo_uuid && els.recargoSelect.value !== state.recargo_uuid) {
+            els.recargoSelect.value = state.recargo_uuid;
         }
     }
 
@@ -340,6 +375,8 @@ export function bindPos() {
 
         if (documentKind === 'invoice') {
             els.kindNote.textContent = 'Payment is taken next. Stock is deducted when the invoice is saved.';
+        } else if (documentKind === 'performa') {
+            els.kindNote.textContent = 'Issued to a creditor. No discount, no tax. Stock leaves now; the creditor pays later.';
         } else if (documentKind === 'delivery_note') {
             els.kindNote.textContent = 'No tax is added. Stock leaves now; the note can be cancelled or invoiced later.';
         } else {
@@ -708,6 +745,11 @@ export function bindPos() {
             els.previewTax.textContent = taxAmount > 0 ? `+ ${formatMoney(taxAmount)}` : formatMoney(0);
         }
 
+        const recargoAmount = Number(documentTotals.recargo_amount || 0);
+        if (els.previewRecargo) {
+            els.previewRecargo.textContent = recargoAmount > 0 ? `+ ${formatMoney(recargoAmount)}` : formatMoney(0);
+        }
+
         if (els.previewTotalNote) {
             const notes = [
                 discountAmount > 0 ? `After ${formatMoney(discountAmount)} discount` : null,
@@ -731,7 +773,7 @@ export function bindPos() {
         documentKind = kind;
         const isInvoice = kind === 'invoice';
         const isQuotation = kind === 'quotation';
-        const labels = { invoice: 'Grand Total', quotation: 'Quotation Total', delivery_note: 'Delivery Note Total' };
+        const labels = { invoice: 'Grand Total', quotation: 'Quotation Total', delivery_note: 'Delivery Note Total', performa: 'Performa Value' };
         if (els.previewGrandLabel) els.previewGrandLabel.textContent = labels[kind] || labels.quotation;
         els.validUntilRows?.forEach((row) => row.classList.toggle('is-hidden', !isQuotation));
 
@@ -742,13 +784,24 @@ export function bindPos() {
             option.setAttribute('aria-checked', on ? 'true' : 'false');
         });
         els.kindOnly?.forEach((control) => control.classList.toggle('is-hidden', control.dataset.kindOnly !== kind));
-        if (els.kindChip) els.kindChip.textContent = { invoice: 'Invoice', quotation: 'Quotation', delivery_note: 'Delivery Note' }[kind] || 'Quotation';
+        if (els.kindChip) els.kindChip.textContent = { invoice: 'Invoice', quotation: 'Quotation', delivery_note: 'Delivery Note', performa: 'Performa' }[kind] || 'Quotation';
         if (els.actionHelp) {
             els.actionHelp.textContent = {
                 invoice: 'An invoice takes payment and marks stock sold. It prints, then clears the ticket.',
                 quotation: 'A quotation holds stock until it is converted or cancelled. It prints, then clears the ticket.',
                 delivery_note: 'A delivery note takes the stock out now and prints the client\'s copy. No tax, no payment.',
+                performa: 'A performa takes the stock out now against a creditor. No discount, no tax; payment comes later on an invoice.',
             }[kind] || '';
+        }
+
+        // Who the ticket is for: a creditor on a performa, a customer otherwise.
+        if (els.billtoTitle) els.billtoTitle.textContent = kind === 'performa' ? 'Issued to (creditor)' : 'Billed to';
+        const group = kind === 'performa' ? 'creditor' : 'customer';
+        if (group !== identityGroup) {
+            identityGroup = group;
+            // The picked person belongs to the other registry: start the fields afresh.
+            unlockCustomer('idle');
+            if (group === 'creditor') loadCreditors();
         }
         renderKindNote();
         renderDocumentNumber();
@@ -887,15 +940,16 @@ export function bindPos() {
         if (!els.chip) return;
         els.chip.classList.remove('pos-chip--existing', 'pos-chip--new');
         els.customerLocked?.classList.toggle('is-hidden', kind !== 'existing');
+        const who = identityGroup === 'creditor' ? 'creditor' : 'customer';
         if (kind === 'existing') {
             const code = state.customer_code ? ` · ${state.customer_code}` : '';
             els.chip.textContent = `Existing${code}`;
             els.chip.classList.add('pos-chip--existing');
         } else if (kind === 'new') {
-            els.chip.textContent = 'New customer';
+            els.chip.textContent = `New ${who}`;
             els.chip.classList.add('pos-chip--new');
         } else {
-            els.chip.textContent = 'No customer';
+            els.chip.textContent = `No ${who}`;
         }
     }
 
@@ -918,7 +972,11 @@ export function bindPos() {
             discount_value: state.discount_on ? state.discount_value : '0',
             tax_type: 'none',
             tax_rate: 0,
-            apply_tax: Boolean(state.apply_tax),
+            // Tax is on when IVA or a recargo is. The IVA key is always sent (null =
+            // none), so a recargo on its own does not pull in the default IVA.
+            apply_tax: Boolean(state.apply_tax || state.recargo_uuid),
+            tax_rate_uuid: state.apply_tax ? (state.iva_uuid || null) : null,
+            recargo_rate_uuid: state.recargo_uuid || null,
             notes: state.notes,
             lines: state.lines.map((line) => serializeLine(line)),
         };
@@ -1178,6 +1236,46 @@ export function bindPos() {
     }
 
     /**
+     * POST performas.store against a creditor: the picked one, or the new one
+     * the phone and name describe (saved as a creditor). No discount, no tax.
+     *
+     * @param {HTMLButtonElement} button
+     */
+    async function generatePerforma(button) {
+        if (!validateCustomer()) return;
+        if (!state.lines.length) {
+            window.AnnigemsAlert?.notifyError('Add at least one item to the performa.');
+            return;
+        }
+
+        setDocumentKind('performa');
+
+        const loading = window.AnnigemsButton?.startButtonLoading(button, 'Saving…');
+        const { ok, json } = await fetchJson(routes.performa, {
+            method: 'POST',
+            body: JSON.stringify({
+                ...buildFormPayload(),
+                creditor_uuid: state.customer_uuid || null,
+                performa_date: state.quotation_date,
+                discount_type: 'none',
+                discount_value: 0,
+                apply_tax: false,
+            }),
+        });
+        loading?.restore();
+
+        if (ok) {
+            finishAndPrint(json.data?.print_url, json.message || 'Performa issued.');
+            refreshDocumentNumbers();
+            loadCreditors();
+        } else if (json.errors && Object.keys(json.errors).length) {
+            showErrors(json.errors, json.message);
+        } else {
+            window.AnnigemsAlert?.notifyError(json.message || 'The performa could not be saved.');
+        }
+    }
+
+    /**
      * POST delivery-notes.store: no payment, no tax. The stock leaves with it.
      *
      * @param {HTMLButtonElement} button
@@ -1333,6 +1431,26 @@ export function bindPos() {
         render();
     });
 
+    els.ivaSelect?.addEventListener('change', () => {
+        state.iva_uuid = els.ivaSelect.value;
+        render();
+    });
+
+    els.toggleRecargo?.addEventListener('click', () => {
+        state.recargo_uuid = els.recargoSelect?.value || config.recargoRates?.[0]?.uuid || '';
+        render();
+    });
+
+    els.recargoSelect?.addEventListener('change', () => {
+        state.recargo_uuid = els.recargoSelect.value;
+        render();
+    });
+
+    els.clearRecargo?.addEventListener('click', () => {
+        state.recargo_uuid = '';
+        render();
+    });
+
     els.clearTax?.addEventListener('click', () => {
         state.apply_tax = false;
         render();
@@ -1341,6 +1459,11 @@ export function bindPos() {
     els.generateQuote?.addEventListener('click', (event) => {
         event.preventDefault();
         generateQuotation(els.generateQuote);
+    });
+
+    els.generatePerforma?.addEventListener('click', (event) => {
+        event.preventDefault();
+        generatePerforma(els.generatePerforma);
     });
 
     els.generateDeliveryNote?.addEventListener('click', (event) => {
@@ -1362,7 +1485,7 @@ export function bindPos() {
     els.kindOptions?.forEach((option) => {
         option.addEventListener('click', () => {
             if (option.disabled) return;
-            setDocumentKind(['invoice', 'delivery_note'].includes(option.dataset.kind) ? option.dataset.kind : 'quotation');
+            setDocumentKind(['invoice', 'delivery_note', 'performa'].includes(option.dataset.kind) ? option.dataset.kind : 'quotation');
         });
     });
 
@@ -1765,6 +1888,7 @@ export function bindPos() {
     /* -------------------------------------------------- customer typeahead ---- */
 
     let customerCatalog = [];
+    let creditorCatalog = [];
     let customerHits = [];
     let activeCustomer = 0;
     let customerSeq = 0;
@@ -1829,7 +1953,7 @@ export function bindPos() {
             return;
         }
 
-        customerHits = customerCatalog.filter((row) => (
+        customerHits = (identityGroup === 'creditor' ? creditorCatalog : customerCatalog).filter((row) => (
             row.haystack.includes(needle) || (digits.length >= 2 && row.haystack.includes(digits))
         )).slice(0, 8).map((row) => customerRow(row));
         activeCustomer = 0;
@@ -1855,6 +1979,29 @@ export function bindPos() {
                 customer.customer_code,
                 customer.email,
                 customer.city,
+            ].filter(Boolean).join(' ').toLowerCase(),
+        }));
+    }
+
+    /**
+     * GET creditors.search?catalog=1 — the branch's creditors, filtered locally
+     * like customers. A creditor looks like a customer to the phone picker.
+     */
+    async function loadCreditors() {
+        if (!routes.creditorSearch) return;
+
+        const { ok, json } = await fetchJson(`${routes.creditorSearch}?catalog=1`);
+        const rows = ok && Array.isArray(json.data?.creditors) ? json.data.creditors : [];
+        creditorCatalog = rows.map((creditor) => ({
+            ...creditor,
+            customer_code: creditor.creditor_code,
+            haystack: [
+                creditor.name,
+                creditor.phone,
+                String(creditor.phone || '').replace(/\D/g, ''),
+                creditor.creditor_code,
+                creditor.email,
+                creditor.city,
             ].filter(Boolean).join(' ').toLowerCase(),
         }));
     }

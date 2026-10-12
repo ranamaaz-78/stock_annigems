@@ -9,6 +9,8 @@ use App\Http\Requests\Branch\StoreDirectInvoiceRequest;
 use App\Http\Requests\Branch\StoreQuotationRequest;
 use App\Models\Customer;
 use App\Models\Quotation;
+use App\Models\TaxRate;
+use App\Services\TaxRateService;
 use App\Repositories\GoldRateRepository;
 use App\Services\InvoiceConversionService;
 use App\Services\PricingCalculationService;
@@ -41,6 +43,7 @@ class QuotationController extends Controller
         private PricingCalculationService $pricingService,
         private GoldRateRepository $goldRateRepository,
         private InvoiceConversionService $conversionService,
+        private TaxRateService $taxRates,
     ) {}
 
     /**
@@ -309,6 +312,8 @@ class QuotationController extends Controller
             'discount_value' => ['nullable', 'numeric'],
             'tax_type' => ['nullable', 'string'],
             'tax_rate' => ['nullable', 'numeric'],
+            'tax_rate_uuid' => ['nullable', 'uuid'],
+            'recargo_rate_uuid' => ['nullable', 'uuid'],
             'apply_tax' => ['sometimes', 'boolean'],
         ]);
 
@@ -330,9 +335,16 @@ class QuotationController extends Controller
         $payload = $quotation ? $this->quotationService->toPayload($quotation) : ($draft ?? []);
         $tax = DocumentSettings::tax();
 
-        // Live SuperAdmin tax wins over a stale draft or an older saved draft.
+        // The rates are SuperAdmin's lists. A saved quotation opens on the IVA /
+        // recargo it was made with when that rate still exists, else the default.
+        $iva = $this->taxRates->active(TaxRate::KIND_IVA);
+        $recargo = $this->taxRates->active(TaxRate::KIND_RECARGO);
+        $ivaUuid = $iva->firstWhere('name', $payload['tax_name'] ?? null)?->uuid ?? $tax['uuid'];
+        $recargoUuid = $recargo->firstWhere('name', $payload['recargo_name'] ?? null)?->uuid;
+        $payload['tax_rate_uuid'] = $ivaUuid;
+        $payload['recargo_rate_uuid'] = $recargoUuid;
         $payload['tax_type'] = $tax['type'];
-        $payload['tax_rate'] = $tax['rate'];
+        $payload['tax_rate'] = $iva->firstWhere('uuid', $ivaUuid)?->rate ?? $tax['rate'];
 
         return [
             'quotation' => $quotation,
@@ -347,6 +359,8 @@ class QuotationController extends Controller
             'taxType' => $tax['type'],
             'taxRate' => $tax['rate'],
             'taxLabel' => $tax['label'],
+            'ivaRates' => $iva->map(fn (TaxRate $r): array => ['uuid' => $r->uuid, 'name' => $r->name, 'rate' => (float) $r->rate])->values()->all(),
+            'recargoRates' => $recargo->map(fn (TaxRate $r): array => ['uuid' => $r->uuid, 'name' => $r->name, 'rate' => (float) $r->rate])->values()->all(),
             'canConvert' => $quotation ? $user->can('convert', $quotation) : $user->hasPermission('quotations.convert'),
             'paymentMethods' => \App\Enums\PaymentMethod::options(),
         ];

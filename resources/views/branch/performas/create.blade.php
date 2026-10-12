@@ -143,6 +143,7 @@
 
             <section class="sales-aside__section sales-aside__section--checkout">
                 <div class="sales-aside__notes">
+
                     <label class="field-inline__label" for="performa-notes">Notes</label>
                     <textarea id="performa-notes" data-doc="notes" class="input-field" rows="2"></textarea>
                 </div>

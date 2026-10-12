@@ -8,7 +8,7 @@ use Illuminate\Database\Seeder;
  * DeploySeeder
  *
  * Runs on every deploy. Only calls seeders that are safe to repeat
- * (roles, permissions, settings, role_id backfill).
+ * (roles, permissions, settings, tax rates when none exist, role_id backfill).
  */
 class DeploySeeder extends Seeder
 {
@@ -21,6 +21,7 @@ class DeploySeeder extends Seeder
             RoleSeeder::class,
             PermissionSeeder::class,
             SettingSeeder::class,
+            TaxRateSeeder::class,
             BackfillUserRoleIdsSeeder::class,
         ]);
     }

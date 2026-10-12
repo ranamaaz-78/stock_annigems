@@ -33,22 +33,114 @@
   margin-bottom: var(--gutter);
 }
 
-/* Branch invoice_print_format / quotation_print_format. */
+/* Branch invoice_print_format / quotation_print_format. The A4 design is
+   narrowed for a till roll: no frame, one column, smaller type. */
+.doc-page--thermal_80mm,
+.doc-page--thermal_58mm {
+  .sheet--a4 {
+    min-height: 0;
+  }
+
+  .sheet::before {
+    display: none;
+  }
+
+  .sheet__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sheet__docinfo {
+    align-items: flex-start;
+  }
+
+  .sheet__doctype,
+  .sheet__header--title-only .sheet__doctype {
+    font-size: 30px;
+    line-height: 32px;
+  }
+
+  .sheet__brand {
+    font-size: 20px;
+    line-height: 22px;
+  }
+
+  .sheet__mark {
+    flex-basis: 40px;
+    width: 40px;
+    height: 40px;
+    font-size: 22px;
+  }
+
+  .sheet__tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sheet__tile--outline {
+    grid-column: span 2;
+  }
+
+  .sheet__party {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .sheet__party-lines {
+    text-align: left;
+  }
+
+  .sheet__party-name {
+    font-size: 18px;
+    line-height: 22px;
+  }
+
+  .sheet__closing {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sheet__totals {
+    grid-column: 1;
+  }
+
+  .sheet__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sheet-table th,
+  .sheet-table td {
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+
+  .sheet-totals__grand-value {
+    font-size: 22px;
+  }
+}
+
 .doc-page--thermal_80mm {
   .sheet,
   .doc-page__toolbar {
     max-width: 80mm;
   }
 
-  .sheet--a4 {
-    min-height: 0;
+  .sheet__header,
+  .sheet__tiles,
+  .sheet__parties,
+  .sheet__notice,
+  .sheet__items,
+  .sheet__stats,
+  .sheet__closing {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
   }
 
-  .sheet__header,
-  .sheet__parties,
-  .sheet__items,
+  .sheet__rule {
+    margin: 0 0.75rem;
+  }
+
   .sheet__footer {
-    padding: 0.75rem;
+    margin: 1rem 0.5rem 0.5rem;
   }
 }
 
@@ -58,439 +150,562 @@
     max-width: 58mm;
   }
 
-  .sheet--a4 {
-    min-height: 0;
+  .sheet__header,
+  .sheet__tiles,
+  .sheet__parties,
+  .sheet__notice,
+  .sheet__items,
+  .sheet__stats,
+  .sheet__closing {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
 
-  .sheet__header,
-  .sheet__parties,
-  .sheet__items,
+  .sheet__rule {
+    margin: 0 0.5rem;
+  }
+
   .sheet__footer {
-    padding: 0.5rem;
+    margin: 1rem 0.25rem 0.25rem;
   }
 }
 
 /* ---------------------------------------------------------------- sheet ---- */
 
+/**
+ * Printed document design — one family for invoice, quotation, delivery note
+ * and performa. Light on ink: white page, a thin gold frame, ivory tiles and
+ * cards, gold accents. Only the grand total is a solid fill.
+ *
+ * Colours are scoped to the sheet so the app's own palette is untouched.
+ */
 .sheet {
+  --doc-gold: #8a6417;
+  --doc-gold-soft: #f3ead6;
+  --doc-gold-line: #e2d3b0;
+  --doc-ivory: #f8f4ec;
+  --doc-ink: #17202a;
+  --doc-muted: #6b604c;
+  --doc-body: #4a4235;
+  --doc-edge: #e7dcc6;
+  --doc-serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  font-variant-numeric: lining-nums;
+
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 56rem;
+  max-width: 794px;
   margin: 0 auto;
-  background-color: var(--color-surface-container-lowest);
-  border: 1px solid var(--color-outline-variant);
+  background-color: #fff;
+  border: 1px solid var(--doc-edge);
   box-shadow: var(--shadow-card);
+  color: var(--doc-ink);
+  font-size: 12.5px;
+  line-height: 18px;
+}
+
+/* The thin gold frame inside the page edge. */
+.sheet::before {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border: 1px solid var(--doc-gold-line);
+  border-radius: 4px;
+  pointer-events: none;
 }
 
 /* Only the printable page forces full A4 height; in-app detail views size to
    their content so a two-line invoice does not leave a metre of whitespace. */
 .sheet--a4 {
-  min-height: 1122px;
+  min-height: 1123px;
 }
 
 .sheet__header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: var(--gutter);
-  padding: 2rem;
-  border-bottom: 1px solid var(--color-outline-variant);
+  gap: 24px;
+  padding: 42px 48px 20px;
 }
 
 .sheet__identity {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 16px;
 }
 
 .sheet__logo {
-  flex: 0 0 auto;
-  width: 4rem;
-  height: 4rem;
+  max-width: 120px;
+  max-height: 56px;
   object-fit: contain;
-  border-radius: var(--radius-sm);
 }
 
-/* Square brand tile carrying the single-letter mark. */
 .sheet__mark {
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  width: 4rem;
-  height: 4rem;
-  border-radius: var(--radius-sm);
-  background-color: var(--color-primary-container);
-  color: var(--color-on-primary-container);
-  font-family: var(--font-display);
-  font-size: var(--text-display);
-  font-weight: var(--text-display-weight);
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 56px;
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  background-color: var(--doc-gold);
+  color: #fff;
+  font-family: var(--doc-serif);
+  font-size: 32px;
+  font-weight: 700;
 }
 
 .sheet__brand {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--text-display);
-  font-weight: var(--text-display-weight);
-  letter-spacing: var(--text-display-tracking);
-  line-height: var(--text-display-line);
-  color: var(--color-primary);
+  font-family: var(--doc-serif);
+  font-size: 30px;
+  line-height: 30px;
+  font-weight: 700;
+  color: var(--doc-ink);
 }
 
 .sheet__tagline {
-  margin: 0;
-  font-size: var(--text-body-sm);
-  line-height: var(--text-body-sm-line);
-  color: var(--color-on-surface-variant);
+  margin: 3px 0 0;
+  font-size: 9.5px;
+  line-height: 14px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--doc-gold);
 }
 
 .sheet__branch {
-  margin: var(--stack-dense) 0 0;
-  font-family: var(--font-label-caps);
-  font-size: var(--text-label-caps);
-  font-weight: var(--text-label-caps-weight);
-  letter-spacing: var(--text-label-caps-tracking);
-  line-height: var(--text-label-caps-line);
-  text-transform: uppercase;
-  color: var(--color-on-surface-variant);
+  margin: 3px 0 0;
+  font-size: 11px;
+  line-height: 15px;
+  color: var(--doc-muted);
 }
 
 .sheet__docinfo {
-  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
 }
 
 .sheet__doctype {
-  margin: 0 0 var(--stack-compact);
-  font-family: var(--font-headline-sm);
-  font-size: var(--text-headline-sm);
-  font-weight: var(--text-headline-sm-weight);
-  line-height: var(--text-headline-sm-line);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--color-on-surface);
+  margin: 0;
+  font-family: var(--doc-serif);
+  font-size: 54px;
+  line-height: 48px;
+  font-weight: 600;
+  color: var(--doc-gold);
 }
 
-/* Quotations wear an outlined pill so a quote is never mistaken for a bill. */
-.sheet__doctype--outlined {
-  display: inline-block;
-  padding: 0.25rem 0.625rem;
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-sm);
-  color: var(--color-primary);
+/* Document number in a soft pill under the title. */
+.sheet__number {
+  margin: 0;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background-color: var(--doc-ivory);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--doc-ink);
 }
 
-/* Delivery note (albarán): the title is the header, in two languages. */
-.sheet__header--delivery-note {
+/* Delivery note: no company, so the title is the whole header. */
+.sheet__header--title-only {
   align-items: flex-end;
 }
 
-.sheet__headline {
-  margin: 0;
-  font-family: var(--font-headline-sm);
-  font-size: 2.25rem;
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--color-on-surface);
+.sheet__header--title-only .sheet__doctype {
+  font-size: 66px;
+  line-height: 60px;
 }
 
-.sheet__headline-alt {
-  margin: 0.25rem 0 0;
-  font-size: 1.25rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-on-surface-variant);
+/* Gold double rule under the header. */
+.sheet__rule {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0 48px;
 }
 
-.sheet__parties--single {
-  grid-template-columns: minmax(0, 1fr);
+.sheet__rule::before,
+.sheet__rule::after {
+  content: '';
+  display: block;
+  background-color: var(--doc-gold);
 }
 
-/* Label / value pairs (Invoice No, Date, Valid until…). */
-.sheet__meta {
+.sheet__rule::before {
+  height: 2px;
+}
+
+.sheet__rule::after {
+  height: 1px;
+}
+
+/* Facts about the document, as ivory tiles (date, payment, status…). */
+.sheet__tiles {
   display: grid;
-  grid-template-columns: auto auto;
-  gap: var(--stack-dense) 1rem;
-  justify-content: end;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
   margin: 0;
+  padding: 24px 48px 0;
 }
 
 .sheet__meta-label {
   margin: 0;
-  font-family: var(--font-label-caps);
-  font-size: var(--text-label-caps);
-  font-weight: var(--text-label-caps-weight);
-  letter-spacing: var(--text-label-caps-tracking);
-  line-height: var(--text-label-caps-line);
+  font-size: 9.5px;
+  line-height: 14px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  text-align: right;
-  color: var(--color-on-surface-variant);
-  align-self: center;
+  color: var(--doc-muted);
 }
 
 .sheet__meta-value {
   margin: 0;
-  font-family: var(--font-data-mono);
-  font-size: var(--text-data-mono);
-  font-weight: var(--text-data-mono-weight);
-  line-height: var(--text-data-mono-line);
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-  color: var(--color-on-surface);
+  font-size: 13.5px;
+  line-height: 18px;
+  font-weight: 600;
+  color: var(--doc-ink);
+}
+
+.sheet__tile {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 11px 14px;
+  border-radius: 6px;
+  background-color: var(--doc-ivory);
+}
+
+/* A tile that stands out (validity on a quotation). */
+.sheet__tile--outline {
+  grid-column: span 2;
+  background-color: #fff;
+  border: 1.5px solid var(--doc-gold);
+}
+
+.sheet__tile--outline .sheet__meta-label {
+  color: var(--doc-gold);
 }
 
 /* ---------------------------------------------------------- party blocks ---- */
 
 .sheet__parties {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  padding: var(--container-padding) 2rem;
+  display: block;
+  padding: 20px 48px 0;
 }
 
+/* One card across the page: name on the left, contact on the right. */
 .sheet__party {
-  padding-right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 16px 18px;
+  border: 1px solid var(--doc-edge);
+  border-radius: 8px;
 }
 
-/* Right-hand column is separated by a rule, per the approved design. */
-.sheet__party--divided {
-  padding-right: 0;
-  padding-left: 1rem;
-  border-left: 1px solid var(--color-outline-variant);
+.sheet__party + .sheet__party {
+  margin-top: 12px;
 }
 
 .sheet__party-label {
-  margin: 0 0 var(--stack-compact);
-  font-family: var(--font-label-caps);
-  font-size: var(--text-label-caps);
-  font-weight: var(--text-label-caps-weight);
-  letter-spacing: var(--text-label-caps-tracking);
-  line-height: var(--text-label-caps-line);
+  margin: 0 0 2px;
+  font-size: 9.5px;
+  line-height: 14px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--color-on-surface-variant);
+  color: var(--doc-muted);
 }
 
 .sheet__party-name {
   margin: 0;
-  font-size: var(--text-body-md);
-  font-weight: 600;
-  line-height: var(--text-body-md-line);
-  color: var(--color-on-surface);
+  font-family: var(--doc-serif);
+  font-size: 24px;
+  line-height: 28px;
+  font-weight: 700;
+  color: var(--doc-ink);
 }
 
 .sheet__party-lines {
-  margin: var(--stack-dense) 0 0;
-  font-size: var(--text-body-sm);
-  line-height: var(--text-body-sm-line);
-  color: var(--color-on-surface-variant);
+  margin: 0;
+  text-align: right;
+  color: var(--doc-body);
 }
 
-/* Full-width strip for a voided banner or a validity callout. */
 .sheet__notice {
-  padding: 0 2rem;
-}
-
-.sheet__notice + .sheet__parties {
-  padding-top: var(--stack-compact);
+  padding: 16px 48px 0;
 }
 
 /* ---------------------------------------------------------------- table ---- */
 
-/* flex-grow pushes the totals and footer to the bottom of a tall sheet. */
 .sheet__items {
-  flex: 1 1 auto;
-  padding: var(--stack-compact) 2rem 1rem;
+  padding: 20px 48px 0;
 }
 
 .sheet-table {
   width: 100%;
-  border-collapse: collapse;
-  text-align: left;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .sheet-table th {
-  padding: var(--stack-compact) 1rem;
-  background-color: var(--color-surface-variant);
-  border-top: 1px solid var(--color-outline-variant);
-  border-bottom: 1px solid var(--color-outline-variant);
-  font-family: var(--font-label-caps);
-  font-size: var(--text-label-caps);
-  font-weight: var(--text-label-caps-weight);
-  letter-spacing: var(--text-label-caps-tracking);
-  line-height: var(--text-label-caps-line);
+  padding: 10px 12px;
+  background-color: var(--doc-gold-soft);
+  border-bottom: 2px solid var(--doc-gold);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 14px;
+  text-align: left;
   text-transform: uppercase;
-  color: var(--color-on-surface-variant);
-  white-space: nowrap;
+  color: var(--doc-ink);
+}
+
+/* Numbers sit right, under a right-aligned heading (needs the th specificity). */
+.sheet-table th.sheet-table__num {
+  text-align: right;
+}
+
+.sheet-table th:first-child {
+  border-top-left-radius: 6px;
+}
+
+.sheet-table th:last-child {
+  border-top-right-radius: 6px;
 }
 
 .sheet-table td {
-  height: 48px;
-  padding: var(--stack-compact) 1rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-outline-variant) 50%, transparent);
-  font-family: var(--font-data-mono);
-  font-size: var(--text-data-mono);
-  font-weight: var(--text-data-mono-weight);
-  line-height: var(--text-data-mono-line);
-  font-variant-numeric: tabular-nums;
-  vertical-align: middle;
+  padding: 14px 12px;
+  border-bottom: 1px solid #efe6d4;
+  font-size: 12.5px;
+  line-height: 17px;
+  color: var(--doc-ink);
+  vertical-align: top;
 }
 
-/* Item description reads as prose, not tabular data. */
-.sheet-table__desc {
-  font-family: var(--font-body-sm);
-  font-size: var(--text-body-sm);
-  font-weight: var(--text-body-sm-weight);
-  font-variant-numeric: normal;
+.sheet-table tbody tr:nth-child(even) td {
+  background-color: #fcfaf5;
+}
+
+.sheet-table__code {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background-color: var(--doc-gold-soft);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #5d4200;
+}
+
+.sheet-table__name {
+  display: block;
+  margin-top: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
 }
 
 .sheet-table__sub {
   display: block;
   margin-top: 2px;
-  font-family: var(--font-data-mono);
   font-size: 11px;
+  line-height: 15px;
+  color: var(--doc-muted);
+}
+
+.sheet-table__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.sheet-table__chip {
+  padding: 2px 8px;
+  border: 1px solid var(--doc-edge);
+  border-radius: 999px;
+  font-size: 10.5px;
   line-height: 14px;
-  color: var(--color-on-surface-variant);
+  color: var(--doc-body);
 }
 
 .sheet-table__num {
   text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .sheet-table__muted {
   text-align: right;
-  color: var(--color-on-surface-variant);
+  white-space: nowrap;
+  color: var(--doc-body);
 }
 
 .sheet-table__total {
   text-align: right;
-  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 /* --------------------------------------------------------------- totals ---- */
 
-/* Wraps totals + footer so mt-auto keeps them pinned to the sheet bottom. */
+/* Terms on the left, totals card on the right, pinned to the page foot. */
 .sheet__closing {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
+  align-items: end;
   margin-top: auto;
+  padding: 20px 48px 30px;
+}
+
+.sheet__terms-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  border-radius: 8px;
+  background-color: var(--doc-ivory);
 }
 
 .sheet__totals {
-  display: flex;
-  justify-content: flex-end;
-  padding: var(--container-padding) 2rem;
+  grid-column: 2;
+}
+
+.sheet__terms-card:empty {
+  display: none;
 }
 
 .sheet-totals {
-  width: 100%;
-  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px 0;
+  border: 1px solid var(--doc-edge);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .sheet-totals__row {
   display: flex;
-  align-items: baseline;
   justify-content: space-between;
-  gap: 1rem;
-  padding: var(--stack-compact) 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-outline-variant) 50%, transparent);
+  gap: 16px;
+  padding: 5px 0;
+  font-size: 12.5px;
+  color: var(--doc-body);
 }
 
 .sheet-totals__label {
-  font-size: var(--text-body-sm);
-  line-height: var(--text-body-sm-line);
-  color: var(--color-on-surface-variant);
+  color: var(--doc-body);
 }
 
 .sheet-totals__value {
-  font-family: var(--font-data-mono);
-  font-size: var(--text-data-mono);
-  font-weight: var(--text-data-mono-weight);
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  color: var(--color-on-surface);
+  text-align: right;
 }
 
+/* The one solid fill on the page. */
 .sheet-totals__grand {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin-top: var(--stack-compact);
-  padding: 1rem;
-  border-radius: var(--radius-sm);
-  background-color: var(--color-surface-container-low);
+  gap: 12px;
+  margin: 12px -18px 0;
+  padding: 14px 18px;
+  background-color: var(--doc-gold);
+  color: #fff;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .sheet-totals__grand-label {
-  font-family: var(--font-headline-sm);
-  font-size: var(--text-headline-sm);
-  font-weight: var(--text-headline-sm-weight);
-  line-height: var(--text-headline-sm-line);
-  color: var(--color-on-surface);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .sheet-totals__grand-value {
-  font-family: var(--font-display);
-  font-size: var(--text-display);
-  font-weight: var(--text-display-weight);
-  letter-spacing: var(--text-display-tracking);
-  line-height: var(--text-display-line);
-  font-variant-numeric: tabular-nums;
+  font-family: var(--doc-serif);
+  font-size: 30px;
+  line-height: 30px;
+  font-weight: 700;
   white-space: nowrap;
-  color: var(--color-primary);
 }
 
 /* --------------------------------------------------------------- footer ---- */
 
 .sheet__footer {
+  position: relative;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
-  gap: var(--container-padding);
-  padding: 2rem;
-  border-top: 1px solid var(--color-outline-variant);
-  background-color: var(--color-surface);
+  gap: 24px;
+  margin: 0 30px 30px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--doc-gold);
+  border-radius: 0 0 4px 4px;
+  background-color: var(--doc-ivory);
+}
+
+.sheet__footer-title {
+  margin: 0;
+  font-family: var(--doc-serif);
+  font-size: 18px;
+  line-height: 22px;
+  font-style: italic;
+  color: var(--doc-gold);
+}
+
+.sheet__footer-text {
+  margin: 0;
+  font-size: 11px;
+  line-height: 15px;
+  color: var(--doc-body);
 }
 
 .sheet__terms-label {
-  margin: 0 0 var(--stack-dense);
-  font-family: var(--font-label-caps);
-  font-size: var(--text-label-caps);
-  font-weight: var(--text-label-caps-weight);
-  letter-spacing: var(--text-label-caps-tracking);
-  line-height: var(--text-label-caps-line);
+  margin: 0;
+  font-size: 9.5px;
+  line-height: 14px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--color-on-surface-variant);
+  color: var(--doc-muted);
 }
 
 .sheet__terms {
-  max-width: 28rem;
   margin: 0;
-  font-size: var(--text-body-sm);
-  line-height: var(--text-body-sm-line);
-  color: var(--color-on-surface-variant);
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--doc-body);
 }
 
 .sheet__terms + .sheet__terms {
-  margin-top: var(--stack-compact);
+  margin-top: 4px;
 }
 
-/* QR / code column on the right of the footer. */
 .sheet__codes {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  flex: 0 0 auto;
+  gap: 12px;
 }
 
 .sheet__qr {
-  display: grid;
-  place-items: center;
-  width: 4rem;
-  height: 4rem;
-  padding: 2px;
-  border: 1px solid var(--color-outline);
-  background-color: var(--color-surface-container-lowest);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border: 1px solid var(--doc-edge);
+  border-radius: 6px;
+  background-color: #fff;
+  overflow: hidden;
 }
 
 .sheet__qr img {
@@ -502,30 +717,56 @@
 .sheet__code {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--stack-dense);
-  width: 8rem;
-  height: 4rem;
-  border: 1px solid var(--color-outline);
-  background-color: var(--color-surface-variant);
+  gap: 2px;
 }
 
 .sheet__code-label {
-  font-family: var(--font-label-caps);
-  font-size: var(--text-label-caps);
-  font-weight: var(--text-label-caps-weight);
-  letter-spacing: var(--text-label-caps-tracking);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--color-on-surface-variant);
+  color: var(--doc-muted);
 }
 
 .sheet__code-value {
-  font-family: var(--font-data-mono);
   font-size: 11px;
-  line-height: 14px;
   font-variant-numeric: tabular-nums;
-  color: var(--color-on-surface);
+  color: var(--doc-ink);
+}
+
+/* Performa: how many are issued / settled / returned / still out. */
+.sheet__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  padding: 20px 48px 0;
+}
+
+.sheet__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--doc-edge);
+  border-radius: 8px;
+}
+
+.sheet__stat strong {
+  font-size: 30px;
+  line-height: 32px;
+  font-weight: 700;
+}
+
+.sheet__stat--accent {
+  background-color: var(--doc-gold);
+  border-color: var(--doc-gold);
+  color: #fff;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.sheet__stat--accent .sheet__meta-label {
+  color: #fff;
 }
 
 /* Attribution / links printed under the sheet on the in-app detail screens. */
@@ -553,6 +794,10 @@
 
 /* ---------------------------------------------------------------- print ---- */
 
+@page {
+  margin: 0;
+}
+
 @media print {
   .no-print {
     display: none !important;
@@ -564,16 +809,18 @@
     background-color: #fff;
   }
 
-  /* Paper already frames the document; borders and shadows only waste ink. */
+  /* The page itself is the sheet: fill an A4 with no browser margin, keep the
+     ivory tiles and the gold total (colour adjust), drop the screen shadow. */
   .sheet {
     max-width: none;
-    min-height: 0;
     border: 0;
     box-shadow: none;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
-  .sheet__footer {
-    background-color: transparent;
+  .sheet--a4 {
+    min-height: 297mm;
   }
 
   /* Sticky headers repeat oddly on paper. */

@@ -106,6 +106,16 @@ class CodeSequenceService
     }
 
     /**
+     * The performa number the next issue would receive, without taking it.
+     *
+     * @see self::peekQuotationNumber()
+     */
+    public function peekPerformaNumber(): string
+    {
+        return $this->peek('performa');
+    }
+
+    /**
      * Next performa number, e.g. PRF-000125.
      */
     public function nextPerformaNumber(): string

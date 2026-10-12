@@ -247,6 +247,7 @@ class DeliveryNoteService
                     'discount_value' => $note->discount_value,
                     'tax_type' => $tax['enabled'] ? $tax['type'] : TaxType::NONE->value,
                     'tax_rate' => $tax['enabled'] ? $tax['rate'] : 0,
+                    'tax_name' => $tax['enabled'] ? $tax['name'] : null,
                 ]
             );
 
@@ -269,6 +270,7 @@ class DeliveryNoteService
                 'tax_type' => TaxType::from($document['tax_type']),
                 'tax_rate' => $document['tax_rate'],
                 'tax_amount' => $document['tax_amount'],
+                'tax_name' => $document['tax_name'],
                 'grand_total' => $document['grand_total'],
                 'payment_method' => PaymentMethod::from($payment['payment_method']),
                 'payment_reference' => $payment['payment_reference'] ?? null,

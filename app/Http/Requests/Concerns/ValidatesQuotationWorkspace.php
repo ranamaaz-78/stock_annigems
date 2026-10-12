@@ -98,6 +98,10 @@ trait ValidatesQuotationWorkspace
             'discount_value' => ['nullable', 'numeric', 'min:0'],
             'tax_type' => ['required', Rule::enum(TaxType::class)],
             'tax_rate' => ['nullable', 'numeric', 'min:0'],
+            // The rates SuperAdmin manages, named by uuid. The percentage is
+            // looked up on the server, so tax_rate above is never trusted.
+            'tax_rate_uuid' => ['nullable', 'uuid', Rule::exists('tax_rates', 'uuid')->where('kind', 'iva')->whereNull('deleted_at')],
+            'recargo_rate_uuid' => ['nullable', 'uuid', Rule::exists('tax_rates', 'uuid')->where('kind', 'recargo')->whereNull('deleted_at')],
             'notes' => ['nullable', 'string', 'max:5000'],
             'lines' => ['required', 'array', 'min:1'],
             'lines.*.line_type' => ['required', Rule::enum(LineType::class)],

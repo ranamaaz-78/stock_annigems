@@ -20,10 +20,13 @@
         $discountLabel .= ' ('.$trim($document->discount_value).'%)';
     }
 
-    $taxName = (string) setting('tax_label', 'GST');
-    $taxLabel = (float) $document->tax_rate > 0
-        ? $taxName.' ('.$trim($document->tax_rate).'%)'
-        : $taxName;
+    // The IVA rate the document was made with: its stored name ("IVA 21%",
+    // "Exempt"), or for a document from before names were kept, a plain label.
+    $taxLabel = filled($document->tax_name ?? null)
+        ? $document->tax_name
+        : ((float) $document->tax_rate > 0 ? 'Tax ('.$trim($document->tax_rate).'%)' : 'Tax');
+    $taxExempt = filled($document->tax_name ?? null) && (float) $document->tax_rate <= 0;
+    $hasRecargo = (float) ($document->recargo_amount ?? 0) > 0;
 @endphp
 
 <div class="sheet-totals">
@@ -43,6 +46,19 @@
         <div class="sheet-totals__row">
             <span class="sheet-totals__label">{{ $taxLabel }}</span>
             <span class="sheet-totals__value">{{ setting_amount($document->tax_amount) }}</span>
+        </div>
+    @elseif($taxExempt)
+        {{-- An exempt rate has no amount, but the document says it was exempt. --}}
+        <div class="sheet-totals__row">
+            <span class="sheet-totals__label">IVA</span>
+            <span class="sheet-totals__value">Exempt</span>
+        </div>
+    @endif
+
+    @if($hasRecargo)
+        <div class="sheet-totals__row">
+            <span class="sheet-totals__label">Recargo de equivalencia ({{ $trim($document->recargo_rate) }}%)</span>
+            <span class="sheet-totals__value">{{ setting_amount($document->recargo_amount) }}</span>
         </div>
     @endif
 

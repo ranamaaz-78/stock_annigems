@@ -167,6 +167,9 @@ class QuotationService
             'discount_value' => (string) $quotation->discount_value,
             'tax_type' => $quotation->tax_type->value,
             'tax_rate' => (string) $quotation->tax_rate,
+            'tax_name' => $quotation->tax_name,
+            'recargo_rate' => (string) $quotation->recargo_rate,
+            'recargo_name' => $quotation->recargo_name,
             'notes' => $quotation->notes,
             'lines' => $lines,
         ];
@@ -202,6 +205,9 @@ class QuotationService
                 'discount_value' => $data['discount_value'] ?? 0,
                 'tax_type' => $data['tax_type'],
                 'tax_rate' => $data['tax_rate'],
+                'tax_name' => $data['tax_name'] ?? null,
+                'recargo_rate' => $data['recargo_rate'] ?? 0,
+                'recargo_name' => $data['recargo_name'] ?? null,
             ]
         );
 
@@ -287,6 +293,10 @@ class QuotationService
                 'tax_type' => TaxType::from($recalculated['document']['tax_type']),
                 'tax_rate' => $recalculated['document']['tax_rate'],
                 'tax_amount' => $recalculated['document']['tax_amount'],
+                'tax_name' => $recalculated['document']['tax_name'],
+                'recargo_name' => $recalculated['document']['recargo_name'],
+                'recargo_rate' => $recalculated['document']['recargo_rate'],
+                'recargo_amount' => $recalculated['document']['recargo_amount'],
                 'grand_total' => $recalculated['document']['grand_total'],
                 'notes' => $data['notes'] ?? null,
             ]);

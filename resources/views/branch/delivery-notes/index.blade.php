@@ -5,7 +5,7 @@
 @section('page-title', 'Delivery Notes')
 
 @section('content')
-<x-page-header title="Delivery Notes" subtitle="Albarán: goods handed over with price and discount, no tax. Stock leaves when the note is issued.">
+<x-page-header title="Delivery Notes" subtitle="Goods handed over with price and discount, no tax. Stock leaves when the note is issued.">
     <x-slot:actions>
         @can('create', \App\Models\DeliveryNote::class)
             <x-btn href="{{ route('branch.pos.show') }}">New Delivery Note</x-btn>
