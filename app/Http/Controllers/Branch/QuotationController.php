@@ -66,7 +66,7 @@ class QuotationController extends Controller
     {
         $this->authorize('create', Quotation::class);
 
-        return redirect()->route('branch.pos.show');
+        return redirect()->route('branch.pos.show', ['kind' => 'quotation']);
     }
 
     /**

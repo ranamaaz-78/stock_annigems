@@ -48,6 +48,10 @@
                         <dt class="detail-list__term">Registered</dt>
                         <dd class="detail-list__value">{{ setting_date($customer->created_at) }}</dd>
                     </div>
+                    <div class="detail-list__item">
+                        <dt class="detail-list__term">NIE / NIF</dt>
+                        <dd class="detail-list__value">{{ $customer->nie ?: '—' }}</dd>
+                    </div>
                     <div class="detail-list__item detail-list__item--full">
                         <dt class="detail-list__term">Address</dt>
                         <dd class="detail-list__value">{{ $customer->address ?? '—' }}</dd>

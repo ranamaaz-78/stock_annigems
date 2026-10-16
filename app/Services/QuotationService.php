@@ -362,6 +362,7 @@ class QuotationService
                 'gross_weight_snapshot' => $line['gross_weight_snapshot'] ?? null,
                 'net_weight_snapshot' => $line['net_weight_snapshot'] ?? null,
                 'quantity' => (int) ($line['quantity'] ?? 1),
+                'weight_grams' => $line['weight_grams'] ?? null,
                 'gold_rate_applied' => $line['gold_rate_applied'] ?? 0,
                 'gold_value' => $line['gold_value'] ?? 0,
                 'making_charge_type' => $line['making_charge_type'] ?? MakingChargeType::NONE->value,
@@ -402,6 +403,16 @@ class QuotationService
 
         $jewelleryIds = [];
 
+        // Grams wanted of each weighed lot across the whole ticket, so two lines of
+        // the same lot cannot each pass the check and together overdraw it.
+        $gramsWanted = [];
+        foreach ($lines as $row) {
+            if (LineType::from((string) $row['line_type']) === LineType::LOOSE_STONE && (float) ($row['weight_grams'] ?? 0) > 0) {
+                $key = (int) ($row['stone_id'] ?? 0);
+                $gramsWanted[$key] = round(($gramsWanted[$key] ?? 0) + (float) $row['weight_grams'], 3);
+            }
+        }
+
         foreach ($lines as $index => $line) {
             $lineNum = $index + 1;
             $type = LineType::from((string) $line['line_type']);
@@ -434,6 +445,19 @@ class QuotationService
                     ->whereKey($stoneId)
                     ->lockForUpdate()
                     ->first();
+
+                if ($stone && $stone->isWeighed()) {
+                    $wanted = $gramsWanted[$stoneId] ?? 0.0;
+                    $available = round((float) $stone->weight_grams, 3);
+
+                    if ($wanted <= 0 || $available + 0.0005 < $wanted) {
+                        throw ValidationException::withMessages([
+                            "lines.{$index}" => "Line {$lineNum}: {$line['item_code_snapshot']} has only {$available} g in stock, {$wanted} g requested.",
+                        ]);
+                    }
+
+                    continue;
+                }
 
                 if (! $stone || (int) $stone->quantity < $qty) {
                     $available = $stone ? (int) $stone->quantity : 0;
@@ -547,12 +571,16 @@ class QuotationService
         $name = trim((string) ($data['walkin_name'] ?? ''));
         $phone = trim((string) ($data['walkin_phone'] ?? ''));
         $email = trim((string) ($data['walkin_email'] ?? ''));
+        $nie = trim((string) ($data['walkin_nie'] ?? ''));
+        $address = trim((string) ($data['walkin_address'] ?? ''));
         if ($name !== '' && $phone !== '') {
             return $this->customerService->findOrCreateByPhone(
                 $name,
                 $phone,
                 $actor,
-                $email !== '' ? $email : null
+                $email !== '' ? $email : null,
+                $nie !== '' ? $nie : null,
+                $address !== '' ? $address : null
             )->id;
         }
 

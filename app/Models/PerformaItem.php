@@ -33,6 +33,9 @@ class PerformaItem extends Model
         'quantity_issued',
         'quantity_settled',
         'quantity_returned',
+        'weight_issued',
+        'weight_settled',
+        'weight_returned',
         'unit_price',
         'sort_order',
     ];
@@ -49,6 +52,9 @@ class PerformaItem extends Model
             'quantity_issued' => 'integer',
             'quantity_settled' => 'integer',
             'quantity_returned' => 'integer',
+            'weight_issued' => 'decimal:3',
+            'weight_settled' => 'decimal:3',
+            'weight_returned' => 'decimal:3',
             'unit_price' => 'decimal:2',
             'sort_order' => 'integer',
         ];
@@ -79,19 +85,71 @@ class PerformaItem extends Model
     }
 
     /**
-     * Worth of a number of pieces at the price fixed when the performa was
-     * issued. Zero when the line was never priced.
+     * Whether this line is a per-gram stone, counted in grams not pieces.
+     * Its unit_price is then the price of one gram.
      */
-    public function valueOf(int $quantity): float
+    public function isWeighed(): bool
     {
-        return round((float) $this->unit_price * max(0, $quantity), 2);
+        return (float) $this->weight_issued > 0;
     }
 
     /**
-     * Qty still with the customer and unpaid.
+     * Worth of an amount (pieces, or grams on a weighed line) at the price
+     * fixed when the performa was issued. Zero when the line was never priced.
+     */
+    public function valueOf(int|float $amount): float
+    {
+        return round((float) $this->unit_price * max(0, (float) $amount), 2);
+    }
+
+    /**
+     * Grams still with the creditor and unpaid (weighed lines).
+     */
+    public function outstandingWeight(): float
+    {
+        return max(0.0, round((float) $this->weight_issued - (float) $this->weight_settled - (float) $this->weight_returned, 3));
+    }
+
+    /**
+     * What is still out, in the line's own unit: grams on a weighed line,
+     * pieces otherwise. Use this where the unit does not matter.
+     */
+    public function outstandingAmount(): int|float
+    {
+        return $this->isWeighed() ? $this->outstandingWeight() : $this->outstandingQuantity();
+    }
+
+    /**
+     * What has been paid for, in the line's own unit.
+     */
+    public function settledAmount(): int|float
+    {
+        return $this->isWeighed() ? (float) $this->weight_settled : (int) $this->quantity_settled;
+    }
+
+    /**
+     * An amount worded in the line's own unit: "3" for pieces, "5.5 g" for a
+     * weighed line.
+     */
+    public function amountLabel(int|float $amount): string
+    {
+        if ($this->isWeighed()) {
+            return rtrim(rtrim(number_format((float) $amount, 3, '.', ''), '0'), '.').' g';
+        }
+
+        return (string) (int) $amount;
+    }
+
+    /**
+     * Qty still with the customer and unpaid. A weighed line counts as one
+     * piece while any grams remain, so "is anything left" checks keep working.
      */
     public function outstandingQuantity(): int
     {
+        if ($this->isWeighed()) {
+            return $this->outstandingWeight() > 0 ? 1 : 0;
+        }
+
         return max(0, $this->quantity_issued - $this->quantity_settled - $this->quantity_returned);
     }
 }

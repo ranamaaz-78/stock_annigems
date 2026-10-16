@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\JewelleryItemStatus;
 use App\Enums\LineType;
+use App\Enums\StonePricingMode;
 use App\Models\JewelleryItem;
 use App\Models\Stone;
 use App\Models\User;
@@ -121,7 +122,13 @@ class SalesLookupService
             ->withoutGlobalScopes()
             ->where('branch_id', $branchId)
             ->where('is_active', true)
-            ->where('quantity', '>=', 1)
+            ->where(function ($stock): void {
+                $stock->where('quantity', '>=', 1)
+                    ->orWhere(function ($weighed): void {
+                        $weighed->where('pricing_mode', StonePricingMode::PER_GRAM->value)
+                            ->where('weight_grams', '>', 0);
+                    });
+            })
             ->when($term !== '', function ($query) use ($like): void {
                 $query->where(function ($inner) use ($like): void {
                     $inner->where('name', 'like', $like)
@@ -140,7 +147,7 @@ class SalesLookupService
                 'label' => implode(' · ', array_filter([
                     $stone->stone_code,
                     $stone->name,
-                    '('.$stone->quantity.')',
+                    $stone->isWeighed() ? '('.$stone->gramsLabel().' g)' : '('.$stone->quantity.')',
                 ])),
                 'haystack' => mb_strtolower(implode(' ', array_filter([
                     $stone->stone_code,
@@ -267,7 +274,12 @@ class SalesLookupService
             return ['status' => 'inactive', 'message' => 'This stone is deactivated.'];
         }
 
-        if ((int) $stone->quantity < 1) {
+        // A per-gram lot is stocked in grams (its piece count is always zero).
+        $empty = $stone->isWeighed()
+            ? (float) $stone->weight_grams <= 0
+            : (int) $stone->quantity < 1;
+
+        if ($empty) {
             return ['status' => 'unavailable', 'message' => "{$stone->stone_code} has no stock on hand."];
         }
 
@@ -387,6 +399,24 @@ class SalesLookupService
                     'price_per_piece' => $line['price_per_piece'] ?? $payload['price_per_piece'],
                 ]);
 
+                if ($stone->isWeighed()) {
+                    $grams = round((float) ($line['weight_grams'] ?? 0), 3);
+
+                    if ($grams <= 0) {
+                        throw ValidationException::withMessages([
+                            "lines.{$index}" => "Line {$lineNum}: enter how many grams of {$stone->stone_code}.",
+                        ]);
+                    }
+
+                    // Weighed: grams carry the amount and the piece count stays one.
+                    $last = count($hydrated) - 1;
+                    $hydrated[$last]['quantity'] = 1;
+                    $hydrated[$last]['weight_grams'] = number_format($grams, 3, '.', '');
+                } else {
+                    // A piece lot never carries grams, whatever the browser sent.
+                    $hydrated[count($hydrated) - 1]['weight_grams'] = null;
+                }
+
                 continue;
             }
 
@@ -468,6 +498,8 @@ class SalesLookupService
         $price = match ($stone->pricing_mode) {
             \App\Enums\StonePricingMode::PER_CARAT => $stone->piece_price,
             \App\Enums\StonePricingMode::PER_PIECE => $stone->price_per_piece,
+            // For a weighed lot the "piece" price field carries the price of one gram.
+            \App\Enums\StonePricingMode::PER_GRAM => $stone->price_per_gram,
             default => null,
         };
 
@@ -492,6 +524,11 @@ class SalesLookupService
             'category_snapshot' => $stone->shape,
             'quantity' => 1,
             'available_quantity' => (int) $stone->quantity,
+            // A per-gram lot is sold by weight: the cashier types the grams, and the
+            // price field is the rate per gram.
+            'weighed' => $stone->isWeighed(),
+            'available_grams' => $stone->isWeighed() ? (string) ($stone->weight_grams ?? '0') : null,
+            'weight_grams' => $stone->isWeighed() ? '' : null,
             'price_per_piece' => $this->stonePiecePrice($stone),
             'stones' => [],
         ];

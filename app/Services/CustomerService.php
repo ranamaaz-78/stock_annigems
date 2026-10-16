@@ -78,7 +78,7 @@ class CustomerService
             ->active()
             ->orderBy('name')
             ->limit($limit)
-            ->get(['id', 'uuid', 'customer_code', 'name', 'phone', 'email', 'city']);
+            ->get(['id', 'uuid', 'customer_code', 'name', 'phone', 'email', 'nie', 'address', 'city']);
     }
 
     /**
@@ -110,7 +110,7 @@ class CustomerService
      * @param  string  $phone  Matched exactly after trim (system-wide unique)
      * @param  string|null  $email  Stored only on insert; existing rows keep theirs
      */
-    public function findOrCreateByPhone(string $name, string $phone, User $actor, ?string $email = null): Customer
+    public function findOrCreateByPhone(string $name, string $phone, User $actor, ?string $email = null, ?string $nie = null, ?string $address = null): Customer
     {
         $phone = trim($phone);
         $name = trim($name);
@@ -127,6 +127,8 @@ class CustomerService
                 'name' => $name,
                 'phone' => $phone,
                 'email' => $email,
+                'nie' => $nie,
+                'address' => $address,
             ], $actor);
         } catch (UniqueConstraintViolationException $exception) {
             $raced = Customer::query()->where('phone', $phone)->first();
@@ -153,6 +155,7 @@ class CustomerService
                 'alternate_phone' => $data['alternate_phone'] ?? null,
                 'email' => $data['email'] ?? null,
                 'cnic' => $data['cnic'] ?? null,
+                'nie' => filled($data['nie'] ?? null) ? strtoupper(trim($data['nie'])) : null,
                 'address' => $data['address'] ?? null,
                 'city' => $data['city'] ?? null,
                 'notes' => $data['notes'] ?? null,
@@ -181,6 +184,7 @@ class CustomerService
                 'alternate_phone' => $data['alternate_phone'] ?? null,
                 'email' => $data['email'] ?? null,
                 'cnic' => $data['cnic'] ?? null,
+                'nie' => filled($data['nie'] ?? null) ? strtoupper(trim($data['nie'])) : null,
                 'address' => $data['address'] ?? null,
                 'city' => $data['city'] ?? null,
                 'notes' => $data['notes'] ?? null,

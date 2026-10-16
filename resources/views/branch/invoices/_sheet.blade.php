@@ -39,6 +39,9 @@
                 @if($customerAddress)
                     <br>{{ $customerAddress }}
                 @endif
+                @if($invoice->customer?->nie)
+                    <br>NIE / NIF {{ $invoice->customer->nie }}
+                @endif
             </p>
         </x-document.party>
     </x-slot:parties>

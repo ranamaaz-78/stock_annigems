@@ -36,6 +36,7 @@ class Creditor extends Model
         'phone',
         'alternate_phone',
         'email',
+        'nie',
         'address',
         'city',
         'notes',

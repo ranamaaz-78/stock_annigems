@@ -802,8 +802,8 @@ class JewelleryManagementTest extends TestCase
         // 0.2 ct x 100 per carat is 20 a piece.
         $this->assertSame('20.00', $service->stonePayload($carat)['price_per_piece']);
         $this->assertSame('7.50', $service->stonePayload($piece)['price_per_piece']);
-        // A weighed lot has no price per piece.
-        $this->assertSame('0.00', $service->stonePayload($gram)['price_per_piece']);
+        // A weighed lot is sold by the gram: the price field carries the price of one gram.
+        $this->assertSame('5.00', $service->stonePayload($gram)['price_per_piece']);
 
         $this->actingAs(User::factory()->cashier($branch->id)->create());
         $this->assertSame('0.00', $service->stonePayload($carat)['price_per_piece']);

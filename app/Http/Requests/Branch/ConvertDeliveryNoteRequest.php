@@ -36,6 +36,9 @@ class ConvertDeliveryNoteRequest extends FormRequest
         return [
             'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
             'payment_reference' => ['nullable', 'string', 'max:100'],
+            // Blank IVA = no IVA on this invoice; recargo is optional.
+            'tax_rate_uuid' => ['nullable', 'uuid', Rule::exists('tax_rates', 'uuid')->where('kind', 'iva')->whereNull('deleted_at')],
+            'recargo_rate_uuid' => ['nullable', 'uuid', Rule::exists('tax_rates', 'uuid')->where('kind', 'recargo')->whereNull('deleted_at')],
         ];
     }
 

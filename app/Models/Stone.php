@@ -131,6 +131,15 @@ class Stone extends Model
     }
 
     /**
+     * Whether this lot is bought and sold by weight. Its stock is the grams in
+     * `weight_grams`; `quantity` stays zero, so a sale must ask for grams.
+     */
+    public function isWeighed(): bool
+    {
+        return $this->pricing_mode === StonePricingMode::PER_GRAM;
+    }
+
+    /**
      * Whether a packet barcode was issued for this lot.
      *
      * stone_barcode_enabled only gates new generation. This is the stored

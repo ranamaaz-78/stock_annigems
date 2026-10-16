@@ -37,10 +37,34 @@
 @can('convert', $note)
     <x-modal id="convert-modal" title="Convert to invoice">
         <p class="detail-list__value">
-            This creates an invoice with the same lines and discount, adds tax if it is enabled in settings, and takes payment. Stock is not cut again: it already left when the delivery note was issued.
+            This creates an invoice with the same lines and discount and takes payment. Choose the IVA (and recargo, if it applies) for this invoice. Stock is not cut again: it already left when the delivery note was issued.
         </p>
         <form method="POST" action="{{ route('branch.delivery-notes.convert', $note) }}" data-loading-form>
             @csrf
+            @if($taxEnabled)
+                <div class="form-grid mt-3">
+                    <div>
+                        <label class="form-label" for="convert_tax_rate_uuid">IVA</label>
+                        <select id="convert_tax_rate_uuid" name="tax_rate_uuid" class="input-field" data-no-select2>
+                            <option value="">No IVA</option>
+                            @foreach($ivaRates as $rate)
+                                <option value="{{ $rate['uuid'] }}" @selected($rate['uuid'] === old('tax_rate_uuid', $defaultIvaUuid))>{{ $rate['name'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @if(count($recargoRates))
+                        <div>
+                            <label class="form-label" for="convert_recargo_rate_uuid">Recargo de equivalencia</label>
+                            <select id="convert_recargo_rate_uuid" name="recargo_rate_uuid" class="input-field" data-no-select2>
+                                <option value="">None</option>
+                                @foreach($recargoRates as $rate)
+                                    <option value="{{ $rate['uuid'] }}" @selected($rate['uuid'] === old('recargo_rate_uuid'))>{{ $rate['name'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
+                </div>
+            @endif
             <div class="form-grid mt-3">
                 <x-form.select name="payment_method" label="Payment method" :options="$paymentMethods" required />
                 <x-form.input name="payment_reference" label="Reference (optional)" maxlength="100" />

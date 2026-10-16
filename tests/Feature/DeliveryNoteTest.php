@@ -16,6 +16,7 @@ use App\Models\Purity;
 use App\Models\Quotation;
 use App\Models\Stone;
 use App\Models\StoneStockMovement;
+use App\Models\TaxRate;
 use App\Models\User;
 use App\Services\SettingService;
 use App\Services\StoneStockService;
@@ -278,6 +279,50 @@ class DeliveryNoteTest extends TestCase
         $this->assertSame(5, (int) $stone->fresh()->quantity);
     }
 
+    public function test_convert_applies_the_iva_and_recargo_chosen_at_conversion(): void
+    {
+        [, $admin] = $this->branchAdmin();
+        $this->enableTax();
+        $recargo = TaxRate::query()->create(['kind' => 'recargo', 'name' => 'Recargo 5.2%', 'rate' => 5.2, 'is_active' => true]);
+        $iva = TaxRate::query()->where('kind', 'iva')->firstOrFail();
+        $stone = $this->stockedStone($admin, 5);
+
+        foreach ([2, 2] as $qty) {
+            $this->actingAs($admin)->postJson(route('branch.delivery-notes.store'), $this->stonePayload($stone, $qty))->assertOk();
+        }
+        [$first, $second] = DeliveryNote::query()->orderBy('id')->get()->all();
+
+        // IVA 18% + recargo 5.2% on the 40.00 subtotal.
+        $this->actingAs($admin)
+            ->post(route('branch.delivery-notes.convert', $first), [
+                'payment_method' => 'cash',
+                'tax_rate_uuid' => $iva->uuid,
+                'recargo_rate_uuid' => $recargo->uuid,
+            ])->assertRedirect();
+        $invoice = $first->fresh()->invoice;
+        $this->assertEqualsWithDelta(7.2, (float) $invoice->tax_amount, 0.001);
+        $this->assertEqualsWithDelta(2.08, (float) $invoice->recargo_amount, 0.001);
+        $this->assertSame('Recargo 5.2%', $invoice->recargo_name);
+        $this->assertEqualsWithDelta(49.28, (float) $invoice->grand_total, 0.001);
+
+        // A blank IVA means none at all.
+        $this->actingAs($admin)
+            ->post(route('branch.delivery-notes.convert', $second), ['payment_method' => 'cash', 'tax_rate_uuid' => ''])
+            ->assertRedirect();
+        $plain = $second->fresh()->invoice;
+        $this->assertEqualsWithDelta(0.0, (float) $plain->tax_amount, 0.001);
+        $this->assertEqualsWithDelta(40.0, (float) $plain->grand_total, 0.001);
+
+        // The convert modal offers the rates.
+        $third = $this->actingAs($admin)->postJson(route('branch.delivery-notes.store'), $this->stonePayload($stone, 1))->assertOk();
+        $this->actingAs($admin)
+            ->get(route('branch.delivery-notes.show', DeliveryNote::query()->orderByDesc('id')->firstOrFail()))
+            ->assertOk()
+            ->assertSee('name="tax_rate_uuid"', false)
+            ->assertSee('name="recargo_rate_uuid"', false)
+            ->assertSee('Recargo 5.2%');
+    }
+
     public function test_convert_makes_an_invoice_with_tax_and_cuts_nothing_twice(): void
     {
         [, $admin, $purity] = $this->branchAdmin();
@@ -293,7 +338,10 @@ class DeliveryNoteTest extends TestCase
         $itemNote = DeliveryNote::query()->orderByDesc('id')->firstOrFail();
 
         $this->actingAs($admin)
-            ->post(route('branch.delivery-notes.convert', $stoneNote), ['payment_method' => 'cash'])
+            ->post(route('branch.delivery-notes.convert', $stoneNote), [
+                'payment_method' => 'cash',
+                'tax_rate_uuid' => TaxRate::query()->where('kind', 'iva')->value('uuid'),
+            ])
             ->assertRedirect();
 
         $invoice = Invoice::query()->firstOrFail();

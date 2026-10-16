@@ -49,6 +49,9 @@
                 @if($quotation->customer?->address)
                     <br>{{ $quotation->customer->address }}
                 @endif
+                @if($quotation->customer?->nie)
+                    <br>NIE / NIF {{ $quotation->customer->nie }}
+                @endif
             </p>
         </x-document.party>
     </x-slot:parties>

@@ -87,6 +87,10 @@ trait ValidatesQuotationWorkspace
             ],
             // Optional on walk-in / POS; stored only when a new customer row is created.
             'walkin_email' => ['nullable', 'email', 'max:150'],
+            // Optional address, saved with a new customer or creditor.
+            'walkin_address' => ['nullable', 'string', 'max:500'],
+            // Optional NIE / NIF, saved with a new customer or creditor.
+            'walkin_nie' => ['nullable', 'string', 'max:20', 'regex:/^[A-Za-z0-9\-\s.\/]{5,20}$/'],
             // POS tax toggle. Omitted on the quotation workspace so catalog GST still applies.
             'apply_tax' => ['sometimes', 'boolean'],
             'quotation_date' => ['required', 'date'],
@@ -105,6 +109,8 @@ trait ValidatesQuotationWorkspace
             'notes' => ['nullable', 'string', 'max:5000'],
             'lines' => ['required', 'array', 'min:1'],
             'lines.*.line_type' => ['required', Rule::enum(LineType::class)],
+            // Grams, for a stone lot priced per gram (the server checks the lot's kind).
+            'lines.*.weight_grams' => ['nullable', 'numeric', 'gt:0', 'decimal:0,3', 'max:9999999'],
 
             // Identity is all the server needs: SalesLookupService::hydrateLines()
             // rebuilds every descriptive snapshot (code, name, purity, weights,

@@ -260,6 +260,20 @@ class InvoiceConversionService
                     ->lockForUpdate()
                     ->first();
 
+                // A weighed lot is checked in grams: what is on the shelf plus what this quote holds.
+                if ($stone && $line->weight_grams !== null) {
+                    $grams = round((float) $line->weight_grams, 3);
+                    $availableGrams = round((float) $stone->weight_grams + $this->quotationStock->reservedStoneWeight($quotation, (int) $stone->id), 3);
+
+                    if ($availableGrams + 0.0005 < $grams) {
+                        throw ValidationException::withMessages([
+                            'lines' => "Line {$lineNum}: {$code} has only {$availableGrams} g in stock, {$grams} g were quoted.",
+                        ]);
+                    }
+
+                    continue;
+                }
+
                 $qty = (int) $line->quantity;
                 $held = $stone
                     ? $this->quotationStock->reservedStoneQuantity($quotation, (int) $stone->id)
@@ -292,6 +306,7 @@ class InvoiceConversionService
             'gross_weight_snapshot' => $qItem->gross_weight_snapshot,
             'net_weight_snapshot' => $qItem->net_weight_snapshot,
             'quantity' => $qItem->quantity,
+            'weight_grams' => $qItem->weight_grams,
             'gold_rate_applied' => $qItem->gold_rate_applied,
             'gold_value' => $qItem->gold_value,
             'making_charge_type' => $qItem->making_charge_type,
@@ -338,6 +353,35 @@ class InvoiceConversionService
         }
 
         $stone = Stone::query()->lockForUpdate()->findOrFail($line->stone_id);
+
+        if ($line->weight_grams !== null) {
+            $grams = round((float) $line->weight_grams, 3);
+            $heldGrams = $this->quotationStock->reservedStoneWeight($quotation, (int) $stone->id);
+
+            if ($heldGrams + 0.0005 >= $grams) {
+                $this->stoneStockService->recordUnchanged(
+                    $stone,
+                    StoneMovementType::SOLD,
+                    $actor,
+                    $invoice,
+                    "Sold on invoice {$invoice->invoice_number} ({$grams} g held on {$quotation->quotation_number})"
+                );
+
+                return;
+            }
+
+            $this->stoneStockService->applyWeight(
+                $stone,
+                StoneMovementType::SOLD,
+                -$grams,
+                $actor,
+                $invoice,
+                "Sold on invoice {$invoice->invoice_number}"
+            );
+
+            return;
+        }
+
         $qty = (int) $line->quantity;
         $held = $this->quotationStock->reservedStoneQuantity($quotation, (int) $stone->id);
 
@@ -385,6 +429,7 @@ class InvoiceConversionService
             'gross_weight_snapshot' => $line['gross_weight_snapshot'] ?? null,
             'net_weight_snapshot' => $line['net_weight_snapshot'] ?? null,
             'quantity' => (int) ($line['quantity'] ?? 1),
+            'weight_grams' => $line['weight_grams'] ?? null,
             'gold_rate_applied' => $line['gold_rate_applied'] ?? 0,
             'gold_value' => $line['gold_value'] ?? 0,
             'making_charge_type' => $line['making_charge_type'] ?? MakingChargeType::NONE->value,
@@ -433,6 +478,20 @@ class InvoiceConversionService
         }
 
         $stone = Stone::query()->lockForUpdate()->findOrFail($line['stone_id']);
+
+        if ($stone->isWeighed()) {
+            $this->stoneStockService->applyWeight(
+                $stone,
+                StoneMovementType::SOLD,
+                -round((float) ($line['weight_grams'] ?? 0), 3),
+                $actor,
+                $invoice,
+                "Sold on invoice {$invoice->invoice_number}"
+            );
+
+            return;
+        }
+
         $this->stoneStockService->apply(
             $stone,
             StoneMovementType::SOLD,

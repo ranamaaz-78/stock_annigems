@@ -8,7 +8,7 @@
 <x-page-header title="Invoices" subtitle="Finalised sales. Corrections are made by voiding, never editing.">
     <x-slot:actions>
         @can('create', \App\Models\Quotation::class)
-            <x-btn href="{{ route('branch.pos.show') }}">New Invoice</x-btn>
+            <x-btn href="{{ route('branch.pos.show', ['kind' => 'invoice']) }}">New Invoice</x-btn>
         @endcan
     </x-slot:actions>
 </x-page-header>
@@ -37,7 +37,7 @@
             >
                 <x-slot:actions>
                     @can('create', \App\Models\Quotation::class)
-                        <x-btn href="{{ route('branch.pos.show') }}">New Invoice</x-btn>
+                        <x-btn href="{{ route('branch.pos.show', ['kind' => 'invoice']) }}">New Invoice</x-btn>
                     @endcan
                 </x-slot:actions>
             </x-empty-state>

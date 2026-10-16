@@ -359,7 +359,7 @@ class ModuleSevenSettingsTest extends TestCase
 
         $this->actingAs($this->admin)
             ->get(route('branch.quotations.create'))
-            ->assertRedirect(route('branch.pos.show'));
+            ->assertRedirect(route('branch.pos.show', ['kind' => 'quotation']));
 
         $this->actingAs($this->admin)
             ->get(route('branch.pos.show'))

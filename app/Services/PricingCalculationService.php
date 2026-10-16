@@ -31,7 +31,14 @@ class PricingCalculationService
         if ($lineType === LineType::LOOSE_STONE) {
             $quantity = max(1, (int) ($line['quantity'] ?? 1));
             $pricePerPiece = $this->money($line['price_per_piece'] ?? $line['stone_unit_price'] ?? 0);
-            $stoneValue = round($pricePerPiece * $quantity, 2);
+
+            // A per-gram line is sold by weight: its price field is the rate
+            // per gram and the line is worth rate x grams.
+            $grams = round((float) ($line['weight_grams'] ?? 0), 3);
+            $stoneValue = $grams > 0
+                ? round($pricePerPiece * $grams, 2)
+                : round($pricePerPiece * $quantity, 2);
+            $quantity = $grams > 0 ? 1 : $quantity;
 
             return array_merge($line, [
                 'quantity' => $quantity,

@@ -7,11 +7,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Branch\ReturnPerformaRequest;
 use App\Http\Requests\Branch\SettlePerformaRequest;
 use App\Http\Requests\Branch\StorePerformaRequest;
+use App\Http\Requests\Branch\UpdatePerformaRequest;
 use App\Models\Performa;
+use App\Models\TaxRate;
 use App\Repositories\GoldRateRepository;
 use App\Services\PerformaService;
 use App\Services\PerformaSettlementService;
 use App\Services\SalesLookupService;
+use App\Services\TaxRateService;
 use App\Support\Settings\DocumentSettings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -35,6 +38,7 @@ class PerformaController extends Controller
         private PerformaSettlementService $settlementService,
         private SalesLookupService $lookupService,
         private GoldRateRepository $goldRateRepository,
+        private TaxRateService $taxRates,
     ) {}
 
     /**
@@ -51,19 +55,18 @@ class PerformaController extends Controller
     }
 
     /**
-     * Issue workspace. Optional ?creditor=uuid prefills the picker.
+     * Performas are issued from the POS now. This old address sends people
+     * there with Performa already chosen; ?creditor=uuid carries over so the
+     * creditor is filled in.
      */
-    public function create(Request $request): View
+    public function create(Request $request): RedirectResponse
     {
         $this->authorize('create', Performa::class);
 
-        return view('branch.performas.create', [
-            'payload' => $this->performaService->withSelectedCreditor(
-                $this->performaService->emptyPayload(),
-                $request->query('creditor')
-            ),
-            'scanner' => scanner_config(),
-        ]);
+        return redirect()->route('branch.pos.show', array_filter([
+            'kind' => 'performa',
+            'creditor' => $request->query('creditor'),
+        ]));
     }
 
     /**
@@ -103,6 +106,56 @@ class PerformaController extends Controller
         }
 
         return redirect()->route('branch.performas.show', $performa)->with('success', 'Performa issued.');
+    }
+
+    /**
+     * Editing happens in the POS, which opens with this performa loaded.
+     */
+    public function edit(Performa $performa): RedirectResponse
+    {
+        $this->authorize('update', $performa);
+
+        return redirect()->route('branch.pos.show', ['performa' => $performa->uuid]);
+    }
+
+    /**
+     * Save an edited performa: lines nobody paid for are replaced, stock follows.
+     */
+    public function update(UpdatePerformaRequest $request, Performa $performa): RedirectResponse|JsonResponse
+    {
+        try {
+            $performa = $this->performaService->update($performa, $request->validated(), $request->user());
+        } catch (ValidationException $e) {
+            if ($request->expectsJson()) {
+                return $this->jsonFailure($e->getMessage(), $e->errors(), 422);
+            }
+
+            throw $e;
+        } catch (Throwable $e) {
+            Log::error('Performa update failed.', [
+                'user_id' => $request->user()?->id,
+                'exception' => $e,
+            ]);
+
+            $message = 'The performa could not be saved. Please try again or contact support.';
+
+            if ($request->expectsJson()) {
+                return $this->jsonFailure($message, [], 500);
+            }
+
+            return back()->withInput()->withErrors(['performa' => $message]);
+        }
+
+        if ($request->expectsJson()) {
+            return $this->jsonSuccess('Performa '.$performa->performa_number.' updated.', [
+                'uuid' => $performa->uuid,
+                'show_url' => route('branch.performas.show', $performa),
+                'number' => $performa->performa_number,
+                'print_url' => route('branch.performas.print', $performa),
+            ]);
+        }
+
+        return redirect()->route('branch.performas.show', $performa)->with('success', 'Performa updated.');
     }
 
     /**
@@ -149,6 +202,10 @@ class PerformaController extends Controller
             'taxType' => $tax['type'],
             'taxRate' => $tax['rate'],
             'taxLabel' => $tax['label'],
+            // The cashier picks the IVA (default preselected) and an optional recargo.
+            'ivaRates' => $this->taxRates->active(TaxRate::KIND_IVA)->map(fn (TaxRate $r): array => ['uuid' => $r->uuid, 'name' => $r->name, 'rate' => (float) $r->rate])->values()->all(),
+            'recargoRates' => $this->taxRates->active(TaxRate::KIND_RECARGO)->map(fn (TaxRate $r): array => ['uuid' => $r->uuid, 'name' => $r->name, 'rate' => (float) $r->rate])->values()->all(),
+            'defaultIvaUuid' => $tax['uuid'],
         ]);
     }
 

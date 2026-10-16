@@ -34,6 +34,7 @@ class Customer extends Model
         'alternate_phone',
         'email',
         'cnic',
+        'nie',
         'address',
         'city',
         'notes',

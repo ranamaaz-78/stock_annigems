@@ -57,6 +57,8 @@ class CreditorController extends Controller
                 'name' => $c->name,
                 'phone' => $c->phone,
                 'email' => $c->email,
+                'nie' => $c->nie,
+                'address' => $c->address,
                 'city' => $c->city,
             ])->values(),
         ]);

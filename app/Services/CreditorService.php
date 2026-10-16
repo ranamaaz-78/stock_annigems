@@ -59,7 +59,7 @@ class CreditorService
             $this->applySearch($query, ['search' => $term]);
         }
 
-        return $query->get(['id', 'uuid', 'creditor_code', 'name', 'phone', 'email', 'city']);
+        return $query->get(['id', 'uuid', 'creditor_code', 'name', 'phone', 'email', 'nie', 'address', 'city']);
     }
 
     /**
@@ -74,7 +74,7 @@ class CreditorService
             ->active()
             ->orderBy('name')
             ->limit($limit)
-            ->get(['id', 'uuid', 'creditor_code', 'name', 'phone', 'email', 'city']);
+            ->get(['id', 'uuid', 'creditor_code', 'name', 'phone', 'email', 'nie', 'address', 'city']);
     }
 
     /**
@@ -99,6 +99,7 @@ class CreditorService
                 'phone' => $data['phone'],
                 'alternate_phone' => $data['alternate_phone'] ?? null,
                 'email' => $data['email'] ?? null,
+                'nie' => filled($data['nie'] ?? null) ? strtoupper(trim($data['nie'])) : null,
                 'address' => $data['address'] ?? null,
                 'city' => $data['city'] ?? null,
                 'notes' => $data['notes'] ?? null,
@@ -130,6 +131,7 @@ class CreditorService
                 'phone' => $data['phone'],
                 'alternate_phone' => $data['alternate_phone'] ?? null,
                 'email' => $data['email'] ?? null,
+                'nie' => filled($data['nie'] ?? null) ? strtoupper(trim($data['nie'])) : null,
                 'address' => $data['address'] ?? null,
                 'city' => $data['city'] ?? null,
                 'notes' => $data['notes'] ?? null,

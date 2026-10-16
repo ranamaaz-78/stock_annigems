@@ -8,6 +8,9 @@
 <x-page-header :title="$performa->performa_number" :subtitle="setting_date($performa->performa_date)">
     <x-slot:actions>
         @if($performa->isOpen())
+            @can('update', $performa)
+                <x-btn href="{{ route('branch.performas.edit', $performa) }}" variant="secondary">Edit</x-btn>
+            @endcan
             @can('settle', $performa)
                 <x-btn href="{{ route('branch.performas.settle', $performa) }}">Settle payment</x-btn>
             @endcan
@@ -68,10 +71,10 @@
                                 @endif
                             </td>
                             <td class="font-data-mono">{{ $item->item_code_snapshot }}</td>
-                            <td class="font-data-mono">{{ $item->quantity_issued }}</td>
-                            <td class="font-data-mono">{{ $item->quantity_settled }}</td>
-                            <td class="font-data-mono">{{ $item->quantity_returned }}</td>
-                            <td class="font-data-mono">{{ $item->outstandingQuantity() }}</td>
+                            <td class="font-data-mono">{{ $item->isWeighed() ? $item->amountLabel($item->weight_issued) : $item->quantity_issued }}</td>
+                            <td class="font-data-mono">{{ $item->isWeighed() ? $item->amountLabel($item->weight_settled) : $item->quantity_settled }}</td>
+                            <td class="font-data-mono">{{ $item->isWeighed() ? $item->amountLabel($item->weight_returned) : $item->quantity_returned }}</td>
+                            <td class="font-data-mono">{{ $item->amountLabel($item->outstandingAmount()) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -153,12 +156,12 @@
                             </thead>
                             <tbody>
                                 @foreach($outstandingReturn as $item)
-                                    <tr data-return-line data-line-id="{{ $item->id }}" data-line-type="{{ $item->line_type->value }}" data-outstanding="{{ $item->outstandingQuantity() }}">
+                                    <tr data-return-line data-line-id="{{ $item->id }}" data-line-type="{{ $item->line_type->value }}" data-weighed="{{ $item->isWeighed() ? 1 : 0 }}" data-outstanding="{{ $item->outstandingAmount() }}">
                                         <td>
                                             {{ $item->name_snapshot }}
                                             <span class="text-body-sm">{{ $item->item_code_snapshot }}</span>
                                         </td>
-                                        <td class="font-data-mono">{{ $item->outstandingQuantity() }}</td>
+                                        <td class="font-data-mono">{{ $item->amountLabel($item->outstandingAmount()) }}</td>
                                         <td>
                                             @if($item->line_type === \App\Enums\LineType::JEWELLERY_ITEM)
                                                 <label class="form-check">
@@ -169,12 +172,12 @@
                                                 <input
                                                     type="number"
                                                     min="0"
-                                                    max="{{ $item->outstandingQuantity() }}"
-                                                    step="1"
+                                                    max="{{ $item->outstandingAmount() }}"
+                                                    step="{{ $item->isWeighed() ? '0.001' : '1' }}"
                                                     class="input-field"
                                                     data-return-qty
-                                                    placeholder="0"
-                                                    aria-label="Return quantity"
+                                                    placeholder="{{ $item->isWeighed() ? 'grams' : '0' }}"
+                                                    aria-label="{{ $item->isWeighed() ? 'Grams to return' : 'Return quantity' }}"
                                                 >
                                             @endif
                                         </td>

@@ -41,9 +41,13 @@ class SettlePerformaRequest extends FormRequest
             'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
             'payment_reference' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:5000'],
+            // Chosen on the settle page; a blank IVA means none, recargo is optional.
+            'tax_rate_uuid' => ['nullable', 'uuid', Rule::exists('tax_rates', 'uuid')->where('kind', 'iva')->whereNull('deleted_at')],
+            'recargo_rate_uuid' => ['nullable', 'uuid', Rule::exists('tax_rates', 'uuid')->where('kind', 'recargo')->whereNull('deleted_at')],
             'lines' => ['required', 'array', 'min:1'],
             'lines.*.performa_item_id' => ['required', 'integer', 'exists:performa_items,id'],
-            'lines.*.quantity' => ['required', 'integer', 'min:1'],
+            // Pieces, or grams on a weighed stone line (the service insists on whole pieces otherwise).
+            'lines.*.quantity' => ['required', 'numeric', 'gt:0', 'decimal:0,3'],
             // Flat amount kept so older clients / tests still settle.
             'lines.*.price' => ['nullable', 'numeric', 'min:0'],
             'lines.*.price_per_piece' => ['nullable', 'numeric', 'min:0'],
@@ -65,7 +69,7 @@ class SettlePerformaRequest extends FormRequest
             'payment_method.required' => 'Select a payment method.',
             'lines.required' => 'Select at least one unpaid line to settle.',
             'lines.min' => 'Select at least one unpaid line to settle.',
-            'lines.*.quantity.min' => 'Quantity must be at least 1.',
+            'lines.*.quantity.gt' => 'Enter an amount above zero.',
         ];
     }
 }

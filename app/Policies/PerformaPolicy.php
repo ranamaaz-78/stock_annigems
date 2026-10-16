@@ -44,6 +44,16 @@ class PerformaPolicy
     }
 
     /**
+     * Edit an open performa (same permission as issuing one).
+     */
+    public function update(User $user, Performa $performa): bool
+    {
+        return $user->hasPermission('performas.create')
+            && $this->sameBranch($user, $performa)
+            && $performa->isOpen();
+    }
+
+    /**
      * Take payment against unpaid lines.
      */
     public function settle(User $user, Performa $performa): bool

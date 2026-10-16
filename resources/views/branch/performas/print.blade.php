@@ -6,15 +6,24 @@
 @php
     $showPrices = $performa->items->contains(fn ($item) => (float) $item->unit_price > 0);
 
-    $issued = (int) $performa->items->sum('quantity_issued');
-    $settled = (int) $performa->items->sum('quantity_settled');
-    $returned = (int) $performa->items->sum('quantity_returned');
-    $outstanding = (int) $performa->items->sum(fn ($item) => $item->outstandingQuantity());
+    // Pieces count as pieces; a weighed stone is counted in grams, shown beside them.
+    $count = fn (callable $pieces, callable $grams): string => collect([
+        (int) $performa->items->reject->isWeighed()->sum($pieces) ?: null,
+        ($g = (float) $performa->items->filter->isWeighed()->sum($grams)) > 0
+            ? rtrim(rtrim(number_format($g, 3, '.', ''), '0'), '.').' g'
+            : null,
+    ])->filter(fn ($part) => $part !== null)->implode(' + ') ?: '0';
 
-    $valueIssued = (float) $performa->items->sum(fn ($item) => $item->valueOf($item->quantity_issued));
-    $valueSettled = (float) $performa->items->sum(fn ($item) => $item->valueOf($item->quantity_settled));
-    $valueReturned = (float) $performa->items->sum(fn ($item) => $item->valueOf($item->quantity_returned));
-    $valueOutstanding = (float) $performa->items->sum(fn ($item) => $item->valueOf($item->outstandingQuantity()));
+    $issued = $count(fn ($i) => $i->quantity_issued, fn ($i) => $i->weight_issued);
+    $settled = $count(fn ($i) => $i->quantity_settled, fn ($i) => $i->weight_settled);
+    $returned = $count(fn ($i) => $i->quantity_returned, fn ($i) => $i->weight_returned);
+    $outstanding = $count(fn ($i) => $i->outstandingQuantity(), fn ($i) => $i->outstandingWeight());
+
+    // Worth in each line's own unit: pieces, or grams on a weighed line.
+    $valueIssued = (float) $performa->items->sum(fn ($item) => $item->valueOf($item->isWeighed() ? $item->weight_issued : $item->quantity_issued));
+    $valueSettled = (float) $performa->items->sum(fn ($item) => $item->valueOf($item->isWeighed() ? $item->weight_settled : $item->quantity_settled));
+    $valueReturned = (float) $performa->items->sum(fn ($item) => $item->valueOf($item->isWeighed() ? $item->weight_returned : $item->quantity_returned));
+    $valueOutstanding = (float) $performa->items->sum(fn ($item) => $item->valueOf($item->outstandingAmount()));
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -93,13 +102,13 @@
                                     <span class="sheet-table__sub">{{ $detail }}</span>
                                 @endif
                             </td>
-                            <td class="sheet-table__num">{{ $item->quantity_issued }}</td>
-                            <td class="sheet-table__num">{{ $item->quantity_settled }}</td>
-                            <td class="sheet-table__num">{{ $item->quantity_returned }}</td>
-                            <td class="sheet-table__total">{{ $item->outstandingQuantity() }}</td>
+                            <td class="sheet-table__num">{{ $item->isWeighed() ? $item->amountLabel($item->weight_issued) : $item->quantity_issued }}</td>
+                            <td class="sheet-table__num">{{ $item->isWeighed() ? $item->amountLabel($item->weight_settled) : $item->quantity_settled }}</td>
+                            <td class="sheet-table__num">{{ $item->isWeighed() ? $item->amountLabel($item->weight_returned) : $item->quantity_returned }}</td>
+                            <td class="sheet-table__total">{{ $item->amountLabel($item->outstandingAmount()) }}</td>
                             @if($showPrices)
-                                <td class="sheet-table__num">{{ $priced ? setting_amount($item->unit_price) : '—' }}</td>
-                                <td class="sheet-table__total">{{ $priced ? setting_amount($item->valueOf($item->quantity_issued)) : '—' }}</td>
+                                <td class="sheet-table__num">{{ $priced ? setting_amount($item->unit_price).($item->isWeighed() ? ' / g' : '') : '—' }}</td>
+                                <td class="sheet-table__total">{{ $priced ? setting_amount($item->valueOf($item->isWeighed() ? $item->weight_issued : $item->quantity_issued)) : '—' }}</td>
                             @endif
                         </tr>
                     @endforeach

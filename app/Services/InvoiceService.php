@@ -125,7 +125,16 @@ class InvoiceService
                         }
                     } elseif ($line->line_type === LineType::LOOSE_STONE && $line->stone_id) {
                         $stone = Stone::query()->lockForUpdate()->find($line->stone_id);
-                        if ($stone) {
+                        if ($stone && $line->weight_grams !== null) {
+                            $this->stoneStockService->applyWeight(
+                                $stone,
+                                StoneMovementType::RETURNED_FROM_SALE,
+                                round((float) $line->weight_grams, 3),
+                                $actor,
+                                $invoice,
+                                "Void invoice {$invoice->invoice_number}"
+                            );
+                        } elseif ($stone) {
                             $this->stoneStockService->apply(
                                 $stone,
                                 StoneMovementType::RETURNED_FROM_SALE,

@@ -74,13 +74,20 @@ class PerformaSettlementService
 
             $selections = $this->validatedSelections($performa, $data);
             $pricedLines = $this->buildPricedLines($selections);
-            $tax = DocumentSettings::tax();
+            // IVA and recargo are the cashier's choice: a blank IVA means none,
+            // and leaving the key out takes the default IVA.
+            $taxChoice = DocumentSettings::applyToPayload(array_intersect_key(
+                $data,
+                ['tax_rate_uuid' => 1, 'recargo_rate_uuid' => 1]
+            ));
             $result = $this->pricing->recalculate($pricedLines, [
                 'discount_type' => DiscountType::NONE->value,
                 'discount_value' => 0,
-                'tax_type' => $tax['enabled'] ? $tax['type'] : TaxType::NONE->value,
-                'tax_rate' => $tax['enabled'] ? $tax['rate'] : 0,
-                'tax_name' => $tax['enabled'] ? $tax['name'] : null,
+                'tax_type' => $taxChoice['tax_type'],
+                'tax_rate' => $taxChoice['tax_rate'],
+                'tax_name' => $taxChoice['tax_name'],
+                'recargo_rate' => $taxChoice['recargo_rate'],
+                'recargo_name' => $taxChoice['recargo_name'],
             ]);
 
             $invoice = Invoice::query()->create([
@@ -105,6 +112,9 @@ class PerformaSettlementService
                 'tax_rate' => $result['document']['tax_rate'],
                 'tax_amount' => $result['document']['tax_amount'],
                 'tax_name' => $result['document']['tax_name'],
+                'recargo_name' => $result['document']['recargo_name'],
+                'recargo_rate' => $result['document']['recargo_rate'],
+                'recargo_amount' => $result['document']['recargo_amount'],
                 'grand_total' => $result['document']['grand_total'],
                 'payment_method' => PaymentMethod::from((string) $data['payment_method']),
                 'payment_reference' => $data['payment_reference'] ?? null,
@@ -129,7 +139,11 @@ class PerformaSettlementService
             foreach ($selections as $selection) {
                 $this->applySettlementStock($selection, $invoice, $performa, $actor);
                 $item = $selection['item'];
-                $item->quantity_settled += $selection['quantity'];
+                if ($item->isWeighed()) {
+                    $item->weight_settled = round((float) $item->weight_settled + (float) $selection['quantity'], 3);
+                } else {
+                    $item->quantity_settled += $selection['quantity'];
+                }
                 $item->save();
             }
 
@@ -189,7 +203,10 @@ class PerformaSettlementService
                 }
             } elseif ($invLine->line_type === LineType::LOOSE_STONE && $invLine->stone_id) {
                 $item = $performa->items->firstWhere('stone_id', $invLine->stone_id);
-                if ($item) {
+                if ($item && $invLine->weight_grams !== null) {
+                    $item->weight_settled = max(0, round((float) $item->weight_settled - (float) $invLine->weight_grams, 3));
+                    $item->save();
+                } elseif ($item) {
                     $item->quantity_settled = max(0, (int) $item->quantity_settled - (int) $invLine->quantity);
                     $item->save();
                 }
@@ -228,14 +245,23 @@ class PerformaSettlementService
                 ]);
             }
 
-            $outstanding = $item->outstandingQuantity();
-            if ($outstanding < 1) {
+            $outstanding = $item->outstandingAmount();
+            if ($outstanding <= 0) {
                 throw ValidationException::withMessages([
                     "lines.{$index}" => "{$item->item_code_snapshot} has nothing unpaid.",
                 ]);
             }
 
-            $qty = (int) ($row['quantity'] ?? 0);
+            // A weighed line is paid for in grams; pieces come whole.
+            $qty = $item->isWeighed()
+                ? round((float) ($row['quantity'] ?? 0), 3)
+                : (int) ($row['quantity'] ?? 0);
+
+            if (! $item->isWeighed() && (float) ($row['quantity'] ?? 0) !== (float) $qty) {
+                throw ValidationException::withMessages([
+                    "lines.{$index}" => "{$item->item_code_snapshot} is settled in whole pieces.",
+                ]);
+            }
             if ($item->line_type === LineType::JEWELLERY_ITEM) {
                 $qty = 1;
                 if ($outstanding !== 1) {
@@ -245,9 +271,10 @@ class PerformaSettlementService
                 }
             }
 
-            if ($qty < 1 || $qty > $outstanding) {
+            if ($qty <= 0 || $qty > $outstanding + 0.0005) {
+                $unit = $item->isWeighed() ? ' g' : '';
                 throw ValidationException::withMessages([
-                    "lines.{$index}" => "{$item->item_code_snapshot} has only {$outstanding} unpaid.",
+                    "lines.{$index}" => "{$item->item_code_snapshot} has only {$outstanding}{$unit} unpaid.",
                 ]);
             }
 
@@ -329,7 +356,9 @@ class PerformaSettlementService
                 'item_code_snapshot' => $item->item_code_snapshot,
                 'name_snapshot' => $item->name_snapshot,
                 'category_snapshot' => $item->category_snapshot,
-                'quantity' => $selection['quantity'],
+                // A weighed line is sold by the gram: one line, grams carry the amount.
+                'quantity' => $item->isWeighed() ? 1 : $selection['quantity'],
+                'weight_grams' => $item->isWeighed() ? number_format((float) $selection['quantity'], 3, '.', '') : null,
                 'price_per_piece' => $price,
                 'stones' => [],
             ];
@@ -413,6 +442,7 @@ class PerformaSettlementService
             'gross_weight_snapshot' => $line['gross_weight_snapshot'] ?? null,
             'net_weight_snapshot' => $line['net_weight_snapshot'] ?? null,
             'quantity' => (int) ($line['quantity'] ?? 1),
+            'weight_grams' => $line['weight_grams'] ?? null,
             'gold_rate_applied' => $line['gold_rate_applied'] ?? 0,
             'gold_value' => $line['gold_value'] ?? 0,
             'making_charge_type' => $line['making_charge_type'] ?? MakingChargeType::NONE->value,
@@ -467,7 +497,7 @@ class PerformaSettlementService
             StoneMovementType::SETTLED_FROM_CREDIT,
             $actor,
             $invoice,
-            "Settled {$selection['quantity']} from performa {$performa->performa_number} on {$invoice->invoice_number}"
+            "Settled {$selection['quantity']}".($item->isWeighed() ? ' g' : '')." from performa {$performa->performa_number} on {$invoice->invoice_number}"
         );
     }
 }

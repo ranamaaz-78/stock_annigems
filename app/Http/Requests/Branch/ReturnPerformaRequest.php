@@ -36,7 +36,8 @@ class ReturnPerformaRequest extends FormRequest
             'return_all' => ['nullable', 'boolean'],
             'lines' => ['required_without:return_all', 'array'],
             'lines.*.performa_item_id' => ['required_with:lines', 'integer', 'exists:performa_items,id'],
-            'lines.*.quantity' => ['required_with:lines', 'integer', 'min:1'],
+            // Pieces, or grams on a weighed stone line (the service insists on whole pieces otherwise).
+            'lines.*.quantity' => ['required_with:lines', 'numeric', 'gt:0', 'decimal:0,3'],
         ];
     }
 
@@ -47,7 +48,7 @@ class ReturnPerformaRequest extends FormRequest
     {
         return [
             'lines.required_without' => 'Select at least one unpaid line to return.',
-            'lines.*.quantity.min' => 'Quantity must be at least 1.',
+            'lines.*.quantity.gt' => 'Enter an amount above zero.',
         ];
     }
 }

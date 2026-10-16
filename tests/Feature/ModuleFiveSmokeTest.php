@@ -127,7 +127,7 @@ class ModuleFiveSmokeTest extends TestCase
         $this->actingAs($admin)->get(route('branch.customers.create'))->assertOk();
         $this->actingAs($admin)
             ->get(route('branch.quotations.create'))
-            ->assertRedirect(route('branch.pos.show'));
+            ->assertRedirect(route('branch.pos.show', ['kind' => 'quotation']));
         $this->actingAs($admin)
             ->get(route('branch.pos.show'))
             ->assertOk()
@@ -206,7 +206,7 @@ class ModuleFiveSmokeTest extends TestCase
 
         $this->actingAs($admin)
             ->get(route('branch.quotations.create'))
-            ->assertRedirect(route('branch.pos.show'));
+            ->assertRedirect(route('branch.pos.show', ['kind' => 'quotation']));
 
         $this->actingAs($admin)
             ->get(route('branch.pos.show'))

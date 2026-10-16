@@ -197,6 +197,8 @@ Route::middleware(['auth', 'password.changed', 'branch.context', 'branch.member'
         Route::get('/performas/search', [PerformaController::class, 'search'])
             ->name('performas.search');
         Route::get('/performas/{performa}', [PerformaController::class, 'show'])->name('performas.show');
+        Route::get('/performas/{performa}/edit', [PerformaController::class, 'edit'])->name('performas.edit');
+        Route::put('/performas/{performa}', [PerformaController::class, 'update'])->name('performas.update');
         Route::get('/performas/{performa}/print', [PerformaController::class, 'print'])->name('performas.print');
         Route::get('/performas/{performa}/settle', [PerformaController::class, 'settleForm'])->name('performas.settle');
         Route::post('/performas/{performa}/settle', [PerformaController::class, 'settle'])->name('performas.settle.store');

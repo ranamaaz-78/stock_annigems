@@ -46,6 +46,21 @@ class QuotationStockService
             }
 
             $stone = Stone::query()->lockForUpdate()->findOrFail($line['stone_id']);
+
+            // A weighed lot is held by grams, not pieces.
+            if ($stone->isWeighed()) {
+                $this->stoneStockService->applyWeight(
+                    $stone,
+                    StoneMovementType::RESERVED_ON_QUOTATION,
+                    -round((float) ($line['weight_grams'] ?? 0), 3),
+                    $actor,
+                    $quotation,
+                    'Reserved on quotation '.$quotation->quotation_number
+                );
+
+                continue;
+            }
+
             $qty = max(1, (int) ($line['quantity'] ?? 1));
             $this->stoneStockService->apply(
                 $stone,
@@ -81,13 +96,29 @@ class QuotationStockService
                 continue;
             }
 
-            $qty = $this->reservedStoneQuantity($quotation, (int) $line->stone_id);
-            if ($qty < 1) {
+            $stone = Stone::query()->lockForUpdate()->find($line->stone_id);
+            if (! $stone) {
                 continue;
             }
 
-            $stone = Stone::query()->lockForUpdate()->find($line->stone_id);
-            if (! $stone) {
+            if ($stone->isWeighed()) {
+                $grams = $this->reservedStoneWeight($quotation, (int) $line->stone_id);
+                if ($grams > 0) {
+                    $this->stoneStockService->applyWeight(
+                        $stone,
+                        StoneMovementType::RELEASED_FROM_QUOTATION,
+                        $grams,
+                        $actor,
+                        $quotation,
+                        'Released from quotation '.$quotation->quotation_number
+                    );
+                }
+
+                continue;
+            }
+
+            $qty = $this->reservedStoneQuantity($quotation, (int) $line->stone_id);
+            if ($qty < 1) {
                 continue;
             }
 
@@ -100,6 +131,25 @@ class QuotationStockService
                 'Released from quotation '.$quotation->quotation_number
             );
         }
+    }
+
+    /**
+     * How many grams of this weighed stone this quotation still holds
+     * (reserved minus released, from the weight ledger).
+     */
+    public function reservedStoneWeight(Quotation $quotation, int $stoneId): float
+    {
+        $net = (float) StoneStockMovement::query()
+            ->where('reference_type', $quotation::class)
+            ->where('reference_id', $quotation->id)
+            ->where('stone_id', $stoneId)
+            ->whereIn('type', [
+                StoneMovementType::RESERVED_ON_QUOTATION,
+                StoneMovementType::RELEASED_FROM_QUOTATION,
+            ])
+            ->sum('weight_change');
+
+        return max(0.0, round(-$net, 3));
     }
 
     /**

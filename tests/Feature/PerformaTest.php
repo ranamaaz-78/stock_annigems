@@ -135,11 +135,9 @@ class PerformaTest extends TestCase
         $admin = $this->branchAdmin();
 
         $this->actingAs($admin)->get(route('branch.performas.index'))->assertOk();
+        // New performas are made on the POS: the old address sends you there.
         $this->actingAs($admin)->get(route('branch.performas.create'))
-            ->assertOk()
-            ->assertSee('Issue performa')
-            ->assertSee('Short code')
-            ->assertSee('Search by name');
+            ->assertRedirect(route('branch.pos.show', ['kind' => 'performa']));
 
         $item = $this->jewellery($admin);
         $this->actingAs($admin)->postJson(route('branch.performas.store'), $this->issuePayload($item))
@@ -688,5 +686,27 @@ class PerformaTest extends TestCase
             ->assertOk()
             ->assertSee('data-kind="performa"', false)
             ->assertSee('data-generate-performa', false);
+    }
+
+    public function test_new_performa_lands_on_the_pos_with_performa_chosen_and_the_creditor_filled(): void
+    {
+        $admin = $this->branchAdmin();
+        $creditor = $this->creditor($admin, ['name' => 'Alpha Gems', 'phone' => '03001110001']);
+
+        $this->actingAs($admin)
+            ->get(route('branch.performas.create', ['creditor' => $creditor->uuid]))
+            ->assertRedirect(route('branch.pos.show', ['kind' => 'performa', 'creditor' => $creditor->uuid]));
+
+        $page = $this->actingAs($admin)
+            ->get(route('branch.pos.show', ['kind' => 'performa', 'creditor' => $creditor->uuid]))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('&quot;defaultKind&quot;:&quot;performa&quot;', $page);
+        $this->assertStringContainsString('Alpha Gems', $page);
+
+        // Without ?kind= the POS opens on its usual default, and an unknown kind is ignored.
+        $this->actingAs($admin)->get(route('branch.pos.show', ['kind' => 'nonsense']))
+            ->assertOk()
+            ->assertDontSee('&quot;defaultKind&quot;:&quot;performa&quot;', false);
     }
 }

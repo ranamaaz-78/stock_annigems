@@ -57,6 +57,8 @@ class StorePerformaRequest extends FormRequest
                 'regex:/^[0-9+\-\s()]{7,30}$/',
             ],
             'walkin_email' => ['nullable', 'email', 'max:150'],
+            'walkin_address' => ['nullable', 'string', 'max:500'],
+            'walkin_nie' => ['nullable', 'string', 'max:20', 'regex:/^[A-Za-z0-9\-\s.\/]{5,20}$/'],
             'creditor_uuid' => [
                 'nullable',
                 'required_without:walkin_phone',
@@ -84,6 +86,7 @@ class StorePerformaRequest extends FormRequest
                 'integer',
             ],
             'lines.*.quantity' => ['required', 'integer', 'min:1'],
+            'lines.*.weight_grams' => ['nullable', 'numeric', 'gt:0', 'decimal:0,3', 'max:9999999'],
             // Optional pricing, used only when the performa prints its prices.
             'lines.*.price_per_piece' => ['nullable', 'numeric', 'min:0'],
             'lines.*.gold_rate_applied' => ['nullable', 'numeric', 'min:0'],

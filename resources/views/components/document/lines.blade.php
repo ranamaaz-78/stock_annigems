@@ -29,7 +29,12 @@
         @foreach($items as $item)
             @php
                 $isLooseStone = $item->line_type === \App\Enums\LineType::LOOSE_STONE;
-                $weight = $item->net_weight_snapshot ? number_format($item->net_weight_snapshot, 3).' g' : null;
+                // A per-gram stone line is sold by weight: grams and a rate per gram.
+                $stoneGrams = $isLooseStone ? (float) ($item->weight_grams ?? 0) : 0.0;
+                $isGramLine = $stoneGrams > 0;
+                $gramsText = rtrim(rtrim(number_format($stoneGrams, 3, '.', ''), '0'), '.').' g';
+                $gramRate = $isGramLine ? (float) $item->stone_value / $stoneGrams : 0.0;
+                $weight = $isGramLine ? $gramsText : ($item->net_weight_snapshot ? number_format($item->net_weight_snapshot, 3).' g' : null);
                 $rate = (float) $item->gold_rate_applied;
                 $metalName = trim(($item->purity_snapshot ?? '').' '.($item->metal_snapshot ?? ''));
             @endphp
@@ -37,7 +42,9 @@
                 <td>
                     <span class="sheet-table__code">{{ $item->item_code_snapshot }}</span>
                     <span class="sheet-table__name">{{ $item->name_snapshot }}</span>
-                    @if($isLooseStone)
+                    @if($isGramLine)
+                        <span class="sheet-table__sub">Loose stone · {{ $gramsText }} × {{ setting_amount($gramRate) }} per g</span>
+                    @elseif($isLooseStone)
                         <span class="sheet-table__sub">Loose stone · {{ $item->quantity }} {{ $item->quantity == 1 ? 'pc' : 'pcs' }}</span>
                     @elseif($metalName !== '')
                         <span class="sheet-table__sub">
@@ -70,9 +77,9 @@
                     <td class="sheet-table__num">{{ (float) $item->making_charges > 0 ? setting_amount($item->making_charges) : '—' }}</td>
                 @else
                     <td class="sheet-table__num">
-                        {{ $isLooseStone ? $item->quantity.($item->quantity == 1 ? ' pc' : ' pcs') : '1 pc'.($weight ? ' · '.$weight : '') }}
+                        {{ $isGramLine ? $gramsText : ($isLooseStone ? $item->quantity.($item->quantity == 1 ? ' pc' : ' pcs') : '1 pc'.($weight ? ' · '.$weight : '')) }}
                     </td>
-                    <td class="sheet-table__num">{{ setting_amount($isLooseStone && $item->quantity > 0 ? (float) $item->line_total / $item->quantity : $item->line_total) }}</td>
+                    <td class="sheet-table__num">{{ setting_amount($isGramLine ? $gramRate : ($isLooseStone && $item->quantity > 0 ? (float) $item->line_total / $item->quantity : $item->line_total)) }}</td>
                 @endif
                 <td class="sheet-table__total">{{ setting_amount($item->line_total) }}</td>
             </tr>

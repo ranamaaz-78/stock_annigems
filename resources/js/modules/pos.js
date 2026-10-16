@@ -158,9 +158,13 @@ export function bindPos() {
 
     let state = emptyState();
     // Invoice when the cashier may convert, otherwise only quotations exist.
-    let documentKind = config.defaultKind === 'invoice' ? 'invoice' : 'quotation';
+    let documentKind = ['invoice', 'delivery_note', 'performa'].includes(config.defaultKind) ? config.defaultKind : 'quotation';
     // Which registry the phone field searches: customers, or creditors on a performa.
     let identityGroup = 'customer';
+    // Line whose grams box takes the cursor after the next paint (a weighed stone was just added).
+    let pendingGramsFocus = null;
+    // An issued performa opened for editing (null on a new ticket).
+    const editing = config.editingPerforma || null;
     // Next number of each series, as last read from the server.
     let documentNumbers = { ...(config.documentNumbers || {}) };
 
@@ -175,6 +179,8 @@ export function bindPos() {
             walkin_name: '',
             walkin_phone: '',
             walkin_email: '',
+            walkin_nie: '',
+            walkin_address: '',
             customerLocked: false,
             customer_code: '',
             // The rates SuperAdmin keeps: the chosen IVA (default preselected) and an optional recargo.
@@ -194,6 +200,8 @@ export function bindPos() {
         phone: root.querySelector('[data-pos-phone]'),
         name: root.querySelector('[data-pos-name]'),
         email: root.querySelector('[data-pos-email]'),
+        nie: root.querySelector('[data-pos-nie]'),
+        address: root.querySelector('[data-pos-address]'),
         chip: root.querySelector('[data-customer-chip]'),
         customerSuggest: root.querySelector('[data-customer-suggest]'),
         customerWrap: root.querySelector('[data-customer-wrap]'),
@@ -449,6 +457,13 @@ export function bindPos() {
             return '<span class="pos-stock__note">Unique piece</span>';
         }
 
+        // A weighed stone's stock is grams.
+        if (line.weighed) {
+            const leftGrams = remainingForLine(line);
+
+            return `<span class="pos-line__stock${leftGrams <= 0 ? ' pos-line__stock--low' : ''}" data-stock-line="${index}">${formatGrams(leftGrams)} g</span>`;
+        }
+
         const onHand = stoneOnHand(line.stone_id, line.available_quantity);
         const left = Math.max(0, onHand - ticketStoneQty(line.stone_id));
 
@@ -466,6 +481,22 @@ export function bindPos() {
     function quantityCell(line, index) {
         if (line.line_type === 'jewellery_item') {
             return '<span class="pos-chip"><span class="pos-num">1</span> · Unique piece</span>';
+        }
+
+        // A weighed stone is sold by the gram: ask for grams instead of pieces.
+        if (line.weighed) {
+            return `<span class="pos-grams">
+                ${cellInput({
+                    type: 'number',
+                    step: '0.001',
+                    min: '0.001',
+                    value: line.weight_grams || '',
+                    placeholder: 'grams',
+                    extra: `data-field="weight_grams" data-grams-input data-line="${index}" max="${lineOnHand(line) || ''}"`,
+                    aria: 'Grams',
+                })}
+                <span class="pos-grams__unit">g</span>
+            </span>`;
         }
 
         const qty = parseInt(line.quantity, 10) || 1;
@@ -518,7 +549,10 @@ export function bindPos() {
         els.lines.innerHTML = state.lines.map((line, index) => {
             const isJewellery = line.line_type === 'jewellery_item';
             const weight = Number(line.net_weight_snapshot);
-            const weightLabel = isJewellery && Number.isFinite(weight) && weight > 0
+            const soldGrams = parseFloat(line.weight_grams) || 0;
+            const weightLabel = !isJewellery && line.weighed && soldGrams > 0
+                ? `${formatGrams(soldGrams)}g`
+                : isJewellery && Number.isFinite(weight) && weight > 0
                 ? `${weight.toFixed(3)}g`
                 : '—';
 
@@ -597,7 +631,8 @@ export function bindPos() {
                 ${cellInput({
                     value: amountOrEmpty(rateValue),
                     extra: `data-material data-line="${index}"`,
-                    aria: 'Rate',
+                    placeholder: line.weighed ? 'per g' : '0.00',
+                    aria: line.weighed ? 'Rate per gram' : 'Rate',
                 })}
                 ${makingCell}
                 <span class="pos-line__amount">${escapeHtml(formatAmount(line.line_total))}</span>
@@ -608,6 +643,11 @@ export function bindPos() {
         }).join('');
 
         bindLineEvents();
+
+        if (pendingGramsFocus !== null) {
+            els.lines.querySelector(`[data-grams-input][data-line="${pendingGramsFocus}"]`)?.focus();
+            pendingGramsFocus = null;
+        }
     }
 
     /**
@@ -642,6 +682,8 @@ export function bindPos() {
                 const line = state.lines[parseInt(input.dataset.line, 10)];
                 if (input.dataset.field === 'quantity') {
                     line.quantity = clampStoneQuantity(line, input.value);
+                } else if (input.dataset.field === 'weight_grams') {
+                    line.weight_grams = clampGrams(line, input.value);
                 } else {
                     line[input.dataset.field] = input.value;
                 }
@@ -703,9 +745,12 @@ export function bindPos() {
     function itemsSummary() {
         let pieces = 0;
         let stones = 0;
+        let grams = 0;
         state.lines.forEach((line) => {
             if (line.line_type === 'jewellery_item') {
                 pieces += 1;
+            } else if (line.weighed) {
+                grams += parseFloat(line.weight_grams) || 0;
             } else {
                 stones += parseInt(line.quantity, 10) || 0;
             }
@@ -717,7 +762,8 @@ export function bindPos() {
         return [
             pieces ? `${pieces} ${pieces === 1 ? 'piece' : 'pieces'}` : null,
             stones ? `${stones} ${stones === 1 ? 'stone' : 'stones'}` : null,
-        ].filter(Boolean).join(' · ');
+            grams > 0 ? `${formatGrams(grams)} g of stone` : null,
+        ].filter(Boolean).join(' · ') || `${state.lines.length} ${state.lines.length === 1 ? 'line' : 'lines'}`;
     }
 
     function renderPreview(documentTotals) {
@@ -858,6 +904,23 @@ export function bindPos() {
             line.making_charge_type = line.making_charge_type || 'none';
             line.making_charge_value = line.making_charge_value || '0';
             state.lines.push(line);
+        } else if (line.weighed) {
+            // A weighed stone: one line, and the cursor goes to its grams box so the
+            // cashier is asked how many grams.
+            const existing = state.lines.findIndex((l) => Number(l.stone_id) === Number(line.stone_id));
+            if (existing >= 0) {
+                showScanError(`${line.item_code_snapshot} is already on this ticket. Change its grams.`);
+                pendingGramsFocus = existing;
+                render();
+                return;
+            }
+            if (remainingForLine(line) <= 0) {
+                showScanError(`${line.item_code_snapshot} has no stock on hand.`);
+                return;
+            }
+            line.weight_grams = '';
+            state.lines.push(line);
+            pendingGramsFocus = state.lines.length - 1;
         } else {
             if (remainingForStone(line.stone_id, line.available_quantity) < 1) {
                 showScanError(`${line.item_code_snapshot} has no remaining stock on this ticket.`);
@@ -886,6 +949,8 @@ export function bindPos() {
         state.walkin_name = customer.name || '';
         state.walkin_phone = customer.phone || '';
         state.walkin_email = customer.email || '';
+        state.walkin_nie = customer.nie || '';
+        state.walkin_address = customer.address || '';
 
         if (els.phone) {
             els.phone.value = state.walkin_phone;
@@ -899,6 +964,14 @@ export function bindPos() {
         if (els.email) {
             els.email.value = state.walkin_email;
             els.email.readOnly = true;
+        }
+        if (els.nie) {
+            els.nie.value = state.walkin_nie;
+            els.nie.readOnly = true;
+        }
+        if (els.address) {
+            els.address.value = state.walkin_address;
+            els.address.readOnly = true;
         }
 
         setCustomerChip('existing');
@@ -914,7 +987,7 @@ export function bindPos() {
         state.customerLocked = false;
         state.customer_code = '';
 
-        [els.phone, els.name, els.email].forEach((field) => {
+        [els.phone, els.name, els.email, els.nie, els.address].forEach((field) => {
             if (!field) return;
             field.readOnly = false;
             field.value = '';
@@ -925,6 +998,8 @@ export function bindPos() {
         state.walkin_name = '';
         state.walkin_phone = '';
         state.walkin_email = '';
+        state.walkin_nie = '';
+        state.walkin_address = '';
 
         hideCustomerSuggestions();
         setCustomerChip(mode === 'new' ? 'new' : 'idle');
@@ -967,6 +1042,8 @@ export function bindPos() {
             walkin_name: existing ? '' : (els.name?.value || '').trim(),
             walkin_phone: existing ? '' : (els.phone?.value || '').trim(),
             walkin_email: existing ? '' : (els.email?.value || '').trim(),
+            walkin_nie: existing ? '' : (els.nie?.value || '').trim(),
+            walkin_address: existing ? '' : (els.address?.value || '').trim(),
             quotation_date: state.quotation_date,
             discount_type: state.discount_on ? state.discount_type : 'none',
             discount_value: state.discount_on ? state.discount_value : '0',
@@ -994,7 +1071,9 @@ export function bindPos() {
                 line_type: line.line_type,
                 stone_id: Number.isFinite(Number(line.stone_id)) ? Number(line.stone_id) : null,
                 stone_uuid: line.stone_uuid || null,
-                quantity: line.quantity,
+                quantity: line.weighed ? 1 : line.quantity,
+                // Grams for a weighed stone (its price field is then the rate per gram).
+                weight_grams: line.weighed ? (line.weight_grams || null) : null,
                 price_per_piece: line.price_per_piece,
             };
         }
@@ -1058,6 +1137,8 @@ export function bindPos() {
             walkin_phone: els.phone,
             walkin_name: els.name,
             walkin_email: els.email,
+            walkin_nie: els.nie,
+            walkin_address: els.address,
             discount_value: els.discountValue,
         };
 
@@ -1183,7 +1264,7 @@ export function bindPos() {
      */
     function resetTicket() {
         state = emptyState();
-        [els.phone, els.name, els.email].forEach((field) => {
+        [els.phone, els.name, els.email, els.nie, els.address].forEach((field) => {
             if (!field) return;
             field.value = '';
             field.readOnly = false;
@@ -1210,7 +1291,7 @@ export function bindPos() {
      * @param {HTMLButtonElement} button
      */
     async function generateQuotation(button) {
-        if (!validateCustomer()) return;
+        if (!validateTicket()) return;
         if (!state.lines.length) {
             window.AnnigemsAlert?.notifyError('Add at least one item to the quotation.');
             return;
@@ -1242,8 +1323,9 @@ export function bindPos() {
      * @param {HTMLButtonElement} button
      */
     async function generatePerforma(button) {
-        if (!validateCustomer()) return;
-        if (!state.lines.length) {
+        if (!validateTicket()) return;
+        // An edited performa may keep only its locked (paid or returned) lines.
+        if (!state.lines.length && !(editing && editing.locked.length)) {
             window.AnnigemsAlert?.notifyError('Add at least one item to the performa.');
             return;
         }
@@ -1251,8 +1333,8 @@ export function bindPos() {
         setDocumentKind('performa');
 
         const loading = window.AnnigemsButton?.startButtonLoading(button, 'Saving…');
-        const { ok, json } = await fetchJson(routes.performa, {
-            method: 'POST',
+        const { ok, json } = await fetchJson(editing ? routes.performaUpdate : routes.performa, {
+            method: editing ? 'PUT' : 'POST',
             body: JSON.stringify({
                 ...buildFormPayload(),
                 creditor_uuid: state.customer_uuid || null,
@@ -1264,7 +1346,13 @@ export function bindPos() {
         });
         loading?.restore();
 
-        if (ok) {
+        if (ok && editing) {
+            // The performa stays the document being worked on: print it, then show it.
+            window.AnnigemsAlert?.notifySuccess(json.message || 'Performa updated.');
+            if (json.data?.print_url) printDocument(json.data.print_url);
+            state.lines = [];
+            window.setTimeout(() => { window.location.href = json.data?.show_url || json.data?.print_url; }, 600);
+        } else if (ok) {
             finishAndPrint(json.data?.print_url, json.message || 'Performa issued.');
             refreshDocumentNumbers();
             loadCreditors();
@@ -1281,7 +1369,7 @@ export function bindPos() {
      * @param {HTMLButtonElement} button
      */
     async function generateDeliveryNote(button) {
-        if (!validateCustomer()) return;
+        if (!validateTicket()) return;
         if (!state.lines.length) {
             window.AnnigemsAlert?.notifyError('Add at least one item to the delivery note.');
             return;
@@ -1312,7 +1400,7 @@ export function bindPos() {
      * @param {HTMLFormElement} form
      */
     async function generateInvoice(form) {
-        if (!validateCustomer()) {
+        if (!validateTicket()) {
             window.AnnigemsModal?.closeModal('pos-invoice-modal');
             return;
         }
@@ -1368,6 +1456,8 @@ export function bindPos() {
             els.name.required = true;
         }
         if (els.email) els.email.readOnly = false;
+        if (els.nie) els.nie.readOnly = false;
+        if (els.address) els.address.readOnly = false;
         els.customerLocked?.classList.add('is-hidden');
         state.walkin_phone = els.phone.value;
         filterCustomers(els.phone.value);
@@ -1375,6 +1465,12 @@ export function bindPos() {
 
     els.name?.addEventListener('input', () => {
         state.walkin_name = els.name.value;
+    });
+    els.nie?.addEventListener('input', () => {
+        state.walkin_nie = els.nie.value;
+    });
+    els.address?.addEventListener('input', () => {
+        state.walkin_address = els.address.value;
     });
     els.email?.addEventListener('input', () => {
         state.walkin_email = els.email.value;
@@ -1473,7 +1569,7 @@ export function bindPos() {
 
     els.generateInvoice?.addEventListener('click', (event) => {
         event.preventDefault();
-        if (!validateCustomer()) return;
+        if (!validateTicket()) return;
         if (!state.lines.length) {
             window.AnnigemsAlert?.notifyError('Add at least one item to the invoice.');
             return;
@@ -1532,12 +1628,112 @@ export function bindPos() {
      * @param {number|string} [fallback]
      * @returns {number}
      */
-    function stoneOnHand(stoneId, fallback) {
+    function stoneOnHand(stoneId, fallback, weighed = false) {
         const row = catalog.find((item) => (
             item.line_type === 'loose_stone' && Number(item.line?.stone_id) === Number(stoneId)
         ));
 
+        if (weighed) {
+            return Number(row?.line?.available_grams ?? fallback ?? 0);
+        }
+
         return Number(row?.line?.available_quantity ?? fallback ?? 0);
+    }
+
+    /**
+     * Grams or pieces on hand for a ticket line, in the unit the stone is sold in.
+     *
+     * @param {object} line
+     * @returns {number}
+     */
+    function lineOnHand(line) {
+        return line.weighed
+            ? stoneOnHand(line.stone_id, line.available_grams, true)
+            : stoneOnHand(line.stone_id, line.available_quantity);
+    }
+
+    /**
+     * Grams of this weighed stone already on the ticket, optionally leaving out one line.
+     *
+     * @param {number|string} stoneId
+     * @param {object|null} [except]
+     * @returns {number}
+     */
+    function ticketStoneGrams(stoneId, except = null) {
+        return state.lines
+            .filter((line) => line.weighed && line !== except && Number(line.stone_id) === Number(stoneId))
+            .reduce((sum, line) => sum + (parseFloat(line.weight_grams) || 0), 0);
+    }
+
+    /**
+     * What can still be added of this stone: grams for a weighed one, pieces otherwise.
+     *
+     * @param {object} line
+     * @returns {number}
+     */
+    function remainingForLine(line) {
+        if (line.weighed) {
+            return Math.max(0, Math.round((lineOnHand(line) - ticketStoneGrams(line.stone_id)) * 1000) / 1000);
+        }
+
+        return remainingForStone(line.stone_id, line.available_quantity);
+    }
+
+    /**
+     * Grams as a short figure: 5, 5.5, 5.125 (no trailing zeros).
+     *
+     * @param {number|string} value
+     * @returns {string}
+     */
+    function formatGrams(value) {
+        const n = Math.round((Number(value) || 0) * 1000) / 1000;
+
+        return String(n);
+    }
+
+    /**
+     * Keep typed grams positive and within what is left of the lot.
+     *
+     * @param {object} line
+     * @param {string|number} value
+     * @returns {string}
+     */
+    function clampGrams(line, value) {
+        let grams = Math.round((parseFloat(value) || 0) * 1000) / 1000;
+        if (grams <= 0) return '';
+
+        const room = Math.round((lineOnHand(line) - ticketStoneGrams(line.stone_id, line)) * 1000) / 1000;
+        if (room >= 0 && grams > room) {
+            grams = Math.max(0, room);
+            showScanError(`${line.item_code_snapshot} has only ${formatGrams(room)} g in stock.`);
+        }
+
+        return grams > 0 ? String(grams) : '';
+    }
+
+    /**
+     * Every weighed stone on the ticket needs its grams before anything is saved.
+     *
+     * @returns {boolean}
+     */
+    function linesReady() {
+        const missing = state.lines.findIndex((line) => line.weighed && !(parseFloat(line.weight_grams) > 0));
+        if (missing < 0) return true;
+
+        window.AnnigemsAlert?.notifyError(`Enter how many grams of ${state.lines[missing].item_code_snapshot}.`);
+        pendingGramsFocus = missing;
+        render();
+
+        return false;
+    }
+
+    /**
+     * The customer (or creditor) is filled in and every line is complete.
+     *
+     * @returns {boolean}
+     */
+    function validateTicket() {
+        return validateCustomer() && linesReady();
     }
 
     /**
@@ -1596,7 +1792,7 @@ export function bindPos() {
             return state.lines.some((item) => Number(item.jewellery_item_id) === id) ? 0 : 1;
         }
 
-        return remainingForStone(line.stone_id, line.available_quantity);
+        return remainingForLine(line);
     }
 
     /**
@@ -1717,7 +1913,7 @@ export function bindPos() {
             code,
             title: name,
             meta: row.meta || String(row.label || ''),
-            badge: isJewellery ? 'In stock' : `${remaining} in stock`,
+            badge: isJewellery ? 'In stock' : (line.weighed ? `${formatGrams(remaining)} g in stock` : `${remaining} in stock`),
             badgeStrong: true,
         };
     }
@@ -1793,7 +1989,8 @@ export function bindPos() {
             return haystack.includes(needle);
         }).map((row) => {
             const remaining = remainingForRow(row);
-            if (remaining < 1) {
+            // A weighed lot is on offer while any grams remain; a piece lot while a piece does.
+            if (remaining < (row.line?.weighed ? 0.001 : 1)) {
                 return null;
             }
 
@@ -2074,6 +2271,47 @@ export function bindPos() {
         }
     });
 
+    /**
+     * Load an issued performa into the ticket: its creditor, date, notes and the
+     * lines that can still change. Paid or returned lines are listed, not editable,
+     * and the creditor stays put once any exist.
+     */
+    function openForEditing() {
+        documentNumbers = { ...documentNumbers, performa: editing.number };
+        renderDocumentNumber();
+
+        state.quotation_date = editing.performa_date || state.quotation_date;
+        if (els.issueDate) els.issueDate.value = state.quotation_date;
+        state.notes = editing.notes || '';
+        if (els.notes) els.notes.value = state.notes;
+        state.lines = (editing.lines || []).map((line) => ({ ...line }));
+
+        if (editing.creditor) {
+            applyCustomer(editing.creditor);
+        }
+        if (editing.creditor_locked) {
+            els.customerClear?.classList.add('is-hidden');
+        }
+
+        // Nothing but this performa can be chosen here.
+        els.kindOptions?.forEach((option) => {
+            option.classList.toggle('is-hidden', option.dataset.kind !== 'performa');
+        });
+        const label = root.querySelector('[data-generate-performa-label]');
+        if (label) label.textContent = 'Save Performa Changes';
+
+        const banner = root.querySelector('[data-edit-banner]');
+        if (banner) {
+            const locked = (editing.locked || [])
+                .map((row) => `<li>${escapeHtml(row.code)} — ${escapeHtml(row.name)} (${escapeHtml(row.summary)})</li>`)
+                .join('');
+            banner.innerHTML = `<strong>Editing ${escapeHtml(editing.number)}.</strong> Changing a line puts its stock back and takes it out again.`
+                + (locked ? `<br>These lines are already paid or returned and stay as they are:<ul class="pos-edit-banner__locked">${locked}</ul>` : '');
+            banner.classList.remove('is-hidden');
+        }
+        render();
+    }
+
     window.addEventListener('beforeunload', (event) => {
         if (!state.lines.length) return;
         event.preventDefault();
@@ -2081,6 +2319,13 @@ export function bindPos() {
     });
 
     setDocumentKind(documentKind);
+    if (editing) {
+        openForEditing();
+    }
+    // Arriving from a creditor's page: that creditor is already the one billed.
+    if (config.initialCreditor && documentKind === 'performa') {
+        applyCustomer(config.initialCreditor);
+    }
     render();
     loadCatalog();
     loadCustomers();

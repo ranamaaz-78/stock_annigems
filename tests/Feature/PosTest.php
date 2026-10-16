@@ -108,7 +108,7 @@ class PosTest extends TestCase
 
         $this->actingAs($admin)
             ->get(route('branch.quotations.create'))
-            ->assertRedirect(route('branch.pos.show'));
+            ->assertRedirect(route('branch.pos.show', ['kind' => 'quotation']));
     }
 
     public function test_cashier_with_quotations_create_can_open_pos(): void

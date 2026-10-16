@@ -43,8 +43,12 @@ export function bindPerformaSettle() {
     const routes = config.routes || {};
     const rateMap = config.rateMap || {};
     const taxEnabled = Boolean(config.taxEnabled);
-    const taxType = taxEnabled ? (config.taxType || 'none') : 'none';
-    const taxRate = taxEnabled ? Number(config.taxRate ?? 0) : 0;
+    // The rates the cashier picks from; blank = no IVA / no recargo.
+    const ivaSelect = document.querySelector('[data-settle-iva]');
+    const recargoSelect = document.querySelector('[data-settle-recargo]');
+    const rateOf = (rows, uuid) => (rows || []).find((row) => row.uuid === uuid) || null;
+    const chosenIva = () => (taxEnabled ? rateOf(config.ivaRates, ivaSelect?.value || '') : null);
+    const chosenRecargo = () => (taxEnabled ? rateOf(config.recargoRates, recargoSelect?.value || '') : null);
 
     /**
      * @param {number|string} value
@@ -97,7 +101,7 @@ export function bindPerformaSettle() {
             if (line.category_snapshot) bits.push(escapeHtml(line.category_snapshot));
         } else {
             bits.push('Loose stone');
-            bits.push(`Outstanding ${line.outstanding}`);
+            bits.push(`Outstanding ${line.outstanding}${line.weighed ? ' g' : ''}`);
             if (line.category_snapshot) bits.push(escapeHtml(line.category_snapshot));
         }
 
@@ -158,12 +162,14 @@ export function bindPerformaSettle() {
                 }];
             }
 
-            const qty = Math.max(0, parseInt(line.payQty, 10) || 0);
-            if (qty < 1) return [];
+            const qty = payAmount(line, line.payQty);
+            if (qty <= 0) return [];
 
             return [{
                 ...line,
-                quantity: qty,
+                // A weighed stone is one line priced per gram; grams carry the amount.
+                quantity: line.weighed ? 1 : qty,
+                weight_grams: line.weighed ? qty : null,
                 price_per_piece: line.price_per_piece || 0,
                 stones: [],
             }];
@@ -174,8 +180,9 @@ export function bindPerformaSettle() {
         const result = recalculate(pricedLines(), {
             discount_type: 'none',
             discount_value: 0,
-            tax_type: taxType,
-            tax_rate: taxRate,
+            tax_type: chosenIva() ? 'percentage' : 'none',
+            tax_rate: chosenIva()?.rate ?? 0,
+            recargo_rate: chosenRecargo()?.rate ?? 0,
         });
 
         let gold = 0;
@@ -196,6 +203,12 @@ export function bindPerformaSettle() {
         if (els.makingValue) els.makingValue.textContent = formatMoney(making);
         if (els.subtotal) els.subtotal.textContent = formatMoney(result.document.subtotal);
         if (els.taxAmount) els.taxAmount.textContent = formatMoney(result.document.tax_amount);
+        const taxLabelEl = document.querySelector('[data-tax-label]');
+        if (taxLabelEl) taxLabelEl.textContent = chosenIva()?.name || 'IVA';
+        const recargoAmountEl = document.querySelector('[data-recargo-amount]');
+        if (recargoAmountEl) recargoAmountEl.textContent = formatMoney(result.document.recargo_amount);
+        const recargoLabelEl = document.querySelector('[data-recargo-label]');
+        if (recargoLabelEl) recargoLabelEl.textContent = chosenRecargo()?.name || 'Recargo de equivalencia';
         if (els.total) els.total.textContent = formatMoney(result.document.grand_total);
         if (els.goldWeight) {
             els.goldWeight.textContent = weight > 0 ? `(${weight.toFixed(3)}g)` : '';
@@ -208,8 +221,23 @@ export function bindPerformaSettle() {
         if (line.line_type === 'jewellery_item') {
             return line.selected ? 0 : line.outstanding;
         }
-        const qty = Math.max(0, parseInt(line.payQty, 10) || 0);
-        return Math.max(0, line.outstanding - qty);
+        const qty = payAmount(line, line.payQty);
+        return Math.max(0, Math.round((line.outstanding - qty) * 1000) / 1000);
+    }
+
+    /**
+     * What the operator typed to pay, in the line's unit: whole pieces, or grams.
+     *
+     * @param {object} line
+     * @param {string|number} value
+     * @returns {number}
+     */
+    function payAmount(line, value) {
+        if (line.weighed) {
+            return Math.max(0, Math.round((parseFloat(value) || 0) * 1000) / 1000);
+        }
+
+        return Math.max(0, parseInt(value, 10) || 0);
     }
 
     function lineTotal(line) {
@@ -244,8 +272,8 @@ export function bindPerformaSettle() {
                 ${field('Making value', `<input type="number" step="0.01" min="0" class="input-field" data-field="making_charge_value" data-line="${index}" value="${escapeHtml(amountOrEmpty(line.making_charge_value))}" placeholder="0.00" />`)}`;
 
             const looseFields = `
-                ${field('Pay qty', `<input type="number" min="0" max="${line.outstanding}" step="1" class="input-field" data-qty="${index}" value="${escapeHtml(line.payQty)}" placeholder="0" />`)}
-                ${field('Price / pc', `<input type="number" min="0" step="0.01" class="input-field" data-field="price_per_piece" data-line="${index}" value="${escapeHtml(amountOrEmpty(line.price_per_piece))}" placeholder="0.00" />`)}
+                ${field(line.weighed ? 'Pay grams' : 'Pay qty', `<input type="number" min="0" max="${line.outstanding}" step="${line.weighed ? '0.001' : '1'}" class="input-field" data-qty="${index}" value="${escapeHtml(line.payQty)}" placeholder="${line.weighed ? 'grams' : '0'}" />`)}
+                ${field(line.weighed ? 'Price / g' : 'Price / pc', `<input type="number" min="0" step="0.01" class="input-field" data-field="price_per_piece" data-line="${index}" value="${escapeHtml(amountOrEmpty(line.price_per_piece))}" placeholder="0.00" />`)}
                 ${field('Remaining', `<span class="font-data-mono">${left}</span>`)}`;
 
             const stonesHtml = isJewellery && line.stones?.length
@@ -285,6 +313,8 @@ export function bindPerformaSettle() {
         bindLineEvents();
     }
 
+    [ivaSelect, recargoSelect].forEach((select) => select?.addEventListener("change", renderTotals));
+
     function bindLineEvents() {
         list.querySelectorAll('[data-select]').forEach((input) => {
             input.addEventListener('change', () => {
@@ -296,7 +326,7 @@ export function bindPerformaSettle() {
         list.querySelectorAll('[data-qty]').forEach((input) => {
             input.addEventListener('change', () => {
                 const line = state[parseInt(input.dataset.qty, 10)];
-                const qty = Math.max(0, parseInt(input.value, 10) || 0);
+                const qty = payAmount(line, input.value);
                 line.payQty = String(Math.min(qty, line.outstanding));
                 render();
             });
@@ -339,8 +369,8 @@ export function bindPerformaSettle() {
                 }];
             }
 
-            const qty = Math.max(0, parseInt(line.payQty, 10) || 0);
-            if (qty < 1 || line.price_per_piece === '' || Number(line.price_per_piece) < 0) {
+            const qty = payAmount(line, line.payQty);
+            if (qty <= 0 || line.price_per_piece === '' || Number(line.price_per_piece) < 0) {
                 return [];
             }
 
@@ -387,6 +417,8 @@ export function bindPerformaSettle() {
             body: JSON.stringify({
                 payment_method: paymentSelect.value,
                 payment_reference: payForm.querySelector('[name="payment_reference"]')?.value || '',
+                // Blank = none; only sent when the tax controls exist.
+                ...(taxEnabled ? { tax_rate_uuid: ivaSelect?.value || '', recargo_rate_uuid: recargoSelect?.value || '' } : {}),
                 lines,
             }),
         });

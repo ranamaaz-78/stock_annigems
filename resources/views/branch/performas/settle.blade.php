@@ -17,6 +17,9 @@
         'taxType' => $taxType,
         'taxRate' => $taxRate,
         'taxLabel' => $taxLabel,
+        'ivaRates' => $ivaRates,
+        'recargoRates' => $recargoRates,
+        'defaultIvaUuid' => $defaultIvaUuid,
         'routes' => [
             'settle' => route('branch.performas.settle.store', $performa),
             'invoiceShow' => route('branch.invoices.show', ['invoice' => '__UUID__']),
@@ -69,9 +72,15 @@
                     </div>
                     @if($taxEnabled)
                         <div class="totals__row totals__row--rule">
-                            <dt class="totals__label">{{ $taxLabel }}</dt>
+                            <dt class="totals__label" data-tax-label>IVA</dt>
                             <dd class="totals__value" data-tax-amount>0.00</dd>
                         </div>
+                        @if(count($recargoRates))
+                            <div class="totals__row">
+                                <dt class="totals__label" data-recargo-label>Recargo de equivalencia</dt>
+                                <dd class="totals__value" data-recargo-amount>0.00</dd>
+                            </div>
+                        @endif
                     @endif
                     <div class="totals__row totals__row--grand">
                         <dt class="totals__label">Payment total</dt>
@@ -79,15 +88,28 @@
                     </div>
                 </dl>
                 @if($taxEnabled)
-                    <p class="form-help">
-                        {{ $taxLabel }}
-                        @if($taxType === 'percentage')
-                            {{ rtrim(rtrim(number_format((float) $taxRate, 2), '0'), '.') }}%
-                        @else
-                            {{ setting_money($taxRate) }}
+                    <div class="form-grid mt-3">
+                        <div>
+                            <label class="form-label" for="settle_tax_rate_uuid">IVA</label>
+                            <select id="settle_tax_rate_uuid" class="input-field" data-no-select2 data-settle-iva>
+                                <option value="">No IVA</option>
+                                @foreach($ivaRates as $rate)
+                                    <option value="{{ $rate['uuid'] }}" @selected($rate['uuid'] === $defaultIvaUuid)>{{ $rate['name'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @if(count($recargoRates))
+                            <div>
+                                <label class="form-label" for="settle_recargo_rate_uuid">Recargo de equivalencia</label>
+                                <select id="settle_recargo_rate_uuid" class="input-field" data-no-select2 data-settle-recargo>
+                                    <option value="">None</option>
+                                    @foreach($recargoRates as $rate)
+                                        <option value="{{ $rate['uuid'] }}">{{ $rate['name'] }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         @endif
-                        — set by SuperAdmin.
-                    </p>
+                    </div>
                 @endif
             </section>
 

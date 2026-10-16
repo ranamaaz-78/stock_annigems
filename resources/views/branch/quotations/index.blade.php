@@ -8,7 +8,7 @@
 <x-page-header title="Quotations" subtitle="Priced documents for this branch.">
     <x-slot:actions>
         @can('create', \App\Models\Quotation::class)
-            <x-btn href="{{ route('branch.pos.show') }}">New Quotation</x-btn>
+            <x-btn href="{{ route('branch.pos.show', ['kind' => 'quotation']) }}">New Quotation</x-btn>
         @endcan
     </x-slot:actions>
 </x-page-header>
@@ -33,7 +33,7 @@
             <x-empty-state title="No quotations yet" message="Open POS to price items for a customer." icon="request_quote">
                 <x-slot:actions>
                     @can('create', \App\Models\Quotation::class)
-                        <x-btn href="{{ route('branch.pos.show') }}">New Quotation</x-btn>
+                        <x-btn href="{{ route('branch.pos.show', ['kind' => 'quotation']) }}">New Quotation</x-btn>
                     @endcan
                 </x-slot:actions>
             </x-empty-state>

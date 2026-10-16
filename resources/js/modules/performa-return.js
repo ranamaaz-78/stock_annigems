@@ -31,7 +31,11 @@ export function bindPerformaReturn() {
     function selectedLines() {
         return [...form.querySelectorAll('[data-return-line]')].flatMap((row) => {
             const id = parseInt(row.dataset.lineId, 10);
-            const outstanding = parseInt(row.dataset.outstanding, 10) || 0;
+            // A weighed stone is returned in grams (decimals); pieces come whole.
+            const weighed = row.dataset.weighed === '1';
+            const outstanding = weighed
+                ? (parseFloat(row.dataset.outstanding) || 0)
+                : (parseInt(row.dataset.outstanding, 10) || 0);
             const isJewellery = row.dataset.lineType === 'jewellery_item';
 
             if (isJewellery) {
@@ -41,8 +45,11 @@ export function bindPerformaReturn() {
                 return [{ performa_item_id: id, quantity: 1 }];
             }
 
-            const qty = Math.max(0, parseInt(row.querySelector('[data-return-qty]')?.value, 10) || 0);
-            if (qty < 1) {
+            const typed = row.querySelector('[data-return-qty]')?.value;
+            const qty = weighed
+                ? Math.max(0, Math.round((parseFloat(typed) || 0) * 1000) / 1000)
+                : Math.max(0, parseInt(typed, 10) || 0);
+            if (qty <= 0) {
                 return [];
             }
 

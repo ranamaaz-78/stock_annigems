@@ -40,6 +40,7 @@ class UpdateCustomerRequest extends FormRequest
             'alternate_phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+\-\s()]{7,30}$/'],
             'email' => ['nullable', 'email', 'max:150'],
             'cnic' => ['nullable', 'string', 'max:20', 'regex:/^[0-9]{5}-[0-9]{7}-[0-9]$/', Rule::unique('customers', 'cnic')->ignore($customer->id)],
+            'nie' => ['nullable', 'string', 'max:20', 'regex:/^[A-Za-z0-9\-\s.\/]{5,20}$/'],
             'address' => ['nullable', 'string', 'max:2000'],
             'city' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:5000'],

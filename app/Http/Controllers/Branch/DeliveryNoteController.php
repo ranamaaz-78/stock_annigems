@@ -8,7 +8,10 @@ use App\Http\Requests\Branch\CancelDeliveryNoteRequest;
 use App\Http\Requests\Branch\ConvertDeliveryNoteRequest;
 use App\Http\Requests\Branch\StoreDeliveryNoteRequest;
 use App\Models\DeliveryNote;
+use App\Models\TaxRate;
 use App\Services\DeliveryNoteService;
+use App\Services\TaxRateService;
+use App\Support\Settings\DocumentSettings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,7 +30,10 @@ class DeliveryNoteController extends Controller
 {
     use RespondsWithJson;
 
-    public function __construct(private DeliveryNoteService $deliveryNoteService) {}
+    public function __construct(
+        private DeliveryNoteService $deliveryNoteService,
+        private TaxRateService $taxRates,
+    ) {}
 
     /**
      * Delivery note list. New notes are made from the POS.
@@ -95,6 +101,11 @@ class DeliveryNoteController extends Controller
         return view('branch.delivery-notes.show', [
             'note' => $this->deliveryNoteService->loadDetail($deliveryNote),
             'paymentMethods' => \App\Enums\PaymentMethod::options(),
+            // The note had no tax; the cashier picks it now, when it becomes an invoice.
+            'taxEnabled' => (bool) setting('tax_enabled'),
+            'ivaRates' => $this->taxRates->active(TaxRate::KIND_IVA)->map(fn (TaxRate $r): array => ['uuid' => $r->uuid, 'name' => $r->name, 'rate' => (float) $r->rate])->values()->all(),
+            'recargoRates' => $this->taxRates->active(TaxRate::KIND_RECARGO)->map(fn (TaxRate $r): array => ['uuid' => $r->uuid, 'name' => $r->name, 'rate' => (float) $r->rate])->values()->all(),
+            'defaultIvaUuid' => DocumentSettings::tax()['uuid'],
         ]);
     }
 

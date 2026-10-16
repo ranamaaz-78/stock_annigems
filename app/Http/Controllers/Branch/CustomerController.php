@@ -68,6 +68,8 @@ class CustomerController extends Controller
                 'name' => $c->name,
                 'phone' => $c->phone,
                 'email' => $c->email,
+                'nie' => $c->nie,
+                'address' => $c->address,
                 'city' => $c->city,
             ])->values(),
         ]);
@@ -101,6 +103,8 @@ class CustomerController extends Controller
                 'name' => $customer->name,
                 'phone' => $customer->phone,
                 'email' => $customer->email,
+                'nie' => $customer->nie,
+                'address' => $customer->address,
             ],
         ]);
     }

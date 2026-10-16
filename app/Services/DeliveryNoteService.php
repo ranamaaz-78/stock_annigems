@@ -176,7 +176,16 @@ class DeliveryNoteService
                     }
                 } elseif ($line->line_type === LineType::LOOSE_STONE && $line->stone_id) {
                     $stone = Stone::query()->lockForUpdate()->find($line->stone_id);
-                    if ($stone) {
+                    if ($stone && $line->weight_grams !== null) {
+                        $this->stoneStockService->applyWeight(
+                            $stone,
+                            StoneMovementType::RETURNED_FROM_DELIVERY,
+                            round((float) $line->weight_grams, 3),
+                            $actor,
+                            $note,
+                            "Cancelled delivery note {$note->delivery_note_number}"
+                        );
+                    } elseif ($stone) {
                         $this->stoneStockService->apply(
                             $stone,
                             StoneMovementType::RETURNED_FROM_DELIVERY,
@@ -211,10 +220,11 @@ class DeliveryNoteService
      * Turn an open note into a completed invoice.
      *
      * The note's lines and discount are copied as they are. Tax, which the
-     * note never had, is added from the branch settings the same way a
-     * direct invoice would get it. Stock is not cut again.
+     * note never had, is chosen at this moment: the IVA and recargo rates
+     * named in $payment (resolved from the SuperAdmin list). Stock is not
+     * cut again.
      *
-     * @param  array{payment_method: string, payment_reference?: string|null}  $payment
+     * @param  array{payment_method: string, payment_reference?: string|null, tax_rate_uuid?: string|null, recargo_rate_uuid?: string|null}  $payment
      */
     public function convertToInvoice(DeliveryNote $note, array $payment, User $actor): Invoice
     {
@@ -239,15 +249,22 @@ class DeliveryNoteService
                 throw ValidationException::withMessages(['delivery_note' => 'This delivery note is no longer open.']);
             }
 
-            $tax = DocumentSettings::tax();
+            // IVA and recargo are chosen now (the note had none). A blank IVA
+            // means none; leaving the key out takes the default IVA.
+            $taxChoice = DocumentSettings::applyToPayload([
+                'tax_rate_uuid' => $payment['tax_rate_uuid'] ?? null,
+                'recargo_rate_uuid' => $payment['recargo_rate_uuid'] ?? null,
+            ]);
             $document = $this->pricing->calculateDocument(
                 $note->items->map(fn (DeliveryNoteItem $line): array => ['line_total' => $line->line_total])->all(),
                 [
                     'discount_type' => $note->discount_type->value,
                     'discount_value' => $note->discount_value,
-                    'tax_type' => $tax['enabled'] ? $tax['type'] : TaxType::NONE->value,
-                    'tax_rate' => $tax['enabled'] ? $tax['rate'] : 0,
-                    'tax_name' => $tax['enabled'] ? $tax['name'] : null,
+                    'tax_type' => $taxChoice['tax_type'],
+                    'tax_rate' => $taxChoice['tax_rate'],
+                    'tax_name' => $taxChoice['tax_name'],
+                    'recargo_rate' => $taxChoice['recargo_rate'],
+                    'recargo_name' => $taxChoice['recargo_name'],
                 ]
             );
 
@@ -271,6 +288,9 @@ class DeliveryNoteService
                 'tax_rate' => $document['tax_rate'],
                 'tax_amount' => $document['tax_amount'],
                 'tax_name' => $document['tax_name'],
+                'recargo_name' => $document['recargo_name'],
+                'recargo_rate' => $document['recargo_rate'],
+                'recargo_amount' => $document['recargo_amount'],
                 'grand_total' => $document['grand_total'],
                 'payment_method' => PaymentMethod::from($payment['payment_method']),
                 'payment_reference' => $payment['payment_reference'] ?? null,
@@ -365,6 +385,20 @@ class DeliveryNoteService
         }
 
         $stone = Stone::query()->lockForUpdate()->findOrFail($line['stone_id']);
+
+        if ($stone->isWeighed()) {
+            $this->stoneStockService->applyWeight(
+                $stone,
+                StoneMovementType::DELIVERED,
+                -round((float) ($line['weight_grams'] ?? 0), 3),
+                $actor,
+                $note,
+                "Delivered on {$note->delivery_note_number}"
+            );
+
+            return;
+        }
+
         $this->stoneStockService->apply(
             $stone,
             StoneMovementType::DELIVERED,
@@ -419,6 +453,7 @@ class DeliveryNoteService
             'gross_weight_snapshot' => $line['gross_weight_snapshot'] ?? null,
             'net_weight_snapshot' => $line['net_weight_snapshot'] ?? null,
             'quantity' => (int) ($line['quantity'] ?? 1),
+            'weight_grams' => $line['weight_grams'] ?? null,
             'gold_rate_applied' => $line['gold_rate_applied'] ?? 0,
             'gold_value' => $line['gold_value'] ?? 0,
             'making_charge_type' => $line['making_charge_type'] ?? MakingChargeType::NONE->value,
@@ -466,6 +501,7 @@ class DeliveryNoteService
             'gross_weight_snapshot' => $line->gross_weight_snapshot,
             'net_weight_snapshot' => $line->net_weight_snapshot,
             'quantity' => $line->quantity,
+            'weight_grams' => $line->weight_grams,
             'gold_rate_applied' => $line->gold_rate_applied,
             'gold_value' => $line->gold_value,
             'making_charge_type' => $line->making_charge_type,

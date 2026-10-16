@@ -19,9 +19,13 @@ export function money(value) {
  */
 export function calculateLine(line, stones = []) {
     if (line.line_type === 'loose_stone') {
-        const quantity = Math.max(1, parseInt(line.quantity, 10) || 1);
+        let quantity = Math.max(1, parseInt(line.quantity, 10) || 1);
         const pricePerPiece = money(line.price_per_piece ?? 0);
-        const stoneValue = money(pricePerPiece * quantity);
+
+        // A per-gram line is sold by weight: its price field is the rate per gram.
+        const grams = parseFloat(line.weight_grams) || 0;
+        const stoneValue = grams > 0 ? money(pricePerPiece * grams) : money(pricePerPiece * quantity);
+        if (grams > 0) quantity = 1;
 
         return {
             ...line,

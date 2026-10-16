@@ -43,7 +43,10 @@
         'dateFormat' => (string) setting('date_format', 'd-m-Y'),
         'validityDays' => $validityDays,
         // Invoice when the cashier may convert, otherwise only quotations exist.
-        'defaultKind' => $canConvert ? 'invoice' : 'quotation',
+        'defaultKind' => $defaultKind,
+        'initialCreditor' => $initialCreditor,
+        // An issued performa opened for editing (null on a new ticket).
+        'editingPerforma' => $editingPerforma ?? null,
         'canDeliver' => $canDeliver,
         'canPerforma' => $canPerforma,
         'documentNumbers' => $documentNumbers,
@@ -54,6 +57,7 @@
             'invoice' => route('branch.quotations.invoice'),
             'deliveryNote' => route('branch.delivery-notes.store'),
             'performa' => route('branch.performas.store'),
+            'performaUpdate' => ($editingPerforma ?? null) ? route('branch.performas.update', $editingPerforma['uuid']) : null,
             'creditorSearch' => route('branch.creditors.search'),
             'numbers' => route('branch.pos.numbers'),
             'customerLookup' => route('branch.customers.lookup'),
@@ -140,6 +144,8 @@
 
                     {{-- Phone filters the cached registry. A miss is just a new customer. --}}
                     <section class="pos-billto" aria-label="Customer">
+                        {{-- Shown only while an issued performa is open for editing. --}}
+                        <div class="pos-edit-banner is-hidden" data-edit-banner></div>
                         {{-- What this ticket becomes. Everything below follows the choice. --}}
                         <div class="pos-kind" role="radiogroup" aria-label="Document type" data-kind-group>
                             <button
@@ -253,6 +259,28 @@
                                 data-pos-email
                                 data-error-email="Enter a valid email address."
                             />
+                            <x-form.input
+                                name="walkin_nie"
+                                label="NIE / NIF"
+                                maxlength="20"
+                                autocomplete="off"
+                                placeholder="X1234567L"
+                                help="optional"
+                                data-pos-nie
+                                data-pattern="^[A-Za-z0-9\-\s./]{5,20}$"
+                                data-error-pattern="Enter a valid NIE / NIF."
+                            />
+                            <div class="pos-billto__wide">
+                                <x-form.input
+                                    name="walkin_address"
+                                    label="Address"
+                                    maxlength="500"
+                                    autocomplete="street-address"
+                                    placeholder="Street, number, postcode, city"
+                                    help="optional"
+                                    data-pos-address
+                                />
+                            </div>
                         </div>
                         <p class="pos-hint is-hidden" data-customer-locked>
                             <span class="material-symbols-outlined icon icon--xs">info</span>
@@ -467,7 +495,7 @@
                             @if($canPerforma)
                                 <x-btn type="button" block data-generate-performa data-kind-only="performa" loading-text="Saving…">
                                     <span class="material-symbols-outlined icon icon--sm">assignment</span>
-                                    Generate Performa &amp; Deduct Stock
+                                    <span data-generate-performa-label>Generate Performa &amp; Deduct Stock</span>
                                 </x-btn>
                             @endif
 
