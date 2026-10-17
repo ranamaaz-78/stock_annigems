@@ -595,8 +595,8 @@ class PerformaTest extends TestCase
 
         $html = $this->actingAs($admin)->get(route('branch.performas.print', $performa))->assertOk()->getContent();
 
-        // The shared sheet: gold double rule, tiles, a party card, the table, the footer strip.
-        foreach (['sheet__rule', 'sheet__tiles', 'sheet__party', 'sheet-table', 'sheet__footer', 'sheet__number'] as $class) {
+        // The shared design: accent bar, title, party block, facts, the table, the footer.
+        foreach (['pd__bar', 'pd__title', 'pd__party', 'pd__facts', 'pd-table', 'pd__footer'] as $class) {
             $this->assertStringContainsString($class, $html, "performa print misses {$class}");
         }
         $this->assertStringContainsString($performa->performa_number, $html);

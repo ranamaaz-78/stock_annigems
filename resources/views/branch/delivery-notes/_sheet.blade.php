@@ -1,59 +1,84 @@
 {{--
-    Delivery note sheet.
+    Delivery note (albarán) sheet. Design: "Printable designs" → Delivery note.
 
     The client's copy: it names the document and the client and nothing about
-    the shop — no logo, company, branch, tagline, terms or QR. Passing no branch
-    to the shared sheet is what drops the company block. Lines show one price
-    each; the totals show the discount and never a tax row.
+    the shop. Lines show one price each; the total is net, with the discount when
+    there is one, and never a tax row. Ends with a signature strip.
 
     Expects: $note and $a4 (true only when printing).
 --}}
 @php
     $a4 = $a4 ?? false;
-    $pieces = $note->items->where('line_type', \App\Enums\LineType::JEWELLERY_ITEM)->count();
-    $stones = (int) $note->items->where('line_type', \App\Enums\LineType::LOOSE_STONE)->sum('quantity');
+    $customer = $note->customer;
+    $units = (int) $note->items->filter(fn ($i) => (float) ($i->weight_grams ?? 0) <= 0)->sum('quantity');
+    $grams = (float) $note->items->sum('weight_grams');
+    $unitsText = collect([
+        $units > 0 ? '<strong>'.number_format($units).'</strong> '.Str::plural('unit', $units) : null,
+        $grams > 0 ? '<strong>'.rtrim(rtrim(number_format($grams, 3, '.', ''), '0'), '.').'</strong> g' : null,
+    ])->filter()->implode(' + ');
+    $pct = static fn ($v): string => rtrim(rtrim(number_format((float) $v, 2), '0'), '.');
+    $discountLabel = 'Discount'.($note->discount_type === \App\Enums\DiscountType::PERCENTAGE && (float) $note->discount_value > 0 ? ' ('.$pct($note->discount_value).'%)' : '');
+    $terms = 'This delivery note is not a tax invoice.';
 @endphp
 
-<x-document.sheet doc-type="Delivery Note" :number="$note->delivery_note_number" :a4="$a4">
-    <x-slot:meta>
-        <x-document.meta-row label="Date">{{ setting_date($note->delivery_date) }}</x-document.meta-row>
-        <x-document.meta-row label="Items">
-            {{ collect([$pieces ? $pieces.' '.Str::plural('piece', $pieces) : null, $stones ? $stones.' '.Str::plural('stone', $stones) : null])->filter()->implode(' · ') ?: '—' }}
-        </x-document.meta-row>
-    </x-slot:meta>
+<article @class(['pd', 'pd--delivery', 'pd--a4' => $a4, 'pd--dense' => $note->items->count() > 12])>
+    <div class="pd__page">
+        <header class="pd__head" style="align-items: center">
+            <h1 class="pd__dtitle">Albarán</h1>
+            <div class="pd__numbox">
+                <div><p class="pd__label">No.</p><p>{{ $note->delivery_note_number }}</p></div>
+                <div><p class="pd__label">Date</p><p>{{ setting_date($note->delivery_date) }}</p></div>
+            </div>
+        </header>
 
-    @if($note->status === \App\Enums\DeliveryNoteStatus::CANCELLED)
-        <x-slot:notice>
-            <x-alert type="error">
-                <strong>This delivery note has been cancelled.</strong> {{ $note->cancel_reason }}
-            </x-alert>
-        </x-slot:notice>
-    @endif
+        @if($note->status === \App\Enums\DeliveryNoteStatus::CANCELLED)
+            <div class="pd__notice"><strong>This delivery note has been cancelled.</strong> {{ $note->cancel_reason }}</div>
+        @endif
 
-    <x-slot:parties>
-        <x-document.party label="Client">
-            <x-slot:name><p class="sheet__party-name">{{ $note->customer_name_snapshot }}</p></x-slot:name>
-            <p class="sheet__party-lines">
-                {{ $note->customer_phone_snapshot ?? '—' }}
-                @if($note->customer_address_snapshot)
-                    <br>{{ $note->customer_address_snapshot }}
+        <section class="pd__deliver">
+            <p class="pd__label">Deliver to</p>
+            <div class="pd__fields">
+                <div class="pd__field"><span>Name</span><span>{{ $note->customer_name_snapshot }}</span></div>
+                @if($customer?->nie || $note->customer_phone_snapshot)
+                    <div class="pd__fields-pair">
+                        <div class="pd__field"><span>N.I.F / N.I.E</span><span>{{ $customer?->nie ?: '—' }}</span></div>
+                        <div class="pd__field"><span>Phone</span><span>{{ $note->customer_phone_snapshot ?: '—' }}</span></div>
+                    </div>
                 @endif
-            </p>
-        </x-document.party>
-    </x-slot:parties>
+                @if($note->customer_address_snapshot)
+                    <div class="pd__field"><span>Address</span><span>{{ $note->customer_address_snapshot }}</span></div>
+                @endif
+            </div>
+        </section>
 
-    <x-slot:items>
-        <x-document.lines :items="$note->items" :split="false" />
-    </x-slot:items>
+        <div class="pd__table-wrap" style="margin-top: 36px">
+            <x-pd.lines :items="$note->items" :document="$note" mode="delivery" />
+        </div>
 
-    @if(filled($note->notes))
-        <x-slot:terms>
-            <p class="sheet__terms-label">Notes</p>
-            <p class="sheet__terms">{{ $note->notes }}</p>
-        </x-slot:terms>
-    @endif
+        <section class="pd__sums" style="margin-top: 24px">
+            <p class="pd__units">{!! $unitsText !!} in <strong>{{ $note->items->count() }}</strong> {{ Str::plural('line', $note->items->count()) }}</p>
+            <div class="pd__totals" style="width: 260px">
+                @if((float) $note->discount_amount > 0)
+                    <div class="pd__total-row"><span>Subtotal</span><span>{{ setting_money($note->subtotal) }}</span></div>
+                    <div class="pd__total-row">
+                        <span>{{ $discountLabel }}</span>
+                        <span>−{{ setting_money($note->discount_amount) }}</span>
+                    </div>
+                @endif
+                <div class="pd__net"><span>Total (net)</span><span>{{ setting_money($note->grand_total) }}</span></div>
+            </div>
+        </section>
 
-    <x-slot:totals>
-        <x-document.totals :document="$note" grand-label="Total" />
-    </x-slot:totals>
-</x-document.sheet>
+        <x-pd.notes :notes="$note->notes" :terms="$terms" />
+
+        <section class="pd__sign">
+            <div><span></span><p>Received by</p></div>
+            <div><span></span><p>Date</p></div>
+        </section>
+
+        <footer class="pd__footer pd__footer--dashed">
+            <span>Keep this slip with the goods.</span>
+            <span>{{ $note->delivery_note_number }}</span>
+        </footer>
+    </div>
+</article>

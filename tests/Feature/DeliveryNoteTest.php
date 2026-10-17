@@ -231,8 +231,9 @@ class DeliveryNoteTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('Delivery Note', $html);
-        $this->assertStringNotContainsString('Albarán', $html);
+        // One name for the document, as on the approved albarán design.
+        $this->assertStringContainsString('Albarán', $html);
+        $this->assertStringNotContainsString('Delivery Note', $html);
         $this->assertStringContainsString($note->delivery_note_number, $html);
         $this->assertStringContainsString('Maria Garcia', $html);
         $this->assertStringContainsString('03001234567', $html);
@@ -243,9 +244,9 @@ class DeliveryNoteTest extends TestCase
             $this->assertStringNotContainsString($company, $html);
         }
         $this->assertStringNotContainsString($branch->name, $html);
-        $this->assertStringNotContainsString('sheet__brand', $html);
-        $this->assertStringNotContainsString('sheet__qr', $html);
-        $this->assertStringNotContainsString('Terms', $html);
+        $this->assertStringNotContainsString('pd__company', $html);
+        $this->assertStringNotContainsString('pd__qr', $html);
+        $this->assertStringContainsString('Received by', $html);
     }
 
     public function test_cancel_returns_the_goods(): void

@@ -13,7 +13,7 @@
     <title>Quotation {{ $quotation->quotation_number }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
     @vite(['resources/css/app.scss'])
 </head>
 <body class="doc-page doc-page--{{ branch_setting('quotation_print_format', $quotation->branch_id, 'a4') }}">

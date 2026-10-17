@@ -1,9 +1,8 @@
 {{--
-    Quotation document sheet.
+    Quotation document sheet. Design: "Printable designs" → Quotation (Presupuesto).
 
-    Same frame as the invoice, but a quote is never mistaken for a bill: the
-    validity tile is outlined, the total reads "Estimated total", and there is
-    no verification QR — a quote is not a receipt.
+    A quote is never mistaken for a bill: it reads "Total with tax", carries the
+    validity date and the line "not a tax invoice", and has no verification QR.
 
     Expects: $quotation and $a4 (true only when printing).
 --}}
@@ -12,69 +11,96 @@
 
     $validityDays = (int) config('annigems.documents.quotation_validity_days');
     $validUntil = $quotation->quotation_date->copy()->addDays($validityDays);
-    $customerPhone = $quotation->customer?->phone ?? $quotation->walkin_phone;
+    $customer = $quotation->customer;
+    $phone = $customer?->phone ?? $quotation->walkin_phone;
     $terms = branch_setting('quotation_footer_note', $quotation->branch_id) ?: config('annigems.documents.quotation_terms');
+    $branch = $quotation->branch;
+
+    $rate = (float) $quotation->tax_rate;
+    $taxed = (float) $quotation->tax_amount > 0 || (filled($quotation->tax_name) && $rate <= 0);
+    $taxName = filled($quotation->tax_name) ? $quotation->tax_name : 'IVA';
+    $pct = static fn ($v): string => rtrim(rtrim(number_format((float) $v, 2), '0'), '.');
+    $discountLabel = 'Discount'.($quotation->discount_type === \App\Enums\DiscountType::PERCENTAGE && (float) $quotation->discount_value > 0 ? ' ('.$pct($quotation->discount_value).'%)' : '');
+    $hasRecargo = (float) ($quotation->recargo_amount ?? 0) > 0;
 @endphp
 
-<x-document.sheet doc-type="Quotation" :number="$quotation->quotation_number" :branch="$quotation->branch" :a4="$a4">
-    <x-slot:meta>
-        <x-document.meta-row label="Issue date">{{ setting_date($quotation->quotation_date) }}</x-document.meta-row>
-        <x-document.meta-row label="Prepared by">{{ $quotation->creator?->name ?? '—' }}</x-document.meta-row>
-        <x-document.meta-row label="Valid until" outline>
-            {{ setting_date($validUntil) }} · {{ $validityDays }} {{ Str::plural('day', $validityDays) }}
-        </x-document.meta-row>
-    </x-slot:meta>
+<article @class(['pd', 'pd--quotation', 'pd--a4' => $a4, 'pd--dense' => $quotation->items->count() > 12])>
+    <div class="pd__page">
+        <header class="pd__qhead">
+            <div class="pd__brand pd__brand--lg"><x-pd.logo /></div>
+            <div class="pd__company--right"><x-pd.company :branch="$branch" /></div>
+        </header>
 
-    {{-- Converted or cancelled quotes are no longer actionable; say so up top
-         so nobody prices against a stale document. --}}
-    @if($quotation->convertedInvoice)
-        <x-slot:notice>
-            <x-alert type="success">
-                Converted to invoice
-                <strong>{{ $quotation->convertedInvoice->invoice_number }}</strong>
-                on {{ setting_date($quotation->convertedInvoice->invoice_date) }}.
-            </x-alert>
-        </x-slot:notice>
-    @elseif($quotation->status === \App\Enums\QuotationStatus::CANCELLED)
-        <x-slot:notice>
-            <x-alert type="error">This quotation has been cancelled.</x-alert>
-        </x-slot:notice>
-    @endif
+        <section class="pd__intro">
+            <div>
+                <span class="pd__rule" aria-hidden="true"></span>
+                <h1 class="pd__qtitle">Quotation</h1>
+                <p class="pd__qnumber">{{ $quotation->quotation_number }}</p>
+            </div>
+            <div class="pd__stats">
+                <div><p class="pd__label">Date</p><p>{{ setting_date($quotation->quotation_date) }}</p></div>
+                <div><p class="pd__label">Valid until</p><p>{{ setting_date($validUntil) }}</p></div>
+                <div><p class="pd__label">{{ $taxed ? 'Total with tax' : 'Total' }}</p><p class="is-accent">{{ setting_money($quotation->grand_total) }}</p></div>
+            </div>
+        </section>
 
-    <x-slot:parties>
-        <x-document.party label="Prepared for">
-            <x-slot:name><p class="sheet__party-name">{{ $quotation->displayCustomerName() }}</p></x-slot:name>
-            <p class="sheet__party-lines">
-                {{ $customerPhone ?: 'Walk-in customer' }}
-                @if($quotation->customer?->address)
-                    <br>{{ $quotation->customer->address }}
-                @endif
-                @if($quotation->customer?->nie)
-                    <br>NIE / NIF {{ $quotation->customer->nie }}
-                @endif
-            </p>
-        </x-document.party>
-    </x-slot:parties>
-
-    <x-slot:items>
-        <x-document.lines :items="$quotation->items" />
-    </x-slot:items>
-
-    <x-slot:terms>
-        <p class="sheet__terms-label">Quotation terms</p>
-        <p class="sheet__terms">{{ $terms }}</p>
-        @if($quotation->notes)
-            <p class="sheet__terms-label" style="margin-top: 8px">Notes</p>
-            <p class="sheet__terms">{{ $quotation->notes }}</p>
+        {{-- A cancelled quote is no longer actionable; say so up top. --}}
+        @if($quotation->status === \App\Enums\QuotationStatus::CANCELLED)
+            <div class="pd__notice">This quotation has been cancelled.</div>
         @endif
-    </x-slot:terms>
 
-    <x-slot:totals>
-        <x-document.totals :document="$quotation" grand-label="Estimated Total" />
-    </x-slot:totals>
+        <section class="pd__cards">
+            <div class="pd__card pd__card--accent">
+                <p class="pd__label">Prepared for</p>
+                <p class="pd__party-name">{{ $quotation->displayCustomerName() }}</p>
+                <p class="pd__party-lines">
+                    @if($customer?->nie)<span>N.I.F / N.I.E {{ $customer->nie }}</span>@endif
+                    <span>{{ $phone ?: 'Walk-in customer' }}</span>
+                    @if($customer?->address)<span>{{ $customer->address }}</span>@endif
+                </p>
+            </div>
+            <div class="pd__card">
+                <p class="pd__label">Prepared by</p>
+                <p class="pd__party-name">{{ setting('company_name', config('annigems.documents.brand_name')) }}</p>
+                <p class="pd__party-lines">
+                    @if($branch?->email)<span>{{ $branch->email }}</span>@endif
+                    @if($branch?->contact_number)<span>{{ $branch->contact_number }}</span>@endif
+                    <span>{{ $quotation->creator?->name ?? '—' }}</span>
+                </p>
+            </div>
+        </section>
 
-    <x-slot:footer>
-        <p class="sheet__footer-title">A quotation, not a receipt.</p>
-        <p class="sheet__footer-text">Quote {{ $quotation->quotation_number }} when you return to buy.</p>
-    </x-slot:footer>
-</x-document.sheet>
+        <div class="pd__table-wrap" style="margin-top: 28px">
+            <x-pd.lines :items="$quotation->items" :document="$quotation" mode="quotation" />
+        </div>
+
+        <section class="pd__sums pd__sums--end">
+            <div class="pd__totals pd__totals--wide">
+                <div class="pd__total-row"><span>{{ $taxed ? 'Total without tax' : 'Subtotal' }}</span><span>{{ setting_money($quotation->subtotal) }}</span></div>
+                @if((float) $quotation->discount_amount > 0)
+                    <div class="pd__total-row">
+                        <span>{{ $discountLabel }}</span>
+                        <span>−{{ setting_money($quotation->discount_amount) }}</span>
+                    </div>
+                @endif
+                @if($taxed)
+                    <div class="pd__total-row"><span>{{ $taxName }}</span><span>{{ $rate > 0 ? setting_money($quotation->tax_amount) : 'Exempt' }}</span></div>
+                @endif
+                @if($hasRecargo)
+                    <div class="pd__total-row"><span>Recargo de equivalencia ({{ $pct($quotation->recargo_rate) }}%)</span><span>{{ setting_money($quotation->recargo_amount) }}</span></div>
+                @endif
+                <div class="pd__grand pd__grand--accent">
+                    <span class="pd__grand-label">{{ $taxed ? 'Total with tax' : 'Total' }}</span>
+                    <span class="pd__grand-value">{{ setting_money($quotation->grand_total) }}</span>
+                </div>
+            </div>
+        </section>
+
+        <x-pd.notes :notes="$quotation->notes" :terms="$terms" terms-label="Scope and conditions" />
+
+        <footer class="pd__footer pd__footer--rule">
+            <span class="pd__footer-strong">This is a quotation, not a tax invoice.</span>
+            <span>{{ $quotation->quotation_number }}</span>
+        </footer>
+    </div>
+</article>

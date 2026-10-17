@@ -66,6 +66,7 @@ class SettingCatalog
     {
         return [
             self::string('company_name', SettingGroup::COMPANY, 'Annigems', 'Appears on invoices, labels and public pages.', ['required', 'string', 'max:80']),
+            self::string('company_tax_id', SettingGroup::COMPANY, '', 'NIF / CIF printed under the company name on documents.', ['nullable', 'string', 'max:30']),
             self::file('company_logo', SettingGroup::COMPANY, null, 'Logo on printed documents and public pages.'),
             self::file('company_favicon', SettingGroup::COMPANY, null, 'Browser tab icon.'),
 
