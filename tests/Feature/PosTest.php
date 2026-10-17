@@ -623,4 +623,24 @@ class PosTest extends TestCase
         $this->assertNotSame($shown['quotation'], $next['quotation']);
         $this->assertNotSame($shown['invoice'], $next['invoice']);
     }
+
+    public function test_every_new_document_button_opens_the_pos_on_that_document(): void
+    {
+        [, $admin] = $this->branchAdmin();
+
+        $expect = [
+            'branch.invoices.index' => 'invoice',
+            'branch.quotations.index' => 'quotation',
+            'branch.delivery-notes.index' => 'delivery_note',
+        ];
+
+        foreach ($expect as $list => $kind) {
+            $this->actingAs($admin)->get(route($list))
+                ->assertOk()
+                ->assertSee(route('branch.pos.show', ['kind' => $kind]), false);
+
+            $page = $this->actingAs($admin)->get(route('branch.pos.show', ['kind' => $kind]))->assertOk()->getContent();
+            $this->assertStringContainsString('&quot;defaultKind&quot;:&quot;'.$kind.'&quot;', $page, "POS did not open on {$kind}");
+        }
+    }
 }

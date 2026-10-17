@@ -73,6 +73,7 @@ Route::middleware(['auth', 'password.changed', 'branch.context', 'branch.member'
         Route::get('/stones/{stone}', [StoneController::class, 'show'])->name('stones.show');
         Route::get('/stones/{stone}/edit', [StoneController::class, 'edit'])->name('stones.edit');
         Route::put('/stones/{stone}', [StoneController::class, 'update'])->name('stones.update');
+        Route::delete('/stones/{stone}', [StoneController::class, 'destroy'])->name('stones.destroy');
         Route::post('/stones/{stone}/deactivate', [StoneController::class, 'deactivate'])->name('stones.deactivate');
         Route::post('/stones/{stone}/activate', [StoneController::class, 'activate'])->name('stones.activate');
         Route::get('/stones/{stone}/label', [StoneLabelController::class, 'show'])->name('stones.label');

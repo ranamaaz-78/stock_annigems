@@ -4,7 +4,7 @@
     'title',
 ])
 
-<div id="{{ $id }}" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+<div id="{{ $id }}" class="fixed inset-0 z-[100] hidden" aria-hidden="true">
     <div class="absolute inset-0 bg-[#141d23]/40 backdrop-blur-sm" data-slide-overlay></div>
     <aside class="absolute right-0 top-0 h-full w-full max-w-md bg-surface-container-lowest border-l border-outline-variant shadow-[0_4px_12px_rgba(0,0,0,0.08)] flex flex-col">
         <div class="flex items-center justify-between px-4 py-3 border-b border-outline-variant">

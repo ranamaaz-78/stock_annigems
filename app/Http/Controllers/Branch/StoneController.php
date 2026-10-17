@@ -163,6 +163,26 @@ class StoneController extends Controller
     }
 
     /**
+     * Delete a lot that no open document needs. Remaining stock is written off.
+     */
+    public function destroy(Stone $stone): RedirectResponse
+    {
+        $this->authorize('delete', $stone);
+
+        try {
+            $result = $this->stoneService->delete($stone, request()->user());
+        } catch (ValidationException $e) {
+            return redirect()
+                ->route('branch.stones.show', $stone)
+                ->with('error', collect($e->errors())->flatten()->first());
+        }
+
+        return redirect()
+            ->route('branch.stones.index')
+            ->with('success', $stone->stone_code.' deleted.'.($result['written_off'] !== '0' ? ' '.$result['written_off'].' written off.' : ''));
+    }
+
+    /**
      * Reactivate.
      */
     public function activate(Stone $stone): RedirectResponse

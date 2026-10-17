@@ -75,7 +75,7 @@ class RolePermissionSeeder extends Seeder
             'settings.view',
             'settings.global.view',
             'settings.branch.view', 'settings.branch.manage',
-            'stones.view', 'stones.create', 'stones.edit', 'stones.deactivate',
+            'stones.view', 'stones.create', 'stones.edit', 'stones.deactivate', 'stones.delete',
             'stones.barcode', 'stones.intake', 'stones.intake_view', 'stones.images',
             'categories.view', 'categories.manage',
             'jewellery.view', 'jewellery.create', 'jewellery.edit', 'jewellery.delete',
@@ -93,6 +93,7 @@ class RolePermissionSeeder extends Seeder
             'items.delete',
             'jewellery.delete',
             'stones.deactivate',
+            'stones.delete',
             // Branch settings writes are Admin-only (spec section 10).
             'settings.branch.manage',
             // Global settings are SuperAdmin-managed; Admin sees them

@@ -58,6 +58,7 @@ class SalesReportRepository extends ReportRepository
      *     gross_sales: float,
      *     discount_total: float,
      *     tax_total: float,
+     *     recargo_total: float,
      *     net_revenue: float,
      *     average_sale: float
      * }
@@ -69,6 +70,7 @@ class SalesReportRepository extends ReportRepository
             ->selectRaw('COALESCE(SUM(subtotal), 0) as gross_sales')
             ->selectRaw('COALESCE(SUM(discount_amount), 0) as discount_total')
             ->selectRaw('COALESCE(SUM(tax_amount), 0) as tax_total')
+            ->selectRaw('COALESCE(SUM(recargo_amount), 0) as recargo_total')
             ->selectRaw('COALESCE(SUM(grand_total), 0) as net_revenue')
             ->first();
 
@@ -80,6 +82,7 @@ class SalesReportRepository extends ReportRepository
             'gross_sales' => $this->toFloat($row?->gross_sales),
             'discount_total' => $this->toFloat($row?->discount_total),
             'tax_total' => $this->toFloat($row?->tax_total),
+            'recargo_total' => $this->toFloat($row?->recargo_total),
             'net_revenue' => $net,
             // Average transaction value. Guarded because a fresh branch has no
             // invoices and dividing by zero would break the whole dashboard.
@@ -337,7 +340,7 @@ class SalesReportRepository extends ReportRepository
     /**
      * Tax collected per period bucket, for filing.
      *
-     * @return Collection<int, array{bucket: string, invoice_count: int, taxable_base: float, tax_total: float}>
+     * @return Collection<int, array{bucket: string, invoice_count: int, taxable_base: float, tax_total: float, recargo_total: float}>
      */
     public function taxCollected(ReportFilter $filter): Collection
     {
@@ -349,6 +352,7 @@ class SalesReportRepository extends ReportRepository
             // Tax applies after discount, so the taxable base is gross less discount.
             ->selectRaw('COALESCE(SUM(subtotal - discount_amount), 0) as taxable_base')
             ->selectRaw('COALESCE(SUM(tax_amount), 0) as tax_total')
+            ->selectRaw('COALESCE(SUM(recargo_amount), 0) as recargo_total')
             ->groupByRaw($expression)
             ->orderByRaw($expression)
             ->get()
@@ -357,6 +361,7 @@ class SalesReportRepository extends ReportRepository
                 'invoice_count' => $this->toInt($row->invoice_count),
                 'taxable_base' => $this->toFloat($row->taxable_base),
                 'tax_total' => $this->toFloat($row->tax_total),
+                'recargo_total' => $this->toFloat($row->recargo_total),
             ]);
     }
 
@@ -423,33 +428,92 @@ class SalesReportRepository extends ReportRepository
     }
 
     /**
-     * Loose stone sales — lines sold as stones rather than as finished pieces.
+     * Loose stone sales: lines sold as stones rather than as finished pieces.
      *
-     * Carat comes from the invoice_item_stones snapshot rows attached to the
-     * line, summed in SQL through a correlated sub-select so no rows are pulled
-     * into PHP.
+     * Read from the invoice line snapshot only. A line sold by weight carries
+     * `weight_grams` (its quantity is one) and is counted in grams; every other
+     * loose line is counted in pieces. Revenue is the line total either way.
      *
-     * @return Collection<int, array{stone_name: string, stone_type: string, quantity: int, carat: float, revenue: float}>
+     * @return Collection<int, array{stone_code: string, stone_name: string, shape: string, quantity: int, grams: float, revenue: float}>
      */
     public function looseStoneSales(ReportFilter $filter): Collection
     {
         return $this->lineQuery($filter)
             ->where('invoice_items.line_type', LineType::LOOSE_STONE->value)
-            ->leftJoin('invoice_item_stones', 'invoice_item_stones.invoice_item_id', '=', 'invoice_items.id')
+            ->selectRaw('invoice_items.item_code_snapshot as stone_code')
             ->selectRaw('invoice_items.name_snapshot as stone_name')
-            ->selectRaw("COALESCE(NULLIF(invoice_item_stones.stone_type_snapshot, ''), 'Unspecified') as stone_type")
-            ->selectRaw('COALESCE(SUM(invoice_items.quantity), 0) as quantity')
-            ->selectRaw('COALESCE(SUM(invoice_item_stones.carat_snapshot * invoice_items.quantity), 0) as carat')
+            ->selectRaw("COALESCE(NULLIF(invoice_items.category_snapshot, ''), 'Unspecified') as shape")
+            ->selectRaw('COALESCE(SUM(CASE WHEN invoice_items.weight_grams IS NULL THEN invoice_items.quantity ELSE 0 END), 0) as quantity')
+            ->selectRaw('COALESCE(SUM(invoice_items.weight_grams), 0) as grams')
             ->selectRaw('COALESCE(SUM(invoice_items.line_total), 0) as revenue')
-            ->groupByRaw("invoice_items.name_snapshot, COALESCE(NULLIF(invoice_item_stones.stone_type_snapshot, ''), 'Unspecified')")
+            ->groupByRaw("invoice_items.item_code_snapshot, invoice_items.name_snapshot, COALESCE(NULLIF(invoice_items.category_snapshot, ''), 'Unspecified')")
             ->orderByRaw('COALESCE(SUM(invoice_items.line_total), 0) DESC')
             ->get()
             ->map(fn ($row): array => [
+                'stone_code' => (string) $row->stone_code,
                 'stone_name' => (string) $row->stone_name,
-                'stone_type' => (string) $row->stone_type,
+                'shape' => (string) $row->shape,
                 'quantity' => $this->toInt($row->quantity),
-                'carat' => $this->toFloat($row->carat),
+                'grams' => round($this->toFloat($row->grams), 3),
                 'revenue' => $this->toFloat($row->revenue),
+            ]);
+    }
+
+    /**
+     * Tax and recargo collected, split by the rate named on each invoice.
+     *
+     * Reads the snapshot (tax_name / tax_rate / recargo_name / recargo_rate), so
+     * a rate renamed or deleted afterwards still reports as it was charged.
+     *
+     * @return Collection<int, array{tax_name: string, tax_rate: float, recargo_name: string, recargo_rate: float, invoice_count: int, taxable_base: float, tax_total: float, recargo_total: float}>
+     */
+    public function taxByRate(ReportFilter $filter): Collection
+    {
+        return $this->completedInvoices($filter)
+            ->selectRaw("COALESCE(NULLIF(invoices.tax_name, ''), 'No tax') as tax_name")
+            ->selectRaw('COALESCE(invoices.tax_rate, 0) as tax_rate')
+            ->selectRaw("COALESCE(NULLIF(invoices.recargo_name, ''), '—') as recargo_name")
+            ->selectRaw('COALESCE(invoices.recargo_rate, 0) as recargo_rate')
+            ->selectRaw('COUNT(*) as invoice_count')
+            ->selectRaw('COALESCE(SUM(invoices.subtotal - invoices.discount_amount), 0) as taxable_base')
+            ->selectRaw('COALESCE(SUM(invoices.tax_amount), 0) as tax_total')
+            ->selectRaw('COALESCE(SUM(invoices.recargo_amount), 0) as recargo_total')
+            ->groupByRaw("COALESCE(NULLIF(invoices.tax_name, ''), 'No tax'), COALESCE(invoices.tax_rate, 0), COALESCE(NULLIF(invoices.recargo_name, ''), '—'), COALESCE(invoices.recargo_rate, 0)")
+            ->orderByRaw('COALESCE(SUM(invoices.subtotal - invoices.discount_amount), 0) DESC')
+            ->get()
+            ->map(fn ($row): array => [
+                'tax_name' => (string) $row->tax_name,
+                'tax_rate' => $this->toFloat($row->tax_rate),
+                'recargo_name' => (string) $row->recargo_name,
+                'recargo_rate' => $this->toFloat($row->recargo_rate),
+                'invoice_count' => $this->toInt($row->invoice_count),
+                'taxable_base' => $this->toFloat($row->taxable_base),
+                'tax_total' => $this->toFloat($row->tax_total),
+                'recargo_total' => $this->toFloat($row->recargo_total),
+            ]);
+    }
+
+    /**
+     * Where completed invoices came from: typed straight in, converted from a
+     * quotation, turned from a delivery note, or raised when a performa was paid.
+     *
+     * @return Collection<int, array{source: string, invoice_count: int, net_revenue: float}>
+     */
+    public function bySource(ReportFilter $filter): Collection
+    {
+        $source = "CASE WHEN invoices.performa_id IS NOT NULL THEN 'Performa settlement' WHEN invoices.delivery_note_id IS NOT NULL THEN 'Delivery note' WHEN invoices.quotation_id IS NOT NULL THEN 'Quotation' ELSE 'Direct invoice' END";
+
+        return $this->completedInvoices($filter)
+            ->selectRaw("{$source} as source")
+            ->selectRaw('COUNT(*) as invoice_count')
+            ->selectRaw('COALESCE(SUM(invoices.grand_total), 0) as net_revenue')
+            ->groupByRaw($source)
+            ->orderByRaw('COALESCE(SUM(invoices.grand_total), 0) DESC')
+            ->get()
+            ->map(fn ($row): array => [
+                'source' => (string) $row->source,
+                'invoice_count' => $this->toInt($row->invoice_count),
+                'net_revenue' => $this->toFloat($row->net_revenue),
             ]);
     }
 

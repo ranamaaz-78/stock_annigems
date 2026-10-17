@@ -148,6 +148,18 @@ td.table-admin__actions-col {
   }
 }
 
+/* An action that exists but is not available for this row (e.g. delete on a sold piece). */
+.table-admin__action--locked {
+  color: var(--color-outline);
+  opacity: 0.55;
+  cursor: not-allowed;
+
+  &:hover {
+    color: var(--color-outline);
+    background: transparent;
+  }
+}
+
 /* Destructive row action (deactivate) — gold hover is replaced by error. */
 .table-admin__action--danger:hover {
   color: var(--color-error);

@@ -108,6 +108,12 @@
                                             {{-- Opens the print dialog over this page; the link is the no-script fallback. --}}
                                             <x-table.action :href="route('branch.stones.label', $stone)" icon="print" label="Print label" data-label-open="{{ $stone->uuid }}" />
                                         @endcan
+                                        @can('delete', $stone)
+                                            {{-- Submits the form below the table (a form cannot sit inside the label form). --}}
+                                            <button type="submit" form="delete-stone-{{ $stone->uuid }}" class="table-admin__action table-admin__action--danger" aria-label="Delete" title="Delete">
+                                                <span class="material-symbols-outlined icon icon--sm">delete</span>
+                                            </button>
+                                        @endcan
                                     </x-table.actions>
                                 </td>
                             </tr>
@@ -124,6 +130,15 @@
                 </div>
             @endif
         </form>
+        @foreach($stones as $stone)
+            @can('delete', $stone)
+                <form id="delete-stone-{{ $stone->uuid }}" method="POST" action="{{ route('branch.stones.destroy', $stone) }}" data-loading-form data-confirm-delete-stone
+                      data-remaining="{{ $stone->isWeighed() ? rtrim(rtrim(number_format((float) $stone->weight_grams, 3, '.', ''), '0'), '.').' g' : ((int) $stone->quantity).' pcs' }}" class="hidden">
+                    @csrf
+                    @method('DELETE')
+                </form>
+            @endcan
+        @endforeach
         @if($stones->total() > 0)
             <div class="panel__footer">
                 {{ $stones->withQueryString()->links() }}

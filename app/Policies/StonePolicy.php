@@ -64,6 +64,15 @@ class StonePolicy
     }
 
     /**
+     * Soft-delete a lot (stock written off, history kept).
+     */
+    public function delete(User $user, Stone $stone): bool
+    {
+        return $user->hasPermission('stones.delete')
+            && (int) $user->branch_id === (int) $stone->branch_id;
+    }
+
+    /**
      * Print packet labels.
      */
     public function printLabel(User $user, ?Stone $stone = null): bool

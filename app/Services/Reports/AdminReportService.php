@@ -30,6 +30,7 @@ class AdminReportService
         private StoneReportService $stones,
         private CustomerReportService $customers,
         private AuditReportService $audit,
+        private CreditReportService $credit,
     ) {}
 
     /**
@@ -65,11 +66,15 @@ class AdminReportService
             'item-movement-log' => $this->inventory->movementLog($filter),
 
             'stone-stock-summary' => $this->stones->stockSummary($filter),
+            'stone-valuation' => $this->stones->valuation($filter),
             'stone-low-stock' => $this->stones->lowStock($filter),
             'stone-intake-history' => $this->stones->intakeHistory($filter),
             'stone-consumption' => $this->stones->consumption($filter),
             'stone-movement-ledger' => $this->stones->movementLedger($filter),
             'stone-movement-log' => $this->stones->movementLedger($filter),
+
+            'performa-outstanding' => $this->credit->performaOutstanding($filter),
+            'delivery-notes' => $this->credit->deliveryNotes($filter),
 
             'top-customers' => $this->customers->topCustomers($filter),
             'cross-branch-customers' => $this->customers->crossBranch($filter),

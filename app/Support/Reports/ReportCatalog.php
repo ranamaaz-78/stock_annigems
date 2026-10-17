@@ -76,7 +76,7 @@ class ReportCatalog
                     ],
                     'tax-collected' => [
                         'label' => 'Tax Collected',
-                        'summary' => 'Tax collected per period, for filing.',
+                        'summary' => 'IVA and recargo collected per period and per rate, for filing.',
                         'filters' => ['grouping'],
                         'chart' => true,
                     ],
@@ -88,7 +88,7 @@ class ReportCatalog
                     ],
                     'loose-stone-sales' => [
                         'label' => 'Loose Stone Sales',
-                        'summary' => 'Stones sold loose rather than set into a piece, by quantity and carat.',
+                        'summary' => 'Stones sold loose rather than set into a piece, in pieces or grams, with revenue.',
                         'filters' => [],
                         'chart' => false,
                     ],
@@ -166,32 +166,56 @@ class ReportCatalog
                 'reports' => [
                     'stone-stock-summary' => [
                         'label' => 'Stone Stock',
-                        'summary' => 'Quantity and carat in hand for every registered stone.',
+                        'summary' => 'Pieces, grams, carat and worth of every registered stone lot.',
+                        'filters' => [],
+                        'chart' => true,
+                    ],
+                    'stone-valuation' => [
+                        'label' => 'Valuation',
+                        'summary' => 'What the stone in hand is worth at each lot\'s own rate, by lot, pricing mode and shape.',
                         'filters' => [],
                         'chart' => true,
                     ],
                     'stone-low-stock' => [
                         'label' => 'Zero & Low Stock',
-                        'summary' => 'Stones out of stock or below the reorder threshold.',
+                        'summary' => 'Lots out of stock or below the reorder threshold, judged in pieces or grams.',
                         'filters' => [],
                         'chart' => false,
                     ],
                     'stone-intake-history' => [
                         'label' => 'Intake History',
-                        'summary' => 'Every intake batch with quantity, carat and who performed it.',
+                        'summary' => 'Every intake batch with pieces, grams, carat and who performed it.',
                         'filters' => [],
                         'chart' => false,
                     ],
                     'stone-consumption' => [
                         'label' => 'Consumption',
-                        'summary' => 'Which stones actually move: used in items, sold loose, or returned.',
+                        'summary' => 'Which stones actually move: set into pieces, sold, delivered, on credit or written off, in pieces and grams.',
                         'filters' => ['stone'],
                         'chart' => false,
                     ],
                     'stone-movement-ledger' => [
                         'label' => 'Movement Ledger',
-                        'summary' => 'Full movement trail with quantity before and after each change.',
+                        'summary' => 'Full movement trail with pieces or grams before and after each change.',
                         'filters' => ['stone', 'movement_type', 'staff'],
+                        'chart' => false,
+                    ],
+                ],
+            ],
+            'credit' => [
+                'label' => 'Credit & Delivery',
+                'icon' => 'local_shipping',
+                'reports' => [
+                    'performa-outstanding' => [
+                        'label' => 'Performa Outstanding',
+                        'summary' => 'What each creditor still holds on open and part-paid performas, at the price fixed on issue.',
+                        'filters' => [],
+                        'chart' => true,
+                    ],
+                    'delivery-notes' => [
+                        'label' => 'Delivery Notes',
+                        'summary' => 'Delivery notes by status, and the ones handed out but not yet invoiced.',
+                        'filters' => [],
                         'chart' => false,
                     ],
                 ],

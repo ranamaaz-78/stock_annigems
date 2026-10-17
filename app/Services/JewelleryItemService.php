@@ -458,6 +458,14 @@ class JewelleryItemService
         $old = $this->auditPayload($item);
 
         return DB::transaction(function () use ($item, $actor, $old) {
+            $item = JewelleryItem::query()->whereKey($item->id)->lockForUpdate()->firstOrFail();
+
+            if (! $item->canBeDeleted()) {
+                throw ValidationException::withMessages([
+                    'item' => "{$item->item_code} is {$item->status->label()} and cannot be deleted.",
+                ]);
+            }
+
             $returned = $this->allocationService->returnAll($item, $actor);
             $item->delete();
             $this->auditLogService->log('jewellery.deleted', $item, $old, null, $actor);

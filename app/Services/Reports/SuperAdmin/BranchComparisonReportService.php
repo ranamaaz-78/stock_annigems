@@ -110,6 +110,7 @@ class BranchComparisonReportService extends AggregateReportService
             'gold_weight' => $this->inventory->goldWeightInStock($scoped->branchId),
             'stones' => $this->stones->totalStonesInStock($scoped->branchId),
             'stone_carat' => $this->stones->totalCaratInStock($scoped->branchId),
+            'stone_grams' => $this->stones->totalStockGrams($scoped->branchId),
         ]);
 
         $totalGold = $rows->sum('gold_weight');
@@ -127,7 +128,7 @@ class BranchComparisonReportService extends AggregateReportService
                 $this->card('pieces', 'Available Pieces', ReportFormatter::count($rows->sum('available_pieces')), 'inventory_2'),
                 $this->card('gold', 'Gold Weight in Stock', ReportFormatter::grams($totalGold), 'scale'),
                 $this->card('stones', 'Stones in Stock', ReportFormatter::count($rows->sum('stones')), 'diamond',
-                    hint: ReportFormatter::carats($rows->sum('stone_carat')).' held'),
+                    hint: ReportFormatter::carats($rows->sum('stone_carat')).' held, '.ReportFormatter::grams($rows->sum('stone_grams')).' by weight'),
                 $this->card('concentration', 'Largest Holding',
                     $rows->isNotEmpty() ? ReportFormatter::percent($rows->first()['gold_share']) : '—', 'pie_chart',
                     hint: $rows->isNotEmpty() ? $rows->first()['branch'].' holds this share of the metal' : null),
@@ -140,6 +141,7 @@ class BranchComparisonReportService extends AggregateReportService
                 ['key' => 'gold_weight', 'label' => 'Gold in Stock', 'align' => 'right', 'format' => 'grams', 'emphasis' => 'strong'],
                 ['key' => 'gold_share', 'label' => 'Share of Metal', 'align' => 'right', 'format' => 'percent'],
                 ['key' => 'stones', 'label' => 'Stones', 'align' => 'right', 'format' => 'count'],
+                ['key' => 'stone_grams', 'label' => 'Stone Grams', 'align' => 'right', 'format' => 'grams'],
                 ['key' => 'stone_carat', 'label' => 'Stone Carat', 'align' => 'right', 'format' => 'carats'],
             ],
             totals: [
@@ -148,6 +150,7 @@ class BranchComparisonReportService extends AggregateReportService
                 'available_pieces' => $rows->sum('available_pieces'),
                 'gold_weight' => $totalGold,
                 'stones' => $rows->sum('stones'),
+                'stone_grams' => $rows->sum('stone_grams'),
                 'stone_carat' => $rows->sum('stone_carat'),
             ],
             chart: ReportResult::chart('Gold weight held by branch', 'grams', $rows->map(fn (array $row): array => [

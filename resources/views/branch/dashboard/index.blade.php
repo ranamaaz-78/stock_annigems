@@ -191,7 +191,7 @@
                         <tr>
                             <th>Stone</th>
                             <th>Shape</th>
-                            <th class="table-admin__num">Qty</th>
+                            <th class="table-admin__num">On hand</th>
                             <th>Status</th>
                         </tr>
                     </thead>
@@ -202,7 +202,7 @@
                                     <a href="{{ route('branch.stones.show', $stone['uuid']) }}" class="form-link">{{ $stone['stone_code'] }}</a>
                                 </td>
                                 <td>{{ $stone['shape'] }}</td>
-                                <td class="table-admin__num {{ $stone['quantity'] === 0 ? 'table-admin__num--negative' : '' }}">{{ $stone['quantity'] }}</td>
+                                <td class="table-admin__num {{ $stone['on_hand'] <= 0 ? 'table-admin__num--negative' : '' }}">{{ $stone['on_hand_label'] }}</td>
                                 <td>{{ $stone['severity'] }}</td>
                             </tr>
                         @endforeach
@@ -259,7 +259,8 @@
                         <tr>
                             <th>Batch</th>
                             <th>Date</th>
-                            <th class="table-admin__num">Qty</th>
+                            <th class="table-admin__num">Pieces</th>
+                            <th class="table-admin__num">Grams</th>
                             <th class="table-admin__num">Carat</th>
                         </tr>
                     </thead>
@@ -271,6 +272,7 @@
                                 </td>
                                 <td class="text-data-mono">{{ $intake['intake_date'] }}</td>
                                 <td class="table-admin__num">{{ $intake['quantity'] }}</td>
+                                <td class="table-admin__num">{{ $intake['weight_grams'] > 0 ? ReportFormatter::grams($intake['weight_grams']) : '—' }}</td>
                                 <td class="table-admin__num">{{ ReportFormatter::carats($intake['total_carat']) }}</td>
                             </tr>
                         @endforeach

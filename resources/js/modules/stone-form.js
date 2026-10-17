@@ -163,6 +163,29 @@ function bindStoneForm(root) {
 }
 
 /**
+ * Confirm before deleting a stone, saying what stock goes with it.
+ */
+function bindDeleteConfirms() {
+    document.querySelectorAll('[data-confirm-delete-stone]').forEach((form) => {
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const remaining = form.dataset.remaining;
+            const left = remaining && remaining !== '0 pcs' && remaining !== '0 g';
+            const ok = await window.AnnigemsAlert?.confirmAction({
+                title: 'Delete this stone?',
+                text: left
+                    ? `${remaining} still in stock will be written off. Invoices and history keep their record.`
+                    : 'It has no stock left. Invoices and history keep their record.',
+                confirmButtonText: 'Delete',
+            });
+            if (ok) {
+                form.submit();
+            }
+        });
+    });
+}
+
+/**
  * Confirm before deactivating a stone.
  */
 function bindDeactivateConfirms() {
@@ -187,4 +210,5 @@ function bindDeactivateConfirms() {
 export function bindStoneForms() {
     document.querySelectorAll('[data-stone-form]').forEach((root) => bindStoneForm(root));
     bindDeactivateConfirms();
+    bindDeleteConfirms();
 }

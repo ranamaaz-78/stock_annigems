@@ -9,6 +9,7 @@ use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\Branch;
 use App\Models\User;
+use App\Repositories\Reports\CreditReportRepository;
 use App\Repositories\Reports\InventoryReportRepository;
 use App\Repositories\Reports\QuotationReportRepository;
 use App\Repositories\Reports\SalesReportRepository;
@@ -51,6 +52,7 @@ class DashboardStatsService
         private InventoryReportRepository $inventory,
         private StoneReportRepository $stones,
         private QuotationReportRepository $quotations,
+        private CreditReportRepository $credit,
     ) {}
 
     /**
@@ -259,6 +261,26 @@ class DashboardStatsService
 
         if ($user->hasPermission('stones.view')) {
             $dashboard['secondary_cards'][] = $this->card(
+                'total_stones',
+                'Stones in Stock',
+                ReportFormatter::count($this->stones->totalStonesInStock($branchId)),
+                icon: 'diamond',
+                hint: ReportFormatter::grams($this->stones->totalStockGrams($branchId)).' by weight, '
+                    .ReportFormatter::carats($this->stones->totalCaratInStock($branchId)),
+            );
+
+            // Stone worth is purchase cost, so it is shown only to users who may see cost.
+            if ($user->hasPermission('items.view_cost')) {
+                $dashboard['secondary_cards'][] = $this->card(
+                    'stone_value',
+                    'Stone Stock Value',
+                    ReportFormatter::money($this->stones->stockValue($branchId)),
+                    icon: 'payments',
+                    hint: 'At purchase rate',
+                );
+            }
+
+            $dashboard['secondary_cards'][] = $this->card(
                 'zero_stock_stones',
                 'Stones at Zero Stock',
                 ReportFormatter::count($this->stones->zeroStockCount($branchId)),
@@ -267,6 +289,23 @@ class DashboardStatsService
             );
 
             $dashboard['low_stones'] = $this->stones->zeroAndLowStock($branchId)->take(5);
+        }
+
+        // Goods that left the shelf and are not sold yet: performas and delivery notes.
+        $performas = $user->hasPermission('performas.view');
+        $notes = $user->hasPermission('delivery_notes.view');
+        if ($performas || $notes) {
+            $onCredit = $performas ? (float) $this->credit->outstandingByCreditor($branchId)->sum('outstanding') : 0.0;
+            $uninvoiced = $notes ? $this->credit->uninvoicedNotes($branchId, 1000) : collect();
+
+            $dashboard['secondary_cards'][] = $this->card(
+                'out_with_clients',
+                'Out With Clients',
+                ReportFormatter::money($onCredit + (float) $uninvoiced->sum('grand_total')),
+                icon: 'local_shipping',
+                hint: ReportFormatter::money($onCredit).' on performa, '
+                    .ReportFormatter::count($uninvoiced->count()).' delivery notes to invoice',
+            );
         }
 
         if ($user->hasPermission('invoices.view')) {
@@ -369,11 +408,22 @@ class DashboardStatsService
         if ($user->hasPermission('stones.view')) {
             $dashboard['cards'][] = $this->card(
                 'total_stones',
-                'Total Stones in Stock',
+                'Stones in Stock',
                 ReportFormatter::count($this->stones->totalStonesInStock($branchId)),
                 icon: 'diamond',
-                hint: ReportFormatter::carats($this->stones->totalCaratInStock($branchId)).' held',
+                hint: ReportFormatter::carats($this->stones->totalCaratInStock($branchId)).' held, '
+                    .ReportFormatter::grams($this->stones->totalStockGrams($branchId)).' by weight',
             );
+
+            if ($user->hasPermission('items.view_cost')) {
+                $dashboard['cards'][] = $this->card(
+                    'stone_value',
+                    'Stone Stock Value',
+                    ReportFormatter::money($this->stones->stockValue($branchId)),
+                    icon: 'payments',
+                    hint: 'At purchase rate',
+                );
+            }
 
             $dashboard['cards'][] = $this->card(
                 'zero_stock_stones',

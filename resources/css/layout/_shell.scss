@@ -487,7 +487,11 @@ html.is-sidebar-open .sa-sidebar {
   padding-top: var(--topbar-height);
   background-color: var(--color-background);
   position: relative;
-  z-index: 10;
+  /*
+   * No z-index here on purpose. A z-index would make this column its own
+   * stacking context, and every modal inside it would then be capped below the
+   * top bar (30) and sidebar (40) however high its own z-index is.
+   */
   display: flex;
   flex-direction: column;
   transition: margin-left 0.2s ease, padding-top 0.2s ease;

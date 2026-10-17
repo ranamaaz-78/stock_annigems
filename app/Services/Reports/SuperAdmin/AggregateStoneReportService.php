@@ -30,7 +30,9 @@ class AggregateStoneReportService extends AggregateReportService
     {
         $rows = $this->perBranch($filter, fn (ReportFilter $scoped): array => [
             'quantity' => $this->stones->totalStonesInStock($scoped->branchId),
+            'grams' => $this->stones->totalStockGrams($scoped->branchId),
             'total_carat' => $this->stones->totalCaratInStock($scoped->branchId),
+            'value' => $this->stones->stockValue($scoped->branchId),
             'zero_stock' => $this->stones->zeroStockCount($scoped->branchId),
         ]);
 
@@ -41,21 +43,28 @@ class AggregateStoneReportService extends AggregateReportService
             title: 'Stone Stock Summary',
             summary: [
                 $this->card('quantity', 'Stones in Stock', ReportFormatter::count($rows->sum('quantity')), 'diamond'),
-                $this->card('carat', 'Total Carat', ReportFormatter::carats($rows->sum('total_carat')), 'scale'),
+                $this->card('grams', 'Weight Held', ReportFormatter::grams($rows->sum('grams')), 'scale'),
+                $this->card('value', 'Stock Value', ReportFormatter::money($rows->sum('value')), 'payments',
+                    hint: 'At each lot\'s own rate'),
+                $this->card('carat', 'Total Carat', ReportFormatter::carats($rows->sum('total_carat')), 'diamond'),
                 $this->card('zero', 'At Zero Stock', ReportFormatter::count($rows->sum('zero_stock')), 'warning',
                     hint: 'Registered stones needing reorder'),
             ],
             rows: $rows,
             columns: [
                 $this->branchColumn(),
-                ['key' => 'quantity', 'label' => 'Stones', 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
+                ['key' => 'quantity', 'label' => 'Pieces', 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
+                ['key' => 'grams', 'label' => 'Grams', 'align' => 'right', 'format' => 'grams'],
                 ['key' => 'total_carat', 'label' => 'Total Carat', 'align' => 'right', 'format' => 'carats'],
+                ['key' => 'value', 'label' => 'Value', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
                 ['key' => 'zero_stock', 'label' => 'At Zero', 'align' => 'right', 'format' => 'count'],
             ],
             totals: [
                 'branch' => 'All Branches',
                 'quantity' => $rows->sum('quantity'),
+                'grams' => $rows->sum('grams'),
                 'total_carat' => $rows->sum('total_carat'),
+                'value' => $rows->sum('value'),
                 'zero_stock' => $rows->sum('zero_stock'),
             ],
             chart: ReportResult::chart('Stones held by branch', 'stones', $rows->map(fn (array $row): array => [
@@ -66,21 +75,26 @@ class AggregateStoneReportService extends AggregateReportService
             meta: $this->meta([
                 'table_title' => 'Stone stock by branch',
                 'live_snapshot' => true,
+                'money' => true,
                 'extra_tables' => [
                     [
                         'title' => 'Totals by shape',
                         'columns' => [
                             ['key' => 'shape', 'label' => 'Shape'],
                             ['key' => 'stone_count', 'label' => 'Registered', 'align' => 'right', 'format' => 'count'],
-                            ['key' => 'quantity', 'label' => 'Quantity', 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
+                            ['key' => 'quantity', 'label' => 'Pieces', 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
+                            ['key' => 'grams', 'label' => 'Grams', 'align' => 'right', 'format' => 'grams'],
                             ['key' => 'total_carat', 'label' => 'Total Carat', 'align' => 'right', 'format' => 'carats'],
+                            ['key' => 'value', 'label' => 'Value', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
                         ],
                         'rows' => $byShape,
                         'totals' => [
                             'shape' => 'Total',
                             'stone_count' => $byShape->sum('stone_count'),
                             'quantity' => $byShape->sum('quantity'),
+                            'grams' => $byShape->sum('grams'),
                             'total_carat' => $byShape->sum('total_carat'),
+                            'value' => $byShape->sum('value'),
                         ],
                     ],
                 ],
@@ -100,7 +114,7 @@ class AggregateStoneReportService extends AggregateReportService
 
         $rows = $this->perBranch($filter, function (ReportFilter $scoped): array {
             $flagged = $this->stones->zeroAndLowStock($scoped->branchId);
-            $zero = $flagged->where('quantity', 0)->count();
+            $zero = $flagged->where('severity', 'Out of stock')->count();
 
             return [
                 'zero_stock' => $zero,
@@ -150,6 +164,7 @@ class AggregateStoneReportService extends AggregateReportService
             return [
                 'batches' => $intakes->count(),
                 'quantity' => $intakes->sum('quantity'),
+                'weight_grams' => $intakes->sum('weight_grams'),
                 'total_carat' => $intakes->sum('total_carat'),
             ];
         });
@@ -159,20 +174,23 @@ class AggregateStoneReportService extends AggregateReportService
             title: 'Stone Intake Volume',
             summary: [
                 $this->card('batches', 'Intake Batches', ReportFormatter::count($rows->sum('batches')), 'move_to_inbox'),
-                $this->card('quantity', 'Stones Received', ReportFormatter::count($rows->sum('quantity')), 'diamond'),
+                $this->card('quantity', 'Stones Received', ReportFormatter::count($rows->sum('quantity')), 'diamond',
+                    hint: ReportFormatter::grams($rows->sum('weight_grams')).' by weight'),
                 $this->card('carat', 'Carat Received', ReportFormatter::carats($rows->sum('total_carat')), 'scale'),
             ],
             rows: $rows,
             columns: [
                 $this->branchColumn(),
                 ['key' => 'batches', 'label' => 'Batches', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'quantity', 'label' => 'Stones Received', 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
+                ['key' => 'quantity', 'label' => 'Pieces Received', 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
+                ['key' => 'weight_grams', 'label' => 'Grams', 'align' => 'right', 'format' => 'grams'],
                 ['key' => 'total_carat', 'label' => 'Carat', 'align' => 'right', 'format' => 'carats'],
             ],
             totals: [
                 'branch' => 'All Branches',
                 'batches' => $rows->sum('batches'),
                 'quantity' => $rows->sum('quantity'),
+                'weight_grams' => $rows->sum('weight_grams'),
                 'total_carat' => $rows->sum('total_carat'),
             ],
             meta: $this->meta(['table_title' => 'Intake by branch', 'empty_title' => 'No stone intakes in this period']),
@@ -190,8 +208,11 @@ class AggregateStoneReportService extends AggregateReportService
             return [
                 'used_in_item' => $consumption->sum('used_in_item'),
                 'sold' => $consumption->sum('sold'),
-                'returned' => $consumption->sum('returned'),
+                'with_clients' => $consumption->sum('delivered') + $consumption->sum('on_credit'),
+                'written_off' => $consumption->sum('written_off'),
+                'back' => $consumption->sum('back'),
                 'total_out' => $consumption->sum('total_out'),
+                'total_out_g' => round($consumption->sum('total_out_g'), 3),
             ];
         });
 
@@ -199,7 +220,8 @@ class AggregateStoneReportService extends AggregateReportService
             key: 'stone-consumption',
             title: 'Stone Consumption',
             summary: [
-                $this->card('total_out', 'Stones Consumed', ReportFormatter::count($rows->sum('total_out')), 'trending_down'),
+                $this->card('total_out', 'Stones Consumed', ReportFormatter::count($rows->sum('total_out')), 'trending_down',
+                    hint: ReportFormatter::grams($rows->sum('total_out_g')).' by weight'),
                 $this->card('used_in_item', 'Set Into Pieces', ReportFormatter::count($rows->sum('used_in_item')), 'diamond'),
                 $this->card('sold', 'Sold Loose', ReportFormatter::count($rows->sum('sold')), 'sell'),
             ],
@@ -208,15 +230,21 @@ class AggregateStoneReportService extends AggregateReportService
                 $this->branchColumn(),
                 ['key' => 'used_in_item', 'label' => 'Set Into Pieces', 'align' => 'right', 'format' => 'count'],
                 ['key' => 'sold', 'label' => 'Sold Loose', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'returned', 'label' => 'Returned', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'total_out', 'label' => 'Total Out', 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
+                ['key' => 'with_clients', 'label' => 'With Clients', 'align' => 'right', 'format' => 'count'],
+                ['key' => 'written_off', 'label' => 'Written Off', 'align' => 'right', 'format' => 'count'],
+                ['key' => 'back', 'label' => 'Back to Stock', 'align' => 'right', 'format' => 'count', 'emphasis' => 'muted'],
+                ['key' => 'total_out', 'label' => 'Pieces Out', 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
+                ['key' => 'total_out_g', 'label' => 'Grams Out', 'align' => 'right', 'format' => 'grams'],
             ],
             totals: [
                 'branch' => 'All Branches',
                 'used_in_item' => $rows->sum('used_in_item'),
                 'sold' => $rows->sum('sold'),
-                'returned' => $rows->sum('returned'),
+                'with_clients' => $rows->sum('with_clients'),
+                'written_off' => $rows->sum('written_off'),
+                'back' => $rows->sum('back'),
                 'total_out' => $rows->sum('total_out'),
+                'total_out_g' => $rows->sum('total_out_g'),
             ],
             meta: $this->meta([
                 'table_title' => 'Consumption by branch',

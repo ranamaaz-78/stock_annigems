@@ -62,7 +62,7 @@ class SalesReportService
                     trend: ReportFormatter::trend($totals['invoice_count'], $previous['invoice_count'])),
                 $this->card('average_sale', 'Average Sale', ReportFormatter::money($totals['average_sale']), 'analytics'),
                 $this->card('gross_sales', 'Gross Sales', ReportFormatter::money($totals['gross_sales']), 'sell',
-                    hint: ReportFormatter::money($totals['discount_total']).' discount, '.ReportFormatter::money($totals['tax_total']).' tax'),
+                    hint: ReportFormatter::money($totals['discount_total']).' discount, '.ReportFormatter::money($totals['tax_total']).' tax'.($totals['recargo_total'] > 0 ? ', '.ReportFormatter::money($totals['recargo_total']).' recargo' : '')),
                 $this->card('gold_weight_sold', 'Gold Weight Sold', ReportFormatter::grams($this->sales->goldWeightSold($filter)), 'scale',
                     hint: 'Net metal, revenue not profit'),
                 $this->card('voided', 'Voided Invoices', ReportFormatter::count($voided['count']), 'block',
@@ -91,7 +91,26 @@ class SalesReportService
                 ])->all(),
                 'vertical'
             ),
-            meta: ['table_title' => 'Revenue by period', 'money' => true],
+            meta: [
+                'table_title' => 'Revenue by period',
+                'money' => true,
+                'extra_tables' => [
+                    [
+                        'title' => 'Where the invoices came from',
+                        'columns' => [
+                            ['key' => 'source', 'label' => 'Source'],
+                            ['key' => 'invoice_count', 'label' => 'Invoices', 'align' => 'right', 'format' => 'count'],
+                            ['key' => 'net_revenue', 'label' => 'Net Revenue', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+                        ],
+                        'rows' => $sources = $this->sales->bySource($filter),
+                        'totals' => [
+                            'source' => 'Total',
+                            'invoice_count' => $sources->sum('invoice_count'),
+                            'net_revenue' => $sources->sum('net_revenue'),
+                        ],
+                    ],
+                ],
+            ],
         );
     }
 
@@ -364,11 +383,14 @@ class SalesReportService
             'invoice_count' => $row['invoice_count'],
             'taxable_base' => $row['taxable_base'],
             'tax_total' => $row['tax_total'],
+            'recargo_total' => $row['recargo_total'],
             'effective_rate' => $row['taxable_base'] > 0 ? $row['tax_total'] / $row['taxable_base'] * 100 : 0.0,
         ]);
 
         $taxTotal = $rows->sum('tax_total');
+        $recargoTotal = $rows->sum('recargo_total');
         $base = $rows->sum('taxable_base');
+        $byRate = $this->sales->taxByRate($filter);
 
         return new ReportResult(
             key: 'tax-collected',
@@ -377,6 +399,8 @@ class SalesReportService
                 $this->card('tax_total', 'Tax Collected', ReportFormatter::money($taxTotal), 'receipt'),
                 $this->card('taxable_base', 'Taxable Base', ReportFormatter::money($base), 'sell',
                     hint: 'Gross less discount'),
+                $this->card('recargo_total', 'Recargo Collected', ReportFormatter::money($recargoTotal), 'add_card',
+                    hint: 'Recargo de equivalencia'),
                 $this->card('effective_rate', 'Effective Rate',
                     ReportFormatter::percent($base > 0 ? $taxTotal / $base * 100 : 0), 'percent'),
             ],
@@ -386,20 +410,48 @@ class SalesReportService
                 ['key' => 'invoice_count', 'label' => 'Invoices', 'align' => 'right', 'format' => 'count'],
                 ['key' => 'taxable_base', 'label' => 'Taxable Base', 'align' => 'right', 'format' => 'money'],
                 ['key' => 'effective_rate', 'label' => 'Rate', 'align' => 'right', 'format' => 'percent'],
-                ['key' => 'tax_total', 'label' => 'Tax', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+                ['key' => 'tax_total', 'label' => 'IVA', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+                ['key' => 'recargo_total', 'label' => 'Recargo', 'align' => 'right', 'format' => 'money'],
             ],
             totals: [
                 'bucket' => 'Total',
                 'invoice_count' => $rows->sum('invoice_count'),
                 'taxable_base' => $base,
                 'tax_total' => $taxTotal,
+                'recargo_total' => $recargoTotal,
             ],
             chart: ReportResult::chart('Tax collected by '.strtolower($filter->grouping->label()), 'tax', $rows->map(fn (array $row): array => [
                 'label' => $row['bucket'],
                 'value' => $row['tax_total'],
                 'display' => ReportFormatter::moneyCompact($row['tax_total']),
             ])->all(), 'vertical'),
-            meta: ['table_title' => 'Tax by period', 'money' => true],
+            meta: [
+                'table_title' => 'Tax by period',
+                'money' => true,
+                'extra_tables' => [
+                    [
+                        'title' => 'By rate',
+                        'columns' => [
+                            ['key' => 'tax_name', 'label' => 'IVA'],
+                            ['key' => 'tax_rate', 'label' => 'Rate', 'align' => 'right', 'format' => 'percent'],
+                            ['key' => 'recargo_name', 'label' => 'Recargo'],
+                            ['key' => 'recargo_rate', 'label' => 'Rate', 'align' => 'right', 'format' => 'percent'],
+                            ['key' => 'invoice_count', 'label' => 'Invoices', 'align' => 'right', 'format' => 'count'],
+                            ['key' => 'taxable_base', 'label' => 'Taxable Base', 'align' => 'right', 'format' => 'money'],
+                            ['key' => 'tax_total', 'label' => 'IVA', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+                            ['key' => 'recargo_total', 'label' => 'Recargo', 'align' => 'right', 'format' => 'money'],
+                        ],
+                        'rows' => $byRate,
+                        'totals' => [
+                            'tax_name' => 'Total',
+                            'invoice_count' => $byRate->sum('invoice_count'),
+                            'taxable_base' => $byRate->sum('taxable_base'),
+                            'tax_total' => $byRate->sum('tax_total'),
+                            'recargo_total' => $byRate->sum('recargo_total'),
+                        ],
+                    ],
+                ],
+            ],
         );
     }
 
@@ -461,32 +513,35 @@ class SalesReportService
     }
 
     /**
-     * Stones sold loose rather than set into a piece.
+     * Stones sold loose rather than set into a piece, in pieces or grams.
      */
     public function looseStoneSales(ReportFilter $filter): ReportResult
     {
-        $rows = $this->sales->looseStoneSales($filter);
+        $rows = $this->sales->looseStoneSales($filter)->map(fn (array $row): array => $row + [
+            'sold_label' => $this->amount($row['quantity'], $row['grams']),
+        ]);
 
         return new ReportResult(
             key: 'loose-stone-sales',
             title: 'Loose Stone Sales',
             summary: [
-                $this->card('quantity', 'Stones Sold', ReportFormatter::count($rows->sum('quantity')), 'diamond'),
-                $this->card('carat', 'Carat Sold', ReportFormatter::carats($rows->sum('carat')), 'scale'),
+                $this->card('quantity', 'Pieces Sold', ReportFormatter::count($rows->sum('quantity')), 'diamond'),
+                $this->card('grams', 'Grams Sold', ReportFormatter::grams($rows->sum('grams')), 'scale'),
                 $this->card('revenue', 'Revenue', ReportFormatter::money($rows->sum('revenue')), 'payments'),
             ],
             rows: $rows,
             columns: [
+                ['key' => 'stone_code', 'label' => 'Code'],
                 ['key' => 'stone_name', 'label' => 'Stone'],
-                ['key' => 'stone_type', 'label' => 'Type'],
-                ['key' => 'quantity', 'label' => 'Quantity', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'carat', 'label' => 'Carat', 'align' => 'right', 'format' => 'carats'],
+                ['key' => 'shape', 'label' => 'Shape'],
+                ['key' => 'quantity', 'label' => 'Pieces', 'align' => 'right', 'format' => 'count'],
+                ['key' => 'grams', 'label' => 'Grams', 'align' => 'right', 'format' => 'grams'],
                 ['key' => 'revenue', 'label' => 'Revenue', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
             ],
             totals: [
-                'stone_name' => 'Total',
+                'stone_code' => 'Total',
                 'quantity' => $rows->sum('quantity'),
-                'carat' => $rows->sum('carat'),
+                'grams' => $rows->sum('grams'),
                 'revenue' => $rows->sum('revenue'),
             ],
             meta: [
@@ -496,6 +551,24 @@ class SalesReportService
                 'empty_message' => 'Stones set into finished pieces are counted under Sales by Category.',
             ],
         );
+    }
+
+    /**
+     * Pieces and grams worded together: "4", "2.5 g" or "4 + 2.5 g".
+     */
+    private function amount(int $pieces, float $grams): string
+    {
+        $parts = [];
+
+        if ($pieces > 0) {
+            $parts[] = number_format($pieces);
+        }
+
+        if ($grams > 0) {
+            $parts[] = rtrim(rtrim(number_format($grams, 3, '.', ''), '0'), '.').' g';
+        }
+
+        return $parts === [] ? '0' : implode(' + ', $parts);
     }
 
     /**

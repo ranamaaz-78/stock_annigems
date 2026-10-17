@@ -60,7 +60,8 @@ class JewelleryItemPolicy
     public function delete(User $user, JewelleryItem $item): bool
     {
         return $user->hasPermission('jewellery.delete')
-            && (int) $user->branch_id === (int) $item->branch_id;
+            && (int) $user->branch_id === (int) $item->branch_id
+            && $item->canBeDeleted();
     }
 
     /**

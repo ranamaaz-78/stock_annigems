@@ -6,7 +6,7 @@
 
 <div
     id="{{ $id }}"
-    class="fixed inset-0 z-50 hidden"
+    class="fixed inset-0 z-[100] hidden"
     role="dialog"
     aria-modal="true"
     aria-labelledby="{{ $id }}-title"

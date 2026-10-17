@@ -105,6 +105,18 @@
                                                 <x-table.action :href="route('branch.jewellery-items.label', [$item, 'qr'])" icon="qr_code_2" label="QR" target="_blank" />
                                             @endif
                                         @endcan
+                                        @can('delete', $item)
+                                            <button type="submit" form="delete-item-{{ $item->uuid }}" class="table-admin__action table-admin__action--danger" aria-label="Delete" title="Delete">
+                                                <span class="material-symbols-outlined icon icon--sm">delete</span>
+                                            </button>
+                                        @elseif(auth()->user()->hasPermission('jewellery.delete'))
+                                            {{-- Reserved, sold, on memo, delivered or transferred: the piece belongs to a document. --}}
+                                            <span class="table-admin__action table-admin__action--locked" role="img" tabindex="0"
+                                                  aria-label="{{ $item->status->label() }}: cannot be deleted"
+                                                  title="{{ $item->status->label() }}: this piece is in use and cannot be deleted">
+                                                <span class="material-symbols-outlined icon icon--sm">lock</span>
+                                            </span>
+                                        @endcan
                                     </x-table.actions>
                                 </td>
                             </tr>
@@ -120,6 +132,14 @@
                 </div>
             @endif
         </form>
+        @foreach($items as $item)
+            @can('delete', $item)
+                <form id="delete-item-{{ $item->uuid }}" method="POST" action="{{ route('branch.jewellery-items.destroy', $item) }}" data-loading-form data-confirm-delete-item data-stones-count="{{ $item->item_stones_count }}" class="hidden">
+                    @csrf
+                    @method('DELETE')
+                </form>
+            @endcan
+        @endforeach
         @if($items->total() > 0)
             <div class="panel__footer">
                 {{ $items->withQueryString()->links() }}

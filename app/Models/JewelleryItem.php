@@ -66,6 +66,20 @@ class JewelleryItem extends Model
     }
 
     /**
+     * Whether the piece can still be deleted. One that is reserved, sold, on
+     * memo, delivered or transferred belongs to a document and stays.
+     */
+    public function canBeDeleted(): bool
+    {
+        return in_array($this->status, [
+            JewelleryItemStatus::AVAILABLE,
+            JewelleryItemStatus::DAMAGED,
+            JewelleryItemStatus::LOST,
+            JewelleryItemStatus::UNDER_REPAIR,
+        ], true);
+    }
+
+    /**
      * Category (global).
      */
     public function category(): BelongsTo

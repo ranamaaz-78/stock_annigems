@@ -472,6 +472,9 @@ return [
 
         'low_stone_threshold' => (int) env('ANNIGEMS_LOW_STONE_THRESHOLD', 5),
 
+        // Same idea for a lot that is weighed in grams rather than counted in pieces.
+        'low_stone_weight_threshold' => (float) env('ANNIGEMS_LOW_STONE_WEIGHT_THRESHOLD', 10),
+
         // Items shown in "top N" style dashboard and report lists.
         'top_list_limit' => (int) env('ANNIGEMS_REPORT_TOP_LIMIT', 10),
 

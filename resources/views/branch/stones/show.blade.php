@@ -14,6 +14,14 @@
         @can('printLabel', $stone)
             <x-btn href="{{ route('branch.stones.label', $stone) }}" variant="secondary" data-label-open="{{ $stone->uuid }}">Print Label</x-btn>
         @endcan
+        @can('delete', $stone)
+            <form method="POST" action="{{ route('branch.stones.destroy', $stone) }}" data-loading-form data-confirm-delete-stone
+                  data-remaining="{{ $stone->isWeighed() ? rtrim(rtrim(number_format((float) $stone->weight_grams, 3, '.', ''), '0'), '.').' g' : ((int) $stone->quantity).' pcs' }}" class="inline">
+                @csrf
+                @method('DELETE')
+                <x-btn type="submit" variant="danger" loading-text="Deleting...">Delete</x-btn>
+            </form>
+        @endcan
         @can('deactivate', $stone)
             @if($stone->is_active)
                 <form method="POST" action="{{ route('branch.stones.deactivate', $stone) }}" data-loading-form data-confirm-deactivate class="inline">

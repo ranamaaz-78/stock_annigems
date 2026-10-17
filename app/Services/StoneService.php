@@ -5,6 +5,11 @@ namespace App\Services;
 use App\Enums\StoneMovementType;
 use App\Enums\StonePricingMode;
 use App\Enums\StoneStatus;
+use App\Enums\DeliveryNoteStatus;
+use App\Enums\QuotationStatus;
+use App\Models\DeliveryNoteItem;
+use App\Models\PerformaItem;
+use App\Models\QuotationItem;
 use App\Models\Stone;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -135,6 +140,88 @@ class StoneService
         $this->auditLogService->log('stone.deactivated', $stone, $old, $this->auditPayload($stone), $actor);
 
         return $stone;
+    }
+
+    /**
+     * Delete a lot (soft). Whatever stock is left is written off in the ledger
+     * and the lot disappears from lists, scan and POS; invoices, jewellery and
+     * the ledger keep their snapshots.
+     *
+     * Refused while an open document still needs the lot: a draft quotation
+     * holding it, a performa with goods of it unpaid, or an issued delivery
+     * note. Those documents put stock back into it when they close.
+     *
+     * @return array{written_off: string}
+     */
+    public function delete(Stone $stone, User $actor): array
+    {
+        return DB::transaction(function () use ($stone, $actor): array {
+            $stone = Stone::query()->whereKey($stone->id)->lockForUpdate()->firstOrFail();
+
+            $this->assertNotHeldByOpenDocument($stone);
+
+            $old = $this->auditPayload($stone);
+            $writtenOff = '0';
+
+            if ($stone->isWeighed()) {
+                $grams = round((float) $stone->weight_grams, 3);
+                if ($grams > 0) {
+                    $this->stoneStockService->applyWeight($stone, StoneMovementType::ADJUSTED, -$grams, $actor, $stone, 'Lot deleted: remaining weight written off.');
+                    $writtenOff = rtrim(rtrim(number_format($grams, 3, '.', ''), '0'), '.').' g';
+                }
+            } elseif ((int) $stone->quantity > 0) {
+                $pieces = (int) $stone->quantity;
+                $this->stoneStockService->apply($stone, StoneMovementType::ADJUSTED, -$pieces, $actor, $stone, 'Lot deleted: remaining pieces written off.');
+                $writtenOff = $pieces.' pcs';
+            }
+
+            $this->auditLogService->log('stone.deleted', $stone, $old, ['written_off' => $writtenOff], $actor);
+            $stone->delete();
+
+            return ['written_off' => $writtenOff];
+        });
+    }
+
+    /**
+     * Throw a ValidationException naming the document that still needs the lot.
+     */
+    private function assertNotHeldByOpenDocument(Stone $stone): void
+    {
+        $quotation = QuotationItem::query()
+            ->where('stone_id', $stone->id)
+            ->whereHas('quotation', fn ($q) => $q->where('status', QuotationStatus::DRAFT))
+            ->with('quotation')
+            ->first();
+
+        if ($quotation?->quotation) {
+            throw ValidationException::withMessages([
+                'stone' => "{$stone->stone_code} is held by quotation {$quotation->quotation->quotation_number}. Cancel or convert it first.",
+            ]);
+        }
+
+        $performa = PerformaItem::query()
+            ->where('stone_id', $stone->id)
+            ->with('performa')
+            ->get()
+            ->first(fn (PerformaItem $item): bool => $item->performa?->isOpen() && $item->outstandingAmount() > 0);
+
+        if ($performa) {
+            throw ValidationException::withMessages([
+                'stone' => "{$stone->stone_code} is still out on performa {$performa->performa->performa_number}. Settle or return it first.",
+            ]);
+        }
+
+        $note = DeliveryNoteItem::query()
+            ->where('stone_id', $stone->id)
+            ->whereHas('deliveryNote', fn ($q) => $q->where('status', DeliveryNoteStatus::ISSUED))
+            ->with('deliveryNote')
+            ->first();
+
+        if ($note?->deliveryNote) {
+            throw ValidationException::withMessages([
+                'stone' => "{$stone->stone_code} is on delivery note {$note->deliveryNote->delivery_note_number}. Cancel or invoice it first.",
+            ]);
+        }
     }
 
     /**

@@ -70,7 +70,8 @@ class JewelleryItemStone extends Model
      */
     public function stone(): BelongsTo
     {
-        return $this->belongsTo(Stone::class);
+        // A piece keeps showing its stone after the lot was deleted.
+        return $this->belongsTo(Stone::class)->withTrashed();
     }
 
     /**
