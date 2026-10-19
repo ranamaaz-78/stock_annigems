@@ -210,10 +210,10 @@
                             <h2 class="pos-section__title" data-billto-title>Billed to</h2>
                             <span data-customer-chip class="pos-chip">No customer</span>
                             <span class="pos-section__spacer"></span>
-                            {{-- Whether the money is in. Pending records no payment and leaves the document editable. --}}
+                            {{-- Whether the money is in. Paid asks for the method; Pending records no payment and leaves the document editable. Starts on Paid. --}}
                             <div class="pos-paystate" data-kind-only="invoice delivery_note" data-pay-state-group role="radiogroup" aria-label="Payment status">
-                                <button type="button" class="pos-paystate__opt is-on" data-pay-state="pending" role="radio" aria-checked="true">Pending</button>
-                                <button type="button" class="pos-paystate__opt" data-pay-state="paid" role="radio" aria-checked="false">Paid</button>
+                                <button type="button" class="pos-paystate__opt" data-pay-state="pending" role="radio" aria-checked="false">Pending</button>
+                                <button type="button" class="pos-paystate__opt is-on" data-pay-state="paid" role="radio" aria-checked="true">Paid</button>
                             </div>
                             <button type="button" class="pos-ghost" data-customer-clear>
                                 <span class="material-symbols-outlined icon icon--sm">backspace</span>

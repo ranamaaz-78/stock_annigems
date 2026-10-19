@@ -197,8 +197,8 @@ export function bindPos() {
             // IVA starts on with the default rate; the cashier can change the rate or
             // remove it with the x.
             apply_tax: Boolean(config.taxEnabled && config.defaultIvaUuid),
-            // Pending records no payment; Paid asks for the method when generating.
-            payment_status: 'pending',
+            // Paid asks for the method when generating; Pending records no payment.
+            payment_status: 'paid',
             notes: '',
             lines: [],
         };
@@ -1282,7 +1282,7 @@ export function bindPos() {
      */
     function resetTicket() {
         state = emptyState();
-        setPayState('pending');
+        setPayState('paid');
         [els.phone, els.name, els.email, els.nie, els.address].forEach((field) => {
             if (!field) return;
             field.value = '';
