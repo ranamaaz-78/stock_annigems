@@ -33,7 +33,6 @@ class Customer extends Model
         'phone',
         'alternate_phone',
         'email',
-        'cnic',
         'nie',
         'address',
         'city',

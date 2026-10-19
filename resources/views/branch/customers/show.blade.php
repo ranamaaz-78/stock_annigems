@@ -37,10 +37,6 @@
                         <dd class="detail-list__value">{{ $customer->email ?? '—' }}</dd>
                     </div>
                     <div class="detail-list__item">
-                        <dt class="detail-list__term">CNIC</dt>
-                        <dd class="detail-list__value font-data-mono">{{ $customer->cnic ?? '—' }}</dd>
-                    </div>
-                    <div class="detail-list__item">
                         <dt class="detail-list__term">City</dt>
                         <dd class="detail-list__value">{{ $customer->city ?? '—' }}</dd>
                     </div>

@@ -10,6 +10,7 @@ use App\Models\Performa;
 use App\Models\Quotation;
 use App\Models\TaxRate;
 use App\Services\PerformaService;
+use App\Services\PosDocumentLoader;
 use App\Services\TaxRateService;
 use App\Repositories\GoldRateRepository;
 use App\Services\CodeSequenceService;
@@ -32,6 +33,7 @@ class PosController extends Controller
         private CodeSequenceService $codeSequence,
         private TaxRateService $taxRates,
         private PerformaService $performaService,
+        private PosDocumentLoader $documentLoader,
     ) {}
 
     /**
@@ -70,6 +72,21 @@ class PosController extends Controller
             $defaultKind = 'performa';
         }
 
+        // ?invoice=uuid / ?delivery_note=uuid opens a document nobody has paid yet,
+        // for editing in the ticket.
+        $editingDocument = null;
+        if (filled($request->query('invoice'))) {
+            $invoice = \App\Models\Invoice::query()->where('uuid', (string) $request->query('invoice'))->firstOrFail();
+            $this->authorize('update', $invoice);
+            $editingDocument = $this->documentLoader->invoice($invoice);
+            $defaultKind = 'invoice';
+        } elseif (filled($request->query('delivery_note'))) {
+            $note = DeliveryNote::query()->where('uuid', (string) $request->query('delivery_note'))->firstOrFail();
+            $this->authorize('update', $note);
+            $editingDocument = $this->documentLoader->deliveryNote($note);
+            $defaultKind = 'delivery_note';
+        }
+
         // ?creditor=uuid fills the creditor on a performa (from a creditor's page).
         $initialCreditor = null;
         if ($defaultKind === 'performa' && filled($request->query('creditor'))) {
@@ -98,6 +115,7 @@ class PosController extends Controller
             'canPerforma' => $canPerforma,
             'defaultKind' => $defaultKind,
             'editingPerforma' => $editingPerforma,
+            'editingDocument' => $editingDocument,
             'initialCreditor' => $initialCreditor ? [
                 'uuid' => $initialCreditor->uuid,
                 'customer_code' => $initialCreditor->creditor_code,

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Branch\CancelDeliveryNoteRequest;
 use App\Http\Requests\Branch\ConvertDeliveryNoteRequest;
 use App\Http\Requests\Branch\StoreDeliveryNoteRequest;
+use App\Http\Requests\Branch\UpdateDeliveryNoteRequest;
 use App\Models\DeliveryNote;
 use App\Models\TaxRate;
 use App\Services\DeliveryNoteService;
@@ -79,16 +80,52 @@ class DeliveryNoteController extends Controller
         }
 
         if ($request->expectsJson()) {
+            // The POS opens the document's page next; this is what that page shows.
+            session()->flash('success', 'Delivery note '.$note->delivery_note_number.' created.');
+
             return $this->jsonSuccess('Delivery note '.$note->delivery_note_number.' created.', [
                 'uuid' => $note->uuid,
                 'number' => $note->delivery_note_number,
                 'print_url' => route('branch.delivery-notes.print', $note),
+                'show_url' => route('branch.delivery-notes.show', $note),
             ]);
         }
 
         return redirect()
             ->route('branch.delivery-notes.show', $note)
             ->with('success', 'Delivery note '.$note->delivery_note_number.' created.');
+    }
+
+    /**
+     * Save an edited delivery note: what it held goes back and the new lines go out.
+     */
+    public function update(UpdateDeliveryNoteRequest $request, DeliveryNote $deliveryNote): JsonResponse|RedirectResponse
+    {
+        try {
+            $note = $this->deliveryNoteService->update($deliveryNote, $request->validated(), $request->user());
+        } catch (ValidationException $e) {
+            if ($request->expectsJson()) {
+                return $this->jsonFailure($e->getMessage(), $e->errors(), 422);
+            }
+
+            throw $e;
+        } catch (Throwable $e) {
+            Log::error('Delivery note update failed.', ['user_id' => $request->user()?->id, 'exception' => $e]);
+            $message = 'The delivery note could not be saved. Please try again or contact support.';
+
+            return $request->expectsJson() ? $this->jsonFailure($message, [], 500) : back()->withInput()->withErrors(['delivery_note' => $message]);
+        }
+
+        session()->flash('success', 'Delivery note '.$note->delivery_note_number.' updated.');
+
+        if ($request->expectsJson()) {
+            return $this->jsonSuccess('Delivery note '.$note->delivery_note_number.' updated.', [
+                'uuid' => $note->uuid,
+                'show_url' => route('branch.delivery-notes.show', $note),
+            ]);
+        }
+
+        return redirect()->route('branch.delivery-notes.show', $note);
     }
 
     /**

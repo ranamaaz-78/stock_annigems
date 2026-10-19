@@ -125,7 +125,9 @@ class PosTest extends TestCase
             ->assertSee('Stock left')
             ->assertSee('Qty')
             ->assertSee('Amount')
-            ->assertDontSee('sa-sidebar', false);
+            // The branch sidebar stays for navigation; there is no topbar.
+            ->assertSee('sa-sidebar', false)
+            ->assertDontSee('sa-topbar', false);
     }
 
     /**
@@ -149,7 +151,7 @@ class PosTest extends TestCase
             ->assertDontSee('Walk-in')
             ->assertSee('Add items')
             ->assertSee('Notes')
-            ->assertSee('Exit POS')
+            ->assertDontSee('Exit POS')
             // No kiosk bar and no right-hand add-item rail.
             ->assertDontSee('pos-bar', false)
             ->assertDontSee('pos-rail', false)

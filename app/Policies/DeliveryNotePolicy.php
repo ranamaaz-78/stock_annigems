@@ -69,6 +69,29 @@ class DeliveryNotePolicy
             && $note->status === DeliveryNoteStatus::ISSUED;
     }
 
+    /**
+     * Record the payment of an issued note.
+     */
+    public function recordPayment(User $user, DeliveryNote $note): bool
+    {
+        return $this->mayReachRecords($user)
+            && $user->hasPermission('delivery_notes.create')
+            && $this->sameBranch($user, $note)
+            && $note->status === DeliveryNoteStatus::ISSUED
+            && ! $note->isPaid();
+    }
+
+    /**
+     * Edit a note, which is possible only until a payment is recorded.
+     */
+    public function update(User $user, DeliveryNote $note): bool
+    {
+        return $this->mayReachRecords($user)
+            && $user->hasPermission('delivery_notes.create')
+            && $this->sameBranch($user, $note)
+            && $note->canBeEdited();
+    }
+
     private function sameBranch(User $user, DeliveryNote $note): bool
     {
         return (int) $user->branch_id === (int) $note->branch_id;

@@ -27,7 +27,6 @@ class CustomerFactory extends Factory
             'phone' => '03'.fake()->unique()->numerify('#########'),
             'alternate_phone' => null,
             'email' => null,
-            'cnic' => null,
             'address' => null,
             'city' => null,
             'notes' => null,

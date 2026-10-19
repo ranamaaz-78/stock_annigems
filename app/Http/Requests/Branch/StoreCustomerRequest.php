@@ -34,7 +34,6 @@ class StoreCustomerRequest extends FormRequest
             'phone' => ['required', 'string', 'max:30', 'regex:/^[0-9+\-\s()]{7,30}$/', Rule::unique('customers', 'phone')],
             'alternate_phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+\-\s()]{7,30}$/'],
             'email' => ['nullable', 'email', 'max:150'],
-            'cnic' => ['nullable', 'string', 'max:20', 'regex:/^[0-9]{5}-[0-9]{7}-[0-9]$/', Rule::unique('customers', 'cnic')],
             'nie' => ['nullable', 'string', 'max:20', 'regex:/^[A-Za-z0-9\-\s.\/]{5,20}$/'],
             'address' => ['nullable', 'string', 'max:2000'],
             'city' => ['nullable', 'string', 'max:100'],
@@ -52,8 +51,6 @@ class StoreCustomerRequest extends FormRequest
             'phone.required' => 'Phone number is required.',
             'phone.unique' => 'This phone number is already registered to another customer.',
             'phone.regex' => 'Enter a valid phone number.',
-            'cnic.regex' => 'CNIC must be in the format 12345-1234567-1.',
-            'cnic.unique' => 'This CNIC is already registered to another customer.',
         ];
     }
 }

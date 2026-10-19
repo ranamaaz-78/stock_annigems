@@ -48,6 +48,27 @@ class InvoicePolicy
     }
 
     /**
+     * Record the payment of a pending invoice.
+     */
+    public function recordPayment(User $user, Invoice $invoice): bool
+    {
+        return $user->hasPermission('quotations.convert')
+            && $this->sameBranch($user, $invoice)
+            && $invoice->status === InvoiceStatus::COMPLETED
+            && ! $invoice->isPaid();
+    }
+
+    /**
+     * Edit an invoice, which is possible only until a payment is recorded.
+     */
+    public function update(User $user, Invoice $invoice): bool
+    {
+        return $user->hasPermission('quotations.convert')
+            && $this->sameBranch($user, $invoice)
+            && $invoice->canBeEdited();
+    }
+
+    /**
      * Branch boundary check.
      */
     private function sameBranch(User $user, Invoice $invoice): bool

@@ -117,6 +117,54 @@ class CreditorService
      *
      * @param  array<string, mixed>  $data  Validated data from UpdateCreditorRequest
      */
+    /**
+     * Save what the cashier changed in a loaded creditor's fields on the POS
+     * (name, email, NIE, address; the phone number stays). Same rules as
+     * CustomerService::syncFromTicket.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function syncFromTicket(Creditor $creditor, array $data, User $actor): Creditor
+    {
+        if (! \Illuminate\Support\Facades\Gate::forUser($actor)->allows('update', $creditor)) {
+            return $creditor;
+        }
+
+        $clean = static fn (mixed $v): ?string => filled(trim((string) $v)) ? trim((string) $v) : null;
+
+        $changes = [];
+        if (array_key_exists('walkin_name', $data) && $clean($data['walkin_name']) !== null) {
+            $changes['name'] = $clean($data['walkin_name']);
+        }
+        foreach (['email' => 'walkin_email', 'address' => 'walkin_address'] as $column => $key) {
+            if (array_key_exists($key, $data)) {
+                $changes[$column] = $clean($data[$key]);
+            }
+        }
+        if (array_key_exists('walkin_nie', $data)) {
+            $nie = $clean($data['walkin_nie']);
+            $changes['nie'] = $nie === null ? null : strtoupper($nie);
+        }
+
+        $changes = array_filter(
+            $changes,
+            fn ($value, $column): bool => $creditor->{$column} !== $value,
+            ARRAY_FILTER_USE_BOTH
+        );
+
+        if ($changes === []) {
+            return $creditor;
+        }
+
+        return DB::transaction(function () use ($creditor, $changes, $actor): Creditor {
+            $old = $this->auditPayload($creditor);
+            $creditor->update($changes);
+            $this->auditLog->log('creditor.updated', $creditor, $old, $this->auditPayload($creditor), $actor);
+
+            return $creditor->fresh();
+        });
+    }
+
     public function update(Creditor $creditor, array $data, User $actor): Creditor
     {
         if ((int) $creditor->branch_id !== (int) $actor->branch_id) {

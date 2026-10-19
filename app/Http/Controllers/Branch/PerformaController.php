@@ -98,10 +98,14 @@ class PerformaController extends Controller
         }
 
         if ($request->expectsJson()) {
+            // The POS opens the document's page next; this is what that page shows.
+            session()->flash('success', 'Performa '.$performa->performa_number.' issued.');
+
             return $this->jsonSuccess('Performa '.$performa->performa_number.' issued.', [
                 'uuid' => $performa->uuid,
                 'number' => $performa->performa_number,
                 'print_url' => route('branch.performas.print', $performa),
+                'show_url' => route('branch.performas.show', $performa),
             ]);
         }
 

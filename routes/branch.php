@@ -189,6 +189,10 @@ Route::middleware(['auth', 'password.changed', 'branch.context', 'branch.member'
         Route::post('/creditors/{creditor}/activate', [CreditorController::class, 'activate'])->name('creditors.activate');
 
         // Performas (credit issue — stock out now, prices on settlement)
+        // Payments: pending invoices and delivery notes are paid from their own page.
+        Route::post('/invoices/{invoice}/payment', [\App\Http\Controllers\Branch\PaymentController::class, 'invoice'])->name('invoices.payment');
+        Route::post('/delivery-notes/{deliveryNote}/payment', [\App\Http\Controllers\Branch\PaymentController::class, 'deliveryNote'])->name('delivery-notes.payment');
+
         Route::get('/performas', [PerformaController::class, 'index'])->name('performas.index');
         Route::get('/performas/create', [PerformaController::class, 'create'])->name('performas.create');
         Route::post('/performas', [PerformaController::class, 'store'])->name('performas.store');
@@ -232,12 +236,14 @@ Route::middleware(['auth', 'password.changed', 'branch.context', 'branch.member'
         Route::post('/delivery-notes', [DeliveryNoteController::class, 'store'])->name('delivery-notes.store');
         Route::get('/delivery-notes/{deliveryNote}', [DeliveryNoteController::class, 'show'])->name('delivery-notes.show');
         Route::get('/delivery-notes/{deliveryNote}/print', [DeliveryNoteController::class, 'print'])->name('delivery-notes.print');
+        Route::put('/delivery-notes/{deliveryNote}', [DeliveryNoteController::class, 'update'])->name('delivery-notes.update');
         Route::post('/delivery-notes/{deliveryNote}/cancel', [DeliveryNoteController::class, 'cancel'])->name('delivery-notes.cancel');
         Route::post('/delivery-notes/{deliveryNote}/convert', [DeliveryNoteController::class, 'convert'])->name('delivery-notes.convert');
 
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
         Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
         Route::get('/invoices/{invoice}/print', [InvoiceController::class, 'print'])->name('invoices.print');
+        Route::put('/invoices/{invoice}', [InvoiceController::class, 'update'])->name('invoices.update');
         Route::post('/invoices/{invoice}/void', [InvoiceController::class, 'void'])->name('invoices.void');
 
         /**

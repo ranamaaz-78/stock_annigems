@@ -522,6 +522,8 @@ class SalesLookupService
             // Lots have no catalog type any more; the shape is what an
             // operator recognises on the receipt line.
             'category_snapshot' => $stone->shape,
+            // Shape, size, carat and pricing, shown as badges on the ticket line.
+            'details' => $stone->detailBadges(),
             'quantity' => 1,
             'available_quantity' => (int) $stone->quantity,
             // A per-gram lot is sold by weight: the cashier types the grams, and the

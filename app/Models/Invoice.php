@@ -58,6 +58,7 @@ class Invoice extends Model
         'grand_total',
         'payment_method',
         'payment_reference',
+        'payment_status',
         'status',
         'voided_by',
         'voided_by_role',
@@ -84,6 +85,7 @@ class Invoice extends Model
             'recargo_amount' => 'decimal:2',
             'grand_total' => 'decimal:2',
             'payment_method' => PaymentMethod::class,
+            'payment_status' => \App\Enums\PaymentStatus::class,
             'status' => InvoiceStatus::class,
             'voided_at' => 'datetime',
         ];
@@ -164,6 +166,51 @@ class Invoice extends Model
     public function scopeVoided(Builder $query): Builder
     {
         return $query->where($this->getTable().'.status', InvoiceStatus::VOIDED);
+    }
+
+    /**
+     * Payments recorded against this invoice.
+     */
+    public function payments(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(Payment::class, 'payable')->orderBy('paid_on')->orderBy('id');
+    }
+
+    /**
+     * Money recorded so far.
+     */
+    public function paidAmount(): float
+    {
+        return round((float) $this->payments->sum('amount'), 2);
+    }
+
+    /**
+     * What is still to be paid.
+     */
+    public function balanceDue(): float
+    {
+        return max(0.0, round((float) $this->grand_total - $this->paidAmount(), 2));
+    }
+
+    /**
+     * Whether the money has been recorded in full.
+     */
+    public function isPaid(): bool
+    {
+        return $this->payment_status === \App\Enums\PaymentStatus::PAID;
+    }
+
+    /**
+     * An invoice can be edited until a payment is recorded against it. One that
+     * came from a delivery note or a performa follows that document instead.
+     */
+    public function canBeEdited(): bool
+    {
+        return $this->status === InvoiceStatus::COMPLETED
+            && ! $this->isPaid()
+            && $this->performa_id === null
+            && $this->delivery_note_id === null
+            && ! $this->payments()->exists();
     }
 
     /**

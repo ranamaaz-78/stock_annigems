@@ -43,6 +43,7 @@ class DeliveryNote extends Model
         'discount_amount',
         'grand_total',
         'status',
+        'payment_status',
         'invoice_id',
         'cancelled_by',
         'cancelled_by_role',
@@ -64,6 +65,7 @@ class DeliveryNote extends Model
             'discount_amount' => 'decimal:2',
             'grand_total' => 'decimal:2',
             'status' => DeliveryNoteStatus::class,
+            'payment_status' => \App\Enums\PaymentStatus::class,
             'cancelled_at' => 'datetime',
         ];
     }
@@ -105,6 +107,46 @@ class DeliveryNote extends Model
     public function items(): HasMany
     {
         return $this->hasMany(DeliveryNoteItem::class)->orderBy('sort_order');
+    }
+
+    /**
+     * Payments recorded against this note.
+     */
+    public function payments(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(Payment::class, 'payable')->orderBy('paid_on')->orderBy('id');
+    }
+
+    /**
+     * Money recorded so far.
+     */
+    public function paidAmount(): float
+    {
+        return round((float) $this->payments->sum('amount'), 2);
+    }
+
+    /**
+     * What is still to be paid.
+     */
+    public function balanceDue(): float
+    {
+        return max(0.0, round((float) $this->grand_total - $this->paidAmount(), 2));
+    }
+
+    /**
+     * Whether the money has been recorded in full.
+     */
+    public function isPaid(): bool
+    {
+        return $this->payment_status === \App\Enums\PaymentStatus::PAID;
+    }
+
+    /**
+     * A note can be edited while its goods are out and nothing has been paid.
+     */
+    public function canBeEdited(): bool
+    {
+        return $this->isOpen() && ! $this->isPaid() && ! $this->payments()->exists();
     }
 
     /**

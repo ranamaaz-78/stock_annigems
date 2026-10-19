@@ -1,8 +1,8 @@
 {{--
     Fullscreen POS shell.
 
-    No sidebar, topbar, or kiosk bar — the ticket is the whole screen.
-    Exit POS lives inside the document so the cashier can return to the dashboard.
+    The branch sidebar stays on the left for navigation; there is no topbar. The
+    ticket fills the rest of the screen.
 --}}
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="pos-html">
@@ -10,6 +10,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <x-shell.boot />
     <title>@yield('title', 'POS') — {{ setting('company_name', config('app.name', 'Annigems')) }}</title>
     <x-brand.favicon />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,7 +21,10 @@
     @stack('head')
 </head>
 <body class="pos-body">
-    @yield('content')
+    <x-branch.sidebar />
+    <div class="pos-shell">
+        @yield('content')
+    </div>
     {{-- Hidden host for the saved document; print() runs here so POS never leaves. --}}
     <iframe id="pos-print-frame" class="pos-print-frame" title="Print document" aria-hidden="true"></iframe>
     @stack('scripts')

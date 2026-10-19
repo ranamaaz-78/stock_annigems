@@ -33,7 +33,7 @@
             </div>
             <div class="pd__title-block">
                 <h1 class="pd__title">Invoice</h1>
-                <span @class(['pd__badge', 'pd__badge--paid' => ! $voided, 'pd__badge--void' => $voided])>{{ $voided ? 'Voided' : 'Paid' }}</span>
+                <span @class(['pd__badge', 'pd__badge--paid' => ! $voided && $invoice->isPaid(), 'pd__badge--void' => $voided])>{{ $voided ? 'Voided' : $invoice->payment_status->label() }}</span>
             </div>
         </header>
 
@@ -55,7 +55,10 @@
             <dl class="pd__facts">
                 <dt>Invoice no.</dt><dd class="is-strong">{{ $invoice->invoice_number }}</dd>
                 <dt>Issue date</dt><dd>{{ setting_date($invoice->invoice_date) }}</dd>
-                <dt>Payment</dt><dd>{{ $invoice->payment_method->label() }}@if($invoice->payment_reference) · {{ $invoice->payment_reference }}@endif</dd>
+                <dt>Payment</dt><dd>{{ $invoice->isPaid() ? ($invoice->payment_method?->label() ?? 'Paid').($invoice->payment_reference ? ' · '.$invoice->payment_reference : '') : 'Pending' }}</dd>
+                @unless($invoice->isPaid() || $voided)
+                    <dt>Amount due</dt><dd class="is-strong">{{ setting_money($invoice->balanceDue()) }}</dd>
+                @endunless
                 <dt>Served by</dt><dd>{{ $invoice->creator?->name ?? '—' }}</dd>
             </dl>
         </section>

@@ -558,9 +558,14 @@ class QuotationService
     public function resolveCustomerId(array $data, User $actor): ?int
     {
         if (! empty($data['customer_uuid'])) {
-            $id = Customer::query()->where('uuid', $data['customer_uuid'])->value('id');
-            if ($id) {
-                return (int) $id;
+            $existing = Customer::query()->where('uuid', $data['customer_uuid'])->first();
+            if ($existing) {
+                // The POS sends the fields back when the cashier has them open for editing.
+                if (! empty($data['update_customer'])) {
+                    $this->customerService->syncFromTicket($existing, $data, $actor);
+                }
+
+                return (int) $existing->id;
             }
         }
 

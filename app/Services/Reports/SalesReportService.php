@@ -44,6 +44,7 @@ class SalesReportService
         $totals = $this->sales->totals($filter);
         $previous = $this->sales->totals($filter->previousPeriod());
         $voided = $this->sales->voidedTotals($filter);
+        $awaiting = $this->sales->awaitingPayment($filter->branchId);
 
         $rows = $this->sales->revenueTrend($filter)->map(fn (array $row): array => [
             'bucket' => $this->bucketLabel($row['bucket']),
@@ -65,6 +66,8 @@ class SalesReportService
                     hint: ReportFormatter::money($totals['discount_total']).' discount, '.ReportFormatter::money($totals['tax_total']).' tax'.($totals['recargo_total'] > 0 ? ', '.ReportFormatter::money($totals['recargo_total']).' recargo' : '')),
                 $this->card('gold_weight_sold', 'Gold Weight Sold', ReportFormatter::grams($this->sales->goldWeightSold($filter)), 'scale',
                     hint: 'Net metal, revenue not profit'),
+                $this->card('awaiting', 'Awaiting Payment', ReportFormatter::money($awaiting['invoice_due'] + $awaiting['note_due']), 'hourglass_top',
+                    hint: ReportFormatter::count($awaiting['invoices']).' invoices, '.ReportFormatter::count($awaiting['notes']).' delivery notes'),
                 $this->card('voided', 'Voided Invoices', ReportFormatter::count($voided['count']), 'block',
                     hint: ReportFormatter::money($voided['value']).' excluded from every total'),
             ],
@@ -122,7 +125,7 @@ class SalesReportService
         $totals = $this->sales->totals($filter);
 
         $rows = $this->sales->byPaymentMethod($filter)->map(fn (array $row): array => [
-            'payment_method' => PaymentMethod::tryFrom($row['payment_method'])?->label() ?? $row['payment_method'],
+            'payment_method' => PaymentMethod::tryFrom($row['payment_method'])?->label() ?? ($row['payment_method'] === 'pending' ? 'Pending (not paid yet)' : $row['payment_method']),
             'invoice_count' => $row['invoice_count'],
             'net_revenue' => $row['net_revenue'],
             'share' => $row['share'],

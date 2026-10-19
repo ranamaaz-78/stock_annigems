@@ -123,22 +123,62 @@ class SalesReportRepository extends ReportRepository
      */
     public function byPaymentMethod(ReportFilter $filter): Collection
     {
+        // An invoice whose payment is not recorded yet has no method: it reads "pending".
+        $key = "CASE WHEN invoices.payment_status = 'pending' THEN 'pending' ELSE invoices.payment_method END";
+
         $rows = $this->completedInvoices($filter)
-            ->selectRaw('payment_method')
+            ->selectRaw("{$key} as pay_key")
             ->selectRaw('COUNT(*) as invoice_count')
             ->selectRaw('COALESCE(SUM(grand_total), 0) as net_revenue')
-            ->groupBy('payment_method')
+            ->groupByRaw($key)
             ->orderByRaw('COALESCE(SUM(grand_total), 0) DESC')
             ->get();
 
         $total = (float) $rows->sum(fn ($row): float => $this->toFloat($row->net_revenue));
 
         return $rows->map(fn ($row): array => [
-            'payment_method' => $this->scalar($row->payment_method),
+            'payment_method' => $this->scalar($row->pay_key),
             'invoice_count' => $this->toInt($row->invoice_count),
             'net_revenue' => $this->toFloat($row->net_revenue),
             'share' => $total > 0 ? $this->toFloat($row->net_revenue) / $total * 100 : 0.0,
         ]);
+    }
+
+    /**
+     * Money still to come in: completed invoices whose payments do not cover
+     * the total, and issued delivery notes nobody has paid in full. Live (not
+     * date-filtered): it is what is owed right now.
+     *
+     * @return array{invoices: int, invoice_due: float, notes: int, note_due: float}
+     */
+    public function awaitingPayment(?int $branchId): array
+    {
+        $paidOnInvoice = "(SELECT COALESCE(SUM(p.amount), 0) FROM payments p WHERE p.payable_type = ? AND p.payable_id = invoices.id)";
+
+        $invoices = $this->unscoped(Invoice::class)->completed()
+            ->where('invoices.payment_status', 'pending');
+        $this->scopeToBranch($invoices, $branchId, 'invoices');
+        $invoiceRow = $invoices
+            ->selectRaw('COUNT(*) as n')
+            ->selectRaw("COALESCE(SUM(invoices.grand_total - {$paidOnInvoice}), 0) as due", [Invoice::class])
+            ->first();
+
+        $paidOnNote = "(SELECT COALESCE(SUM(p.amount), 0) FROM payments p WHERE p.payable_type = ? AND p.payable_id = delivery_notes.id)";
+        $notes = $this->unscoped(\App\Models\DeliveryNote::class)
+            ->where('delivery_notes.status', \App\Enums\DeliveryNoteStatus::ISSUED->value)
+            ->where('delivery_notes.payment_status', 'pending');
+        $this->scopeToBranch($notes, $branchId, 'delivery_notes');
+        $noteRow = $notes
+            ->selectRaw('COUNT(*) as n')
+            ->selectRaw("COALESCE(SUM(delivery_notes.grand_total - {$paidOnNote}), 0) as due", [\App\Models\DeliveryNote::class])
+            ->first();
+
+        return [
+            'invoices' => $this->toInt($invoiceRow?->n),
+            'invoice_due' => round($this->toFloat($invoiceRow?->due), 2),
+            'notes' => $this->toInt($noteRow?->n),
+            'note_due' => round($this->toFloat($noteRow?->due), 2),
+        ];
     }
 
     /**

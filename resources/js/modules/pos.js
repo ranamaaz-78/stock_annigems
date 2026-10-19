@@ -165,6 +165,10 @@ export function bindPos() {
     let pendingGramsFocus = null;
     // An issued performa opened for editing (null on a new ticket).
     const editing = config.editingPerforma || null;
+    // An invoice or delivery note with no payment yet, opened for editing.
+    const editingDoc = config.editingDocument || null;
+    // Which document the payment dialog is for.
+    let payTarget = 'invoice';
     // Next number of each series, as last read from the server.
     let documentNumbers = { ...(config.documentNumbers || {}) };
 
@@ -190,7 +194,11 @@ export function bindPos() {
             discount_on: false,
             discount_type: 'none',
             discount_value: '0',
-            apply_tax: false,
+            // IVA starts on with the default rate; the cashier can change the rate or
+            // remove it with the x.
+            apply_tax: Boolean(config.taxEnabled && config.defaultIvaUuid),
+            // Pending records no payment; Paid asks for the method when generating.
+            payment_status: 'pending',
             notes: '',
             lines: [],
         };
@@ -622,6 +630,9 @@ export function bindPos() {
                     <div>
                         <p class="pos-line__name">${escapeHtml(line.name_snapshot)}</p>
                         <p class="pos-line__meta"><span class="pos-line__code">${escapeHtml(line.item_code_snapshot)}</span><span>|</span>${escapeHtml(meta)}</p>
+                        ${!isJewellery && (line.details || []).length
+                            ? `<p class="pos-line__badges">${line.details.map((d) => `<span class="pos-line__badge">${escapeHtml(d)}</span>`).join('')}</p>`
+                            : ''}
                         ${stonesHtml ? `<div class="pos-line__stones">${stonesHtml}</div>` : ''}
                     </div>
                 </div>
@@ -829,7 +840,7 @@ export function bindPos() {
             option.classList.toggle('is-on', on);
             option.setAttribute('aria-checked', on ? 'true' : 'false');
         });
-        els.kindOnly?.forEach((control) => control.classList.toggle('is-hidden', control.dataset.kindOnly !== kind));
+        els.kindOnly?.forEach((control) => control.classList.toggle('is-hidden', !control.dataset.kindOnly.split(' ').includes(kind)));
         if (els.kindChip) els.kindChip.textContent = { invoice: 'Invoice', quotation: 'Quotation', delivery_note: 'Delivery Note', performa: 'Performa' }[kind] || 'Quotation';
         if (els.actionHelp) {
             els.actionHelp.textContent = {
@@ -937,8 +948,9 @@ export function bindPos() {
     }
 
     /**
-     * Fill the customer fields from a registry row and lock the identity so a
-     * cashier cannot silently rename an existing customer from POS.
+     * Fill the customer fields from a registry row. The phone number is locked
+     * (it is the identity); name, email, NIE and address stay editable and are
+     * saved to the record with the ticket.
      *
      * @param {{uuid: string, name?: string, phone?: string, email?: string}} customer
      */
@@ -956,22 +968,24 @@ export function bindPos() {
             els.phone.value = state.walkin_phone;
             els.phone.readOnly = true;
         }
+        // The number is how the person was found, so it stays; every other field
+        // can be corrected here and is saved to their record when the ticket is.
         if (els.name) {
             els.name.value = state.walkin_name;
-            els.name.readOnly = true;
-            els.name.required = false;
+            els.name.readOnly = false;
+            els.name.required = true;
         }
         if (els.email) {
             els.email.value = state.walkin_email;
-            els.email.readOnly = true;
+            els.email.readOnly = false;
         }
         if (els.nie) {
             els.nie.value = state.walkin_nie;
-            els.nie.readOnly = true;
+            els.nie.readOnly = false;
         }
         if (els.address) {
             els.address.value = state.walkin_address;
-            els.address.readOnly = true;
+            els.address.readOnly = false;
         }
 
         setCustomerChip('existing');
@@ -1039,11 +1053,13 @@ export function bindPos() {
         return {
             customer_uuid: existing ? state.customer_uuid : null,
             customer_id: null,
-            walkin_name: existing ? '' : (els.name?.value || '').trim(),
+            // For a loaded person these carry any corrections to save on their record.
+            walkin_name: (els.name?.value || '').trim(),
             walkin_phone: existing ? '' : (els.phone?.value || '').trim(),
-            walkin_email: existing ? '' : (els.email?.value || '').trim(),
-            walkin_nie: existing ? '' : (els.nie?.value || '').trim(),
-            walkin_address: existing ? '' : (els.address?.value || '').trim(),
+            walkin_email: (els.email?.value || '').trim(),
+            walkin_nie: (els.nie?.value || '').trim(),
+            walkin_address: (els.address?.value || '').trim(),
+            update_customer: existing,
             quotation_date: state.quotation_date,
             discount_type: state.discount_on ? state.discount_type : 'none',
             discount_value: state.discount_on ? state.discount_value : '0',
@@ -1102,10 +1118,6 @@ export function bindPos() {
         if (!els.phone || !(window.AnnigemsForm?.validateField?.(els.phone) ?? Boolean(els.phone.value.trim()))) {
             els.phone?.focus();
             return false;
-        }
-
-        if (state.customer_uuid) {
-            return true;
         }
 
         if (els.name) {
@@ -1244,17 +1256,23 @@ export function bindPos() {
     }
 
     /**
-     * Print the saved document in place, then clear the ticket. POS never
-     * navigates away and never opens a new tab.
+     * Clear the ticket and open the saved document's detail page, where it can
+     * be printed. Falls back to printing in place when no detail address came back.
      *
-     * @param {string} printUrl
+     * @param {{show_url?: string, print_url?: string}} data
      * @param {string} message
      */
-    function finishAndPrint(printUrl, message) {
+    function finishAndPrint(data, message) {
         window.AnnigemsAlert?.notifySuccess(message);
         resetTicket();
-        if (printUrl) {
-            printDocument(printUrl);
+        // Nothing prints by itself: the saved document opens on its detail page,
+        // which has the Print button.
+        const target = data?.show_url;
+        if (target) {
+            state.lines = [];
+            window.location.href = target;
+        } else if (data?.print_url) {
+            printDocument(data.print_url);
         }
     }
 
@@ -1264,6 +1282,7 @@ export function bindPos() {
      */
     function resetTicket() {
         state = emptyState();
+        setPayState('pending');
         [els.phone, els.name, els.email, els.nie, els.address].forEach((field) => {
             if (!field) return;
             field.value = '';
@@ -1307,7 +1326,7 @@ export function bindPos() {
         loading?.restore();
 
         if (ok) {
-            finishAndPrint(json.data?.print_url, json.message || 'Quotation saved.');
+            finishAndPrint(json.data, json.message || 'Quotation saved.');
             refreshDocumentNumbers();
         } else if (json.errors && Object.keys(json.errors).length) {
             showErrors(json.errors, json.message);
@@ -1347,13 +1366,12 @@ export function bindPos() {
         loading?.restore();
 
         if (ok && editing) {
-            // The performa stays the document being worked on: print it, then show it.
+            // Back to the performa's page, where it can be printed.
             window.AnnigemsAlert?.notifySuccess(json.message || 'Performa updated.');
-            if (json.data?.print_url) printDocument(json.data.print_url);
             state.lines = [];
-            window.setTimeout(() => { window.location.href = json.data?.show_url || json.data?.print_url; }, 600);
+            window.location.href = json.data?.show_url || json.data?.print_url;
         } else if (ok) {
-            finishAndPrint(json.data?.print_url, json.message || 'Performa issued.');
+            finishAndPrint(json.data, json.message || 'Performa issued.');
             refreshDocumentNumbers();
             loadCreditors();
         } else if (json.errors && Object.keys(json.errors).length) {
@@ -1377,15 +1395,35 @@ export function bindPos() {
 
         setDocumentKind('delivery_note');
 
+        if (editingDoc) {
+            await saveEditedDocument(button);
+        } else if (state.payment_status === 'paid') {
+            openPayDialog('delivery_note');
+        } else {
+            await postDeliveryNote(button, { payment_status: 'pending' });
+        }
+    }
+
+    /**
+     * POST delivery-notes.store with the chosen payment (or none, when pending).
+     *
+     * @param {HTMLElement|null} button
+     * @param {{payment_status: string, payment_method?: string, payment_reference?: string}} payment
+     * @param {Function} [afterOk]
+     */
+    async function postDeliveryNote(button, payment, afterOk) {
+        setDocumentKind('delivery_note');
+
         const loading = window.AnnigemsButton?.startButtonLoading(button, 'Saving…');
         const { ok, json } = await fetchJson(routes.deliveryNote, {
             method: 'POST',
-            body: JSON.stringify({ ...buildFormPayload(), apply_tax: false }),
+            body: JSON.stringify({ ...buildFormPayload(), apply_tax: false, ...payment }),
         });
         loading?.restore();
 
         if (ok) {
-            finishAndPrint(json.data?.print_url, json.message || 'Delivery note saved.');
+            afterOk?.();
+            finishAndPrint(json.data, json.message || 'Delivery note saved.');
             refreshDocumentNumbers();
         } else if (json.errors && Object.keys(json.errors).length) {
             showErrors(json.errors, json.message);
@@ -1406,7 +1444,7 @@ export function bindPos() {
         }
         if (!state.lines.length) {
             window.AnnigemsModal?.closeModal('pos-invoice-modal');
-            window.AnnigemsAlert?.notifyError('Add at least one item to the invoice.');
+            window.AnnigemsAlert?.notifyError('Add at least one item to the ' + (payTarget === 'delivery_note' ? 'delivery note.' : 'invoice.'));
             return;
         }
 
@@ -1418,15 +1456,59 @@ export function bindPos() {
             return;
         }
 
-        setDocumentKind('invoice');
-
-        const submitBtn = form.querySelector('[type="submit"]');
-        const loading = window.AnnigemsButton?.startButtonLoading(submitBtn, 'Saving…');
-        const payload = {
-            ...buildFormPayload(),
+        const payment = {
+            payment_status: 'paid',
             payment_method: paymentSelect.value,
             payment_reference: form.querySelector('[name="payment_reference"]')?.value || '',
         };
+        const submitBtn = form.querySelector('[type="submit"]');
+
+        if (payTarget === 'delivery_note') {
+            await postDeliveryNote(submitBtn, payment, () => {
+                window.AnnigemsModal?.closeModal('pos-invoice-modal');
+                form.reset();
+            });
+        } else {
+            await postInvoice(submitBtn, payment, () => {
+                window.AnnigemsModal?.closeModal('pos-invoice-modal');
+                form.reset();
+            });
+        }
+    }
+
+    /**
+     * Open the payment dialog for an invoice or a delivery note.
+     *
+     * @param {'invoice'|'delivery_note'} target
+     */
+    function openPayDialog(target) {
+        payTarget = target;
+        const note = target === 'delivery_note';
+        const title = document.getElementById('pos-invoice-modal-title');
+        if (title) title.textContent = note ? 'Take payment for the delivery note' : 'Take payment';
+        const help = document.querySelector('[data-pay-help]');
+        if (help) {
+            help.textContent = note
+                ? 'Confirming creates the delivery note, takes the stock out and records the payment.'
+                : 'Confirming creates the invoice, marks stock sold and records the payment.';
+        }
+        const confirm = document.querySelector('[data-pay-confirm]');
+        if (confirm) confirm.textContent = note ? 'Confirm & create delivery note' : 'Confirm & create invoice';
+        window.AnnigemsModal?.openModal('pos-invoice-modal');
+    }
+
+    /**
+     * POST quotations.invoice with the chosen payment (or none, when pending).
+     *
+     * @param {HTMLElement|null} button
+     * @param {{payment_status: string, payment_method?: string, payment_reference?: string}} payment
+     * @param {Function} [afterOk]
+     */
+    async function postInvoice(button, payment, afterOk) {
+        setDocumentKind('invoice');
+
+        const loading = window.AnnigemsButton?.startButtonLoading(button, 'Saving…');
+        const payload = { ...buildFormPayload(), ...payment };
         const { ok, json } = await fetchJson(routes.invoice, {
             method: 'POST',
             body: JSON.stringify(payload),
@@ -1434,9 +1516,8 @@ export function bindPos() {
         loading?.restore();
 
         if (ok) {
-            window.AnnigemsModal?.closeModal('pos-invoice-modal');
-            form.reset();
-            finishAndPrint(json.data?.print_url, json.message || 'Invoice created.');
+            afterOk?.();
+            finishAndPrint(json.data, json.message || 'Invoice created.');
             refreshDocumentNumbers();
         } else if (json.errors && Object.keys(json.errors).length) {
             showErrors(json.errors, json.message);
@@ -1567,6 +1648,103 @@ export function bindPos() {
         generateDeliveryNote(els.generateDeliveryNote);
     });
 
+    /**
+     * Mark the ticket Pending or Paid; the switch follows the state.
+     *
+     * @param {'pending'|'paid'} value
+     */
+    function setPayState(value) {
+        state.payment_status = value;
+        root.querySelectorAll('[data-pay-state]').forEach((option) => {
+            const on = option.dataset.payState === value;
+            option.classList.toggle('is-on', on);
+            option.setAttribute('aria-checked', on ? 'true' : 'false');
+        });
+    }
+
+    root.querySelectorAll('[data-pay-state]').forEach((option) => {
+        option.addEventListener('click', () => setPayState(option.dataset.payState));
+    });
+
+    /**
+     * PUT the ticket back onto the invoice or delivery note being edited, then
+     * open its page. Editing never records a payment.
+     *
+     * @param {HTMLElement|null} button
+     */
+    async function saveEditedDocument(button) {
+        if (!validateTicket()) return;
+        if (!state.lines.length) {
+            window.AnnigemsAlert?.notifyError('Add at least one item.');
+            return;
+        }
+
+        const loading = window.AnnigemsButton?.startButtonLoading(button, 'Saving…');
+        const { ok, json } = await fetchJson(editingDoc.update_url, {
+            method: 'PUT',
+            body: JSON.stringify({
+                ...buildFormPayload(),
+                ...(editingDoc.type === 'delivery_note' ? { apply_tax: false } : {}),
+            }),
+        });
+        loading?.restore();
+
+        if (ok) {
+            window.AnnigemsAlert?.notifySuccess(json.message || 'Saved.');
+            state.lines = [];
+            window.location.href = json.data?.show_url;
+        } else if (json.errors && Object.keys(json.errors).length) {
+            showErrors(json.errors, json.message);
+        } else {
+            window.AnnigemsAlert?.notifyError(json.message || 'It could not be saved.');
+        }
+    }
+
+    /**
+     * Load an invoice or delivery note into the ticket: customer, date, notes,
+     * discount, IVA and lines. The kind is fixed, there is no payment choice,
+     * and the generate button saves the changes.
+     */
+    function openForEditingDocument() {
+        documentNumbers = { ...documentNumbers, [editingDoc.type]: editingDoc.number };
+
+        state.quotation_date = editingDoc.date || state.quotation_date;
+        if (els.issueDate) els.issueDate.value = state.quotation_date;
+        state.notes = editingDoc.notes || '';
+        if (els.notes) els.notes.value = state.notes;
+        state.lines = (editingDoc.lines || []).map((line) => ({ ...line }));
+
+        state.discount_on = Boolean(editingDoc.discount?.on);
+        state.discount_type = editingDoc.discount?.type && editingDoc.discount.type !== 'none' ? editingDoc.discount.type : 'percentage';
+        state.discount_value = editingDoc.discount?.value || '0';
+        if (els.discountType) els.discountType.value = state.discount_type;
+        if (els.discountValue) els.discountValue.value = state.discount_on ? state.discount_value : '';
+
+        state.apply_tax = Boolean(editingDoc.tax?.apply);
+        if (editingDoc.tax?.iva_uuid) state.iva_uuid = editingDoc.tax.iva_uuid;
+        state.recargo_uuid = editingDoc.tax?.recargo_uuid || '';
+
+        if (editingDoc.customer) {
+            applyCustomer(editingDoc.customer);
+        }
+
+        // Nothing but this kind of document can be chosen, and no payment is taken here.
+        els.kindOptions?.forEach((option) => {
+            option.classList.toggle('is-hidden', option.dataset.kind !== editingDoc.type);
+        });
+        root.querySelector('[data-pay-state-group]')?.classList.add('is-hidden');
+        root.querySelectorAll('[data-generate-label]').forEach((label) => {
+            label.textContent = 'Save Changes';
+        });
+
+        const banner = root.querySelector('[data-edit-banner]');
+        if (banner) {
+            banner.innerHTML = `<strong>Editing ${escapeHtml(editingDoc.number)}.</strong> Changing a line puts its stock back and takes it out again. Once a payment is recorded it can no longer be edited.`;
+            banner.classList.remove('is-hidden');
+        }
+        render();
+    }
+
     els.generateInvoice?.addEventListener('click', (event) => {
         event.preventDefault();
         if (!validateTicket()) return;
@@ -1575,7 +1753,13 @@ export function bindPos() {
             return;
         }
         setDocumentKind('invoice');
-        window.AnnigemsModal?.openModal('pos-invoice-modal');
+        if (editingDoc) {
+            saveEditedDocument(els.generateInvoice);
+        } else if (state.payment_status === 'paid') {
+            openPayDialog('invoice');
+        } else {
+            postInvoice(els.generateInvoice, { payment_status: 'pending' });
+        }
     });
 
     els.kindOptions?.forEach((option) => {
@@ -2321,6 +2505,9 @@ export function bindPos() {
     setDocumentKind(documentKind);
     if (editing) {
         openForEditing();
+    }
+    if (editingDoc) {
+        openForEditingDocument();
     }
     // Arriving from a creditor's page: that creditor is already the one billed.
     if (config.initialCreditor && documentKind === 'performa') {

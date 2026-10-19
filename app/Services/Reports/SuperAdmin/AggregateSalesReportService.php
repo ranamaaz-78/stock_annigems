@@ -89,7 +89,7 @@ class AggregateSalesReportService extends AggregateReportService
     public function byPaymentMethod(ReportFilter $filter): ReportResult
     {
         $rows = $this->sales->byPaymentMethod($filter)->map(fn (array $row): array => [
-            'payment_method' => PaymentMethod::tryFrom($row['payment_method'])?->label() ?? $row['payment_method'],
+            'payment_method' => PaymentMethod::tryFrom($row['payment_method'])?->label() ?? ($row['payment_method'] === 'pending' ? 'Pending (not paid yet)' : $row['payment_method']),
             'invoice_count' => $row['invoice_count'],
             'share' => $row['share'],
             'net_revenue' => $row['net_revenue'],

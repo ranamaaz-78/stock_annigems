@@ -202,8 +202,14 @@
     border-color: var(--color-outline-variant);
   }
 
-  @page {
-    size: A4 portrait;
-    margin: 10mm;
+  /* Only label sheets get a page margin. A bare @page here would apply to every
+     printed page in the app and bring the browser's date/URL header back. */
+  .stone-label-print {
+    page: stone-labels;
   }
+}
+
+@page stone-labels {
+  size: A4 portrait;
+  margin: 10mm;
 }

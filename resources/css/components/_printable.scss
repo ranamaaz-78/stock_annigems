@@ -901,6 +901,11 @@
   font-size: 10.5px;
 }
 
+/* A sheet that exists only to be printed from a detail page (performa). */
+.pd-print-only {
+  display: none;
+}
+
 @media print {
   .pd {
     max-width: none;
@@ -908,7 +913,34 @@
     outline: 0;
   }
 
-  .pd--a4 {
-    min-height: 297mm;
+  /* Every printed sheet is one A4 page (a hair under, so no blank second page);
+     the page margin is 0, the sheet's own padding is the margin. */
+  .pd {
+    min-height: 296mm;
+  }
+
+  /* Printing from a detail page prints the sheet alone: no sidebar, top bar,
+     header buttons or notes around it. */
+  .sa-sidebar,
+  .sa-sidebar-backdrop,
+  .sa-topbar,
+  .page-header,
+  .doc-meta,
+  .no-print {
+    display: none !important;
+  }
+
+  .sa-main {
+    margin-left: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  .sa-main__inner {
+    padding: 0 !important;
+  }
+
+  .pd-print-only {
+    display: block;
   }
 }

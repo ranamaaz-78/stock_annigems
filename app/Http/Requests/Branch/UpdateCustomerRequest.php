@@ -9,7 +9,7 @@ use Illuminate\Validation\Rule;
 /**
  * UpdateCustomerRequest
  *
- * Validates customer edits with system-wide phone and CNIC uniqueness.
+ * Validates customer edits with system-wide phone uniqueness.
  */
 class UpdateCustomerRequest extends FormRequest
 {
@@ -39,7 +39,6 @@ class UpdateCustomerRequest extends FormRequest
             'phone' => ['required', 'string', 'max:30', 'regex:/^[0-9+\-\s()]{7,30}$/', Rule::unique('customers', 'phone')->ignore($customer->id)],
             'alternate_phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+\-\s()]{7,30}$/'],
             'email' => ['nullable', 'email', 'max:150'],
-            'cnic' => ['nullable', 'string', 'max:20', 'regex:/^[0-9]{5}-[0-9]{7}-[0-9]$/', Rule::unique('customers', 'cnic')->ignore($customer->id)],
             'nie' => ['nullable', 'string', 'max:20', 'regex:/^[A-Za-z0-9\-\s.\/]{5,20}$/'],
             'address' => ['nullable', 'string', 'max:2000'],
             'city' => ['nullable', 'string', 'max:100'],

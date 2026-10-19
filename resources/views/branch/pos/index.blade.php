@@ -1,10 +1,9 @@
 {{--
     Fullscreen POS ticket.
 
-    No kiosk bar and no branch navbar. The document is the whole screen:
+    The branch sidebar is on the left, no topbar. The document fills the rest:
     identity and issue date, billed-to, scan, lines, then notes beside the
-    totals. Exit sits inside the identity block. Generate saves, prints in
-    the hidden iframe, and clears the ticket.
+    totals. Generate saves, prints in the hidden iframe, and clears the ticket.
 --}}
 @extends('layouts.pos')
 
@@ -45,6 +44,8 @@
         // Invoice when the cashier may convert, otherwise only quotations exist.
         'defaultKind' => $defaultKind,
         'initialCreditor' => $initialCreditor,
+        // An invoice or delivery note with no payment yet, opened for editing (null on a new ticket).
+        'editingDocument' => $editingDocument ?? null,
         // An issued performa opened for editing (null on a new ticket).
         'editingPerforma' => $editingPerforma ?? null,
         'canDeliver' => $canDeliver,
@@ -95,10 +96,6 @@
                                 @if($branchContact !== '')
                                     <p class="pos-brand__meta">{{ $branchContact }}</p>
                                 @endif
-                                <a class="pos-exit" href="{{ route('branch.dashboard') }}">
-                                    <span class="material-symbols-outlined icon icon--sm">arrow_back</span>
-                                    Exit POS
-                                </a>
                             </div>
                         </div>
 
@@ -213,6 +210,11 @@
                             <h2 class="pos-section__title" data-billto-title>Billed to</h2>
                             <span data-customer-chip class="pos-chip">No customer</span>
                             <span class="pos-section__spacer"></span>
+                            {{-- Whether the money is in. Pending records no payment and leaves the document editable. --}}
+                            <div class="pos-paystate" data-kind-only="invoice delivery_note" data-pay-state-group role="radiogroup" aria-label="Payment status">
+                                <button type="button" class="pos-paystate__opt is-on" data-pay-state="pending" role="radio" aria-checked="true">Pending</button>
+                                <button type="button" class="pos-paystate__opt" data-pay-state="paid" role="radio" aria-checked="false">Paid</button>
+                            </div>
                             <button type="button" class="pos-ghost" data-customer-clear>
                                 <span class="material-symbols-outlined icon icon--sm">backspace</span>
                                 Clear fields
@@ -255,7 +257,6 @@
                                 maxlength="150"
                                 autocomplete="email"
                                 placeholder="name@example.com"
-                                help="optional"
                                 data-pos-email
                                 data-error-email="Enter a valid email address."
                             />
@@ -265,7 +266,6 @@
                                 maxlength="20"
                                 autocomplete="off"
                                 placeholder="X1234567L"
-                                help="optional"
                                 data-pos-nie
                                 data-pattern="^[A-Za-z0-9\-\s./]{5,20}$"
                                 data-error-pattern="Enter a valid NIE / NIF."
@@ -277,14 +277,13 @@
                                     maxlength="500"
                                     autocomplete="street-address"
                                     placeholder="Street, number, postcode, city"
-                                    help="optional"
                                     data-pos-address
                                 />
                             </div>
                         </div>
                         <p class="pos-hint is-hidden" data-customer-locked>
                             <span class="material-symbols-outlined icon icon--xs">info</span>
-                            Existing customer details are locked. Use Clear fields to bill someone new.
+                            Name, email, NIE and address can be corrected here and are saved to their record. The number stays; use Clear fields to bill someone new.
                         </p>
                     </section>
 
@@ -479,7 +478,7 @@
                             @if($canConvert)
                                 <x-btn type="button" block data-generate-invoice data-kind-only="invoice" loading-text="Saving…">
                                     <span class="material-symbols-outlined icon icon--sm">receipt_long</span>
-                                    Generate Invoice &amp; Deduct Stock
+                                    <span data-generate-label>Generate Invoice &amp; Deduct Stock</span>
                                 </x-btn>
                             @endif
                             <x-btn type="button" block data-generate-quotation data-kind-only="quotation" loading-text="Saving…">
@@ -489,7 +488,7 @@
                             @if($canDeliver)
                                 <x-btn type="button" block data-generate-delivery-note data-kind-only="delivery_note" loading-text="Saving…">
                                     <span class="material-symbols-outlined icon icon--sm">local_shipping</span>
-                                    Generate Delivery Note &amp; Deduct Stock
+                                    <span data-generate-label>Generate Delivery Note &amp; Deduct Stock</span>
                                 </x-btn>
                             @endif
                             @if($canPerforma)
@@ -510,10 +509,10 @@
     </main>
 </div>
 
-@if($canConvert)
+@if($canConvert || $canDeliver)
     <x-modal id="pos-invoice-modal" title="Take payment">
         <form id="pos-invoice-modal-form">
-            <p class="form-help">Confirming creates the invoice and marks stock sold.</p>
+            <p class="form-help" data-pay-help>Confirming creates the invoice and marks stock sold.</p>
             <div class="pos-pay-due">
                 <div>
                     <span class="pos-cap">Grand Total</span>
@@ -553,7 +552,7 @@
                 <x-btn type="button" variant="secondary" data-modal-close>Cancel</x-btn>
                 <x-btn type="submit" loading-text="Saving…">
                     <span class="material-symbols-outlined icon icon--sm">print</span>
-                    Confirm &amp; print invoice
+                    <span data-pay-confirm>Confirm &amp; create invoice</span>
                 </x-btn>
             </div>
         </form>

@@ -14,7 +14,7 @@
 </x-page-header>
 
 <form method="GET" class="filter-bar">
-    <x-filter.search name="search" :value="$filters['search'] ?? ''" placeholder="Search name, phone, code, CNIC…" aria-label="Search customers" />
+    <x-filter.search name="search" :value="$filters['search'] ?? ''" placeholder="Search name, phone, code…" aria-label="Search customers" />
     <select name="status" class="input-field" aria-label="Filter by status">
         <option value="">All statuses</option>
         <option value="active" @selected(($filters['status'] ?? '') === 'active')>Active</option>

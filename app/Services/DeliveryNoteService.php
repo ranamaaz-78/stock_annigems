@@ -9,6 +9,7 @@ use App\Enums\LineType;
 use App\Enums\MakingChargeType;
 use App\Enums\PaymentMethod;
 use App\Enums\StoneMovementType;
+use App\Enums\PaymentStatus;
 use App\Enums\TaxType;
 use App\Models\Customer;
 use App\Models\DeliveryNote;
@@ -49,6 +50,7 @@ class DeliveryNoteService
         private JewelleryItemService $jewelleryItemService,
         private StoneStockService $stoneStockService,
         private AuditLogService $auditLog,
+        private PaymentService $payments,
     ) {}
 
     /**
@@ -92,7 +94,7 @@ class DeliveryNoteService
      */
     public function loadDetail(DeliveryNote $note): DeliveryNote
     {
-        return $note->load(['branch', 'customer', 'creator', 'invoice', 'items.itemStones']);
+        return $note->load(['branch', 'customer', 'creator', 'invoice', 'items.itemStones', 'payments.creator']);
     }
 
     /**
@@ -107,7 +109,7 @@ class DeliveryNoteService
 
         $prepared = $this->quotationService->prepareWorkspace($data, $actor);
 
-        return DB::transaction(function () use ($prepared, $actor): DeliveryNote {
+        return DB::transaction(function () use ($prepared, $data, $actor): DeliveryNote {
             $this->quotationService->assertLinesAvailable($prepared['lines'], $actor);
 
             $customerId = $this->quotationService->resolveCustomerId($prepared['data'], $actor);
@@ -129,6 +131,8 @@ class DeliveryNoteService
                 // No tax on a delivery note: the total is the discounted subtotal.
                 'grand_total' => $document['grand_total'],
                 'status' => DeliveryNoteStatus::ISSUED,
+                // Pending until a payment is recorded (below, or later from the note's page).
+                'payment_status' => PaymentStatus::PENDING,
                 'notes' => $prepared['data']['notes'] ?? null,
             ]);
 
@@ -137,6 +141,9 @@ class DeliveryNoteService
                 $this->takeStockOut($line, $note, $actor);
             }
 
+            // "Paid" in the POS records the note's total; the default is pending.
+            $this->payments->applyChoice($note, ['payment_status' => $data['payment_status'] ?? PaymentStatus::PENDING->value] + $data, $actor);
+
             $this->auditLog->log('delivery_note.created', $note, null, [
                 'delivery_note_number' => $note->delivery_note_number,
                 'grand_total' => (string) $note->grand_total,
@@ -144,6 +151,96 @@ class DeliveryNoteService
 
             return $note->fresh(['items.itemStones', 'branch', 'customer']);
         });
+    }
+
+    /**
+     * Edit a delivery note nobody has paid yet, from the POS workspace payload
+     * that made it. What it holds goes back to stock, the lines are replaced and
+     * the new goods are taken out, so stock only moves by the difference.
+     *
+     * @param  array<string, mixed>  $data  Validated workspace payload
+     */
+    public function update(DeliveryNote $note, array $data, User $actor): DeliveryNote
+    {
+        // A delivery note never carries tax, whatever the catalog says.
+        $data['apply_tax'] = false;
+
+        $prepared = $this->quotationService->prepareWorkspace($data, $actor);
+
+        return DB::transaction(function () use ($note, $prepared, $actor): DeliveryNote {
+            $note = DeliveryNote::query()->whereKey($note->id)->lockForUpdate()->with('items')->firstOrFail();
+
+            if ((int) $note->branch_id !== (int) $actor->branch_id) {
+                abort(403);
+            }
+
+            if (! $note->canBeEdited()) {
+                throw ValidationException::withMessages([
+                    'delivery_note' => 'This delivery note can no longer be edited: a payment has been recorded or it is not open.',
+                ]);
+            }
+
+            $this->returnGoods($note, $actor, "Delivery note {$note->delivery_note_number} edited");
+            foreach ($note->items as $line) {
+                $line->itemStones()->delete();
+            }
+            $note->items()->delete();
+
+            $this->quotationService->assertLinesAvailable($prepared['lines'], $actor);
+
+            $customerId = $this->quotationService->resolveCustomerId($prepared['data'], $actor);
+            $customer = $customerId ? Customer::query()->whereKey($customerId)->first() : null;
+            $document = $prepared['document'];
+
+            $note->update([
+                'customer_id' => $customerId,
+                'customer_name_snapshot' => $customer?->name ?? 'Walk-in',
+                'customer_phone_snapshot' => $customer?->phone,
+                'customer_address_snapshot' => $customer?->address,
+                'delivery_date' => $prepared['data']['quotation_date'] ?? $note->delivery_date,
+                'subtotal' => $document['subtotal'],
+                'discount_type' => DiscountType::from($document['discount_type']),
+                'discount_value' => $document['discount_value'],
+                'discount_amount' => $document['discount_amount'],
+                'grand_total' => $document['grand_total'],
+                'notes' => $prepared['data']['notes'] ?? null,
+            ]);
+
+            foreach ($prepared['lines'] as $index => $line) {
+                $this->copyHydratedLine($note, $line, $index);
+                $this->takeStockOut($line, $note, $actor);
+            }
+
+            $this->auditLog->log('delivery_note.updated', $note, null, [
+                'delivery_note_number' => $note->delivery_note_number,
+                'grand_total' => (string) $note->grand_total,
+                'lines' => count($prepared['lines']),
+            ], $actor);
+
+            return $note->fresh(['items.itemStones', 'branch', 'customer']);
+        });
+    }
+
+    /**
+     * Put every delivered item of a note back on the shelf.
+     */
+    private function returnGoods(DeliveryNote $note, User $actor, string $reason): void
+    {
+        foreach ($note->items as $line) {
+            if ($line->line_type === LineType::JEWELLERY_ITEM && $line->jewellery_item_id) {
+                $item = JewelleryItem::query()->lockForUpdate()->find($line->jewellery_item_id);
+                if ($item) {
+                    $this->jewelleryItemService->restoreFromDelivery($item, $note->delivery_note_number, $actor);
+                }
+            } elseif ($line->line_type === LineType::LOOSE_STONE && $line->stone_id) {
+                $stone = Stone::query()->lockForUpdate()->find($line->stone_id);
+                if ($stone && $line->weight_grams !== null) {
+                    $this->stoneStockService->applyWeight($stone, StoneMovementType::RETURNED_FROM_DELIVERY, round((float) $line->weight_grams, 3), $actor, $note, $reason);
+                } elseif ($stone) {
+                    $this->stoneStockService->apply($stone, StoneMovementType::RETURNED_FROM_DELIVERY, (int) $line->quantity, $actor, $note, $reason);
+                }
+            }
+        }
     }
 
     /**
@@ -166,6 +263,10 @@ class DeliveryNoteService
 
             if (! $note->isOpen()) {
                 throw ValidationException::withMessages(['reason' => 'This delivery note is no longer open.']);
+            }
+
+            if ($note->payments()->exists()) {
+                throw ValidationException::withMessages(['reason' => 'This delivery note has been paid and cannot be cancelled.']);
             }
 
             foreach ($note->items as $line) {
@@ -224,7 +325,7 @@ class DeliveryNoteService
      * named in $payment (resolved from the SuperAdmin list). Stock is not
      * cut again.
      *
-     * @param  array{payment_method: string, payment_reference?: string|null, tax_rate_uuid?: string|null, recargo_rate_uuid?: string|null}  $payment
+     * @param  array{payment_status?: string, payment_method?: string|null, payment_reference?: string|null, tax_rate_uuid?: string|null, recargo_rate_uuid?: string|null}  $payment
      */
     public function convertToInvoice(DeliveryNote $note, array $payment, User $actor): Invoice
     {
@@ -292,8 +393,9 @@ class DeliveryNoteService
                 'recargo_rate' => $document['recargo_rate'],
                 'recargo_amount' => $document['recargo_amount'],
                 'grand_total' => $document['grand_total'],
-                'payment_method' => PaymentMethod::from($payment['payment_method']),
-                'payment_reference' => $payment['payment_reference'] ?? null,
+                'payment_method' => null,
+                'payment_reference' => null,
+                'payment_status' => PaymentStatus::PENDING,
                 'status' => InvoiceStatus::COMPLETED,
                 'notes' => $note->notes,
             ]);
@@ -301,6 +403,23 @@ class DeliveryNoteService
             foreach ($note->items as $line) {
                 $this->copyLineToInvoice($invoice, $line);
                 $this->markSold($line, $invoice, $note, $actor);
+            }
+
+            // What the client already paid on the note counts toward the invoice;
+            // only the difference (the tax the note never had) is still due.
+            $note->load('payments');
+            $this->payments->copyPayments($note, $invoice);
+            $invoice->unsetRelation('payments');
+            $due = $invoice->balanceDue();
+
+            if (($payment['payment_status'] ?? 'paid') === PaymentStatus::PAID->value && $due > 0.005) {
+                if (blank($payment['payment_method'] ?? null)) {
+                    throw ValidationException::withMessages([
+                        'payment_method' => 'Choose how the '.setting_money($due).' difference is being paid.',
+                    ]);
+                }
+
+                $this->payments->record($invoice, (string) $payment['payment_method'], $payment['payment_reference'] ?? null, $actor);
             }
 
             $old = ['status' => $note->status->value];

@@ -214,6 +214,30 @@ class Stone extends Model
     }
 
     /**
+     * The facts about a lot worth showing as small badges on a line: shape,
+     * size, carat of one piece and how it is priced. Placeholders from the
+     * sheet ("N/A", "0x0") are left out.
+     *
+     * @return list<string>
+     */
+    public function detailBadges(): array
+    {
+        $size = trim((string) $this->dimension);
+
+        return array_values(array_filter([
+            filled($this->shape) && strtoupper((string) $this->shape) !== 'N/A' ? (string) $this->shape : null,
+            $size !== '' && ! in_array(strtoupper($size), ['N/A', '0X0', '0X0X0'], true) ? $size : null,
+            $this->carat !== null && (float) $this->carat > 0 ? $this->caratLabel().' ct' : null,
+            match ($this->pricing_mode) {
+                StonePricingMode::PER_CARAT => 'Per carat',
+                StonePricingMode::PER_PIECE => 'Per piece',
+                StonePricingMode::PER_GRAM => 'Per gram',
+                default => null,
+            },
+        ]));
+    }
+
+    /**
      * Gram weight for display.
      */
     public function gramsLabel(): string

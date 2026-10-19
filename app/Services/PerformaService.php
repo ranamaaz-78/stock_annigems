@@ -545,13 +545,17 @@ class PerformaService
         $uuid = trim((string) ($data['creditor_uuid'] ?? ''));
 
         if ($uuid !== '') {
-            $id = Creditor::query()
+            $creditor = Creditor::query()
                 ->active()
                 ->where('uuid', $uuid)
                 ->where('branch_id', $actor->branch_id)
-                ->value('id');
+                ->first();
 
-            return $id ? (int) $id : null;
+            if ($creditor && ! empty($data['update_customer'])) {
+                $this->creditorService->syncFromTicket($creditor, $data, $actor);
+            }
+
+            return $creditor ? (int) $creditor->id : null;
         }
 
         return $this->creditorFromWalkin($data, $actor);

@@ -52,6 +52,7 @@
                         <th class="table-admin__num">Lines</th>
                         <th class="table-admin__num">Total</th>
                         <th>Invoice</th>
+                        <th>Payment</th>
                         <th>Status</th>
                         <th class="table-admin__actions-col">Actions</th>
                     </tr>
@@ -71,6 +72,7 @@
                             <td class="table-admin__num">{{ $note->items_count }}</td>
                             <td class="table-admin__num table-admin__num--strong">{{ setting_money($note->grand_total) }}</td>
                             <td>{{ $note->invoice?->invoice_number ?? '—' }}</td>
+                            <td><x-status-badge :status="$note->payment_status" /></td>
                             <td><x-status-badge :status="$note->status" /></td>
                             <td class="table-admin__actions-col">
                                 <x-table.actions>

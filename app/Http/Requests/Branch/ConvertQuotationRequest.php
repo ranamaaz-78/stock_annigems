@@ -34,7 +34,9 @@ class ConvertQuotationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
+            // Pending until the payment is recorded; "paid" needs the method.
+            'payment_status' => ['nullable', Rule::enum(\App\Enums\PaymentStatus::class)],
+            'payment_method' => ['required_unless:payment_status,pending', 'nullable', Rule::enum(PaymentMethod::class)],
             'payment_reference' => ['nullable', 'string', 'max:100'],
         ];
     }

@@ -58,6 +58,8 @@ class StorePerformaRequest extends FormRequest
             ],
             'walkin_email' => ['nullable', 'email', 'max:150'],
             'walkin_address' => ['nullable', 'string', 'max:500'],
+            // Set by the POS when a loaded creditor's fields were open for editing.
+            'update_customer' => ['nullable', 'boolean'],
             'walkin_nie' => ['nullable', 'string', 'max:20', 'regex:/^[A-Za-z0-9\-\s.\/]{5,20}$/'],
             'creditor_uuid' => [
                 'nullable',

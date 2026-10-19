@@ -8,6 +8,7 @@ use App\Enums\JewelleryItemStatus;
 use App\Enums\LineType;
 use App\Enums\MakingChargeType;
 use App\Enums\PaymentMethod;
+use App\Enums\PaymentStatus;
 use App\Enums\QuotationStatus;
 use App\Enums\StoneMovementType;
 use App\Enums\TaxType;
@@ -57,12 +58,13 @@ class InvoiceConversionService
         private QuotationService $quotationService,
         private QuotationDraftService $draftService,
         private QuotationStockService $quotationStock,
+        private PaymentService $payments,
     ) {}
 
     /**
      * Convert quotation to invoice with full re-validation and stock updates.
      *
-     * @param  array{payment_method: string, payment_reference?: string|null, customer_id?: int|null, customer_uuid?: string|null}  $payment
+     * @param  array{payment_status?: string, payment_method?: string|null, payment_reference?: string|null}  $payment
      */
     public function convert(Quotation $quotation, array $payment, User $actor): Invoice
     {
@@ -117,8 +119,10 @@ class InvoiceConversionService
                 'recargo_rate' => $quotation->recargo_rate,
                 'recargo_amount' => $quotation->recargo_amount,
                 'grand_total' => $quotation->grand_total,
-                'payment_method' => PaymentMethod::from($payment['payment_method']),
-                'payment_reference' => $payment['payment_reference'] ?? null,
+                // Pending until a payment is recorded below (or later, from the invoice page).
+                'payment_method' => null,
+                'payment_reference' => null,
+                'payment_status' => PaymentStatus::PENDING,
                 'status' => InvoiceStatus::COMPLETED,
                 'notes' => $quotation->notes,
             ]);
@@ -127,6 +131,8 @@ class InvoiceConversionService
                 $this->copyLineToInvoice($invoice, $qItem);
                 $this->applyStockMovement($qItem, $invoice, $actor, $quotation);
             }
+
+            $this->payments->applyChoice($invoice, $payment, $actor);
 
             $quotation->update([
                 'status' => QuotationStatus::CONVERTED,
@@ -158,7 +164,7 @@ class InvoiceConversionService
      * a quotation. quotation_id stays null; stock rules match convert().
      *
      * @param  array<string, mixed>  $data  Validated workspace payload
-     * @param  array{payment_method: string, payment_reference?: string|null}  $payment
+     * @param  array{payment_status?: string, payment_method?: string|null, payment_reference?: string|null}  $payment
      */
     public function createFromWorkspace(array $data, array $payment, User $actor): Invoice
     {
@@ -198,8 +204,10 @@ class InvoiceConversionService
                 'recargo_rate' => $document['recargo_rate'],
                 'recargo_amount' => $document['recargo_amount'],
                 'grand_total' => $document['grand_total'],
-                'payment_method' => PaymentMethod::from($payment['payment_method']),
-                'payment_reference' => $payment['payment_reference'] ?? null,
+                // Pending until a payment is recorded below (or later, from the invoice page).
+                'payment_method' => null,
+                'payment_reference' => null,
+                'payment_status' => PaymentStatus::PENDING,
                 'status' => InvoiceStatus::COMPLETED,
                 'notes' => $prepared['data']['notes'] ?? null,
             ]);
@@ -208,6 +216,8 @@ class InvoiceConversionService
                 $this->copyHydratedLineToInvoice($invoice, $line, $index);
                 $this->applyStockFromHydratedLine($line, $invoice, $actor);
             }
+
+            $this->payments->applyChoice($invoice, $payment, $actor);
 
             $this->auditLog->log('invoice.created', $invoice, null, [
                 'invoice_number' => $invoice->invoice_number,
@@ -222,6 +232,116 @@ class InvoiceConversionService
 
             return $invoice->fresh(['items.itemStones', 'branch', 'customer']);
         });
+    }
+
+    /**
+     * Edit an invoice nobody has paid yet, from the same workspace payload that
+     * made it. The goods it holds go back first, the lines are replaced, and the
+     * new ones are taken, so stock only ends up moved by the difference.
+     *
+     * @param  array<string, mixed>  $data  Validated workspace payload
+     */
+    public function updateFromWorkspace(Invoice $invoice, array $data, User $actor): Invoice
+    {
+        $prepared = $this->quotationService->prepareWorkspace($data, $actor);
+
+        return DB::transaction(function () use ($invoice, $prepared, $actor): Invoice {
+            $invoice = Invoice::query()->whereKey($invoice->id)->lockForUpdate()->with('items')->firstOrFail();
+
+            if ((int) $invoice->branch_id !== (int) $actor->branch_id) {
+                abort(403);
+            }
+
+            if (! $invoice->canBeEdited()) {
+                throw ValidationException::withMessages([
+                    'invoice' => 'This invoice can no longer be edited: a payment has been recorded or it is voided.',
+                ]);
+            }
+
+            $this->returnLinesToStock($invoice, $actor);
+            foreach ($invoice->items as $line) {
+                $line->itemStones()->delete();
+            }
+            $invoice->items()->delete();
+
+            $this->quotationService->assertLinesAvailable($prepared['lines'], $actor);
+
+            $customerId = $this->quotationService->resolveCustomerId($prepared['data'], $actor);
+            $customer = $customerId ? Customer::query()->whereKey($customerId)->first() : null;
+            $document = $prepared['document'];
+
+            $invoice->update([
+                'customer_id' => $customerId,
+                'customer_name_snapshot' => $customer?->name ?? 'Walk-in',
+                'customer_phone_snapshot' => $customer?->phone,
+                'invoice_date' => $prepared['data']['quotation_date'] ?? $invoice->invoice_date,
+                'subtotal' => $document['subtotal'],
+                'discount_type' => DiscountType::from($document['discount_type']),
+                'discount_value' => $document['discount_value'],
+                'discount_amount' => $document['discount_amount'],
+                'tax_type' => TaxType::from($document['tax_type']),
+                'tax_rate' => $document['tax_rate'],
+                'tax_amount' => $document['tax_amount'],
+                'tax_name' => $document['tax_name'],
+                'recargo_name' => $document['recargo_name'],
+                'recargo_rate' => $document['recargo_rate'],
+                'recargo_amount' => $document['recargo_amount'],
+                'grand_total' => $document['grand_total'],
+                'notes' => $prepared['data']['notes'] ?? null,
+            ]);
+
+            foreach ($prepared['lines'] as $index => $line) {
+                $this->copyHydratedLineToInvoice($invoice, $line, $index);
+                $this->applyStockFromHydratedLine($line, $invoice, $actor);
+            }
+
+            $this->auditLog->log('invoice.updated', $invoice, null, [
+                'invoice_number' => $invoice->invoice_number,
+                'grand_total' => (string) $invoice->grand_total,
+                'lines' => count($prepared['lines']),
+            ], $actor);
+
+            DashboardStatsService::forgetBranch((int) $invoice->branch_id);
+
+            return $invoice->fresh(['items.itemStones', 'branch', 'customer']);
+        });
+    }
+
+    /**
+     * Put the goods of every line of an invoice back where they came from: the
+     * piece to available, loose stone (pieces or grams) to the shelf.
+     */
+    private function returnLinesToStock(Invoice $invoice, User $actor): void
+    {
+        foreach ($invoice->items as $line) {
+            if ($line->line_type === LineType::JEWELLERY_ITEM && $line->jewellery_item_id) {
+                $item = JewelleryItem::query()->lockForUpdate()->find($line->jewellery_item_id);
+                if ($item && $item->status === JewelleryItemStatus::SOLD) {
+                    $this->jewelleryItemService->restoreFromVoid($item, $invoice, $actor);
+                }
+            } elseif ($line->line_type === LineType::LOOSE_STONE && $line->stone_id) {
+                $stone = Stone::query()->lockForUpdate()->find($line->stone_id);
+                if ($stone && $line->weight_grams !== null) {
+                    $this->stoneStockService->applyWeight(
+                        $stone,
+                        StoneMovementType::RETURNED_FROM_SALE,
+                        round((float) $line->weight_grams, 3),
+                        $actor,
+                        $invoice,
+                        "Invoice {$invoice->invoice_number} edited"
+                    );
+                } elseif ($stone) {
+                    $this->stoneStockService->apply(
+                        $stone,
+                        StoneMovementType::RETURNED_FROM_SALE,
+                        (int) $line->quantity,
+                        $actor,
+                        $invoice,
+                        "Invoice {$invoice->invoice_number} edited"
+                    );
+                }
+            }
+        }
     }
 
     /**

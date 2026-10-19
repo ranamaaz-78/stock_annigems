@@ -129,10 +129,14 @@ class QuotationController extends Controller
         }
 
         if ($request->expectsJson()) {
+            // The POS opens the document's page next; this is what that page shows.
+            session()->flash('success', 'Quotation '.$quotation->quotation_number.' saved.');
+
             return $this->jsonSuccess('Quotation '.$quotation->quotation_number.' saved.', [
                 'uuid' => $quotation->uuid,
                 'number' => $quotation->quotation_number,
                 'print_url' => route('branch.quotations.print', $quotation),
+                'show_url' => route('branch.quotations.show', $quotation),
             ]);
         }
 
@@ -197,7 +201,8 @@ class QuotationController extends Controller
             $invoice = $this->conversionService->createFromWorkspace(
                 $validated,
                 [
-                    'payment_method' => $validated['payment_method'],
+                    'payment_status' => $validated['payment_status'] ?? 'paid',
+                    'payment_method' => $validated['payment_method'] ?? null,
                     'payment_reference' => $validated['payment_reference'] ?? null,
                 ],
                 $request->user()
@@ -224,10 +229,14 @@ class QuotationController extends Controller
         }
 
         if ($request->expectsJson()) {
+            // The POS opens the document's page next; this is what that page shows.
+            session()->flash('success', 'Invoice '.$invoice->invoice_number.' created.');
+
             return $this->jsonSuccess('Invoice '.$invoice->invoice_number.' created.', [
                 'uuid' => $invoice->uuid,
                 'number' => $invoice->invoice_number,
                 'print_url' => route('branch.invoices.print', $invoice),
+                'show_url' => route('branch.invoices.show', $invoice),
             ]);
         }
 

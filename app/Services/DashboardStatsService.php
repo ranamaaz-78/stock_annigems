@@ -310,6 +310,15 @@ class DashboardStatsService
 
         if ($user->hasPermission('invoices.view')) {
             $dashboard['recent_invoices'] = $this->sales->recentInvoices($branchId, 5);
+
+            $awaiting = $this->sales->awaitingPayment($branchId);
+            $dashboard['secondary_cards'][] = $this->card(
+                'awaiting_payment',
+                'Awaiting Payment',
+                ReportFormatter::money($awaiting['invoice_due'] + $awaiting['note_due']),
+                icon: 'hourglass_top',
+                hint: ReportFormatter::count($awaiting['invoices']).' invoices, '.ReportFormatter::count($awaiting['notes']).' delivery notes',
+            );
         }
 
         return $dashboard;

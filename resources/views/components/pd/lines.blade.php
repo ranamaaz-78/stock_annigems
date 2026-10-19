@@ -17,7 +17,12 @@
     $withIva = $mode === 'quotation' && $hasTax && (float) $document->discount_amount <= 0;
     $pct = rtrim(rtrim(number_format($rate, 2), '0'), '.').'%';
 
-    $rows = collect($items)->map(function ($item) {
+    // Loose stones: shape, size, carat and pricing as chips, from the live lot (one query).
+    $lots = \App\Models\Stone::withTrashed()->withoutGlobalScopes()
+        ->whereIn('id', collect($items)->pluck('stone_id')->filter()->unique())
+        ->get()->keyBy('id');
+
+    $rows = collect($items)->map(function ($item) use ($lots) {
         $loose = $item->line_type === \App\Enums\LineType::LOOSE_STONE;
         $grams = $loose ? (float) ($item->weight_grams ?? 0) : 0.0;
         $gramText = rtrim(rtrim(number_format($grams, 3, '.', ''), '0'), '.').' g';
@@ -41,6 +46,7 @@
 
         return [
             'item' => $item,
+            'badges' => $loose ? ($lots[$item->stone_id] ?? null)?->detailBadges() ?? [] : [],
             'qty' => $qty,
             'price' => $price,
             'sub' => collect([$item->item_code_snapshot, $detail])->filter()->implode(' · '),
@@ -78,6 +84,13 @@
                     <span class="pd-line__name">{{ $item->name_snapshot }}</span>
                     @if($row['sub'] !== '')
                         <span class="pd-line__sub">{{ $row['sub'] }}</span>
+                    @endif
+                    @if($row['badges'] !== [])
+                        <span class="pd-line__chips">
+                            @foreach($row['badges'] as $badge)
+                                <span class="pd-line__chip">{{ $badge }}</span>
+                            @endforeach
+                        </span>
                     @endif
                     {{-- Set stones are priced inside the line, so they are chips, not rows. --}}
                     @if($item->itemStones->isNotEmpty())

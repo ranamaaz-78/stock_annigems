@@ -141,6 +141,57 @@ class CustomerService
     }
 
     /**
+     * Save what the cashier changed in a loaded customer's fields on the POS.
+     *
+     * Only name, email, NIE and address can change here (the phone number is
+     * how the customer was found, so it stays). Users who may not edit
+     * customers have the ticket go through unchanged. Nothing is written when
+     * nothing differs, so ordinary sales leave no audit noise.
+     *
+     * @param  array<string, mixed>  $data  The ticket: walkin_name / _email / _nie / _address
+     */
+    public function syncFromTicket(Customer $customer, array $data, User $actor): Customer
+    {
+        if (! \Illuminate\Support\Facades\Gate::forUser($actor)->allows('update', $customer)) {
+            return $customer;
+        }
+
+        $clean = static fn (mixed $v): ?string => filled(trim((string) $v)) ? trim((string) $v) : null;
+
+        $changes = [];
+        if (array_key_exists('walkin_name', $data) && $clean($data['walkin_name']) !== null) {
+            $changes['name'] = $clean($data['walkin_name']);
+        }
+        foreach (['email' => 'walkin_email', 'address' => 'walkin_address'] as $column => $key) {
+            if (array_key_exists($key, $data)) {
+                $changes[$column] = $clean($data[$key]);
+            }
+        }
+        if (array_key_exists('walkin_nie', $data)) {
+            $nie = $clean($data['walkin_nie']);
+            $changes['nie'] = $nie === null ? null : strtoupper($nie);
+        }
+
+        $changes = array_filter(
+            $changes,
+            fn ($value, $column): bool => $customer->{$column} !== $value,
+            ARRAY_FILTER_USE_BOTH
+        );
+
+        if ($changes === []) {
+            return $customer;
+        }
+
+        return DB::transaction(function () use ($customer, $changes, $actor): Customer {
+            $old = $this->auditPayload($customer);
+            $customer->update($changes);
+            $this->auditLog->log('customer.updated', $customer, $old, $this->auditPayload($customer), $actor);
+
+            return $customer->fresh();
+        });
+    }
+
+    /**
      * Create a new global customer.
      *
      * @param  array<string, mixed>  $data
@@ -154,7 +205,6 @@ class CustomerService
                 'phone' => $data['phone'],
                 'alternate_phone' => $data['alternate_phone'] ?? null,
                 'email' => $data['email'] ?? null,
-                'cnic' => $data['cnic'] ?? null,
                 'nie' => filled($data['nie'] ?? null) ? strtoupper(trim($data['nie'])) : null,
                 'address' => $data['address'] ?? null,
                 'city' => $data['city'] ?? null,
@@ -183,7 +233,6 @@ class CustomerService
                 'phone' => $data['phone'],
                 'alternate_phone' => $data['alternate_phone'] ?? null,
                 'email' => $data['email'] ?? null,
-                'cnic' => $data['cnic'] ?? null,
                 'nie' => filled($data['nie'] ?? null) ? strtoupper(trim($data['nie'])) : null,
                 'address' => $data['address'] ?? null,
                 'city' => $data['city'] ?? null,
@@ -277,8 +326,7 @@ class CustomerService
         $query->where(function (Builder $inner) use ($search): void {
             $inner->where('name', 'like', "%{$search}%")
                 ->orWhere('phone', 'like', "%{$search}%")
-                ->orWhere('customer_code', 'like', "%{$search}%")
-                ->orWhere('cnic', 'like', "%{$search}%");
+                ->orWhere('customer_code', 'like', "%{$search}%");
         });
     }
 

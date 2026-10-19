@@ -4,8 +4,7 @@
     <x-form.input name="phone" label="Phone" maxlength="20" :value="old('phone', $customer->phone ?? '')" required />
     <x-form.input name="alternate_phone" label="Alternate phone" maxlength="20" :value="old('alternate_phone', $customer->alternate_phone ?? '')" />
     <x-form.input name="email" label="Email" type="email" maxlength="150" :value="old('email', $customer->email ?? '')" />
-    <x-form.input name="nie" label="NIE / NIF" help="optional" maxlength="20" :value="old('nie', $customer->nie ?? '')" />
-    <x-form.input name="cnic" label="CNIC" placeholder="12345-1234567-1" maxlength="15" :value="old('cnic', $customer->cnic ?? '')" />
+    <x-form.input name="nie" label="NIE / NIF" maxlength="20" :value="old('nie', $customer->nie ?? '')" />
     <x-form.input name="city" label="City" maxlength="100" :value="old('city', $customer->city ?? '')" />
 
     <div class="form-grid__full">

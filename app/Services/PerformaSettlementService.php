@@ -40,6 +40,7 @@ class PerformaSettlementService
         private StoneStockService $stoneStockService,
         private PerformaService $performaService,
         private AuditLogService $auditLog,
+        private PaymentService $payments,
     ) {}
 
     /**
@@ -118,6 +119,7 @@ class PerformaSettlementService
                 'grand_total' => $result['document']['grand_total'],
                 'payment_method' => PaymentMethod::from((string) $data['payment_method']),
                 'payment_reference' => $data['payment_reference'] ?? null,
+                'payment_status' => \App\Enums\PaymentStatus::PENDING,
                 'status' => InvoiceStatus::COMPLETED,
                 'notes' => $data['notes'] ?? ('Settlement of '.$performa->performa_number),
             ]);
@@ -125,6 +127,9 @@ class PerformaSettlementService
             foreach ($result['lines'] as $index => $line) {
                 $this->writeInvoiceLine($invoice, $line, $index);
             }
+
+            // A settlement is always paid in full as it is made.
+            $this->payments->record($invoice, (string) $data['payment_method'], $data['payment_reference'] ?? null, $actor);
 
             PerformaSettlement::query()->create([
                 'performa_id' => $performa->id,

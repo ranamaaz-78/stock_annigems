@@ -34,7 +34,9 @@ class ConvertDeliveryNoteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'payment_method' => ['required', Rule::enum(PaymentMethod::class)],
+            // The difference (what the note's payment does not cover) is paid now, or left pending.
+            'payment_status' => ['nullable', Rule::enum(\App\Enums\PaymentStatus::class)],
+            'payment_method' => ['nullable', Rule::enum(PaymentMethod::class)],
             'payment_reference' => ['nullable', 'string', 'max:100'],
             // Blank IVA = no IVA on this invoice; recargo is optional.
             'tax_rate_uuid' => ['nullable', 'uuid', Rule::exists('tax_rates', 'uuid')->where('kind', 'iva')->whereNull('deleted_at')],
@@ -48,7 +50,6 @@ class ConvertDeliveryNoteRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'payment_method.required' => 'Select a payment method.',
         ];
     }
 }

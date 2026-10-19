@@ -89,6 +89,8 @@ trait ValidatesQuotationWorkspace
             'walkin_email' => ['nullable', 'email', 'max:150'],
             // Optional address, saved with a new customer or creditor.
             'walkin_address' => ['nullable', 'string', 'max:500'],
+            // Set by the POS when a loaded customer's fields were open for editing.
+            'update_customer' => ['nullable', 'boolean'],
             // Optional NIE / NIF, saved with a new customer or creditor.
             'walkin_nie' => ['nullable', 'string', 'max:20', 'regex:/^[A-Za-z0-9\-\s.\/]{5,20}$/'],
             // POS tax toggle. Omitted on the quotation workspace so catalog GST still applies.

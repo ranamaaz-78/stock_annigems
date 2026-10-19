@@ -84,6 +84,7 @@ class InvoiceService
             'performa',
             'deliveryNote',
             'items.itemStones',
+            'payments.creator',
         ]);
     }
 

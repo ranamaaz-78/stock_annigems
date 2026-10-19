@@ -70,7 +70,7 @@
                             <td>{{ $invoice->customer_name_snapshot }}</td>
                             <td class="table-admin__num">{{ $invoice->items_count }}</td>
                             <td class="table-admin__num table-admin__num--strong">{{ setting_money($invoice->grand_total) }}</td>
-                            <td>{{ $invoice->payment_method->label() }}</td>
+                            <td><x-status-badge :status="$invoice->payment_status" />@if($invoice->payment_method)<span class="table-meta">{{ $invoice->payment_method->label() }}</span>@endif</td>
                             <td><x-status-badge :status="$invoice->status" /></td>
                             <td class="table-admin__actions-col">
                                 <x-table.actions>

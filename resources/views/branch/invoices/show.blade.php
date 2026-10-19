@@ -10,7 +10,13 @@
 @section('content')
 <x-page-header :title="$invoice->invoice_number" :subtitle="setting_date($invoice->invoice_date)">
     <x-slot:actions>
-        <x-btn href="{{ route('branch.invoices.print', $invoice) }}" variant="secondary" target="_blank" rel="noopener">Print</x-btn>
+        @can('update', $invoice)
+            <x-btn href="{{ route('branch.pos.show', ['invoice' => $invoice->uuid]) }}">Edit</x-btn>
+        @endcan
+        @can('recordPayment', $invoice)
+            <x-btn type="button" data-modal-open="record-payment-modal">Record payment</x-btn>
+        @endcan
+        <x-btn type="button" variant="secondary" onclick="window.print()">Print</x-btn>
         @can('void', $invoice)
             <x-btn type="button" variant="danger" id="void-invoice-btn">Void</x-btn>
         @endcan
@@ -19,6 +25,8 @@
 </x-page-header>
 
 @include('branch.invoices._sheet', ['invoice' => $invoice])
+
+<x-payment.panel :document="$invoice" :action="route('branch.invoices.payment', $invoice)" who="invoice" />
 
 <div class="doc-meta">
     <x-attribution :record="$invoice" />

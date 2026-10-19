@@ -6,6 +6,7 @@ use App\Http\Requests\Concerns\RejectsAttributionInput;
 use App\Http\Requests\Concerns\ValidatesQuotationWorkspace;
 use App\Models\DeliveryNote;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * StoreDeliveryNoteRequest
@@ -41,7 +42,12 @@ class StoreDeliveryNoteRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->workspaceRules();
+        return array_merge($this->workspaceRules(), [
+            // Pending unless the POS marks it paid, which needs the method.
+            'payment_status' => ['nullable', Rule::enum(\App\Enums\PaymentStatus::class)],
+            'payment_method' => ['required_if:payment_status,paid', 'nullable', Rule::enum(\App\Enums\PaymentMethod::class)],
+            'payment_reference' => ['nullable', 'string', 'max:100'],
+        ]);
     }
 
     /**

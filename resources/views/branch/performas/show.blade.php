@@ -18,12 +18,12 @@
                 <x-btn type="button" variant="secondary" data-modal-open="return-modal">Return unpaid</x-btn>
             @endcan
         @endif
-        <x-btn href="{{ route('branch.performas.print', $performa) }}" variant="secondary" target="_blank" rel="noopener">Print</x-btn>
+        <x-btn type="button" variant="secondary" onclick="window.print()">Print</x-btn>
         <x-btn href="{{ route('branch.performas.index') }}" variant="secondary">Back</x-btn>
     </x-slot:actions>
 </x-page-header>
 
-<div class="panel-stack">
+<div class="panel-stack no-print">
     <div class="panel">
         <div class="panel__header">
             <h2 class="panel__title">{{ $performa->displayCreditorName() }}</h2>
@@ -196,4 +196,8 @@
         </div>
     </x-modal>
 @endcan
+{{-- The Print button prints this sheet; the page around it is hidden on paper. --}}
+<div class="pd-print-only">
+    @include('branch.performas._sheet', ['performa' => $performa, 'a4' => false])
+</div>
 @endsection
