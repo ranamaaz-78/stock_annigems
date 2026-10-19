@@ -1,7 +1,7 @@
 {{-- Reset password form from emailed token. --}}
 @extends('layouts.guest')
 
-@section('title', 'Reset Password — '.setting('company_name', 'Annigems'))
+@section('title', 'Reset Password — '.setting('company_name', 'Aanigemas'))
 
 @section('content')
 @php $min = \App\Support\Settings\PasswordRules::minLength(); @endphp

@@ -39,12 +39,6 @@ class UpdateGlobalSettingsRequest extends FormRequest
         foreach (SettingCatalog::forGroup($group) as $definition) {
             $key = $definition['key'];
 
-            if ($definition['widget'] === 'file') {
-                $rules[$key] = ['nullable', 'file', 'max:512'];
-
-                continue;
-            }
-
             if ($definition['widget'] === 'toggle') {
                 $rules[$key] = ['required', 'boolean'];
 
@@ -98,7 +92,7 @@ class UpdateGlobalSettingsRequest extends FormRequest
     }
 
     /**
-     * Catalog values ready for SettingService::setGroup, files excluded.
+     * Catalog values ready for SettingService::setGroup.
      *
      * @return array<string, mixed>
      */
@@ -108,10 +102,6 @@ class UpdateGlobalSettingsRequest extends FormRequest
 
         foreach (SettingCatalog::forGroup($this->group()) as $definition) {
             $key = $definition['key'];
-
-            if ($definition['widget'] === 'file') {
-                continue;
-            }
 
             if ($definition['widget'] === 'toggle') {
                 $values[$key] = $this->boolean($key);

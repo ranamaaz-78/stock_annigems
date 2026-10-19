@@ -15,7 +15,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>{{ $documentTitle }} — {{ setting('company_name', 'Annigems') }}</title>
+    <title>{{ $documentTitle }} — {{ setting('company_name', 'Aanigemas') }}</title>
     <x-brand.favicon />
     @vite(['resources/css/tailwind.css', 'resources/css/app.scss'])
 </head>

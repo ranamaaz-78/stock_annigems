@@ -82,11 +82,103 @@
   text-align: center;
   text-decoration: none;
   transition: border-color 0.15s ease, background-color 0.15s ease;
+  position: relative;
+
+  &:hover,
+  &:focus-within {
+    border-color: var(--color-primary);
+    background-color: var(--color-surface-container-low);
+  }
+}
+
+/* Stretched link: the whole tile opens the folder, while the rename field and
+   delete button above it stay clickable on their own (they sit at z-index 1). */
+.folder-tile__link {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+/* Admin only: the name becomes a rename field on click; a pencil shows on hover. */
+.folder-tile__name--editable {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  max-width: 100%;
+  padding: 0 0.25rem;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: text;
 
   &:hover,
   &:focus-visible {
-    border-color: var(--color-primary);
-    background-color: var(--color-surface-container-low);
+    background-color: var(--color-surface-container);
+  }
+}
+
+.folder-tile__pencil {
+  display: none;
+  vertical-align: middle;
+  margin-left: 0.125rem;
+  color: var(--color-primary);
+}
+
+.folder-tile__name--editable:hover .folder-tile__pencil,
+.folder-tile__name--editable:focus-visible .folder-tile__pencil {
+  display: inline-block;
+}
+
+.folder-tile__rename {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+/* Delete icon: top right of the tile, shown while hovering or focusing it. */
+.folder-tile__actions {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  z-index: 1;
+  margin: 0;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.folder-tile:hover .folder-tile__actions,
+.folder-tile:focus-within .folder-tile__actions {
+  opacity: 1;
+}
+
+/* Touch screens have no hover, so the icon is always there. */
+@media (hover: none) {
+  .folder-tile__actions {
+    opacity: 1;
+  }
+}
+
+.folder-tile__action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-error);
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background-color: var(--color-error-container);
   }
 }
 
@@ -126,6 +218,21 @@
 
   .folder-tile__name {
     flex: 1 1 auto;
+  }
+
+  .folder-tile__name--editable {
+    flex: 0 1 auto;
+    margin-right: auto;
+  }
+
+  /* List rows: the delete icon sits at the right edge, centred on the row. */
+  .folder-tile__actions {
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .folder-tile[data-manageable] {
+    padding-right: 2.5rem;
   }
 }
 

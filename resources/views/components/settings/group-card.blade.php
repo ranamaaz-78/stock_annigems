@@ -10,15 +10,10 @@
     'hints' => [],
     'editable' => true,
     'action' => null,
-    'logoUrl' => null,
-    'faviconUrl' => null,
 ])
 
 @php
     /** @var \App\Enums\SettingGroup $group */
-    $enctype = collect($definitions)->contains(fn ($row) => ($row['widget'] ?? '') === 'file')
-        ? 'multipart/form-data'
-        : null;
 @endphp
 
 <section class="panel settings-card" data-settings-card="{{ $group->value }}">
@@ -33,7 +28,6 @@
         <form
             method="POST"
             action="{{ $action }}"
-            @if($enctype) enctype="{{ $enctype }}" @endif
             data-settings-form
             data-group-label="{{ $group->label() }}"
             class="settings-card__form"
@@ -48,8 +42,6 @@
                         :value="$values[$definition['key']] ?? $definition['default']"
                         :hint="$hints[$definition['key']] ?? null"
                         :editable="true"
-                        :logo-url="$logoUrl"
-                        :favicon-url="$faviconUrl"
                     />
                 @endforeach
             </div>
@@ -68,8 +60,6 @@
                     :value="$values[$definition['key']] ?? $definition['default']"
                     :hint="$hints[$definition['key']] ?? null"
                     :editable="false"
-                    :logo-url="$logoUrl"
-                    :favicon-url="$faviconUrl"
                 />
             @endforeach
         </div>

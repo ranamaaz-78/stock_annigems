@@ -27,7 +27,7 @@ class RuntimeSettings
     public static function apply(): void
     {
         $timezone = (string) setting('timezone', 'Asia/Karachi');
-        $company = (string) setting('company_name', 'Annigems');
+        $company = (string) setting('company_name', 'Aanigemas');
         $symbol = (string) setting('currency_symbol', 'Rs');
         $code = strtoupper((string) setting('currency_code', 'PKR'));
 
@@ -37,11 +37,11 @@ class RuntimeSettings
         }
 
         config([
-            'app.name' => $company !== '' ? $company : 'Annigems',
+            'app.name' => $company !== '' ? $company : 'Aanigemas',
             'annigems.timezone' => $timezone,
             'annigems.currency' => $code !== '' ? $code : 'PKR',
             'annigems.currency_symbol' => $symbol !== '' ? $symbol : 'Rs',
-            'annigems.documents.brand_name' => $company !== '' ? $company : 'Annigems',
+            'annigems.documents.brand_name' => $company !== '' ? $company : 'Aanigemas',
         ]);
     }
 }

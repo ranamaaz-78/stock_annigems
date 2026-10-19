@@ -5,7 +5,7 @@
 --}}
 @extends('layouts.guest')
 
-@section('title', 'Login — '.setting('company_name', 'Annigems'))
+@section('title', 'Login — '.setting('company_name', 'Aanigemas'))
 
 @section('content')
 <div class="login-page">
@@ -19,20 +19,17 @@
                 aria-label="Luxury jewellery macro photograph on dark slate"
             ></div>
             <div class="login-brand__content">
-                <div class="login-brand__mark">
-                    <span class="material-symbols-outlined icon icon--lg icon--primary-fixed">diamond</span>
-                </div>
-                <h1 class="login-brand__title text-display">{{ setting('company_name', 'Annigems') }}</h1>
+                {{-- Dark panel: the gold monogram and a gold name read here; the full logo's navy lettering would not. --}}
+                <img class="login-brand__logo" src="{{ brand_logo_url() }}" alt="">
+                <h1 class="login-brand__title text-display">{{ setting('company_name', 'Aanigemas') }}</h1>
                 <p class="login-brand__tagline text-body-md">Luxury Inventory Management</p>
             </div>
         </div>
 
         <div class="login-form">
             <div class="login-form__mobile-brand">
-                <div class="login-brand__mark">
-                    <span class="material-symbols-outlined icon icon--md icon--primary">diamond</span>
-                </div>
-                <p class="login-form__mobile-title text-headline-sm">{{ setting('company_name', 'Annigems') }}</p>
+                {{-- Light background here, so the full logo (with its navy name) fits. --}}
+                <img class="login-form__mobile-logo" src="{{ brand_logo_url('full') }}" alt="{{ setting('company_name', 'Aanigemas') }}">
             </div>
 
             <div class="login-form__header">
@@ -60,7 +57,7 @@
                             value="{{ old('email') }}"
                             required
                             autocomplete="username"
-                            placeholder="admin@annigems.com"
+                            placeholder="admin@aanigemas.com"
                             class="input-with-icon__field {{ $errors->has('email') ? 'is-invalid' : '' }}"
                         >
                     </div>

@@ -6,9 +6,9 @@
 <div class="sa-sidebar-backdrop" data-shell-backdrop></div>
 <nav class="sa-sidebar" aria-label="SuperAdmin" data-shell-sidebar>
     <div class="sa-sidebar__brand">
-        <span class="material-symbols-outlined icon icon--lg icon--primary-fixed">diamond</span>
+        <img class="sa-sidebar__logo" src="{{ brand_logo_url() }}" alt="{{ setting('company_name') }}">
         <div class="sa-sidebar__brand-text">
-            <p class="sa-sidebar__brand-title">{{ setting('company_name', 'Annigems') }}</p>
+            <p class="sa-sidebar__brand-title">{{ setting('company_name', 'Aanigemas') }}</p>
             <p class="sa-sidebar__brand-sub text-label-caps">SuperAdmin Suite</p>
         </div>
         <x-shell.collapse />

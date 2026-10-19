@@ -48,7 +48,7 @@ class StoneController extends Controller
 
         $filters = $request->only([
             'q', 'category', 'pricing_mode', 'status', 'tray_no', 'shape',
-            'is_active', 'stock', 'carat_min', 'carat_max',
+            'is_active', 'stock', 'carat', 'carat_min', 'carat_max',
         ]);
 
         $category = $this->openFolder($request);
@@ -137,6 +137,7 @@ class StoneController extends Controller
 
         return view('branch.stones.show', [
             'stone' => $stone,
+            'listUrl' => $this->listUrlFor($stone),
             'barcodeUri' => $this->labelService->barcodeDataUri($stone),
         ]);
     }
@@ -226,6 +227,35 @@ class StoneController extends Controller
     }
 
     /**
+     * Where "Back" on a lot's page should go: the list it was opened from,
+     * with its search and page kept, or else the lot's own folder.
+     */
+    private function listUrlFor(Stone $stone): string
+    {
+        $previous = url()->previous();
+        $index = route('branch.stones.index');
+
+        if (parse_url($previous, PHP_URL_HOST) === parse_url($index, PHP_URL_HOST)
+            && parse_url($previous, PHP_URL_PATH) === parse_url($index, PHP_URL_PATH)) {
+            return $previous;
+        }
+
+        return $this->folderUrlFor($stone);
+    }
+
+    /**
+     * The lot's folder, or the folder list when it has none (or the folder is gone).
+     */
+    private function folderUrlFor(Stone $stone): string
+    {
+        $uuid = $stone->category?->uuid;
+
+        return $uuid !== null
+            ? route('branch.stones.index', ['category' => $uuid])
+            : route('branch.stones.index');
+    }
+
+    /**
      * The folder being viewed, or null when none was requested.
      *
      * An unknown uuid is treated as no folder rather than a 404: the
@@ -249,7 +279,7 @@ class StoneController extends Controller
      */
     private function hasLotFilters(array $filters): bool
     {
-        foreach (['pricing_mode', 'status', 'tray_no', 'shape', 'is_active', 'stock', 'carat_min', 'carat_max'] as $key) {
+        foreach (['pricing_mode', 'status', 'tray_no', 'shape', 'is_active', 'stock', 'carat', 'carat_min', 'carat_max'] as $key) {
             if (($filters[$key] ?? '') !== '') {
                 return true;
             }

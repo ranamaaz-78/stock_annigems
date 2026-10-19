@@ -20,11 +20,7 @@
     <header @class(['sheet__header', 'sheet__header--title-only' => $branch === null])>
         @if($branch !== null)
             <div class="sheet__identity">
-                @if(brand_asset_url('company_logo'))
-                    <img class="sheet__logo" src="{{ brand_asset_url('company_logo') }}" alt="{{ setting('company_name') }}">
-                @else
-                    <div class="sheet__mark" aria-hidden="true">{{ config('annigems.documents.brand_mark') }}</div>
-                @endif
+                <img class="sheet__logo" src="{{ brand_logo_url() }}" alt="{{ setting('company_name') }}">
                 <div>
                     <p class="sheet__brand">{{ setting('company_name', config('annigems.documents.brand_name')) }}</p>
                     <p class="sheet__tagline">{{ config('annigems.documents.brand_tagline') }}</p>

@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SuperAdmin\SettingsHistoryRequest;
 use App\Http\Requests\SuperAdmin\UpdateGlobalSettingsRequest;
 use App\Models\SettingHistory;
-use App\Services\BrandImageService;
 use App\Services\SettingService;
 use App\Support\Settings\SettingCatalog;
 use Illuminate\Http\RedirectResponse;
@@ -21,10 +20,7 @@ use Illuminate\View\View;
  */
 class SettingController extends Controller
 {
-    public function __construct(
-        private SettingService $settings,
-        private BrandImageService $brandImages,
-    ) {}
+    public function __construct(private SettingService $settings) {}
 
     /**
      * Grouped global settings.
@@ -44,13 +40,8 @@ class SettingController extends Controller
         $this->authorize('manageGlobalSettings');
 
         $settingGroup = $request->group();
-        $values = $request->settingValues();
 
-        if ($settingGroup === SettingGroup::COMPANY) {
-            $values = array_merge($values, $this->storeBrandFiles($request));
-        }
-
-        $raised = $this->settings->setGroup($settingGroup, $values, $request->user());
+        $raised = $this->settings->setGroup($settingGroup, $request->settingValues(), $request->user());
 
         $saved = $settingGroup->label().' settings saved.';
         if ($raised !== []) {
@@ -129,36 +120,6 @@ class SettingController extends Controller
         return [
             'groups' => $groups,
             'editable' => $editable,
-            'logoUrl' => $this->brandImages->url($this->settings->get('company_logo')),
-            'faviconUrl' => $this->brandImages->url($this->settings->get('company_favicon')),
         ];
-    }
-
-    /**
-     * Persist uploaded logo / favicon and return the stored paths.
-     *
-     * @return array<string, string>
-     */
-    private function storeBrandFiles(UpdateGlobalSettingsRequest $request): array
-    {
-        $stored = [];
-
-        if ($request->hasFile('company_logo')) {
-            $stored['company_logo'] = $this->brandImages->store(
-                $request->file('company_logo'),
-                'company_logo',
-                ['max_kb' => 512, 'max_width' => 1200, 'max_height' => 1200]
-            );
-        }
-
-        if ($request->hasFile('company_favicon')) {
-            $stored['company_favicon'] = $this->brandImages->store(
-                $request->file('company_favicon'),
-                'company_favicon',
-                ['max_kb' => 256, 'max_width' => 512, 'max_height' => 512]
-            );
-        }
-
-        return $stored;
     }
 }

@@ -32,7 +32,7 @@ return [
     'documents' => [
         // brand_name moved to setting('company_name'). Kept as a fallback
         // for print views if settings have not been seeded yet.
-        'brand_name' => env('ANNIGEMS_BRAND_NAME', 'Annigems'),
+        'brand_name' => env('ANNIGEMS_BRAND_NAME', 'Aanigemas'),
         'brand_tagline' => env('ANNIGEMS_BRAND_TAGLINE', 'Luxury Inventory'),
         // Single letter shown in the header mark tile.
         'brand_mark' => env('ANNIGEMS_BRAND_MARK', 'A'),

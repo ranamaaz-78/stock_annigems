@@ -96,11 +96,20 @@ function scanner_config(): array
 }
 
 /**
- * Public URL for a stored brand image, or null.
+ * The bundled logo, with the file's age in the address so a replaced logo is
+ * never shown from a stale browser copy.
+ *
+ * "mark" is the square AG monogram for small spots (sidebar, documents, POS);
+ * "full" is the whole logo with the name, for wide light spaces (login, 503).
+ * Both live in public/brand/ and are fixed, not a setting.
+ *
+ * @param  'mark'|'full'  $variant
  */
-function brand_asset_url(string $key): ?string
+function brand_logo_url(string $variant = 'mark'): string
 {
-    return app(\App\Services\BrandImageService::class)->url(setting($key));
+    $path = $variant === 'full' ? 'brand/aanigemas-logo.png' : 'brand/aanigemas-mark.png';
+
+    return asset($path).'?v='.(@filemtime(public_path($path)) ?: 1);
 }
 
 /**

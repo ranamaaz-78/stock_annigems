@@ -1,7 +1,7 @@
 {{-- Forced change-password screen when must_change_password is true. --}}
 @extends('layouts.guest')
 
-@section('title', 'Change Password — '.setting('company_name', 'Annigems'))
+@section('title', 'Change Password — '.setting('company_name', 'Aanigemas'))
 
 @section('content')
 @php

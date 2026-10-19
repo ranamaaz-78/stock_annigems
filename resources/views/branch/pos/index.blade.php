@@ -83,11 +83,7 @@
                     {{-- Identity and the document facts. No page header above this. --}}
                     <section class="pos-identity">
                         <div class="pos-brand">
-                            @if(brand_asset_url('company_logo'))
-                                <img class="pos-brand__logo" src="{{ brand_asset_url('company_logo') }}" alt="{{ $company }}">
-                            @else
-                                <div class="pos-brand__mark" aria-hidden="true">{{ config('annigems.documents.brand_mark') }}</div>
-                            @endif
+                            <img class="pos-brand__logo" src="{{ brand_logo_url() }}" alt="{{ $company }}">
                             <div class="pos-brand__text">
                                 <p class="pos-brand__name">{{ $company }}</p>
                                 @if($branchLine !== '')

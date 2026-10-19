@@ -8,8 +8,6 @@
     'value' => null,
     'hint' => null,
     'editable' => true,
-    'logoUrl' => null,
-    'faviconUrl' => null,
 ])
 
 @php
@@ -25,9 +23,6 @@
     if ($widget === 'json_list' && is_array($display)) {
         $display = implode(', ', $display);
     }
-
-    $isFile = $widget === 'file';
-    $previewUrl = $key === 'company_logo' ? $logoUrl : ($key === 'company_favicon' ? $faviconUrl : null);
 @endphp
 
 <div
@@ -63,12 +58,6 @@
         @if(! $editable)
             @if($widget === 'toggle')
                 <x-settings.toggle :name="$key" :checked="(bool) $display" disabled />
-            @elseif($isFile)
-                @if($previewUrl)
-                    <img class="settings-row__preview-img" src="{{ $previewUrl }}" alt="{{ $label }}">
-                @else
-                    <span class="settings-readonly">Not set</span>
-                @endif
             @else
                 <span class="settings-readonly">{{ $display === null || $display === '' ? '—' : $display }}</span>
             @endif
@@ -82,15 +71,6 @@
             </select>
         @elseif($widget === 'textarea')
             <textarea id="{{ $fieldId }}" name="{{ $key }}" rows="3" class="input-field {{ $hasError ? 'is-invalid' : '' }}">{{ $display }}</textarea>
-        @elseif($widget === 'file')
-            <div>
-                @if($previewUrl)
-                    <div class="settings-row__preview">
-                        <img class="settings-row__preview-img" src="{{ $previewUrl }}" alt="Current {{ $label }}">
-                    </div>
-                @endif
-                <input id="{{ $fieldId }}" name="{{ $key }}" type="file" accept="image/png,image/jpeg,image/webp,image/x-icon,.ico" class="input-field {{ $hasError ? 'is-invalid' : '' }}">
-            </div>
         @elseif($widget === 'json_list')
             <input id="{{ $fieldId }}" name="{{ $key }}" type="text" value="{{ $display }}" class="input-field {{ $hasError ? 'is-invalid' : '' }}" placeholder="30, 60, 90, 180">
         @elseif($widget === 'timezone')

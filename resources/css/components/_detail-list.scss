@@ -19,6 +19,11 @@
   min-width: 0;
 }
 
+/* As many columns as fit, so a wide panel does not stretch two columns apart. */
+.detail-list--auto {
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+
 /* Address / notes need the full row. */
 .detail-list__item--full {
   grid-column: 1 / -1;

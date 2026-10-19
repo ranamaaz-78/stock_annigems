@@ -37,6 +37,20 @@
 @section('content')
 <x-page-header :title="$title" :subtitle="$subtitle">
     <x-slot:actions>
+        @if($mode === 'folder')
+            @can('manage', $category)
+                <x-btn variant="secondary" data-modal-open="rename-folder-modal">
+                    <span class="material-symbols-outlined icon icon--sm">edit</span>
+                    Rename folder
+                </x-btn>
+                <form method="POST" action="{{ route('branch.stone-folders.destroy', $category) }}" data-loading-form data-confirm-delete-folder
+                      data-folder-name="{{ $category->name }}" data-lot-count="{{ $category->stones()->count() }}" class="inline">
+                    @csrf
+                    @method('DELETE')
+                    <x-btn type="submit" variant="danger" loading-text="Deleting...">Delete folder</x-btn>
+                </form>
+            @endcan
+        @endif
         @if(auth()->user()->hasPermission('stones.intake'))
             <x-btn href="{{ route('branch.stone-intakes.scan') }}" variant="secondary">Stone Intake</x-btn>
         @endif
@@ -77,7 +91,7 @@
     <x-filter.search
         name="q"
         :value="$filters['q'] ?? ''"
-        :placeholder="$inLots ? 'Code, barcode, name, tray or size…' : 'Search materials…'"
+        :placeholder="$inLots ? 'Code, barcode, name, tray, size or remarks…' : 'Search materials…'"
         aria-label="{{ $inLots ? 'Search lots' : 'Search materials' }}"
     />
 
@@ -122,6 +136,8 @@
             @endforeach
         </select>
         @endif
+        <input type="number" name="carat" value="{{ $filters['carat'] ?? '' }}" min="0" step="any"
+               class="input-field" placeholder="Carat, e.g. 1.1" aria-label="Carat (ct)">
         <select name="stock" class="input-field" aria-label="Stock">
             <option value="">All stock</option>
             <option value="in" @selected(($filters['stock'] ?? '') === 'in')>In stock</option>
@@ -153,4 +169,10 @@
 @endcan
 
 @include('branch.stones._label-modal')
+
+@if($mode === 'folder')
+    @can('manage', $category)
+        @include('branch.stones._folder-rename-modal')
+    @endcan
+@endif
 @endsection

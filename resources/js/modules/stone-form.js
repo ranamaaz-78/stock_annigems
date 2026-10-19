@@ -163,6 +163,25 @@ function bindStoneForm(root) {
 }
 
 /**
+ * Submit a confirmed form, showing its button as busy while the page posts.
+ *
+ * Confirming forms are skipped by the generic loading helper, so the busy
+ * state starts here, only after the operator has said yes.
+ *
+ * @param {HTMLFormElement} form
+ */
+function submitConfirmed(form) {
+    const submitter = form.querySelector('[type="submit"]');
+    if (submitter instanceof HTMLButtonElement && submitter.hasAttribute('data-icon-only')) {
+        // An icon button has no room for a label; just stop a second click.
+        submitter.disabled = true;
+    } else if (submitter instanceof HTMLButtonElement) {
+        window.AnnigemsButton?.startButtonLoading(submitter, submitter.dataset.loadingText || 'Saving...');
+    }
+    form.submit();
+}
+
+/**
  * Confirm before deleting a stone, saying what stock goes with it.
  */
 function bindDeleteConfirms() {
@@ -179,7 +198,29 @@ function bindDeleteConfirms() {
                 confirmButtonText: 'Delete',
             });
             if (ok) {
-                form.submit();
+                submitConfirmed(form);
+            }
+        });
+    });
+}
+
+/**
+ * Confirm before deleting a whole folder, saying how many lots go with it.
+ */
+function bindFolderDeleteConfirms() {
+    document.querySelectorAll('[data-confirm-delete-folder]').forEach((form) => {
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const lots = Number(form.dataset.lotCount || 0);
+            const ok = await window.AnnigemsAlert?.confirmAction({
+                title: `Delete folder ${form.dataset.folderName}?`,
+                text: lots > 0
+                    ? `All ${lots} ${lots === 1 ? 'lot' : 'lots'} inside will be deleted and their remaining stock written off. Invoices and history keep their record.`
+                    : 'This folder has no lots.',
+                confirmButtonText: 'Delete folder',
+            });
+            if (ok) {
+                submitConfirmed(form);
             }
         });
     });
@@ -198,7 +239,7 @@ function bindDeactivateConfirms() {
                 confirmButtonText: 'Deactivate',
             });
             if (ok) {
-                form.submit();
+                submitConfirmed(form);
             }
         });
     });
@@ -211,4 +252,5 @@ export function bindStoneForms() {
     document.querySelectorAll('[data-stone-form]').forEach((root) => bindStoneForm(root));
     bindDeactivateConfirms();
     bindDeleteConfirms();
+    bindFolderDeleteConfirms();
 }

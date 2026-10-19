@@ -133,10 +133,22 @@ class StoneCategoryService
      */
     private function find(int $branchId, string $matchKey): ?StoneCategory
     {
-        return StoneCategory::query()
+        $byKey = StoneCategory::query()
             ->withoutGlobalScopes()
             ->where('branch_id', $branchId)
             ->where('match_key', $matchKey)
+            ->first();
+
+        if ($byKey !== null) {
+            return $byKey;
+        }
+
+        // A renamed folder keeps its old key so lots under the old spelling
+        // still land in it. Lots under the new label must land there too, or
+        // the first one would create a second folder with the same name.
+        return StoneCategory::query()
+            ->where('branch_id', $branchId)
+            ->whereRaw('UPPER(name) = ?', [$matchKey])
             ->first();
     }
 }

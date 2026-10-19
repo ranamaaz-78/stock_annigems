@@ -1,4 +1,4 @@
-{{-- Previous / Next only, in the Annigems look (SCSS: .pager). --}}
+{{-- Previous / Next only, in the Aanigemas look (SCSS: .pager). --}}
 @if ($paginator->hasPages())
     <nav class="pager pager--simple" role="navigation" aria-label="Pagination">
         <ul class="pager__list">

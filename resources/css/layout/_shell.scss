@@ -75,6 +75,14 @@
   justify-content: center;
 }
 
+/* The logo is transparent; the gold monogram stands on the dark panel by itself. */
+.login-brand__logo {
+  display: block;
+  width: 8rem;
+  height: auto;
+  margin-bottom: 0.5rem;
+}
+
 .login-brand__title {
   margin: 0;
   color: var(--color-primary-fixed-dim);
@@ -114,6 +122,11 @@
   @media (min-width: 768px) {
     display: none;
   }
+}
+
+.login-form__mobile-logo {
+  width: min(100%, 14rem);
+  height: auto;
 }
 
 .login-form__mobile-title {
@@ -215,6 +228,15 @@ html.is-sidebar-open .sa-sidebar {
   align-items: center;
   gap: 0.5rem;
   min-height: 2.5rem;
+}
+
+/* The AG monogram sits on its own black tile, so it reads on the slate sidebar. */
+.sa-sidebar__logo {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius);
+  object-fit: contain;
 }
 
 .sa-sidebar__brand-text {

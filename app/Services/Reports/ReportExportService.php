@@ -247,7 +247,7 @@ class ReportExportService
     {
         $range = $result->meta('range_slug', '');
 
-        return Str::slug('annigems-'.$result->key.($range !== '' ? '-'.$range : '')).'.csv';
+        return Str::slug('aanigemas-'.$result->key.($range !== '' ? '-'.$range : '')).'.csv';
     }
 
     /**

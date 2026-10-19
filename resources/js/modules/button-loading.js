@@ -43,12 +43,24 @@ export function startButtonLoading(button, loadingText = 'Please wait...') {
 }
 
 /**
+ * Forms whose own script confirms before submitting (see stone-form.js).
+ */
+const CONFIRMS_FIRST = '[data-confirm-delete-stone], [data-confirm-delete-folder], [data-confirm-deactivate]';
+
+/**
  * Wire all forms marked with [data-loading-form] to disable the submit button on submit.
  * On native form posts the page navigates away; on AJAX the caller should call restore().
  */
 export function bindLoadingForms() {
     document.querySelectorAll('form[data-loading-form]').forEach((form) => {
         form.addEventListener('submit', (event) => {
+            // These forms ask "are you sure?" first and start the loading state
+            // themselves once the answer is yes; starting it here would show
+            // "Saving..." behind the question, and leave it there on Cancel.
+            if (form.matches(CONFIRMS_FIRST)) {
+                return;
+            }
+
             const submitter = event.submitter || form.querySelector('[type="submit"]');
             if (!submitter || submitter.disabled) {
                 return;

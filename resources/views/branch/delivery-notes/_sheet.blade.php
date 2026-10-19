@@ -10,12 +10,6 @@
 @php
     $a4 = $a4 ?? false;
     $customer = $note->customer;
-    $units = (int) $note->items->filter(fn ($i) => (float) ($i->weight_grams ?? 0) <= 0)->sum('quantity');
-    $grams = (float) $note->items->sum('weight_grams');
-    $unitsText = collect([
-        $units > 0 ? '<strong>'.number_format($units).'</strong> '.Str::plural('unit', $units) : null,
-        $grams > 0 ? '<strong>'.rtrim(rtrim(number_format($grams, 3, '.', ''), '0'), '.').'</strong> g' : null,
-    ])->filter()->implode(' + ');
     $pct = static fn ($v): string => rtrim(rtrim(number_format((float) $v, 2), '0'), '.');
     $discountLabel = 'Discount'.($note->discount_type === \App\Enums\DiscountType::PERCENTAGE && (float) $note->discount_value > 0 ? ' ('.$pct($note->discount_value).'%)' : '');
     $terms = 'This delivery note is not a tax invoice.';
@@ -55,8 +49,7 @@
             <x-pd.lines :items="$note->items" :document="$note" mode="delivery" />
         </div>
 
-        <section class="pd__sums" style="margin-top: 24px">
-            <p class="pd__units">{!! $unitsText !!} in <strong>{{ $note->items->count() }}</strong> {{ Str::plural('line', $note->items->count()) }}</p>
+        <section class="pd__sums pd__sums--end" style="margin-top: 24px">
             <div class="pd__totals" style="width: 260px">
                 @if((float) $note->discount_amount > 0)
                     <div class="pd__total-row"><span>Subtotal</span><span>{{ setting_money($note->subtotal) }}</span></div>

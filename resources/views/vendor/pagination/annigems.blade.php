@@ -1,5 +1,5 @@
 {{--
-    Pagination in the Annigems look (SCSS: .pager). Replaces Laravel's stock
+    Pagination in the Aanigemas look (SCSS: .pager). Replaces Laravel's stock
     Tailwind view so the colours come from the design tokens, not from
     Tailwind's grey/indigo. Registered as the default view in
     AppServiceProvider.

@@ -11,6 +11,7 @@ use App\Models\Performa;
 use App\Models\Quotation;
 use App\Models\Scopes\BranchScope;
 use App\Models\Stone;
+use App\Models\StoneCategory;
 use App\Models\StoneImage;
 use App\Models\StoneImport;
 use App\Models\StoneIntake;
@@ -140,6 +141,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->bindBranchScoped('stone', Stone::class);
         $this->bindBranchScoped('stoneImage', StoneImage::class);
+        $this->bindBranchScoped('stoneCategory', StoneCategory::class);
         $this->bindBranchScoped('stoneIntake', StoneIntake::class);
         $this->bindBranchScoped('stoneImport', StoneImport::class);
         $this->bindBranchScoped('jewelleryItem', JewelleryItem::class);

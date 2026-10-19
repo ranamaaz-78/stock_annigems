@@ -20,6 +20,7 @@ use App\Http\Controllers\Branch\SettingController;
 use App\Http\Controllers\Branch\RoleReferenceController;
 use App\Http\Controllers\Branch\DeliveryNoteController;
 use App\Http\Controllers\Branch\StoneController;
+use App\Http\Controllers\Branch\StoneFolderController;
 use App\Http\Controllers\Branch\StoneImportController;
 use App\Http\Controllers\Branch\StoneImportHistoryController;
 use App\Http\Controllers\Branch\StoneImageController;
@@ -70,6 +71,8 @@ Route::middleware(['auth', 'password.changed', 'branch.context', 'branch.member'
         Route::post('/stones/import/begin', [StoneImportController::class, 'begin'])->name('stones.import.begin');
         Route::post('/stones/import/chunk', [StoneImportController::class, 'chunk'])->name('stones.import.chunk');
         Route::post('/stones/import/finish', [StoneImportController::class, 'finish'])->name('stones.import.finish');
+        Route::put('/stone-folders/{stoneCategory}', [StoneFolderController::class, 'update'])->name('stone-folders.update');
+        Route::delete('/stone-folders/{stoneCategory}', [StoneFolderController::class, 'destroy'])->name('stone-folders.destroy');
         Route::get('/stones/{stone}', [StoneController::class, 'show'])->name('stones.show');
         Route::get('/stones/{stone}/edit', [StoneController::class, 'edit'])->name('stones.edit');
         Route::put('/stones/{stone}', [StoneController::class, 'update'])->name('stones.update');

@@ -35,7 +35,7 @@ class BranchAdminCredentialsMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your Annigems Branch Admin account',
+            subject: 'Your Aanigemas Branch Admin account',
         );
     }
 

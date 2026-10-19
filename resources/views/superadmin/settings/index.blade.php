@@ -35,8 +35,6 @@
             :hints="$card['hints'] ?? []"
             :editable="$editable"
             :action="route('superadmin.settings.update', $card['group']->value)"
-            :logo-url="$logoUrl"
-            :favicon-url="$faviconUrl"
         />
     @endforeach
 </div>

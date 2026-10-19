@@ -47,6 +47,78 @@ class StoneListScopeTest extends TestCase
         ];
     }
 
+    public function test_lot_search_also_reads_the_remarks(): void
+    {
+        $withNote = $this->lot('AMETHYST', ['pricing_mode' => 'per_piece', 'price_per_piece' => '3', 'pieces' => 5, 'remarks' => 'deep purple, eye clean']);
+        $plain = $this->lot('AMETHYST', ['pricing_mode' => 'per_piece', 'price_per_piece' => '3', 'pieces' => 5]);
+
+        $found = $this->actingAs($this->admin)->get(route('branch.stones.index', ['view' => 'lots', 'q' => 'eye clean']))->assertOk();
+        $this->assertSame([$withNote->id], collect($found->viewData('stones')->items())->pluck('id')->all());
+        $this->assertNotContains($plain->id, collect($found->viewData('stones')->items())->pluck('id')->all());
+    }
+
+    public function test_search_reads_size_and_carat_together(): void
+    {
+        $branch = Branch::query()->findOrFail($this->admin->branch_id);
+        $target = Stone::factory()->perCarat('5.400')->for($branch)->create(['name' => 'AMATISTA', 'dimension' => '14x10']);
+        $otherCarat = Stone::factory()->perCarat('2.100')->for($branch)->create(['name' => 'AMATISTA', 'dimension' => '14x10']);
+        $otherSize = Stone::factory()->perCarat('5.400')->for($branch)->create(['name' => 'AMATISTA', 'dimension' => '8x6']);
+
+        $ids = fn (string $q) => collect($this->actingAs($this->admin)
+            ->get(route('branch.stones.index', ['view' => 'lots', 'q' => $q]))->assertOk()
+            ->viewData('stones')->items())->pluck('id')->sort()->values()->all();
+
+        // The carat as the list shows it, with or without a space, alone or with a size.
+        $this->assertSame(collect([$target->id, $otherSize->id])->sort()->values()->all(), $ids('5.4ct'));
+        $this->assertSame(collect([$target->id, $otherSize->id])->sort()->values()->all(), $ids('5.4 ct'));
+        $this->assertSame(collect([$target->id, $otherSize->id])->sort()->values()->all(), $ids('5.4'));
+        $this->assertSame([$target->id], $ids('14x10 5.4 ct'));
+        $this->assertSame([$target->id], $ids('14x10 5.4ct'));
+        $this->assertSame(collect([$target->id, $otherCarat->id])->sort()->values()->all(), $ids('14x10'));
+        $this->assertSame([], $ids('9.9ct'));
+    }
+
+    public function test_back_on_a_lot_returns_to_its_folder_or_the_list_it_came_from(): void
+    {
+        [$amethyst, , $topaz] = $this->lots();
+        $folder = StoneCategory::query()->where('name', 'AMETHYST')->firstOrFail();
+        $folderUrl = route('branch.stones.index', ['category' => $folder->uuid]);
+
+        // Opened from nowhere in particular (a bookmark): back goes to the lot's folder, not the root.
+        $this->actingAs($this->admin)->get(route('branch.stones.show', $amethyst))
+            ->assertOk()->assertSee('href="'.$folderUrl.'"', false);
+        $topazFolder = route('branch.stones.index', ['category' => $topaz->category->uuid]);
+        $this->actingAs($this->admin)->get(route('branch.stones.show', $topaz))
+            ->assertOk()->assertSee('href="'.$topazFolder.'"', false);
+
+        // Opened from a filtered list: back returns to that exact list.
+        $list = route('branch.stones.index', ['category' => $folder->uuid, 'q' => 'AMETHYST', 'page' => 1]);
+        $this->actingAs($this->admin)->from($list)->get(route('branch.stones.show', $amethyst))
+            ->assertOk()->assertSee('href="'.e($list).'"', false);
+
+        // Coming from the edit page (after saving) is not a list: back falls to the folder.
+        $this->actingAs($this->admin)->from(route('branch.stones.edit', $amethyst))->get(route('branch.stones.show', $amethyst))
+            ->assertOk()->assertSee('href="'.$folderUrl.'"', false);
+    }
+
+    public function test_the_carat_box_finds_lots_of_that_exact_carat(): void
+    {
+        $branchId = $this->admin->branch_id;
+        $one = Stone::factory()->perCarat('1.100')->for(Branch::query()->findOrFail($branchId))->create(['name' => 'AMETHYST']);
+        $other = Stone::factory()->perCarat('2.100')->for(Branch::query()->findOrFail($branchId))->create(['name' => 'AMETHYST']);
+
+        $found = $this->actingAs($this->admin)->get(route('branch.stones.index', ['view' => 'lots', 'carat' => '1.1']))->assertOk();
+        $found->assertSee('name="carat"', false);
+        $ids = collect($found->viewData('stones')->items())->pluck('id');
+        $this->assertTrue($ids->contains($one->id));
+        $this->assertFalse($ids->contains($other->id));
+
+        // 1.100 is the same figure; junk is ignored rather than breaking the list.
+        $same = $this->actingAs($this->admin)->get(route('branch.stones.index', ['view' => 'lots', 'carat' => '1.100']))->assertOk();
+        $this->assertSame([$one->id], collect($same->viewData('stones')->items())->pluck('id')->all());
+        $this->actingAs($this->admin)->get(route('branch.stones.index', ['view' => 'lots', 'carat' => 'abc']))->assertOk();
+    }
+
     public function test_the_folder_grid_only_searches_materials_and_offers_no_lot_filters(): void
     {
         [$a, , $topaz] = $this->lots();

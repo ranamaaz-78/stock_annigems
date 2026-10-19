@@ -77,8 +77,86 @@ function bindFolderPanel(root) {
 }
 
 /**
+ * Turn a folder's name into an inline editor. Enter saves, Escape restores.
+ *
+ * Saving submits the tile's hidden rename form, so the server does the
+ * checks and the page comes back with the result. An unchanged or empty
+ * name just puts the label back without a request.
+ *
+ * @param {HTMLButtonElement} nameButton The [data-folder-rename] label
+ */
+function beginRename(nameButton) {
+    const tile = nameButton.closest('[data-folder-tile]');
+    const form = tile?.querySelector('[data-folder-rename-form]');
+    const nameField = form?.querySelector('input[name="name"]');
+    if (!(form instanceof HTMLFormElement) || !(nameField instanceof HTMLInputElement)) {
+        return;
+    }
+
+    const current = nameField.value;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'input-field folder-tile__rename';
+    input.value = current;
+    input.maxLength = 120;
+    input.setAttribute('aria-label', 'Folder name');
+    nameButton.replaceWith(input);
+    input.focus();
+    input.select();
+
+    let settled = false;
+
+    /**
+     * @param {boolean} save
+     */
+    const finish = (save) => {
+        if (settled) return;
+        settled = true;
+
+        const next = input.value.trim();
+        if (!save || next === '' || next === current) {
+            input.replaceWith(nameButton);
+            return;
+        }
+
+        nameField.value = next;
+        form.submit();
+    };
+
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            finish(true);
+        }
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            finish(false);
+        }
+    });
+    input.addEventListener('blur', () => finish(true));
+}
+
+/**
+ * Wire the click on any editable folder name, including ones drawn later.
+ *
+ * @param {HTMLElement} root The [data-stone-folders] panel
+ */
+function bindFolderRename(root) {
+    root.addEventListener('click', (event) => {
+        const target = event.target instanceof Element ? event.target : null;
+        const button = target?.closest('[data-folder-rename]');
+        if (button instanceof HTMLButtonElement) {
+            beginRename(button);
+        }
+    });
+}
+
+/**
  * Page boot for the stone folder grid.
  */
 export function bindStoneFolders() {
-    document.querySelectorAll('[data-stone-folders]').forEach(bindFolderPanel);
+    document.querySelectorAll('[data-stone-folders]').forEach((root) => {
+        bindFolderPanel(root);
+        bindFolderRename(root);
+    });
 }

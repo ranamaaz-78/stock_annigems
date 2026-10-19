@@ -136,6 +136,7 @@ class PermissionSeeder extends Seeder
             ['module' => 'stones', 'name' => 'stones.edit', 'display_name' => 'Edit Stones'],
             ['module' => 'stones', 'name' => 'stones.deactivate', 'display_name' => 'Deactivate Stones'],
             ['module' => 'stones', 'name' => 'stones.delete', 'display_name' => 'Delete Stones', 'description' => 'Soft-delete a stone lot that is not held by an open document'],
+            ['module' => 'stones', 'name' => 'stones.folders', 'display_name' => 'Manage Stone Folders', 'description' => 'Rename a material folder, or delete it together with every lot inside'],
             ['module' => 'stones', 'name' => 'stones.barcode', 'display_name' => 'Print Stone Labels'],
             ['module' => 'stones', 'name' => 'stones.intake', 'display_name' => 'Perform Stone Intake'],
             ['module' => 'stones', 'name' => 'stones.intake_view', 'display_name' => 'View Stone Intake History'],

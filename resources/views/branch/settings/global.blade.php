@@ -58,8 +58,6 @@
             :values="$card['values']"
             :hints="$card['hints'] ?? []"
             :editable="false"
-            :logo-url="$logoUrl"
-            :favicon-url="$faviconUrl"
         />
     @endforeach
 </div>

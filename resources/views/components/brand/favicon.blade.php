@@ -1,14 +1,6 @@
-{{-- Browser tab icon: uploaded favicon when set, otherwise the bundled mark. --}}
-@php
-    $favicon = brand_asset_url('company_favicon');
-@endphp
-@if($favicon)
-    <link rel="icon" href="{{ $favicon }}">
-    <link rel="shortcut icon" href="{{ $favicon }}">
-    <link rel="apple-touch-icon" href="{{ $favicon }}">
-@else
-    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
-    <link rel="icon" href="{{ asset('favicon-32.png') }}" type="image/png" sizes="32x32">
-    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" href="{{ asset('favicon-32.png') }}">
-@endif
+{{-- Browser tab icon: the bundled AG monogram (public/brand/). --}}
+@php($v = @filemtime(public_path('brand/favicon-32.png')) ?: 1)
+<link rel="icon" href="{{ asset('brand/favicon-32.png') }}?v={{ $v }}" type="image/png" sizes="32x32">
+<link rel="icon" href="{{ asset('brand/favicon-64.png') }}?v={{ $v }}" type="image/png" sizes="64x64">
+<link rel="shortcut icon" href="{{ asset('brand/favicon-32.png') }}?v={{ $v }}">
+<link rel="apple-touch-icon" href="{{ asset('brand/apple-touch-icon.png') }}?v={{ $v }}">

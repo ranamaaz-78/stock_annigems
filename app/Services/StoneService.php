@@ -192,6 +192,21 @@ class StoneService
      */
     private function assertNotHeldByOpenDocument(Stone $stone): void
     {
+        $reason = $this->openDocumentReason($stone);
+
+        if ($reason !== null) {
+            throw ValidationException::withMessages(['stone' => $reason]);
+        }
+    }
+
+    /**
+     * Why this lot cannot be deleted right now, or null when nothing holds it.
+     *
+     * Public so a folder delete can check every lot up front and refuse as a
+     * whole, instead of discovering the first blocker halfway through.
+     */
+    public function openDocumentReason(Stone $stone): ?string
+    {
         $quotation = QuotationItem::query()
             ->where('stone_id', $stone->id)
             ->whereHas('quotation', fn ($q) => $q->where('status', QuotationStatus::DRAFT))
@@ -199,9 +214,7 @@ class StoneService
             ->first();
 
         if ($quotation?->quotation) {
-            throw ValidationException::withMessages([
-                'stone' => "{$stone->stone_code} is held by quotation {$quotation->quotation->quotation_number}. Cancel or convert it first.",
-            ]);
+            return "{$stone->stone_code} is held by quotation {$quotation->quotation->quotation_number}. Cancel or convert it first.";
         }
 
         $performa = PerformaItem::query()
@@ -211,9 +224,7 @@ class StoneService
             ->first(fn (PerformaItem $item): bool => $item->performa?->isOpen() && $item->outstandingAmount() > 0);
 
         if ($performa) {
-            throw ValidationException::withMessages([
-                'stone' => "{$stone->stone_code} is still out on performa {$performa->performa->performa_number}. Settle or return it first.",
-            ]);
+            return "{$stone->stone_code} is still out on performa {$performa->performa->performa_number}. Settle or return it first.";
         }
 
         $note = DeliveryNoteItem::query()
@@ -223,10 +234,10 @@ class StoneService
             ->first();
 
         if ($note?->deliveryNote) {
-            throw ValidationException::withMessages([
-                'stone' => "{$stone->stone_code} is on delivery note {$note->deliveryNote->delivery_note_number}. Cancel or invoice it first.",
-            ]);
+            return "{$stone->stone_code} is on delivery note {$note->deliveryNote->delivery_note_number}. Cancel or invoice it first.";
         }
+
+        return null;
     }
 
     /**
@@ -575,14 +586,7 @@ class StoneService
     {
         $term = $filters['q'] ?? $filters['search'] ?? null;
         if (! empty($term)) {
-            $like = '%'.$term.'%';
-            $query->where(function (Builder $inner) use ($like): void {
-                $inner->where('stone_code', 'like', $like)
-                    ->orWhere('barcode', 'like', $like)
-                    ->orWhere('name', 'like', $like)
-                    ->orWhere('tray_no', 'like', $like)
-                    ->orWhere('dimension', 'like', $like);
-            });
+            $this->applySearch($query, (string) $term);
         }
 
         if (! empty($filters['pricing_mode'])) {
@@ -626,11 +630,53 @@ class StoneService
                 ->orWhere(fn (Builder $g) => $g->where('pricing_mode', $weighed)->where(fn (Builder $w) => $w->whereNull('weight_grams')->orWhere('weight_grams', '<=', 0))));
         }
 
+        // One carat figure, e.g. 1.1 ct. Carat is stored to three decimals, so
+        // typing 1.1 or 1.100 finds the same lots. Non-numeric input is ignored.
+        if (isset($filters['carat']) && is_numeric($filters['carat'])) {
+            $query->where('carat', round((float) $filters['carat'], 3));
+        }
+
         if (! empty($filters['carat_min'])) {
             $query->where('carat', '>=', $filters['carat_min']);
         }
         if (! empty($filters['carat_max'])) {
             $query->where('carat', '<=', $filters['carat_max']);
+        }
+    }
+
+    /**
+     * Free-text search over a lot's code, barcode, name, tray, size, remarks and carat.
+     *
+     * The text is split into words and every word must match something, so
+     * "14x10 5.4 ct" finds a lot by size and carat together. A carat is read
+     * as "5.4ct" or "5.4 ct" (the unit is dropped) and compared as a number,
+     * the way the list shows it; a bare number such as "5.4" matches either
+     * the text columns or the carat.
+     */
+    private function applySearch(Builder $query, string $term): void
+    {
+        // "5.4ct", "5.4 ct", "5,4 cts": carat figures, with the unit attached.
+        if (preg_match_all('/(\d+(?:[.,]\d+)?)\s*(?:cts?|carats?)\b/iu', $term, $found)) {
+            foreach ($found[1] as $figure) {
+                $query->where('carat', round((float) str_replace(',', '.', $figure), 3));
+            }
+            $term = (string) preg_replace('/(\d+(?:[.,]\d+)?)\s*(?:cts?|carats?)\b/iu', ' ', $term);
+        }
+
+        foreach (preg_split('/\s+/u', trim($term), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $word) {
+            $like = '%'.$word.'%';
+            $query->where(function (Builder $inner) use ($like, $word): void {
+                $inner->where('stone_code', 'like', $like)
+                    ->orWhere('barcode', 'like', $like)
+                    ->orWhere('name', 'like', $like)
+                    ->orWhere('tray_no', 'like', $like)
+                    ->orWhere('dimension', 'like', $like)
+                    ->orWhere('remarks', 'like', $like);
+
+                if (is_numeric(str_replace(',', '.', $word))) {
+                    $inner->orWhere('carat', round((float) str_replace(',', '.', $word), 3));
+                }
+            });
         }
     }
 
