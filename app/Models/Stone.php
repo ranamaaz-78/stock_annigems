@@ -261,6 +261,39 @@ class Stone extends Model
     }
 
     /**
+     * Whether anything is left: pieces, or grams for a lot sold by weight.
+     */
+    public function hasStock(): bool
+    {
+        return $this->pricing_mode === StonePricingMode::PER_GRAM
+            ? (float) $this->weight_grams > 0
+            : (int) $this->quantity > 0;
+    }
+
+    /**
+     * Keep the lot's status in step with its stock: "Out of stock" when
+     * nothing is left, "In stock" again once there is. A pending lot (figures
+     * still missing) is left as it is. Returns whether the status changed;
+     * the caller saves.
+     */
+    public function syncStockStatus(): bool
+    {
+        if ($this->status === StoneStatus::PENDING) {
+            return false;
+        }
+
+        $wanted = $this->hasStock() ? StoneStatus::IN_STOCK : StoneStatus::OUT_OF_STOCK;
+
+        if ($this->status === $wanted) {
+            return false;
+        }
+
+        $this->status = $wanted;
+
+        return true;
+    }
+
+    /**
      * Whether the lot has run out, for the "low stock" styling.
      *
      * Gram lots are never counted in pieces, so an empty quantity on one of

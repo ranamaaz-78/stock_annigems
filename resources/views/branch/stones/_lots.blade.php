@@ -92,6 +92,8 @@
                                 <td>
                                     @if(! $stone->is_active)
                                         <x-status-badge status="inactive" />
+                                    @elseif($stone->status === \App\Enums\StoneStatus::OUT_OF_STOCK)
+                                        <x-status-badge status="out_of_stock" label="Out of stock" />
                                     @elseif($isPending)
                                         <x-status-badge status="reserved" label="Pending" />
                                     @else

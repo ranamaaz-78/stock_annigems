@@ -28,7 +28,7 @@
         'reserved', 'under_repair', 'draft',
         'sold', 'damaged', 'lost', 'voided',
         'converted', 'issued', 'invoiced', 'delivered',
-        'open', 'partial', 'settled', 'on_memo', 'paid',
+        'open', 'partial', 'settled', 'on_memo', 'paid', 'out_of_stock',
         // Report export lifecycle (Module 6).
         'pending', 'processing', 'streamed', 'failed',
     ];

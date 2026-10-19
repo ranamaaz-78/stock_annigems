@@ -123,6 +123,11 @@ class StoneService
             $this->syncPieceCount($stone, $data, $actor, 'Piece count corrected on edit');
             $this->syncWeight($stone, $data, $actor, 'Weight corrected on edit');
 
+            // The form's status is only In stock or Pending; the stock decides the rest.
+            if ($stone->syncStockStatus()) {
+                $stone->save();
+            }
+
             $this->auditLogService->log('stone.updated', $stone, $old, $this->auditPayload($stone), $actor);
 
             return $stone->refresh();
@@ -361,6 +366,11 @@ class StoneService
 
         $this->syncPieceCount($stone, $data, $actor, 'Opening stock from registration');
         $this->syncWeight($stone, $data, $actor, 'Opening stock from registration');
+
+        // A lot registered with nothing in hand starts out of stock.
+        if ($stone->syncStockStatus()) {
+            $stone->save();
+        }
 
         return $stone;
     }
@@ -602,11 +612,18 @@ class StoneService
             $query->where('is_active', (string) $filters['is_active'] === '1');
         }
 
+        // A lot sold by weight holds grams and always has 0 pieces, so each kind is
+        // judged on its own unit.
+        $weighed = StonePricingMode::PER_GRAM->value;
         if (($filters['stock'] ?? '') === 'in') {
-            $query->where('quantity', '>', 0);
+            $query->where(fn (Builder $q) => $q
+                ->where(fn (Builder $p) => $p->where('pricing_mode', '!=', $weighed)->where('quantity', '>', 0))
+                ->orWhere(fn (Builder $g) => $g->where('pricing_mode', $weighed)->where('weight_grams', '>', 0)));
         }
         if (($filters['stock'] ?? '') === 'out') {
-            $query->where('quantity', '=', 0);
+            $query->where(fn (Builder $q) => $q
+                ->where(fn (Builder $p) => $p->where('pricing_mode', '!=', $weighed)->where('quantity', '=', 0))
+                ->orWhere(fn (Builder $g) => $g->where('pricing_mode', $weighed)->where(fn (Builder $w) => $w->whereNull('weight_grams')->orWhere('weight_grams', '<=', 0))));
         }
 
         if (! empty($filters['carat_min'])) {

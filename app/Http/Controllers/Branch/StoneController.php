@@ -53,20 +53,36 @@ class StoneController extends Controller
 
         $category = $this->openFolder($request);
 
-        if ($category === null && ! $this->hasLotFilters($filters)) {
+        // Three explicit scopes, so a filter never silently changes what is listed:
+        //   folders  the material folders; only a search by material name applies
+        //   folder   the lots of one folder, with every lot filter
+        //   lots     every lot of the branch ("All lots"), with every lot filter
+        // Lot filters in a bare address (old links) count as the "lots" scope.
+        $mode = match (true) {
+            $category !== null => 'folder',
+            $request->query('view') === 'lots', $this->hasLotFilters($filters) => 'lots',
+            default => 'folders',
+        };
+
+        if ($mode === 'folders') {
             return view('branch.stones.index', array_merge($this->formLookups(), [
-                'categories' => $this->categoryService->paginate($filters),
-                'filters' => $filters,
+                'mode' => $mode,
+                'categories' => $this->categoryService->paginate(['q' => $filters['q'] ?? '']),
+                'filters' => ['q' => $filters['q'] ?? ''],
                 'category' => null,
                 'stones' => null,
+                'folderOptions' => collect(),
             ]));
         }
 
-        return view('branch.stones.index', array_merge($this->formLookups(), [
+        return view('branch.stones.index', array_merge($this->formLookups(), $this->scopedFilterOptions($category, $filters), [
+            'mode' => $mode,
             'categories' => null,
             'category' => $category,
             'stones' => $this->stoneService->paginate($filters),
             'filters' => $filters,
+            // The folder dropdown is offered only across all lots; inside a folder it is fixed.
+            'folderOptions' => $mode === 'lots' ? StoneCategory::query()->ordered()->get(['uuid', 'name']) : collect(),
         ]));
     }
 
@@ -243,6 +259,35 @@ class StoneController extends Controller
     }
 
     /**
+     * The values the filter dropdowns offer, limited to what the lots in view
+     * actually carry: a folder whose lots sit in two trays offers those two
+     * trays, not every tray in the branch. A value already chosen (an old link)
+     * stays in its list so the form still shows it.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
+    private function scopedFilterOptions(?StoneCategory $category, array $filters): array
+    {
+        $lots = fn () => Stone::query()->when($category, fn ($query) => $query->where('stone_category_id', $category->id));
+        $plain = fn ($value): string => $value instanceof \BackedEnum ? (string) $value->value : (string) $value;
+
+        $modes = $lots()->distinct()->pluck('pricing_mode')->map($plain)->push((string) ($filters['pricing_mode'] ?? ''))->filter()->unique();
+        $statuses = $lots()->distinct()->pluck('status')->map($plain)->push((string) ($filters['status'] ?? ''))->filter()->unique();
+        $trays = $lots()->whereNotNull('tray_no')->where('tray_no', '!=', '')->distinct()->orderBy('tray_no')->pluck('tray_no')
+            ->push((string) ($filters['tray_no'] ?? ''))->filter()->unique()->values();
+        $shapes = $lots()->whereNotNull('shape')->where('shape', '!=', '')->distinct()->orderBy('shape')->pluck('shape')
+            ->push((string) ($filters['shape'] ?? ''))->filter()->unique()->values();
+
+        return [
+            'pricingModes' => array_intersect_key(StonePricingMode::options(), $modes->flip()->all()),
+            'statuses' => array_intersect_key(StoneStatus::options(), $statuses->flip()->all()),
+            'trays' => $trays->all(),
+            'shapes' => $shapes->all(),
+        ];
+    }
+
+    /**
      * Shared option lists for the list filters and the create/edit forms.
      *
      * Trays and shapes are free text on the sheet, so the dropdowns are
@@ -254,7 +299,7 @@ class StoneController extends Controller
     {
         return [
             'pricingModes' => StonePricingMode::options(),
-            'statuses' => StoneStatus::options(),
+            'statuses' => StoneStatus::formOptions(),
             'trays' => Stone::query()
                 ->whereNotNull('tray_no')
                 ->distinct()

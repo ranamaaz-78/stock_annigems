@@ -50,6 +50,7 @@ class StoneStockService
 
         $stone->authorizeQuantityWrite();
         $stone->quantity = $after;
+        $stone->syncStockStatus();
         $stone->save();
 
         return StoneStockMovement::query()->create([
@@ -99,6 +100,7 @@ class StoneStockService
         }
 
         $stone->weight_grams = number_format($after, 3, '.', '');
+        $stone->syncStockStatus();
         $stone->save();
 
         $pieces = (int) $stone->quantity;

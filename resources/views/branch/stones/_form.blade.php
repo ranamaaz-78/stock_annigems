@@ -34,7 +34,7 @@
                 <x-form.input name="image_code" label="Image code" :value="$stone->image_code ?? null" maxlength="180" placeholder="stone1" help="Name of a picture in Stones → Images, without .jpg." />
             </div>
             <x-form.input name="tray_no" label="Tray no." :value="$stone->tray_no ?? null" maxlength="30" placeholder="K1" />
-            <x-form.select name="status" label="Status" :options="$statuses" :value="old('status', $stone->status?->value ?? \App\Enums\StoneStatus::IN_STOCK->value)" required />
+            <x-form.select name="status" label="Status" :options="$statuses" :value="old('status', ($stone->status ?? \App\Enums\StoneStatus::IN_STOCK) === \App\Enums\StoneStatus::OUT_OF_STOCK ? \App\Enums\StoneStatus::IN_STOCK->value : ($stone->status?->value ?? \App\Enums\StoneStatus::IN_STOCK->value))" required />
         </div>
     </section>
 
