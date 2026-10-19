@@ -119,7 +119,7 @@ class QuotationController extends Controller
                 'exception' => $e,
             ]);
 
-            $message = 'The quotation could not be saved. Please try again or contact support.';
+            $message = __('The quotation could not be saved. Please try again or contact support.');
 
             if ($request->expectsJson()) {
                 return $this->jsonFailure($message, [], 500);
@@ -130,9 +130,9 @@ class QuotationController extends Controller
 
         if ($request->expectsJson()) {
             // The POS opens the document's page next; this is what that page shows.
-            session()->flash('success', 'Quotation '.$quotation->quotation_number.' saved.');
+            session()->flash('success', __('Quotation :number saved.', ['number' => $quotation->quotation_number]));
 
-            return $this->jsonSuccess('Quotation '.$quotation->quotation_number.' saved.', [
+            return $this->jsonSuccess(__('Quotation :number saved.', ['number' => $quotation->quotation_number]), [
                 'uuid' => $quotation->uuid,
                 'number' => $quotation->quotation_number,
                 'print_url' => route('branch.quotations.print', $quotation),
@@ -140,7 +140,7 @@ class QuotationController extends Controller
             ]);
         }
 
-        return redirect()->route('branch.quotations.show', $quotation)->with('success', 'Quotation saved.');
+        return redirect()->route('branch.quotations.show', $quotation)->with('success', __('Quotation saved.'));
     }
 
     /**
@@ -175,7 +175,7 @@ class QuotationController extends Controller
         $this->authorize('cancel', $quotation);
         $this->quotationService->cancel($quotation, $request->user());
 
-        return redirect()->route('branch.quotations.index')->with('success', 'Quotation cancelled.');
+        return redirect()->route('branch.quotations.index')->with('success', __('Quotation cancelled.'));
     }
 
     /**
@@ -185,7 +185,7 @@ class QuotationController extends Controller
     {
         $invoice = $this->conversionService->convert($quotation, $request->validated(), $request->user());
 
-        return redirect()->route('branch.invoices.show', $invoice)->with('success', 'Invoice created successfully.');
+        return redirect()->route('branch.invoices.show', $invoice)->with('success', __('Invoice created successfully.'));
     }
 
     /**
@@ -219,7 +219,7 @@ class QuotationController extends Controller
                 'exception' => $e,
             ]);
 
-            $message = 'The invoice could not be created. Please try again or contact support.';
+            $message = __('The invoice could not be created. Please try again or contact support.');
 
             if ($request->expectsJson()) {
                 return $this->jsonFailure($message, [], 500);
@@ -230,9 +230,9 @@ class QuotationController extends Controller
 
         if ($request->expectsJson()) {
             // The POS opens the document's page next; this is what that page shows.
-            session()->flash('success', 'Invoice '.$invoice->invoice_number.' created.');
+            session()->flash('success', __('Invoice :number created.', ['number' => $invoice->invoice_number]));
 
-            return $this->jsonSuccess('Invoice '.$invoice->invoice_number.' created.', [
+            return $this->jsonSuccess(__('Invoice :number created.', ['number' => $invoice->invoice_number]), [
                 'uuid' => $invoice->uuid,
                 'number' => $invoice->invoice_number,
                 'print_url' => route('branch.invoices.print', $invoice),
@@ -240,7 +240,7 @@ class QuotationController extends Controller
             ]);
         }
 
-        return redirect()->route('branch.invoices.show', $invoice)->with('success', 'Invoice created successfully.');
+        return redirect()->route('branch.invoices.show', $invoice)->with('success', __('Invoice created successfully.'));
     }
 
     /**
@@ -255,10 +255,10 @@ class QuotationController extends Controller
         $result = $this->lookupService->lookup($request->input('code'), $request->user());
 
         if ($result['status'] === 'found') {
-            return $this->jsonSuccess('Found.', ['line' => $result['line']]);
+            return $this->jsonSuccess(__('Found.'), ['line' => $result['line']]);
         }
 
-        return $this->jsonFailure($result['message'] ?? 'Not found.', ['code' => [$result['message'] ?? 'Not found.']], 422);
+        return $this->jsonFailure($result['message'] ?? __('Not found.'), ['code' => [$result['message'] ?? __('Not found.')]], 422);
     }
 
     /**
@@ -277,7 +277,7 @@ class QuotationController extends Controller
             ? $this->lookupService->catalog($request->user())
             : $this->lookupService->search((string) $request->query('q', ''), $request->user());
 
-        return $this->jsonSuccess('OK.', [
+        return $this->jsonSuccess(__('OK.'), [
             'items' => $items,
         ]);
     }
@@ -295,7 +295,7 @@ class QuotationController extends Controller
 
         $this->draftService->save($request->user(), $payload, $payload['quotation_id'] ?? null);
 
-        return $this->jsonSuccess('Draft saved.');
+        return $this->jsonSuccess(__('Draft saved.'));
     }
 
     /**
@@ -305,7 +305,7 @@ class QuotationController extends Controller
     {
         $this->draftService->discard($request->user());
 
-        return $this->jsonSuccess('Draft discarded.');
+        return $this->jsonSuccess(__('Draft discarded.'));
     }
 
     /**
@@ -329,7 +329,7 @@ class QuotationController extends Controller
         $data = DocumentSettings::applyToPayload($data, $request->user());
         $result = $this->pricingService->recalculate($data['lines'], $data);
 
-        return $this->jsonSuccess('OK', $result);
+        return $this->jsonSuccess(__('OK'), $result);
     }
 
     /**

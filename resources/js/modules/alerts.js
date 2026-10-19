@@ -3,6 +3,7 @@
  * Used system-wide instead of browser alert()/confirm().
  */
 import Swal from 'sweetalert2';
+import { t } from './i18n';
 
 const defaultToast = Swal.mixin({
     toast: true,
@@ -23,8 +24,8 @@ const defaultToast = Swal.mixin({
  * @returns {Promise<boolean>} true when the user confirms
  */
 export async function confirmAction({
-    title = 'Are you sure?',
-    text = 'This action cannot be undone.',
+    title = t('Are you sure?'),
+    text = t('This action cannot be undone.'),
     confirmButtonText = 'Confirm',
     icon = 'warning',
 } = {}) {
@@ -36,7 +37,7 @@ export async function confirmAction({
         confirmButtonColor: '#785600',
         cancelButtonColor: '#5d5e61',
         confirmButtonText,
-        cancelButtonText: 'Cancel',
+        cancelButtonText: t('Cancel'),
         reverseButtons: true,
     });
 
@@ -56,7 +57,7 @@ export function notifySuccess(message, toast = true) {
 
     return Swal.fire({
         icon: 'success',
-        title: 'Success',
+        title: t('Success'),
         text: message,
         confirmButtonColor: '#785600',
     });
@@ -75,7 +76,7 @@ export function notifyError(message, toast = false) {
 
     return Swal.fire({
         icon: 'error',
-        title: 'Something went wrong',
+        title: t('Something went wrong'),
         text: message,
         confirmButtonColor: '#785600',
     });
@@ -92,21 +93,21 @@ export function notifyError(message, toast = false) {
 export async function showCredentialsModal({ email, password, name }) {
     const html = `
         <div class="text-left text-sm space-y-3">
-            ${name ? `<p><strong>Name:</strong> ${escapeHtml(name)}</p>` : ''}
-            <p><strong>Email:</strong> <code id="cred-email">${escapeHtml(email)}</code></p>
-            <p><strong>Temporary password:</strong> <code id="cred-password">${escapeHtml(password)}</code></p>
-            <p class="text-xs text-gray-600">Copy these now. The password will not be shown again.</p>
+            ${name ? `<p><strong>${t('Name:')}</strong> ${escapeHtml(name)}</p>` : ''}
+            <p><strong>${t('Email:')}</strong> <code id="cred-email">${escapeHtml(email)}</code></p>
+            <p><strong>${t('Temporary password:')}</strong> <code id="cred-password">${escapeHtml(password)}</code></p>
+            <p class="text-xs text-gray-600">${t('Copy these now. The password will not be shown again.')}</p>
         </div>
     `;
 
     await Swal.fire({
-        title: 'Account credentials',
+        title: t('Account credentials'),
         html,
         icon: 'info',
         confirmButtonColor: '#785600',
-        confirmButtonText: 'Copy password & close',
+        confirmButtonText: t('Copy password & close'),
         showCancelButton: true,
-        cancelButtonText: 'Close',
+        cancelButtonText: t('Close'),
         preConfirm: async () => {
             try {
                 await navigator.clipboard.writeText(password);
@@ -145,7 +146,7 @@ function escapeHtml(value) {
  * @returns {Promise<string|null>} Trimmed text when confirmed, otherwise null
  */
 export async function promptText({
-    title = 'Are you sure?',
+    title = t('Are you sure?'),
     text = '',
     confirmButtonText = 'Confirm',
     inputLabel = '',
@@ -160,7 +161,7 @@ export async function promptText({
         inputLabel,
         inputValidator: (value) => {
             if (minLength > 0 && (!value || value.trim().length < minLength)) {
-                return `Please enter at least ${minLength} characters.`;
+                return t('Please enter at least :minLength characters.', { minLength: minLength });
             }
 
             return null;
@@ -169,7 +170,7 @@ export async function promptText({
         confirmButtonColor: '#785600',
         cancelButtonColor: '#5d5e61',
         confirmButtonText,
-        cancelButtonText: 'Cancel',
+        cancelButtonText: t('Cancel'),
         reverseButtons: true,
     });
 
@@ -188,14 +189,14 @@ export async function chooseDuplicateAction({ names = [] } = {}) {
     const more = names.length > 8 ? ` and ${names.length - 8} more` : '';
 
     const result = await Swal.fire({
-        title: names.length === 1 ? 'This name already exists' : `${names.length} names already exist`,
-        html: `<p><strong>${shown}</strong>${more}</p><p>Replace the existing pictures with the new files, or skip these and upload only the rest?</p>`,
+        title: names.length === 1 ? t('This name already exists') : t(':names names already exist', { names: names.length }),
+        html: `<p><strong>${shown}</strong>${more}</p><p>${t('Replace the existing pictures with the new files, or skip these and upload only the rest?')}</p>`,
         icon: 'question',
         showDenyButton: true,
         showCancelButton: true,
-        confirmButtonText: 'Replace',
-        denyButtonText: 'Skip these',
-        cancelButtonText: 'Cancel upload',
+        confirmButtonText: t('Replace'),
+        denyButtonText: t('Skip these'),
+        cancelButtonText: t('Cancel upload'),
         confirmButtonColor: '#785600',
         denyButtonColor: '#5d5e61',
         cancelButtonColor: '#b3b3b3',

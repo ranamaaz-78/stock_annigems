@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-shell.boot />
+    <x-shell.i18n />
     <title>@yield('title', 'SuperAdmin') — {{ setting('company_name', config('app.name', 'Aanigemas')) }}</title>
     <x-brand.favicon />
     <link rel="preconnect" href="https://fonts.googleapis.com">

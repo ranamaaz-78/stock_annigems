@@ -7,19 +7,19 @@
 @section('content')
 <x-page-header :title="$intake->intake_number" subtitle="This intake is a historical record and cannot be edited. Mistakes are corrected later with an adjustment.">
     <x-slot:actions>
-        <x-btn href="{{ route('branch.stone-intakes.index') }}" variant="secondary">Back</x-btn>
-        <button type="button" class="btn btn--secondary" onclick="window.print()">Print</button>
+        <x-btn href="{{ route('branch.stone-intakes.index') }}" variant="secondary">{{ __('Back') }}</x-btn>
+        <button type="button" class="btn btn--secondary" onclick="window.print()">{{ __('Print') }}</button>
     </x-slot:actions>
 </x-page-header>
 
 <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-4 mb-4">
     <dl class="grid grid-cols-2 md:grid-cols-4 gap-3 text-body-sm">
-        <div><dt class="form-label">Date</dt><dd class="font-data-mono">{{ setting_date($intake->intake_date) }}</dd></div>
-        <div><dt class="form-label">Stone types</dt><dd class="font-data-mono">{{ $intake->total_stone_types }}</dd></div>
-        <div><dt class="form-label">Total quantity</dt><dd class="font-data-mono">{{ $intake->total_quantity }}</dd></div>
-        <div><dt class="form-label">Total carat</dt><dd class="font-data-mono">{{ $intake->total_carat }}</dd></div>
+        <div><dt class="form-label">{{ __('Date') }}</dt><dd class="font-data-mono">{{ setting_date($intake->intake_date) }}</dd></div>
+        <div><dt class="form-label">{{ __('Stone types') }}</dt><dd class="font-data-mono">{{ $intake->total_stone_types }}</dd></div>
+        <div><dt class="form-label">{{ __('Total quantity') }}</dt><dd class="font-data-mono">{{ $intake->total_quantity }}</dd></div>
+        <div><dt class="form-label">{{ __('Total carat') }}</dt><dd class="font-data-mono">{{ $intake->total_carat }}</dd></div>
         @if((float) $intake->total_weight_grams > 0)
-            <div><dt class="form-label">Total grams</dt><dd class="font-data-mono">{{ rtrim(rtrim((string) $intake->total_weight_grams, '0'), '.') }} g</dd></div>
+            <div><dt class="form-label">{{ __('Total grams') }}</dt><dd class="font-data-mono">{{ rtrim(rtrim((string) $intake->total_weight_grams, '0'), '.') }} g</dd></div>
         @endif
     </dl>
     @if($intake->notes)
@@ -32,11 +32,11 @@
     <table class="table-admin">
         <thead>
             <tr>
-                <th>Code</th>
-                <th>Name</th>
-                <th>Carat (snapshot)</th>
-                <th>Qty</th>
-                <th>Scanned</th>
+                <th>{{ __('Code') }}</th>
+                <th>{{ __('Name') }}</th>
+                <th>{{ __('Carat (snapshot)') }}</th>
+                <th>{{ __('Qty') }}</th>
+                <th>{{ __('Scanned') }}</th>
             </tr>
         </thead>
         <tbody>

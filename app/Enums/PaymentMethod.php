@@ -20,13 +20,13 @@ enum PaymentMethod: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::CASH => 'Cash',
             self::CARD => 'Card',
             self::BANK_TRANSFER => 'Bank transfer',
             self::CHEQUE => 'Cheque',
             self::OTHER => 'Other',
-        };
+        });
     }
 
     /**

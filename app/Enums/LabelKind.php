@@ -20,10 +20,10 @@ enum LabelKind: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::BARCODE => 'Barcode',
             self::QR => 'QR',
             self::BOTH => 'Barcode + QR',
-        };
+        });
     }
 }

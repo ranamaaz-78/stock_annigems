@@ -21,11 +21,11 @@ enum StoneStatus: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::IN_STOCK => 'In stock',
             self::OUT_OF_STOCK => 'Out of stock',
             self::PENDING => 'Pending',
-        };
+        });
     }
 
     /**

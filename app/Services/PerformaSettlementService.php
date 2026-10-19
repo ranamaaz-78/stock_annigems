@@ -56,7 +56,7 @@ class PerformaSettlementService
 
         if (! $performa->isOpen()) {
             throw ValidationException::withMessages([
-                'performa' => 'This performa has no unpaid goods to settle.',
+                'performa' => __('This performa has no unpaid goods to settle.'),
             ]);
         }
 
@@ -69,7 +69,7 @@ class PerformaSettlementService
 
             if (! $performa->status->isOpen()) {
                 throw ValidationException::withMessages([
-                    'performa' => 'This performa has no unpaid goods to settle.',
+                    'performa' => __('This performa has no unpaid goods to settle.'),
                 ]);
             }
 
@@ -230,7 +230,7 @@ class PerformaSettlementService
         $rows = $data['lines'] ?? [];
         if (! is_array($rows) || $rows === []) {
             throw ValidationException::withMessages([
-                'lines' => 'Select at least one unpaid line to settle.',
+                'lines' => __('Select at least one unpaid line to settle.'),
             ]);
         }
 
@@ -246,14 +246,14 @@ class PerformaSettlementService
             $item = $items->get($id);
             if (! $item) {
                 throw ValidationException::withMessages([
-                    "lines.{$index}" => 'That line is not on this performa.',
+                    "lines.{$index}" => __('That line is not on this performa.'),
                 ]);
             }
 
             $outstanding = $item->outstandingAmount();
             if ($outstanding <= 0) {
                 throw ValidationException::withMessages([
-                    "lines.{$index}" => "{$item->item_code_snapshot} has nothing unpaid.",
+                    "lines.{$index}" => __(':code has nothing unpaid.', ['code' => $item->item_code_snapshot]),
                 ]);
             }
 
@@ -264,14 +264,14 @@ class PerformaSettlementService
 
             if (! $item->isWeighed() && (float) ($row['quantity'] ?? 0) !== (float) $qty) {
                 throw ValidationException::withMessages([
-                    "lines.{$index}" => "{$item->item_code_snapshot} is settled in whole pieces.",
+                    "lines.{$index}" => __(':code is settled in whole pieces.', ['code' => $item->item_code_snapshot]),
                 ]);
             }
             if ($item->line_type === LineType::JEWELLERY_ITEM) {
                 $qty = 1;
                 if ($outstanding !== 1) {
                     throw ValidationException::withMessages([
-                        "lines.{$index}" => 'A jewellery piece must be settled in full.',
+                        "lines.{$index}" => __('A jewellery piece must be settled in full.'),
                     ]);
                 }
             }
@@ -279,7 +279,7 @@ class PerformaSettlementService
             if ($qty <= 0 || $qty > $outstanding + 0.0005) {
                 $unit = $item->isWeighed() ? ' g' : '';
                 throw ValidationException::withMessages([
-                    "lines.{$index}" => "{$item->item_code_snapshot} has only {$outstanding}{$unit} unpaid.",
+                    "lines.{$index}" => __(':code has only :outstanding:unit unpaid.', ['code' => $item->item_code_snapshot, 'outstanding' => $outstanding, 'unit' => $unit]),
                 ]);
             }
 
@@ -296,7 +296,7 @@ class PerformaSettlementService
 
         if ($selections === []) {
             throw ValidationException::withMessages([
-                'lines' => 'Select at least one unpaid line to settle.',
+                'lines' => __('Select at least one unpaid line to settle.'),
             ]);
         }
 
@@ -351,7 +351,7 @@ class PerformaSettlementService
             $price = $selection['price_per_piece'];
             if ($price === null) {
                 throw ValidationException::withMessages([
-                    'lines' => 'Enter a price for '.$item->item_code_snapshot.'.',
+                    'lines' => __('Enter a price for :code.', ['code' => $item->item_code_snapshot]),
                 ]);
             }
 
@@ -488,7 +488,7 @@ class PerformaSettlementService
             $jewellery = JewelleryItem::query()->lockForUpdate()->findOrFail($item->jewellery_item_id);
             if ($jewellery->status !== JewelleryItemStatus::ON_MEMO) {
                 throw ValidationException::withMessages([
-                    'lines' => $item->item_code_snapshot.' is no longer on memo.',
+                    'lines' => __(':code is no longer on memo.', ['code' => $item->item_code_snapshot]),
                 ]);
             }
             $this->jewelleryItemService->markSold($jewellery, $invoice, $actor);

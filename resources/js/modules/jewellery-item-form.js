@@ -8,6 +8,7 @@
 
 import { attachBarcodeScanner } from './barcode-scanner';
 import { refreshSelect } from './select-search';
+import { t } from './i18n';
 
 /**
  * CSRF token from the layout meta tag.
@@ -195,7 +196,7 @@ export function bindJewelleryItemForm() {
             const errorEl = container?.querySelector('[data-error-for="metal_weight"]');
             metalInput.classList.add('is-invalid');
             if (errorEl) {
-                errorEl.textContent = 'Metal weight cannot be greater than gross weight.';
+                errorEl.textContent = t('Metal weight cannot be greater than gross weight.');
                 errorEl.classList.remove('is-hidden', 'hidden');
             }
             return false;
@@ -257,13 +258,13 @@ export function bindJewelleryItemForm() {
             const cost = rowCost(row);
             costTotal += cost || 0;
             const amountInput = gram
-                ? `<span class="stone-alloc__amount"><input type="number" min="0.001" step="0.001" class="input-field" data-grams="${row.stone.uuid}" value="${row.grams || ''}" placeholder="0.000" aria-label="Grams used"><span class="stone-alloc__unit">g</span></span>`
-                : `<span class="stone-alloc__amount"><input type="number" min="1" class="input-field" data-qty="${row.stone.uuid}" value="${row.quantity}" aria-label="Pieces used"><span class="stone-alloc__unit">pcs</span></span>`;
+                ? `<span class="stone-alloc__amount"><input type="number" min="0.001" step="0.001" class="input-field" data-grams="${row.stone.uuid}" value="${row.grams || ''}" placeholder="0.000" aria-label="${t('Grams used')}"><span class="stone-alloc__unit">g</span></span>`
+                : `<span class="stone-alloc__amount"><input type="number" min="1" class="input-field" data-qty="${row.stone.uuid}" value="${row.quantity}" aria-label="${t('Pieces used')}"><span class="stone-alloc__unit">${t('pcs')}</span></span>`;
             const missing = gram && !(Number(row.grams) > 0)
-                ? '<p class="form-error">Enter the grams used.</p>'
+                ? '<p class="form-error">' + t('Enter the grams used.') + '</p>'
                 : '';
             const unit = gram ? 'g' : (row.stone.pricing_mode === 'per_carat' ? 'ct' : 'pc');
-            const modeLabel = { per_carat: 'Per carat', per_piece: 'Per piece', per_gram: 'Per gram' }[row.stone.pricing_mode] || '';
+            const modeLabel = { per_carat: t('Per carat'), per_piece: t('Per piece'), per_gram: t('Per gram') }[row.stone.pricing_mode] || '';
             const costCells = showCost
                 ? `<td class="table-admin__num">${row.stone.rate !== undefined && row.stone.rate !== null ? `${escapeHtml(String(row.stone.rate))} / ${unit}` : '—'}</td>
                    <td class="table-admin__num font-data-mono">${cost === null ? '—' : cost.toFixed(3)}</td>`
@@ -280,12 +281,12 @@ export function bindJewelleryItemForm() {
                 <td class="table-admin__num">${!gram && row.stone.carat ? escapeHtml(String(row.stone.carat)) : '—'}</td>
                 <td>
                     ${amountInput}
-                    ${over ? '<p class="form-error">More than available on hand.</p>' : ''}
+                    ${over ? '<p class="form-error">' + t('More than available on hand.') + '</p>' : ''}
                     ${missing}
                 </td>
                 <td class="table-admin__num">${gram ? `${max} g` : `${max} pcs`}</td>
                 ${costCells}
-                <td class="table-admin__num"><button type="button" class="form-link text-body-sm" data-remove="${row.stone.uuid}">Remove</button></td>
+                <td class="table-admin__num"><button type="button" class="form-link text-body-sm" data-remove="${row.stone.uuid}">${t('Remove')}</button></td>
             `;
             rowsBody.appendChild(tr);
             if (fieldsWrap) {
@@ -343,7 +344,7 @@ export function bindJewelleryItemForm() {
         body.append('code', trimmed);
         const { ok, status, json } = await requestJson(root.dataset.lookupUrl, { method: 'POST', body });
         if (status === 404 || !ok) {
-            setMessage(json.message || 'Barcode not found.');
+            setMessage(json.message || t('Barcode not found.'));
             return;
         }
         if (json.data?.stone) {
@@ -444,7 +445,7 @@ export function bindJewelleryItemForm() {
             return;
         }
         const selected = root.dataset.selectedSub || '';
-        subSelect.innerHTML = '<option value="">None</option>';
+        subSelect.innerHTML = '<option value="">' + t('None') + '</option>';
         if (!uuid) {
             refreshSelect(subSelect);
             return;
@@ -477,7 +478,7 @@ export function bindJewelleryItemForm() {
             return;
         }
         const selected = root.dataset.selectedPurity || '';
-        puritySelect.innerHTML = '<option value="">Select…</option>';
+        puritySelect.innerHTML = '<option value="">' + t('Select…') + '</option>';
         if (!uuid) {
             refreshSelect(puritySelect);
             return;
@@ -538,9 +539,9 @@ function bindDeleteConfirm() {
             event.preventDefault();
             const count = form.dataset.stonesCount || '0';
             const ok = await window.AnnigemsAlert?.confirmAction({
-                title: 'Delete this item?',
-                text: `${count} allocated stone(s) will be returned to stock. The piece will be removed from inventory.`,
-                confirmButtonText: 'Delete item',
+                title: t('Delete this item?'),
+                text: t(':count allocated stone(s) will be returned to stock. The piece will be removed from inventory.', { count: count }),
+                confirmButtonText: t('Delete item'),
             });
             if (!ok) {
                 return;

@@ -87,16 +87,16 @@ class ReportFilterRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'from.required_if' => 'Enter a start date for the custom range.',
-            'to.required_if' => 'Enter an end date for the custom range.',
-            'from.date' => 'Enter a valid start date.',
-            'to.date' => 'Enter a valid end date.',
-            'category.exists' => 'That category no longer exists. Choose another.',
-            'purity.exists' => 'That purity no longer exists. Choose another.',
-            'staff.exists' => 'That staff member no longer exists. Choose another.',
-            'customer.exists' => 'That customer no longer exists. Choose another.',
-            'stone.exists' => 'That stone no longer exists. Choose another.',
-            'payment_method.Illuminate\Validation\Rules\Enum' => 'Choose a valid payment method.',
+            'from.required_if' => __('Enter a start date for the custom range.'),
+            'to.required_if' => __('Enter an end date for the custom range.'),
+            'from.date' => __('Enter a valid start date.'),
+            'to.date' => __('Enter a valid end date.'),
+            'category.exists' => __('That category no longer exists. Choose another.'),
+            'purity.exists' => __('That purity no longer exists. Choose another.'),
+            'staff.exists' => __('That staff member no longer exists. Choose another.'),
+            'customer.exists' => __('That customer no longer exists. Choose another.'),
+            'stone.exists' => __('That stone no longer exists. Choose another.'),
+            'payment_method.Illuminate\Validation\Rules\Enum' => __('Choose a valid payment method.'),
         ];
     }
 
@@ -118,13 +118,13 @@ class ReportFilterRequest extends FormRequest
             [$from, $to] = $this->resolveRange();
 
             if ($from->greaterThan($to)) {
-                $validator->errors()->add('to', 'The end date must be on or after the start date.');
+                $validator->errors()->add('to', __('The end date must be on or after the start date.'));
 
                 return;
             }
 
             if ($from->greaterThan(CarbonImmutable::now($this->displayTimezone())->endOfDay())) {
-                $validator->errors()->add('from', 'The start date cannot be in the future.');
+                $validator->errors()->add('from', __('The start date cannot be in the future.'));
 
                 return;
             }
@@ -134,7 +134,7 @@ class ReportFilterRequest extends FormRequest
             if ($from->diffInDays($to) + 1 > $maxDays) {
                 $validator->errors()->add(
                     'to',
-                    'That range covers more than '.$maxDays.' days. Choose a narrower range — for example one month or one quarter at a time.'
+                    __('That range covers more than :days days. Choose a narrower range — for example one month or one quarter at a time.', ['days' => $maxDays])
                 );
             }
         });

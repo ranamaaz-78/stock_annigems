@@ -3,6 +3,7 @@
  */
 
 import { attachBarcodeScanner } from './barcode-scanner';
+import { t } from './i18n';
 
 /**
  * CSRF token from the layout meta tag.
@@ -255,21 +256,21 @@ export function bindStoneIntake() {
 
             const amountCell = gram
                 ? `<div class="intake-weight">
-                        <input type="number" min="0.001" step="0.001" inputmode="decimal" class="input-field intake-qty" value="${escapeHtml(row.entered)}" placeholder="grams" data-row-weight aria-label="Grams for ${escapeHtml(row.stone.name)}">
-                        <select class="input-field intake-unit" data-row-unit data-no-select2="true" aria-label="Unit">
+                        <input type="number" min="0.001" step="0.001" inputmode="decimal" class="input-field intake-qty" value="${escapeHtml(row.entered)}" placeholder="${t('grams')}" data-row-weight aria-label="${t('Grams for :name', { name: escapeHtml(row.stone.name) })}">
+                        <select class="input-field intake-unit" data-row-unit data-no-select2="true" aria-label="${t('Unit')}">
                             <option value="g"${row.unit === 'g' ? ' selected' : ''}>g</option>
-                            <option value="kg"${row.unit === 'kg' ? ' selected' : ''}>kg</option>
+                            <option value="kg"${row.unit === 'kg' ? ' selected' : ''}>${t('kg')}</option>
                         </select>
                    </div>`
                 : `<div class="intake-amount">
                         <input type="number" min="1" max="${qtyMax}" step="1" inputmode="numeric" class="input-field intake-qty" value="${row.quantity}" data-row-qty aria-label="Quantity for ${escapeHtml(row.stone.name)}">
-                        <span class="intake-amount__unit">pcs</span>
+                        <span class="intake-amount__unit">${t('pcs')}</span>
                    </div>`;
 
             const lead = row.stone.image_url
                 ? `<span class="intake-thumb"><img src="${escapeHtml(row.stone.image_url)}" alt="" width="40" height="40" loading="lazy"></span>`
                 : '<span class="intake-thumb"><span class="material-symbols-outlined icon icon--sm">diamond</span></span>';
-            const kind = gram ? '<span class="badge badge--inactive">Per gram</span>' : '';
+            const kind = gram ? '<span class="badge badge--inactive">' + t('Per gram') + '</span>' : '';
             const codes = [row.stone.stone_code, row.stone.barcode].filter(Boolean).map(escapeHtml).join(' &middot; ');
             const shapeSize = [row.stone.shape, row.stone.dimension]
                 .filter((part) => part && part !== 'N/A')
@@ -290,7 +291,7 @@ export function bindStoneIntake() {
                 <td class="table-admin__num font-data-mono">${escapeHtml(row.stone.carat || '—')}</td>
                 <td>${amountCell}</td>
                 <td class="table-admin__actions-col">
-                    <button type="button" class="table-admin__action" data-remove-row aria-label="Remove ${escapeHtml(row.stone.name)}" title="Remove">
+                    <button type="button" class="table-admin__action" data-remove-row aria-label="Remove ${escapeHtml(row.stone.name)}" title="${t('Remove')}">
                         <span class="material-symbols-outlined icon icon--xs">close</span>
                     </button>
                 </td>
@@ -428,12 +429,12 @@ export function bindStoneIntake() {
     async function lookup(code, fromScan) {
         const trimmed = String(code || '').trim();
         if (!trimmed) {
-            setMessage('Scan or type a barcode first.');
+            setMessage(t('Scan or type a barcode first.'));
             return;
         }
 
         hideSuggestions();
-        setMessage('Looking up ' + trimmed + '…');
+        setMessage(t('Looking up :code…', { code: trimmed }));
 
         let ok = false;
         let status = 0;
@@ -447,7 +448,7 @@ export function bindStoneIntake() {
             if (!muteBox?.checked) {
                 beep(false);
             }
-            setMessage('Could not look up that barcode. Try again.');
+            setMessage(t('Could not look up that barcode. Try again.'));
             return;
         }
 
@@ -469,7 +470,7 @@ export function bindStoneIntake() {
             beep(false);
         }
         lastUnknown = trimmed;
-        setMessage(json.message || 'Barcode not found.');
+        setMessage(json.message || t('Barcode not found.'));
         if (status === 404 && canRegister) {
             registerHint?.classList.remove('hidden');
         }
@@ -561,14 +562,14 @@ export function bindStoneIntake() {
      */
     async function saveIntake() {
         if (rows.size === 0) {
-            window.AnnigemsAlert?.notifyError('Scan or add at least one stone before saving.');
+            window.AnnigemsAlert?.notifyError(t('Scan or add at least one stone before saving.'));
             return;
         }
 
         // A gram row with no grams cannot be saved; show which one.
         for (const row of rows.values()) {
             if (isGramLot(row.stone) && gramsOf(row) <= 0) {
-                window.AnnigemsAlert?.notifyError(`Enter the grams received for ${row.stone.name}.`);
+                window.AnnigemsAlert?.notifyError(t('Enter the grams received for :name.', { name: row.stone.name }));
                 focusWeight(row.stone.uuid);
                 return;
             }
@@ -589,9 +590,9 @@ export function bindStoneIntake() {
         ].filter(Boolean).join(' and ');
 
         const confirmed = await window.AnnigemsAlert?.confirmAction({
-            title: 'Save this intake?',
-            text: `${rows.size} stone type(s), ${received}. This batch cannot be edited later.`,
-            confirmButtonText: 'Save intake',
+            title: t('Save this intake?'),
+            text: t(':size stone type(s), :received. This batch cannot be edited later.', { size: rows.size, received: received }),
+            confirmButtonText: t('Save intake'),
             icon: 'question',
         });
         if (!confirmed) {
@@ -611,12 +612,12 @@ export function bindStoneIntake() {
         });
 
         if (!ok) {
-            window.AnnigemsAlert?.notifyError(json.message || 'Could not save the intake. The list is unchanged.');
+            window.AnnigemsAlert?.notifyError(json.message || t('Could not save the intake. The list is unchanged.'));
             loader?.restore();
             return;
         }
 
-        window.AnnigemsAlert?.notifySuccess(json.message || 'Intake saved.');
+        window.AnnigemsAlert?.notifySuccess(json.message || t('Intake saved.'));
         if (json.data?.show_url) {
             window.location.href = json.data.show_url;
         }
@@ -645,7 +646,7 @@ export function bindStoneIntake() {
     function lookupFromInput() {
         const typed = String(scanInput?.value || '').trim();
         if (!typed) {
-            setMessage('Scan or type a barcode first.');
+            setMessage(t('Scan or type a barcode first.'));
             return;
         }
         if (scannerApi) {
@@ -670,11 +671,11 @@ export function bindStoneIntake() {
         scannerApi?.setEnabled(next);
         scanToggle.classList.toggle('is-active', next);
         scanToggle.setAttribute('aria-pressed', next ? 'true' : 'false');
-        scanToggle.textContent = next ? 'Scanning on' : 'Scanning off';
+        scanToggle.textContent = next ? t('Scanning on') : t('Scanning off');
         const state = root.querySelector('[data-scan-state]');
-        if (state) state.textContent = next ? 'Ready' : 'Off';
+        if (state) state.textContent = next ? t('Ready') : t('Off');
         if (scanInput) {
-            scanInput.placeholder = next ? 'Scan, or type a barcode / code / name' : 'Scanning off — type a code or name, then Add';
+            scanInput.placeholder = next ? t('Scan, or type a barcode / code / name') : t('Scanning off — type a code or name, then Add');
         }
     });
 
@@ -735,7 +736,7 @@ export function bindStoneIntake() {
                 hideSuggestions();
                 return;
             }
-            suggestEl.innerHTML = '<li class="pos-suggest__empty">No stone matches. Press Enter to try it as a barcode.</li>';
+            suggestEl.innerHTML = '<li class="pos-suggest__empty">' + t('No stone matches. Press Enter to try it as a barcode.') + '</li>';
         } else {
             suggestEl.innerHTML = suggestions.map((stone, index) => {
                 const lead = stone.image_url
@@ -894,7 +895,7 @@ export function bindStoneIntake() {
         const { ok, json } = await fetchJson(root.dataset.storeStoneUrl, { method: 'POST', body });
         if (!ok) {
             window.AnnigemsForm?.applyServerErrors(registerForm, json.errors || {});
-            window.AnnigemsAlert?.notifyError(json.message || 'Could not register the stone.');
+            window.AnnigemsAlert?.notifyError(json.message || t('Could not register the stone.'));
             return;
         }
         // Registering already opens the lot's stock with the pieces or grams
@@ -904,7 +905,7 @@ export function bindStoneIntake() {
             const opening = isGramLot(stone)
                 ? `${gramsText(Number(stone.weight_grams || 0))} g`
                 : `${Number(stone.quantity || 0)} piece(s)`;
-            window.AnnigemsAlert?.notifySuccess(`${stone.stone_code} registered with ${opening} in stock. It is already counted, so do not add it to this intake again.`);
+            window.AnnigemsAlert?.notifySuccess(t(':code registered with :opening in stock. It is already counted, so do not add it to this intake again.', { code: stone.stone_code, opening: opening }));
         }
         setModalOpen(registerModal, false);
         registerForm.reset();

@@ -6,23 +6,23 @@
 --}}
 @extends('layouts.branch')
 
-@section('title', 'Company Settings')
-@section('page-title', 'Company Settings')
+@section('title', __('Company Settings'))
+@section('page-title', __('Company Settings'))
 
 @section('content')
 <x-page-header
-    title="Company settings"
-    subtitle="Read-only. These rules apply to every branch."
+    :title="__('Company settings')"
+    :subtitle="__('Read-only. These rules apply to every branch.')"
 >
     <x-slot:actions>
         <x-btn href="{{ route('branch.settings.index') }}" variant="secondary">
-            Branch settings
+            {{ __('Branch settings') }}
         </x-btn>
     </x-slot:actions>
 </x-page-header>
 
 <x-alert type="info" class="settings-banner">
-    These settings are managed by the SuperAdmin and cannot be changed from this branch.
+    {{ __('These settings are managed by the SuperAdmin and cannot be changed from this branch.') }}
 </x-alert>
 
 <div class="settings-stack">
@@ -30,7 +30,7 @@
         <div class="panel__header settings-card__header">
             <h2 class="panel__title text-headline-sm">
                 <span class="material-symbols-outlined icon icon--sm settings-card__icon" aria-hidden="true">brightness_high</span>
-                Current gold rates
+                {{ __('Current gold rates') }}
             </h2>
         </div>
         <div class="settings-rates">
@@ -41,12 +41,12 @@
                         @if($row['rate'])
                             {{ setting_money($row['rate']->rate_per_gram) }}
                         @else
-                            Not set
+                            {{ __('Not set') }}
                         @endif
                     </span>
                 </div>
             @empty
-                <p class="text-body-sm">No active purities.</p>
+                <p class="text-body-sm">{{ __('No active purities.') }}</p>
             @endforelse
         </div>
     </section>

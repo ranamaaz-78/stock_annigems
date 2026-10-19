@@ -13,7 +13,7 @@
     // ['direction' => 'up'|'down'|'flat', 'label' => '+12.5%'] or null when the
     // previous period was zero and a percentage would be meaningless.
     'trend' => null,
-    'trendCaption' => 'vs previous period',
+    'trendCaption' => null,
 ])
 
 @php
@@ -47,7 +47,7 @@
                     <span class="material-symbols-outlined icon icon--xs" aria-hidden="true">{{ $trendIcon }}</span>
                     {{ $trend['label'] }}
                 </span>
-                <span class="kpi-card__hint text-body-sm">{{ $trendCaption }}</span>
+                <span class="kpi-card__hint text-body-sm">{{ $trendCaption ?? __('vs previous period') }}</span>
             @endif
 
             @if($hint)

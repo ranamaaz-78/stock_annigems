@@ -45,6 +45,6 @@ class ProfileController extends Controller
 
         return redirect()
             ->route('branch.profile.edit')
-            ->with('success', 'Profile updated successfully.');
+            ->with('success', __('Profile updated successfully.'));
     }
 }

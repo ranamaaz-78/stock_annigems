@@ -4,7 +4,7 @@
     class="sa-sidebar__collapse"
     data-shell-density
     aria-pressed="false"
-    title="Collapse sidebar"
+    title="{{ __('Collapse sidebar') }}"
 >
     <span class="material-symbols-outlined icon icon--sm" data-shell-density-icon>chevron_left</span>
 </button>

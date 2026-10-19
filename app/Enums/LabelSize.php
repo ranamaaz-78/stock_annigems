@@ -19,11 +19,11 @@ enum LabelSize: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::SMALL => 'Small (30 × 20 mm)',
             self::MEDIUM => 'Medium (50 × 25 mm)',
             self::LARGE => 'Large (80 × 40 mm)',
-        };
+        });
     }
 
     /**

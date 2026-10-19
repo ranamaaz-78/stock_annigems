@@ -33,15 +33,15 @@
         if ($grams > 0) {
             $qty = $gramText;
             $price = (float) $item->stone_value / $grams;
-            $detail = 'Loose stone · per gram';
+            $detail = __('Loose stone · per gram');
         } elseif ($loose) {
             $qty = (string) $item->quantity;
             $price = $item->quantity > 0 ? (float) $item->line_total / $item->quantity : (float) $item->line_total;
-            $detail = 'Loose stone';
+            $detail = __('Loose stone');
         } else {
             $qty = '1';
             $price = (float) $item->line_total;
-            $detail = trim($metal.($weight && $goldRate > 0 ? ' · '.$weight.' × '.setting_amount($goldRate).' per g' : ($weight ? ' · '.$weight : '')));
+            $detail = trim($metal.($weight && $goldRate > 0 ? ' · '.$weight.' × '.setting_amount($goldRate).' '.__('per g') : ($weight ? ' · '.$weight : '')));
         }
 
         return [
@@ -67,12 +67,12 @@
     <thead>
         <tr>
             <th>#</th>
-            <th>Description</th>
-            <th>Qty</th>
-            <th>Price</th>
-            @if($hasTax)<th>IVA</th>@endif
-            <th>{{ $mode === 'quotation' && $withIva ? 'Net' : 'Amount' }}</th>
-            @if($withIva)<th>With IVA</th>@endif
+            <th>{{ __('Description') }}</th>
+            <th>{{ __('Qty') }}</th>
+            <th>{{ __('Price') }}</th>
+            @if($hasTax)<th>{{ __('IVA') }}</th>@endif
+            <th>{{ $mode === 'quotation' && $withIva ? __('Net') : __('Amount') }}</th>
+            @if($withIva)<th>{{ __('With IVA') }}</th>@endif
         </tr>
     </thead>
     <tbody>

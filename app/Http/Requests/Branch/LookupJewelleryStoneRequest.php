@@ -47,7 +47,7 @@ class LookupJewelleryStoneRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'code.required' => 'Scan or type a barcode.',
+            'code.required' => __('Scan or type a barcode.'),
         ];
     }
 }

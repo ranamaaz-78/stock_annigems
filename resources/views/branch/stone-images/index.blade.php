@@ -6,11 +6,11 @@
 --}}
 @extends('layouts.branch')
 
-@section('title', 'Stone Images')
-@section('page-title', 'Images')
+@section('title', __('Stone Images'))
+@section('page-title', __('Images'))
 
 @section('content')
-<x-page-header title="Images" subtitle="Names are stored without the file extension, so stone1.jpg is saved as stone1." />
+<x-page-header :title="__('Images')" :subtitle="__('Names are stored without the file extension, so stone1.jpg is saved as stone1.')" />
 
 <div
     id="stone-images"
@@ -21,9 +21,9 @@
     <div class="stone-folder__toolbar">
         <button type="button" class="btn btn--primary" data-upload-trigger>
             <span class="material-symbols-outlined icon icon--sm">upload_file</span>
-            Upload files
+            {{ __('Upload files') }}
         </button>
-        <p class="stone-folder__hint">Drop images on the folder, or click a name to rename it.</p>
+        <p class="stone-folder__hint">{{ __('Drop images on the folder, or click a name to rename it.') }}</p>
         <input type="file" class="stone-folder__picker" data-file-input accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden>
     </div>
 
@@ -31,14 +31,14 @@
         <div class="stone-folder__grid" data-grid></div>
         <div class="stone-folder__empty" data-empty>
             <span class="material-symbols-outlined icon icon--lg">folder_open</span>
-            <p class="stone-folder__empty-title">This folder is empty</p>
-            <p class="stone-folder__empty-copy">Drag images here, or use Upload files.</p>
+            <p class="stone-folder__empty-title">{{ __('This folder is empty') }}</p>
+            <p class="stone-folder__empty-copy">{{ __('Drag images here, or use Upload files.') }}</p>
         </div>
     </div>
 </div>
 
 <div class="stone-lightbox" data-lightbox hidden>
-    <button type="button" class="stone-lightbox__backdrop" data-lightbox-close aria-label="Close preview"></button>
+    <button type="button" class="stone-lightbox__backdrop" data-lightbox-close aria-label="{{ __('Close preview') }}"></button>
     <figure class="stone-lightbox__frame">
         <img data-lightbox-image alt="">
         <figcaption class="stone-lightbox__caption" data-lightbox-caption></figcaption>

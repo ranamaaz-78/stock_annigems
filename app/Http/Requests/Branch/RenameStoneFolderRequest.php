@@ -36,8 +36,8 @@ class RenameStoneFolderRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Enter a folder name.',
-            'name.max' => 'Folder name must be 120 characters or fewer.',
+            'name.required' => __('Enter a folder name.'),
+            'name.max' => __('Folder name must be 120 characters or fewer.'),
         ];
     }
 }

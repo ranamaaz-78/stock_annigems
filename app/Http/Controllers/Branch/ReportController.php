@@ -131,7 +131,7 @@ class ReportController extends Controller
         if ($outcome instanceof ReportExport) {
             return redirect()
                 ->route('branch.reports.index')
-                ->with('success', 'This export is large, so it is being generated in the background. It will appear in Recent Exports below when it is ready.');
+                ->with('success', __('This export is large, so it is being generated in the background. It will appear in Recent Exports below when it is ready.'));
         }
 
         return $outcome;
@@ -172,7 +172,7 @@ class ReportController extends Controller
 
         return $result->withMeta([
             'header' => ReportExportService::header($result, $filter, $request->user(), $branchName),
-            'branch_label' => $branchName ?? 'Branch',
+            'branch_label' => $branchName ?? __('Branch'),
             'range_label' => $filter->rangeLabel(),
             'generated_at' => AttributionFormatter::timestamp(now()),
             'range_slug' => $filter->from->toDateString().'-to-'.$filter->to->toDateString(),

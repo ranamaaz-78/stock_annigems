@@ -1,38 +1,38 @@
 {{-- Customer registry list. Design: customer_management. --}}
 @extends('layouts.branch')
 
-@section('title', 'Customers')
-@section('page-title', 'Customers')
+@section('title', __('Customers'))
+@section('page-title', __('Customers'))
 
 @section('content')
-<x-page-header title="Customer Registry" subtitle="Global customer master data — shared across all branches.">
+<x-page-header :title="__('Customer Registry')" :subtitle="__('Global customer master data — shared across all branches.')">
     <x-slot:actions>
         @can('create', \App\Models\Customer::class)
-            <x-btn href="{{ route('branch.customers.create') }}">Add Customer</x-btn>
+            <x-btn href="{{ route('branch.customers.create') }}">{{ __('Add Customer') }}</x-btn>
         @endcan
     </x-slot:actions>
 </x-page-header>
 
 <form method="GET" class="filter-bar">
-    <x-filter.search name="search" :value="$filters['search'] ?? ''" placeholder="Search name, phone, code…" aria-label="Search customers" />
-    <select name="status" class="input-field" aria-label="Filter by status">
-        <option value="">All statuses</option>
-        <option value="active" @selected(($filters['status'] ?? '') === 'active')>Active</option>
-        <option value="inactive" @selected(($filters['status'] ?? '') === 'inactive')>Inactive</option>
+    <x-filter.search name="search" :value="$filters['search'] ?? ''" :placeholder="__('Search name, phone, code…')" :aria-label="__('Search customers')" />
+    <select name="status" class="input-field" aria-label="{{ __('Filter by status') }}">
+        <option value="">{{ __('All statuses') }}</option>
+        <option value="active" @selected(($filters['status'] ?? '') === 'active')>{{ __('Active') }}</option>
+        <option value="inactive" @selected(($filters['status'] ?? '') === 'inactive')>{{ __('Inactive') }}</option>
     </select>
     <div class="filter-bar__actions">
-        <x-btn type="submit" variant="secondary">Filter</x-btn>
-        <a href="{{ route('branch.customers.index') }}" class="btn btn--secondary">Reset</a>
+        <x-btn type="submit" variant="secondary">{{ __('Filter') }}</x-btn>
+        <a href="{{ route('branch.customers.index') }}" class="btn btn--secondary">{{ __('Reset') }}</a>
     </div>
 </form>
 
 <div class="panel">
     @if($customers->isEmpty())
         <div class="panel__body">
-            <x-empty-state title="No customers found" message="Register a customer or adjust your search." icon="group">
+            <x-empty-state :title="__('No customers found')" :message="__('Register a customer or adjust your search.')" icon="group">
                 <x-slot:actions>
                     @can('create', \App\Models\Customer::class)
-                        <x-btn href="{{ route('branch.customers.create') }}">Add Customer</x-btn>
+                        <x-btn href="{{ route('branch.customers.create') }}">{{ __('Add Customer') }}</x-btn>
                     @endcan
                 </x-slot:actions>
             </x-empty-state>
@@ -42,13 +42,13 @@
             <table class="table-admin">
                 <thead>
                     <tr>
-                        <th>Client</th>
-                        <th>Contact</th>
-                        <th>City</th>
-                        <th class="table-admin__num">Quotations</th>
-                        <th class="table-admin__num">Invoices</th>
-                        <th>Status</th>
-                        <th class="table-admin__actions-col">Actions</th>
+                        <th>{{ __('Client') }}</th>
+                        <th>{{ __('Contact') }}</th>
+                        <th>{{ __('City') }}</th>
+                        <th class="table-admin__num">{{ __('Quotations') }}</th>
+                        <th class="table-admin__num">{{ __('Invoices') }}</th>
+                        <th>{{ __('Status') }}</th>
+                        <th class="table-admin__actions-col">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>

@@ -1,20 +1,20 @@
 {{-- Public invoice verification — design: public_invoice_verification. --}}
 @extends('layouts.public')
 
-@section('title', 'Invoice Verification')
+@section('title', __('Invoice Verification'))
 
 @section('content')
 <div class="panel verify-card">
     <p class="verify-card__brand">{{ setting('company_name', 'Aanigemas') }}</p>
 
     @if($payload['voided'] ?? false)
-        <x-status-badge status="voided" label="Invoice voided" />
+        <x-status-badge status="voided" :label="__('Invoice voided')" />
         <p class="verify-card__number">{{ $payload['invoice_number'] }}</p>
         <p class="verify-card__message">
-            This invoice, dated {{ $payload['invoice_date'] }}, is no longer valid.
+            {{ __('This invoice, dated :date, is no longer valid.', ['date' => $payload['invoice_date']]) }}
         </p>
     @else
-        <x-status-badge status="active" label="Verified Invoice" />
+        <x-status-badge status="active" :label="__('Verified Invoice')" />
 
         <p class="verify-card__number">{{ $payload['invoice_number'] }}</p>
         <p class="verify-card__meta">{{ $payload['invoice_date'] }} · {{ $payload['branch_name'] }}</p>

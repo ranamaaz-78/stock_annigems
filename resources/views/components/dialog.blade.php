@@ -39,7 +39,7 @@
                     <p class="dialog__subtitle">{{ $subtitle }}</p>
                 @endif
             </div>
-            <button type="button" class="dialog__close" data-modal-close aria-label="Close">
+            <button type="button" class="dialog__close" data-modal-close aria-label="{{ __('Close') }}">
                 <span class="material-symbols-outlined icon icon--sm">close</span>
             </button>
         </header>

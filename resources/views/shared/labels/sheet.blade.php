@@ -8,7 +8,7 @@
     $uuids = $uuids ?? [];
     $isBulk = count($uuids) > 1;
     $applyUrl = $applyUrl ?? url()->current();
-    $documentTitle = $documentTitle ?? 'Labels';
+    $documentTitle = $documentTitle ?? __('Labels');
     $isUnique = $layout === 'unique';
 @endphp
 <!DOCTYPE html>
@@ -27,7 +27,7 @@
             @endforeach
         @endif
         @unless($isUnique)
-            <label class="form-label" for="label-copies">Copies</label>
+            <label class="form-label" for="label-copies">{{ __('Copies') }}</label>
             <input
                 id="label-copies"
                 class="input-field"
@@ -37,10 +37,10 @@
                 max="48"
                 value="{{ $copies }}"
             >
-            <x-btn type="submit" variant="secondary">Apply</x-btn>
+            <x-btn type="submit" variant="secondary">{{ __('Apply') }}</x-btn>
         @endunless
-        <x-btn type="button" onclick="window.print()">Print</x-btn>
-        <x-btn type="button" variant="secondary" onclick="window.close()">Close</x-btn>
+        <x-btn type="button" onclick="window.print()">{{ __('Print') }}</x-btn>
+        <x-btn type="button" variant="secondary" onclick="window.close()">{{ __('Close') }}</x-btn>
     </form>
 
     @if($isUnique)

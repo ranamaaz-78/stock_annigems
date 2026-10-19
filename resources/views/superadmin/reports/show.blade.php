@@ -26,9 +26,9 @@
         {{-- Branch scope is the SuperAdmin-only filter. It is a branch uuid and
              nothing else: no route on this surface accepts a record uuid. --}}
         <div>
-            <label for="branch" class="form-label">Branch scope</label>
+            <label for="branch" class="form-label">{{ __('Branch scope') }}</label>
             <select id="branch" name="branch" class="input-field">
-                <option value="">All branches (consolidated)</option>
+                <option value="">{{ __('All branches (consolidated)') }}</option>
                 @foreach($branches as $branch)
                     <option value="{{ $branch->uuid }}" @selected($selectedBranch === $branch->uuid)>{{ $branch->name }}</option>
                 @endforeach
@@ -45,7 +45,7 @@
     @if($result->meta('live_snapshot', false))
         <p class="report-notice">
             <span class="material-symbols-outlined icon icon--sm report-notice__icon" aria-hidden="true">inventory_2</span>
-            <span>This report describes stock held <strong>right now</strong>. The date range above does not narrow it.</span>
+            <span>{{ __('This report describes stock held') }} <strong>{{ __('right now') }}</strong>{{ __('. The date range above does not narrow it.') }}</span>
         </p>
     @endif
 </x-report.shell>

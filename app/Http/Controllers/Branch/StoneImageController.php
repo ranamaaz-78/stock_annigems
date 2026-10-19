@@ -67,7 +67,7 @@ class StoneImageController extends Controller
     {
         $this->authorize('create', StoneImage::class);
 
-        return $this->jsonSuccess('Checked.', [
+        return $this->jsonSuccess(__('Checked.'), [
             'existing' => $this->imageService->existingNames(
                 (array) $request->validated('names'),
                 (int) $request->user()->branch_id
@@ -97,15 +97,15 @@ class StoneImageController extends Controller
 
         if ($payloads->isEmpty() && $result['skipped'] === []) {
             throw ValidationException::withMessages($result['errors'] ?: [
-                'files' => 'No images were saved.',
+                'files' => __('No images were saved.'),
             ]);
         }
 
         $parts = array_filter([
-            $result['stored'] !== [] ? count($result['stored']).' uploaded' : null,
-            $result['replaced'] !== [] ? count($result['replaced']).' replaced' : null,
-            $result['skipped'] !== [] ? count($result['skipped']).' skipped (name already in the folder)' : null,
-            $result['errors'] !== [] ? count($result['errors']).' could not be saved' : null,
+            $result['stored'] !== [] ? __(':count uploaded', ['count' => count($result['stored'])]) : null,
+            $result['replaced'] !== [] ? __(':count replaced', ['count' => count($result['replaced'])]) : null,
+            $result['skipped'] !== [] ? __(':count skipped (name already in the folder)', ['count' => count($result['skipped'])]) : null,
+            $result['errors'] !== [] ? __(':count could not be saved', ['count' => count($result['errors'])]) : null,
         ]);
 
         return $this->jsonSuccess(ucfirst(implode(', ', $parts)).'.', [
@@ -129,7 +129,7 @@ class StoneImageController extends Controller
             $request->user()
         );
 
-        return $this->jsonSuccess('Name updated.', [
+        return $this->jsonSuccess(__('Name updated.'), [
             'image' => $this->imageService->payload($image),
         ]);
     }
@@ -143,6 +143,6 @@ class StoneImageController extends Controller
 
         $this->imageService->delete($stoneImage, request()->user());
 
-        return $this->jsonSuccess('Image deleted.');
+        return $this->jsonSuccess(__('Image deleted.'));
     }
 }

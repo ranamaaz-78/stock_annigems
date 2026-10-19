@@ -201,7 +201,7 @@ class SalesReportRepository extends ReportRepository
             ->orderByRaw('COALESCE(SUM(invoice_items.line_total), 0) DESC')
             ->get()
             ->map(fn ($row): array => [
-                'category' => (string) $row->category,
+                'category' => $row->category === 'Uncategorised' ? __('Uncategorised') : (string) $row->category,
                 'pieces' => $this->toInt($row->pieces),
                 'revenue' => $this->toFloat($row->revenue),
             ]);
@@ -273,7 +273,7 @@ class SalesReportRepository extends ReportRepository
             ->orderByRaw('COALESCE(SUM(invoice_items.net_weight_snapshot * invoice_items.quantity), 0) DESC')
             ->get()
             ->map(fn ($row): array => [
-                'purity' => (string) $row->purity,
+                'purity' => $row->purity === 'Unspecified' ? __('Unspecified') : (string) $row->purity,
                 'pieces' => $this->toInt($row->pieces),
                 'net_weight' => $this->toFloat($row->net_weight),
                 'gross_weight' => $this->toFloat($row->gross_weight),
@@ -492,7 +492,7 @@ class SalesReportRepository extends ReportRepository
             ->map(fn ($row): array => [
                 'stone_code' => (string) $row->stone_code,
                 'stone_name' => (string) $row->stone_name,
-                'shape' => (string) $row->shape,
+                'shape' => $row->shape === 'Unspecified' ? __('Unspecified') : (string) $row->shape,
                 'quantity' => $this->toInt($row->quantity),
                 'grams' => round($this->toFloat($row->grams), 3),
                 'revenue' => $this->toFloat($row->revenue),
@@ -551,7 +551,7 @@ class SalesReportRepository extends ReportRepository
             ->orderByRaw('COALESCE(SUM(invoices.grand_total), 0) DESC')
             ->get()
             ->map(fn ($row): array => [
-                'source' => (string) $row->source,
+                'source' => __((string) $row->source),
                 'invoice_count' => $this->toInt($row->invoice_count),
                 'net_revenue' => $this->toFloat($row->net_revenue),
             ]);

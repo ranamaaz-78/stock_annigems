@@ -43,9 +43,9 @@ class SettingController extends Controller
 
         $raised = $this->settings->setGroup($settingGroup, $request->settingValues(), $request->user());
 
-        $saved = $settingGroup->label().' settings saved.';
+        $saved = __(':group settings saved.', ['group' => $settingGroup->label()]);
         if ($raised !== []) {
-            $saved .= ' Starting numbers already issued were raised so the next code cannot collide.';
+            $saved .= ' '.__('Starting numbers already issued were raised so the next code cannot collide.');
         }
 
         return redirect()

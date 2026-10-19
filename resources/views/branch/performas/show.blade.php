@@ -2,24 +2,24 @@
 @extends('layouts.branch')
 
 @section('title', $performa->performa_number)
-@section('page-title', 'Performa Detail')
+@section('page-title', __('Performa Detail'))
 
 @section('content')
 <x-page-header :title="$performa->performa_number" :subtitle="setting_date($performa->performa_date)">
     <x-slot:actions>
         @if($performa->isOpen())
             @can('update', $performa)
-                <x-btn href="{{ route('branch.performas.edit', $performa) }}" variant="secondary">Edit</x-btn>
+                <x-btn href="{{ route('branch.performas.edit', $performa) }}" variant="secondary">{{ __('Edit') }}</x-btn>
             @endcan
             @can('settle', $performa)
-                <x-btn href="{{ route('branch.performas.settle', $performa) }}">Settle payment</x-btn>
+                <x-btn href="{{ route('branch.performas.settle', $performa) }}">{{ __('Settle payment') }}</x-btn>
             @endcan
             @can('returnUnpaid', $performa)
-                <x-btn type="button" variant="secondary" data-modal-open="return-modal">Return unpaid</x-btn>
+                <x-btn type="button" variant="secondary" data-modal-open="return-modal">{{ __('Return unpaid') }}</x-btn>
             @endcan
         @endif
-        <x-btn type="button" variant="secondary" onclick="window.print()">Print</x-btn>
-        <x-btn href="{{ route('branch.performas.index') }}" variant="secondary">Back</x-btn>
+        <x-btn type="button" variant="secondary" onclick="window.print()">{{ __('Print') }}</x-btn>
+        <x-btn href="{{ route('branch.performas.index') }}" variant="secondary">{{ __('Back') }}</x-btn>
     </x-slot:actions>
 </x-page-header>
 
@@ -47,18 +47,18 @@
 
     <div class="panel">
         <div class="panel__header">
-            <h2 class="panel__title">Issued goods</h2>
+            <h2 class="panel__title">{{ __('Issued goods') }}</h2>
         </div>
         <div class="panel__scroll">
             <table class="table-admin">
                 <thead>
                     <tr>
-                        <th>Item</th>
-                        <th>Code</th>
-                        <th>Issued</th>
-                        <th>Settled</th>
-                        <th>Returned</th>
-                        <th>Outstanding</th>
+                        <th>{{ __('Item') }}</th>
+                        <th>{{ __('Code') }}</th>
+                        <th>{{ __('Issued') }}</th>
+                        <th>{{ __('Settled') }}</th>
+                        <th>{{ __('Returned') }}</th>
+                        <th>{{ __('Outstanding') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -84,21 +84,21 @@
 
     <div class="panel">
         <div class="panel__header">
-            <h2 class="panel__title">Settlements</h2>
+            <h2 class="panel__title">{{ __('Settlements') }}</h2>
         </div>
         @if($performa->settlements->isEmpty())
             <div class="panel__body">
-                <p class="text-body-sm">No payments yet.</p>
+                <p class="text-body-sm">{{ __('No payments yet.') }}</p>
             </div>
         @else
             <div class="panel__scroll">
                 <table class="table-admin">
                     <thead>
                         <tr>
-                            <th>Invoice</th>
-                            <th>Date</th>
-                            <th>Method</th>
-                            <th>Total</th>
+                            <th>{{ __('Invoice') }}</th>
+                            <th>{{ __('Date') }}</th>
+                            <th>{{ __('Method') }}</th>
+                            <th>{{ __('Total') }}</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -111,7 +111,7 @@
                                 <td class="font-data-mono">{{ $settlement->invoice ? setting_money($settlement->invoice->grand_total) : '—' }}</td>
                                 <td>
                                     @if($settlement->invoice)
-                                        <a href="{{ route('branch.invoices.show', $settlement->invoice) }}" class="btn btn--secondary btn--sm">View</a>
+                                        <a href="{{ route('branch.invoices.show', $settlement->invoice) }}" class="btn btn--secondary btn--sm">{{ __('View') }}</a>
                                     @endif
                                 </td>
                             </tr>
@@ -137,21 +137,21 @@
             ],
         ];
     @endphp
-    <x-modal id="return-modal" title="Return unpaid goods">
+    <x-modal id="return-modal" :title="__('Return unpaid goods')">
         <div id="performa-return-root" data-config="{{ json_encode($returnConfig) }}">
-            <p class="text-body-sm">Return every unpaid line, or only some pieces / stone qty. Settled lines are not touched.</p>
+            <p class="text-body-sm">{{ __('Return every unpaid line, or only some pieces / stone qty. Settled lines are not touched.') }}</p>
 
             @if($outstandingReturn->isEmpty())
-                <p class="text-body-sm">Nothing unpaid to return.</p>
+                <p class="text-body-sm">{{ __('Nothing unpaid to return.') }}</p>
             @else
                 <form id="performa-return-form" class="panel-stack">
                     <div class="panel__scroll">
                         <table class="table-admin">
                             <thead>
                                 <tr>
-                                    <th>Item</th>
-                                    <th>Outstanding</th>
-                                    <th>Return</th>
+                                    <th>{{ __('Item') }}</th>
+                                    <th>{{ __('Outstanding') }}</th>
+                                    <th>{{ __('Return') }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -166,7 +166,7 @@
                                             @if($item->line_type === \App\Enums\LineType::JEWELLERY_ITEM)
                                                 <label class="form-check">
                                                     <input type="checkbox" data-return-select>
-                                                    This piece
+                                                    {{ __('This piece') }}
                                                 </label>
                                             @else
                                                 <input
@@ -177,7 +177,7 @@
                                                     class="input-field"
                                                     data-return-qty
                                                     placeholder="{{ $item->isWeighed() ? 'grams' : '0' }}"
-                                                    aria-label="{{ $item->isWeighed() ? 'Grams to return' : 'Return quantity' }}"
+                                                    aria-label="{{ $item->isWeighed() ? __('Grams to return') : __('Return quantity') }}"
                                                 >
                                             @endif
                                         </td>
@@ -187,9 +187,9 @@
                         </table>
                     </div>
                     <div class="form-actions">
-                        <x-btn type="button" variant="secondary" data-modal-close>Cancel</x-btn>
-                        <x-btn type="button" variant="secondary" data-return-selected loading-text="Returning…">Return selected</x-btn>
-                        <x-btn type="button" variant="danger" data-return-all loading-text="Returning…">Return all unpaid</x-btn>
+                        <x-btn type="button" variant="secondary" data-modal-close>{{ __('Cancel') }}</x-btn>
+                        <x-btn type="button" variant="secondary" data-return-selected :loading-text="__('Returning…')">{{ __('Return selected') }}</x-btn>
+                        <x-btn type="button" variant="danger" data-return-all :loading-text="__('Returning…')">{{ __('Return all unpaid') }}</x-btn>
                     </div>
                 </form>
             @endif

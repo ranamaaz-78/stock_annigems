@@ -4,8 +4,8 @@
 --}}
 @extends('layouts.branch')
 
-@section('title', 'New Performa')
-@section('page-title', 'New Performa')
+@section('title', __('New Performa'))
+@section('page-title', __('New Performa'))
 
 @php
     $formConfig = [
@@ -32,14 +32,14 @@
         <div class="sales-workspace__main">
             <div class="sales-workspace__toolbar">
                 <div class="sales-workspace__heading">
-                    <h1 class="sales-workspace__title">New Performa</h1>
-                    <p class="sales-workspace__meta" data-item-count>No items scanned</p>
+                    <h1 class="sales-workspace__title">{{ __('New Performa') }}</h1>
+                    <p class="sales-workspace__meta" data-item-count>{{ __('No items scanned') }}</p>
                 </div>
-                <x-btn href="{{ route('branch.performas.index') }}" variant="secondary">Back</x-btn>
+                <x-btn href="{{ route('branch.performas.index') }}" variant="secondary">{{ __('Back') }}</x-btn>
             </div>
 
             <div class="scan-dock">
-                <label class="form-label" for="performa-scan">Scan barcode or enter SKU</label>
+                <label class="form-label" for="performa-scan">{{ __('Scan barcode or enter SKU') }}</label>
                 <div class="scan-dock__row scan-input-wrap" data-scan-wrap>
                     <span class="scan-dock__icon" aria-hidden="true">
                         <span class="material-symbols-outlined icon icon--md icon--secondary">barcode_scanner</span>
@@ -48,28 +48,28 @@
                         id="performa-scan"
                         data-scan-input
                         class="input-field input-field--scan scan-dock__input"
-                        placeholder="Ready to scan…"
-                        aria-label="Item or stone code"
+                        placeholder="{{ __('Ready to scan…') }}"
+                        aria-label="{{ __('Item or stone code') }}"
                         autofocus
                     />
-                    <x-btn type="button" data-scan-submit>Add</x-btn>
+                    <x-btn type="button" data-scan-submit>{{ __('Add') }}</x-btn>
                 </div>
                 {{-- Short code = stone packet letters; name search = jewellery or stone. --}}
                 <div class="scan-dock__extras">
                     <div>
-                        <label class="form-label" for="performa-short-code">Short code</label>
+                        <label class="form-label" for="performa-short-code">{{ __('Short code') }}</label>
                         <input
                             id="performa-short-code"
                             type="text"
                             class="input-field"
                             maxlength="3"
                             autocomplete="off"
-                            placeholder="DIA"
+                            placeholder="{{ __('DIA') }}"
                             data-short-code-input
                         >
                     </div>
                     <div>
-                        <label class="form-label" for="performa-item-search">Search by name</label>
+                        <label class="form-label" for="performa-item-search">{{ __('Search by name') }}</label>
                         <select
                             id="performa-item-search"
                             class="input-field"
@@ -77,7 +77,7 @@
                             data-ajax-url="{{ route('branch.performas.search') }}"
                             data-ajax-collection="items"
                         >
-                            <option value="">Jewellery or stone name…</option>
+                            <option value="">{{ __('Jewellery or stone name…') }}</option>
                         </select>
                     </div>
                 </div>
@@ -87,8 +87,8 @@
             <div class="sales-workspace__list">
                 <div data-lines-empty class="sales-workspace__empty">
                     <x-empty-state
-                        title="Add the goods they are taking"
-                        message="Scan a tag, type a 3-letter short code, or search by name. No prices here — stock leaves when you issue."
+                        :title="__('Add the goods they are taking')"
+                        :message="__('Scan a tag, type a 3-letter short code, or search by name. No prices here — stock leaves when you issue.')"
                         icon="barcode_scanner"
                     />
                 </div>
@@ -100,14 +100,14 @@
             <section class="sales-aside__section">
                 <div class="customer-picker">
                     <div class="sales-aside__bar">
-                        <p class="sales-aside__label">Creditor</p>
+                        <p class="sales-aside__label">{{ __('Creditor') }}</p>
                         @can('create', \App\Models\Creditor::class)
-                            <a href="{{ route('branch.creditors.create') }}" class="form-link">Add creditor</a>
+                            <a href="{{ route('branch.creditors.create') }}" class="form-link">{{ __('Add creditor') }}</a>
                         @endcan
                     </div>
 
                     <div data-creditor-select-wrap>
-                        <label for="performa-creditor" class="form-label">Issued against</label>
+                        <label for="performa-creditor" class="form-label">{{ __('Issued against') }}</label>
                         <select
                             id="performa-creditor"
                             name="creditor_uuid"
@@ -115,10 +115,10 @@
                             data-creditor-select
                             data-ajax-url="{{ route('branch.creditors.search') }}"
                             data-ajax-collection="creditors"
-                            data-error-required="Select a creditor."
+                            data-error-required="{{ __('Select a creditor.') }}"
                             required
                         >
-                            <option value="">Search by name or phone…</option>
+                            <option value="">{{ __('Search by name or phone…') }}</option>
                             @if($selectedCreditor)
                                 <option value="{{ $selectedCreditor['uuid'] }}" selected>
                                     {{ $selectedCreditor['name'] }} · {{ $selectedCreditor['phone'] }}
@@ -129,7 +129,7 @@
                     </div>
 
                     <div class="field-inline">
-                        <label class="field-inline__label" for="performa-date">Performa date</label>
+                        <label class="field-inline__label" for="performa-date">{{ __('Performa date') }}</label>
                         <input
                             id="performa-date"
                             type="date"
@@ -144,13 +144,13 @@
             <section class="sales-aside__section sales-aside__section--checkout">
                 <div class="sales-aside__notes">
 
-                    <label class="field-inline__label" for="performa-notes">Notes</label>
+                    <label class="field-inline__label" for="performa-notes">{{ __('Notes') }}</label>
                     <textarea id="performa-notes" data-doc="notes" class="input-field" rows="2"></textarea>
                 </div>
                 <div class="sales-aside__actions">
-                    <x-btn type="submit" class="btn--tall" loading-text="Issuing…" block>
+                    <x-btn type="submit" class="btn--tall" :loading-text="__('Issuing…')" block>
                         <span class="material-symbols-outlined icon icon--sm">assignment</span>
-                        Issue performa
+                        {{ __('Issue performa') }}
                     </x-btn>
                 </div>
             </section>

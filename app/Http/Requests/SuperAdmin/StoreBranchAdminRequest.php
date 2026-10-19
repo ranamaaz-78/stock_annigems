@@ -80,12 +80,12 @@ class StoreBranchAdminRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'branch.required' => 'Select a branch.',
-            'branch.uuid' => 'Select an active branch.',
-            'branch.exists' => 'Select an active branch.',
-            'email.unique' => 'This email is already registered.',
-            'phone.regex' => 'Enter a valid phone number.',
-            'password.required' => 'Enter a password or choose auto-generate.',
+            'branch.required' => __('Select a branch.'),
+            'branch.uuid' => __('Select an active branch.'),
+            'branch.exists' => __('Select an active branch.'),
+            'email.unique' => __('This email is already registered.'),
+            'phone.regex' => __('Enter a valid phone number.'),
+            'password.required' => __('Enter a password or choose auto-generate.'),
         ];
     }
 }

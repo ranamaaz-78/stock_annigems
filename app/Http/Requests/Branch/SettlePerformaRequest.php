@@ -66,10 +66,10 @@ class SettlePerformaRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'payment_method.required' => 'Select a payment method.',
-            'lines.required' => 'Select at least one unpaid line to settle.',
-            'lines.min' => 'Select at least one unpaid line to settle.',
-            'lines.*.quantity.gt' => 'Enter an amount above zero.',
+            'payment_method.required' => __('Select a payment method.'),
+            'lines.required' => __('Select at least one unpaid line to settle.'),
+            'lines.min' => __('Select at least one unpaid line to settle.'),
+            'lines.*.quantity.gt' => __('Enter an amount above zero.'),
         ];
     }
 }

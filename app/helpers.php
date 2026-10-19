@@ -47,9 +47,27 @@ function setting_date(mixed $date, ?string $format = null): string
         ? \Illuminate\Support\Carbon::instance(\Illuminate\Support\Carbon::parse($date))
         : \Illuminate\Support\Carbon::parse($date);
 
+    // translatedFormat: month and day names follow the interface language
+    // ("31 dic 2026" in Spanish); numeric formats are unaffected.
     return $carbon
         ->timezone((string) setting('timezone', 'Asia/Karachi'))
-        ->format($format ?? (string) setting('date_format', 'd-m-Y'));
+        ->translatedFormat($format ?? (string) setting('date_format', 'd-m-Y'));
+}
+
+/**
+ * Texts the browser scripts need, in the current language.
+ *
+ * Kept apart from lang/{locale}.json (lang/{locale}/js.php) so each page only
+ * carries the few hundred strings JavaScript shows, not every screen's copy.
+ * Keys are the English text, as in resources/js/modules/i18n.js t().
+ *
+ * @return array<string, string>
+ */
+function trans_js(): array
+{
+    $messages = trans('js', [], app()->getLocale());
+
+    return is_array($messages) ? $messages : [];
 }
 
 /**

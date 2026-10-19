@@ -13,7 +13,7 @@
 ])
 
 @if(count($tabs) > 1)
-    <nav {{ $attributes->merge(['class' => 'report-tabs report-print-hide']) }} aria-label="Report type">
+    <nav {{ $attributes->merge(['class' => 'report-tabs report-print-hide']) }} aria-label="{{ __('Report type') }}">
         @foreach($tabs as $tab)
             <a
                 href="{{ $tab['url'] }}"

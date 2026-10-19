@@ -8,21 +8,19 @@
 --}}
 @extends('layouts.superadmin')
 
-@section('title', 'Reports')
-@section('page-title', 'Reports')
+@section('title', __('Reports'))
+@section('page-title', __('Reports'))
 
 @section('content')
 <x-page-header
-    title="Reports"
-    subtitle="Consolidated and per-branch figures across the whole business."
+    :title="__('Reports')"
+    :subtitle="__('Consolidated and per-branch figures across the whole business.')"
 />
 
 <p class="report-notice">
     <span class="material-symbols-outlined icon icon--sm report-notice__icon" aria-hidden="true">info</span>
     <span>
-        Money figures are <strong>revenue</strong>, not profit — purchase cost is not recorded, so margin cannot be
-        calculated. These reports show <strong>aggregated figures only</strong>: individual invoices, quotations,
-        items, stones and customer purchases are not reachable from here.
+        {{ __('Money figures are') }} <strong>{{ __('revenue') }}</strong>{{ __(', not profit — purchase cost is not recorded, so margin cannot be calculated. These reports show') }} <strong>{{ __('aggregated figures only') }}</strong>{{ __(': individual invoices, quotations, items, stones and customer purchases are not reachable from here.') }}
     </span>
 </p>
 
@@ -54,17 +52,17 @@
 @if($recentExports->isNotEmpty())
     <div class="panel">
         <div class="panel-header">
-            <h2 class="panel-header__title text-headline-sm">Recent Exports</h2>
+            <h2 class="panel-header__title text-headline-sm">{{ __('Recent Exports') }}</h2>
         </div>
         <div class="table-scroll">
             <table class="table-admin table-admin--dense">
                 <thead>
                     <tr>
-                        <th>Report</th>
-                        <th>Requested</th>
-                        <th>Format</th>
-                        <th class="table-admin__num">Rows</th>
-                        <th>Status</th>
+                        <th>{{ __('Report') }}</th>
+                        <th>{{ __('Requested') }}</th>
+                        <th>{{ __('Format') }}</th>
+                        <th class="table-admin__num">{{ __('Rows') }}</th>
+                        <th>{{ __('Status') }}</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -78,7 +76,7 @@
                             <td><x-status-badge :status="$export->status" /></td>
                             <td>
                                 @if($export->isDownloadable())
-                                    <a href="{{ route('superadmin.reports.download', $export) }}" class="form-link">Download</a>
+                                    <a href="{{ route('superadmin.reports.download', $export) }}" class="form-link">{{ __('Download') }}</a>
                                 @elseif($export->failure_reason)
                                     <span class="text-body-sm">{{ $export->failure_reason }}</span>
                                 @endif

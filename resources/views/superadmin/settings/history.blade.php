@@ -6,17 +6,17 @@
 --}}
 @extends('layouts.superadmin')
 
-@section('title', 'Settings History')
-@section('page-title', 'Settings History')
+@section('title', __('Settings History'))
+@section('page-title', __('Settings History'))
 
 @section('content')
 <x-page-header
-    title="Settings change history"
-    subtitle="Who changed which key, and which role they held at the time."
+    :title="__('Settings change history')"
+    :subtitle="__('Who changed which key, and which role they held at the time.')"
 >
     <x-slot:actions>
         <x-btn href="{{ route('superadmin.settings.index') }}" variant="secondary">
-            Back to settings
+            {{ __('Back to settings') }}
         </x-btn>
     </x-slot:actions>
 </x-page-header>
@@ -24,19 +24,19 @@
 <form method="GET" action="{{ route('superadmin.settings.history') }}" class="filter-bar mb-4">
     <div class="form-grid form-grid--3">
         <div class="form-field">
-            <label class="form-label" for="history-group">Group</label>
+            <label class="form-label" for="history-group">{{ __('Group') }}</label>
             <select id="history-group" name="group" class="input-field">
-                <option value="">All groups</option>
+                <option value="">{{ __('All groups') }}</option>
                 @foreach($groups as $group)
                     <option value="{{ $group->value }}" @selected(($filters['group'] ?? '') === $group->value)>{{ $group->label() }}</option>
                 @endforeach
             </select>
         </div>
-        <x-form.input name="from" type="date" label="From" :value="$filters['from'] ?? null" />
-        <x-form.input name="to" type="date" label="To" :value="$filters['to'] ?? null" />
+        <x-form.input name="from" type="date" :label="__('From')" :value="$filters['from'] ?? null" />
+        <x-form.input name="to" type="date" :label="__('To')" :value="$filters['to'] ?? null" />
     </div>
     <div class="mt-3">
-        <x-btn type="submit" variant="secondary">Apply filters</x-btn>
+        <x-btn type="submit" variant="secondary">{{ __('Apply filters') }}</x-btn>
     </div>
 </form>
 
@@ -45,12 +45,12 @@
         <table class="table-admin table-admin--dense">
             <thead>
                 <tr>
-                    <th>When</th>
-                    <th>Scope</th>
-                    <th>Key</th>
-                    <th>From</th>
-                    <th>To</th>
-                    <th>Changed by</th>
+                    <th>{{ __('When') }}</th>
+                    <th>{{ __('Scope') }}</th>
+                    <th>{{ __('Key') }}</th>
+                    <th>{{ __('From') }}</th>
+                    <th>{{ __('To') }}</th>
+                    <th>{{ __('Changed by') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -73,8 +73,8 @@
                     <tr>
                         <td colspan="6">
                             <x-empty-state
-                                title="No changes yet"
-                                message="Saving a settings group writes a row here."
+                                :title="__('No changes yet')"
+                                :message="__('Saving a settings group writes a row here.')"
                                 icon="history"
                             />
                         </td>

@@ -84,17 +84,17 @@ class StoneIntakeController extends Controller
         );
 
         return match ($result['status']) {
-            'found' => $this->jsonSuccess('Found.', [
+            'found' => $this->jsonSuccess(__('Found.'), [
                 'stone' => $this->stoneService->toScanPayload($result['stone']),
             ]),
-            'inactive' => $this->jsonFailure('This stone is deactivated. Reactivate it before adding stock.', [
-                'code' => ['This stone is deactivated.'],
+            'inactive' => $this->jsonFailure(__('This stone is deactivated. Reactivate it before adding stock.'), [
+                'code' => [__('This stone is deactivated.')],
             ], 422),
-            'other_branch' => $this->jsonFailure('Not found in this branch.', [
-                'code' => ['Not found in this branch.'],
+            'other_branch' => $this->jsonFailure(__('Not found in this branch.'), [
+                'code' => [__('Not found in this branch.')],
             ], 404),
-            default => $this->jsonFailure('Barcode not found.', [
-                'code' => ['Barcode not found.'],
+            default => $this->jsonFailure(__('Barcode not found.'), [
+                'code' => [__('Barcode not found.')],
             ], 404),
         };
     }
@@ -106,7 +106,7 @@ class StoneIntakeController extends Controller
     {
         $this->draftService->save($request->user(), $request->validated());
 
-        return $this->jsonSuccess('Draft saved.');
+        return $this->jsonSuccess(__('Draft saved.'));
     }
 
     /**
@@ -117,7 +117,7 @@ class StoneIntakeController extends Controller
         $this->authorize('create', StoneIntake::class);
         $this->draftService->discard(request()->user());
 
-        return $this->jsonSuccess('Draft discarded.');
+        return $this->jsonSuccess(__('Draft discarded.'));
     }
 
     /**
@@ -129,7 +129,7 @@ class StoneIntakeController extends Controller
             $intake = $this->intakeService->save($request->validated(), $request->user());
         } catch (ValidationException $e) {
             if ($request->expectsJson()) {
-                return $this->jsonFailure(collect($e->errors())->flatten()->first() ?? 'Could not save intake.', $e->errors());
+                return $this->jsonFailure(collect($e->errors())->flatten()->first() ?? __('Could not save intake.'), $e->errors());
             }
             throw $e;
         }
@@ -142,12 +142,12 @@ class StoneIntakeController extends Controller
         ];
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Intake '.$intake->intake_number.' saved.', $payload, 201);
+            return $this->jsonSuccess(__('Intake :number saved.', ['number' => $intake->intake_number]), $payload, 201);
         }
 
         return redirect()
             ->route('branch.stone-intakes.show', $intake)
-            ->with('success', 'Intake '.$intake->intake_number.' saved.');
+            ->with('success', __('Intake :number saved.', ['number' => $intake->intake_number]));
     }
 
     /**

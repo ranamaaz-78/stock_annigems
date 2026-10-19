@@ -77,11 +77,11 @@ class StoreBranchStaffRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.unique' => 'This email is already registered.',
-            'phone.regex' => 'Enter a valid phone number.',
-            'role.in' => 'Select a valid staff role.',
-            'password.required' => 'Enter a password or choose auto-generate.',
-            'permissions.*.exists' => 'One or more selected permissions are invalid.',
+            'email.unique' => __('This email is already registered.'),
+            'phone.regex' => __('Enter a valid phone number.'),
+            'role.in' => __('Select a valid staff role.'),
+            'password.required' => __('Enter a password or choose auto-generate.'),
+            'permissions.*.exists' => __('One or more selected permissions are invalid.'),
         ];
     }
 }

@@ -8,8 +8,8 @@
 --}}
 @extends('layouts.branch')
 
-@section('title', $quotation ? 'Edit Quotation' : 'New Quotation')
-@section('page-title', $quotation ? 'Edit Quotation' : 'New Quotation')
+@section('title', $quotation ? __('Edit Quotation') : __('New Quotation'))
+@section('page-title', $quotation ? __('Edit Quotation') : __('New Quotation'))
 
 @php
     // Built as a single variable: a multi-line @json(...) argument breaks the
@@ -68,16 +68,16 @@
             <div class="sales-workspace__toolbar">
                 <div class="sales-workspace__heading">
                     <h1 class="sales-workspace__title">
-                        {{ $quotation ? $quotation->quotation_number : 'New Quotation' }}
+                        {{ $quotation ? $quotation->quotation_number : __('New Quotation') }}
                     </h1>
-                    <p class="sales-workspace__meta" data-item-count>No items scanned</p>
+                    <p class="sales-workspace__meta" data-item-count>{{ __('No items scanned') }}</p>
                 </div>
-                <x-btn href="{{ route('branch.quotations.index') }}" variant="secondary">Back</x-btn>
+                <x-btn href="{{ route('branch.quotations.index') }}" variant="secondary">{{ __('Back') }}</x-btn>
             </div>
 
             {{-- USB scanner / manual code entry. Adds a line via AJAX lookup. --}}
             <div class="scan-dock">
-                <label class="form-label" for="quotation-scan">Scan barcode or enter SKU</label>
+                <label class="form-label" for="quotation-scan">{{ __('Scan barcode or enter SKU') }}</label>
                 <div class="scan-dock__row scan-input-wrap" data-scan-wrap>
                     <span class="scan-dock__icon" aria-hidden="true">
                         <span class="material-symbols-outlined icon icon--md icon--secondary">barcode_scanner</span>
@@ -86,28 +86,28 @@
                         id="quotation-scan"
                         data-scan-input
                         class="input-field input-field--scan scan-dock__input"
-                        placeholder="Ready to scan…"
-                        aria-label="Item or stone code"
+                        placeholder="{{ __('Ready to scan…') }}"
+                        aria-label="{{ __('Item or stone code') }}"
                         autofocus
                     />
-                    <x-btn type="button" data-scan-submit>Add</x-btn>
+                    <x-btn type="button" data-scan-submit>{{ __('Add') }}</x-btn>
                 </div>
                 {{-- Short code = stone packet letters; name search = jewellery or stone. --}}
                 <div class="scan-dock__extras">
                     <div>
-                        <label class="form-label" for="quotation-short-code">Short code</label>
+                        <label class="form-label" for="quotation-short-code">{{ __('Short code') }}</label>
                         <input
                             id="quotation-short-code"
                             type="text"
                             class="input-field"
                             maxlength="3"
                             autocomplete="off"
-                            placeholder="DIA"
+                            placeholder="{{ __('DIA') }}"
                             data-short-code-input
                         >
                     </div>
                     <div>
-                        <label class="form-label" for="quotation-item-search">Search by name</label>
+                        <label class="form-label" for="quotation-item-search">{{ __('Search by name') }}</label>
                         <select
                             id="quotation-item-search"
                             class="input-field"
@@ -115,7 +115,7 @@
                             data-ajax-url="{{ route('branch.quotations.search') }}"
                             data-ajax-collection="items"
                         >
-                            <option value="">Jewellery or stone name…</option>
+                            <option value="">{{ __('Jewellery or stone name…') }}</option>
                         </select>
                     </div>
                 </div>
@@ -128,8 +128,8 @@
 
                 <div data-lines-empty class="sales-workspace__empty">
                     <x-empty-state
-                        title="Add the first piece"
-                        message="Scan a tag, type a 3-letter short code, or search by name."
+                        :title="__('Add the first piece')"
+                        :message="__('Scan a tag, type a 3-letter short code, or search by name.')"
                         icon="barcode_scanner"
                     />
                 </div>
@@ -144,17 +144,17 @@
             <section class="sales-aside__section">
                 <div class="customer-picker {{ $isWalkinEdit ? 'is-walkin' : '' }}">
                     <div class="sales-aside__bar">
-                        <p class="sales-aside__label">Customer info</p>
+                        <p class="sales-aside__label">{{ __('Customer info') }}</p>
                         <label class="sales-aside__text-action">
                             <input type="checkbox" data-walkin-toggle class="sales-aside__text-action-input" @checked($isWalkinEdit)>
-                            <span class="sales-aside__text-action-listed">Walk-in</span>
-                            <span class="sales-aside__text-action-walkin">Listed customer</span>
+                            <span class="sales-aside__text-action-listed">{{ __('Walk-in') }}</span>
+                            <span class="sales-aside__text-action-walkin">{{ __('Listed customer') }}</span>
                         </label>
                     </div>
 
                     {{-- Select2 AJAX: search existing customers without dumping the whole list. --}}
                     <div data-customer-select-wrap>
-                        <label for="quotation-customer" class="form-label">Customer</label>
+                        <label for="quotation-customer" class="form-label">{{ __('Customer') }}</label>
                         <select
                             id="quotation-customer"
                             name="customer_uuid"
@@ -162,10 +162,10 @@
                             data-customer-select
                             data-ajax-url="{{ route('branch.customers.search') }}"
                             data-ajax-collection="customers"
-                            data-error-required="Select a customer or add a walk-in."
+                            data-error-required="{{ __('Select a customer or add a walk-in.') }}"
                             @unless($isWalkinEdit) required @endunless
                         >
-                            <option value="">Search by name or phone…</option>
+                            <option value="">{{ __('Search by name or phone…') }}</option>
                             @if($selectedCustomerUuid !== '')
                                 <option value="{{ $selectedCustomerUuid }}" selected>{{ $selectedCustomerLabel }}</option>
                             @endif
@@ -175,20 +175,20 @@
 
                     <div data-walkin-fields class="form-grid form-grid--2">
                         <div class="field-inline">
-                            <label class="field-inline__label" for="walkin-name">Name</label>
+                            <label class="field-inline__label" for="walkin-name">{{ __('Name') }}</label>
                             <input
                                 id="walkin-name"
                                 name="walkin_name"
                                 data-doc="walkin_name"
                                 class="input-field"
                                 maxlength="150"
-                                data-error-required="Enter the walk-in customer name."
+                                data-error-required="{{ __('Enter the walk-in customer name.') }}"
                                 value="{{ $payload['walkin_name'] ?? '' }}"
                                 @if($isWalkinEdit) required @endif
                             />
                         </div>
                         <div class="field-inline">
-                            <label class="field-inline__label" for="walkin-phone">Phone</label>
+                            <label class="field-inline__label" for="walkin-phone">{{ __('Phone') }}</label>
                             <input
                                 id="walkin-phone"
                                 name="walkin_phone"
@@ -196,8 +196,8 @@
                                 class="input-field"
                                 maxlength="30"
                                 data-pattern="^[0-9+\-\s()]{7,30}$"
-                                data-error-required="Enter the walk-in customer phone."
-                                data-error-pattern="Enter a valid phone number."
+                                data-error-required="{{ __('Enter the walk-in customer phone.') }}"
+                                data-error-pattern="{{ __('Enter a valid phone number.') }}"
                                 value="{{ $payload['walkin_phone'] ?? '' }}"
                                 @if($isWalkinEdit) required @endif
                             />
@@ -205,7 +205,7 @@
                     </div>
 
                     <div class="field-inline">
-                        <label class="field-inline__label" for="quotation-date">Quotation date</label>
+                        <label class="field-inline__label" for="quotation-date">{{ __('Quotation date') }}</label>
                         <input
                             id="quotation-date"
                             type="date"
@@ -219,12 +219,12 @@
 
             <section class="sales-aside__section sales-aside__section--grow">
                 <div class="sales-aside__card">
-                    <h2 class="sales-aside__card-title">Quotation summary</h2>
+                    <h2 class="sales-aside__card-title">{{ __('Quotation summary') }}</h2>
 
                     @if($canDiscount)
                         <div class="sales-aside__discount">
                             <div class="field-inline">
-                                <label class="field-inline__label" for="discount-type">Discount type</label>
+                                <label class="field-inline__label" for="discount-type">{{ __('Discount type') }}</label>
                                 <select id="discount-type" data-doc="discount_type" class="input-field">
                                     @foreach(\App\Enums\DiscountType::cases() as $type)
                                         <option value="{{ $type->value }}" @selected(($payload['discount_type'] ?? 'none') === $type->value)>{{ $type->label() }}</option>
@@ -232,7 +232,7 @@
                                 </select>
                             </div>
                             <div class="field-inline">
-                                <label class="field-inline__label" for="discount-value">Discount value</label>
+                                <label class="field-inline__label" for="discount-value">{{ __('Discount value') }}</label>
                                 <input
                                     id="discount-value"
                                     data-doc="discount_value"
@@ -245,7 +245,7 @@
                                 />
                             </div>
                         </div>
-                        <p class="form-help">Discount cannot exceed {{ rtrim(rtrim(number_format((float) $maxDiscountPercentage, 2), '0'), '.') }}%.</p>
+                        <p class="form-help">{{ __('Discount cannot exceed :max%.', ['max' => rtrim(rtrim(number_format((float) $maxDiscountPercentage, 2), '0'), '.')]) }}</p>
                     @else
                         <input type="hidden" data-doc="discount_type" value="none">
                         <input type="hidden" data-doc="discount_value" value="0">
@@ -257,7 +257,7 @@
                     @if($taxEnabled ?? false)
                         <div class="form-grid">
                             <div>
-                                <label class="form-label" for="tax_rate_uuid">IVA</label>
+                                <label class="form-label" for="tax_rate_uuid">{{ __('IVA') }}</label>
                                 <select id="tax_rate_uuid" class="input-field" data-no-select2 data-doc="tax_rate_uuid">
                                     @foreach($ivaRates as $rate)
                                         <option value="{{ $rate['uuid'] }}" @selected($rate['uuid'] === ($payload['tax_rate_uuid'] ?? null))>{{ $rate['name'] }}</option>
@@ -266,9 +266,9 @@
                             </div>
                             @if(count($recargoRates))
                                 <div>
-                                    <label class="form-label" for="recargo_rate_uuid">Recargo de equivalencia</label>
+                                    <label class="form-label" for="recargo_rate_uuid">{{ __('Recargo de equivalencia') }}</label>
                                     <select id="recargo_rate_uuid" class="input-field" data-no-select2 data-doc="recargo_rate_uuid">
-                                        <option value="">None</option>
+                                        <option value="">{{ __('None') }}</option>
                                         @foreach($recargoRates as $rate)
                                             <option value="{{ $rate['uuid'] }}" @selected($rate['uuid'] === ($payload['recargo_rate_uuid'] ?? null))>{{ $rate['name'] }}</option>
                                         @endforeach
@@ -280,74 +280,74 @@
 
                     <dl class="totals">
                         <div class="totals__row">
-                            <dt class="totals__label">Gold value <span data-gold-weight></span></dt>
+                            <dt class="totals__label">{{ __('Gold value') }} <span data-gold-weight></span></dt>
                             <dd class="totals__value" data-gold-value>0.00</dd>
                         </div>
                         <div class="totals__row">
-                            <dt class="totals__label">Stone value</dt>
+                            <dt class="totals__label">{{ __('Stone value') }}</dt>
                             <dd class="totals__value" data-stone-value>0.00</dd>
                         </div>
                         <div class="totals__row totals__row--rule">
-                            <dt class="totals__label">Making charges</dt>
+                            <dt class="totals__label">{{ __('Making charges') }}</dt>
                             <dd class="totals__value" data-making-value>0.00</dd>
                         </div>
                         <div class="totals__row">
-                            <dt class="totals__label">Subtotal</dt>
+                            <dt class="totals__label">{{ __('Subtotal') }}</dt>
                             <dd class="totals__value" data-subtotal>0.00</dd>
                         </div>
                         @if($canDiscount)
                             <div class="totals__row">
-                                <dt class="totals__label">Discount</dt>
+                                <dt class="totals__label">{{ __('Discount') }}</dt>
                                 <dd class="totals__value" data-discount-amount>0.00</dd>
                             </div>
                         @endif
                         @if($taxEnabled ?? true)
                             <div class="totals__row totals__row--rule">
-                                <dt class="totals__label">IVA</dt>
+                                <dt class="totals__label">{{ __('IVA') }}</dt>
                                 <dd class="totals__value" data-tax-amount>0.00</dd>
                             </div>
                             <div class="totals__row">
-                                <dt class="totals__label">Recargo de equivalencia</dt>
+                                <dt class="totals__label">{{ __('Recargo de equivalencia') }}</dt>
                                 <dd class="totals__value" data-recargo-amount>0.00</dd>
                             </div>
                         @endif
                         <div class="totals__row totals__row--grand">
-                            <dt class="totals__label">Total</dt>
+                            <dt class="totals__label">{{ __('Total') }}</dt>
                             <dd class="totals__value" data-grand-total>0.00</dd>
                         </div>
                     </dl>
 
                     @if($taxEnabled ?? false)
-                        <p class="form-help">IVA and recargo are charged on the discounted total, from the rates SuperAdmin keeps.</p>
+                        <p class="form-help">{{ __('IVA and recargo are charged on the discounted total, from the rates SuperAdmin keeps.') }}</p>
                     @endif
                 </div>
             </section>
 
             <section class="sales-aside__section sales-aside__section--checkout">
                 <div class="sales-aside__notes">
-                    <label class="field-inline__label" for="quotation-notes">Notes</label>
+                    <label class="field-inline__label" for="quotation-notes">{{ __('Notes') }}</label>
                     <textarea id="quotation-notes" data-doc="notes" class="input-field" rows="2">{{ $payload['notes'] ?? '' }}</textarea>
                 </div>
 
                 <div class="sales-aside__actions">
                     {{-- Quotation first; invoice is the optional checkout path. --}}
                     @if($canConvert && ! $quotation)
-                        <x-btn type="submit" class="btn--tall" loading-text="Saving…" block>
+                        <x-btn type="submit" class="btn--tall" :loading-text="__('Saving…')" block>
                             <span class="material-symbols-outlined icon icon--sm">request_quote</span>
-                            Save quotation
+                            {{ __('Save quotation') }}
                         </x-btn>
                         <x-btn type="button" variant="secondary" block data-modal-open="invoice-modal">
                             <span class="material-symbols-outlined icon icon--sm">point_of_sale</span>
-                            Save invoice
+                            {{ __('Save invoice') }}
                         </x-btn>
                     @else
-                        <x-btn type="submit" class="btn--tall" loading-text="Saving…" block>
+                        <x-btn type="submit" class="btn--tall" :loading-text="__('Saving…')" block>
                             <span class="material-symbols-outlined icon icon--sm">request_quote</span>
-                            Save quotation
+                            {{ __('Save quotation') }}
                         </x-btn>
                     @endif
                     @if($quotation && $canConvert)
-                        <x-btn type="button" variant="secondary" block data-modal-open="convert-modal">Convert to invoice</x-btn>
+                        <x-btn type="button" variant="secondary" block data-modal-open="convert-modal">{{ __('Convert to invoice') }}</x-btn>
                     @endif
                 </div>
             </section>
@@ -361,37 +361,37 @@
         quotation-form.js (POST JSON to quotations.invoice). No native
         action — a full-page POST would drop the scanned lines.
     --}}
-    <x-modal id="invoice-modal" title="Save invoice">
+    <x-modal id="invoice-modal" :title="__('Save invoice')">
         <form id="invoice-modal-form">
             <div class="form-grid">
                 <x-form.select
                     name="payment_method"
-                    label="Payment method"
+                    :label="__('Payment method')"
                     :options="$paymentMethods"
                     required
-                    data-error-required="Select a payment method."
+                    data-error-required="{{ __('Select a payment method.') }}"
                 />
-                <x-form.input name="payment_reference" label="Reference (optional)" maxlength="100" />
+                <x-form.input name="payment_reference" :label="__('Reference (optional)')" maxlength="100" />
             </div>
             <div class="form-actions">
-                <x-btn type="button" variant="secondary" data-modal-close>Cancel</x-btn>
-                <x-btn type="submit" loading-text="Saving…">Create invoice</x-btn>
+                <x-btn type="button" variant="secondary" data-modal-close>{{ __('Cancel') }}</x-btn>
+                <x-btn type="submit" :loading-text="__('Saving…')">{{ __('Create invoice') }}</x-btn>
             </div>
         </form>
     </x-modal>
 @endif
 
 @if($quotation && $canConvert)
-    <x-modal id="convert-modal" title="Convert to invoice">
+    <x-modal id="convert-modal" :title="__('Convert to invoice')">
         <form method="POST" action="{{ route('branch.quotations.convert', $quotation) }}" id="convert-modal-form" data-loading-form>
             @csrf
             <div class="form-grid">
-                <x-form.select name="payment_method" label="Payment method" :options="$paymentMethods" required />
-                <x-form.input name="payment_reference" label="Reference (optional)" maxlength="100" />
+                <x-form.select name="payment_method" :label="__('Payment method')" :options="$paymentMethods" required />
+                <x-form.input name="payment_reference" :label="__('Reference (optional)')" maxlength="100" />
             </div>
             <div class="form-actions">
-                <x-btn type="button" variant="secondary" data-modal-close>Cancel</x-btn>
-                <x-btn type="submit" loading-text="Converting…">Create invoice</x-btn>
+                <x-btn type="button" variant="secondary" data-modal-close>{{ __('Cancel') }}</x-btn>
+                <x-btn type="submit" :loading-text="__('Converting…')">{{ __('Create invoice') }}</x-btn>
             </div>
         </form>
     </x-modal>

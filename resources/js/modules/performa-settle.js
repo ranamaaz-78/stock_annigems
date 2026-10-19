@@ -3,6 +3,7 @@
  */
 
 import { recalculate } from './pricing-calculator';
+import { t } from './i18n';
 
 function csrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -94,13 +95,13 @@ export function bindPerformaSettle() {
         if (line.line_type === 'jewellery_item') {
             const net = Number(line.net_weight_snapshot);
             const gross = Number(line.gross_weight_snapshot);
-            if (Number.isFinite(net) && net > 0) bits.push(`Net ${net.toFixed(3)}g`);
-            if (Number.isFinite(gross) && gross > 0) bits.push(`Gross ${gross.toFixed(3)}g`);
+            if (Number.isFinite(net) && net > 0) bits.push(t('Net :netg', { net: net.toFixed(3) }));
+            if (Number.isFinite(gross) && gross > 0) bits.push(t('Gross :grossg', { gross: gross.toFixed(3) }));
             if (line.metal_snapshot) bits.push(escapeHtml(line.metal_snapshot));
             if (line.purity_snapshot) bits.push(escapeHtml(line.purity_snapshot));
             if (line.category_snapshot) bits.push(escapeHtml(line.category_snapshot));
         } else {
-            bits.push('Loose stone');
+            bits.push(t('Loose stone'));
             bits.push(`Outstanding ${line.outstanding}${line.weighed ? ' g' : ''}`);
             if (line.category_snapshot) bits.push(escapeHtml(line.category_snapshot));
         }
@@ -208,7 +209,7 @@ export function bindPerformaSettle() {
         const recargoAmountEl = document.querySelector('[data-recargo-amount]');
         if (recargoAmountEl) recargoAmountEl.textContent = formatMoney(result.document.recargo_amount);
         const recargoLabelEl = document.querySelector('[data-recargo-label]');
-        if (recargoLabelEl) recargoLabelEl.textContent = chosenRecargo()?.name || 'Recargo de equivalencia';
+        if (recargoLabelEl) recargoLabelEl.textContent = chosenRecargo()?.name || t('Recargo de equivalencia');
         if (els.total) els.total.textContent = formatMoney(result.document.grand_total);
         if (els.goldWeight) {
             els.goldWeight.textContent = weight > 0 ? `(${weight.toFixed(3)}g)` : '';
@@ -261,27 +262,27 @@ export function bindPerformaSettle() {
             const jewelleryFields = `
                 ${field('Include', `<label class="form-check">
                     <input type="checkbox" data-select="${index}" ${line.selected ? 'checked' : ''}>
-                    Settle this piece
+                    ${t('Settle this piece')}
                 </label>`)}
                 ${field('Gold rate / g', `<input type="number" step="0.01" min="0" class="input-field" data-field="gold_rate_applied" data-line="${index}" value="${escapeHtml(amountOrEmpty(line.gold_rate_applied))}" placeholder="0.00" />`)}
                 ${field('Making type', `<select class="input-field" data-field="making_charge_type" data-line="${index}">
-                    <option value="none" ${line.making_charge_type === 'none' ? 'selected' : ''}>None</option>
-                    <option value="fixed" ${line.making_charge_type === 'fixed' ? 'selected' : ''}>Fixed</option>
-                    <option value="per_gram" ${line.making_charge_type === 'per_gram' ? 'selected' : ''}>Per gram</option>
+                    <option value="none" ${line.making_charge_type === 'none' ? 'selected' : ''}>${t('None')}</option>
+                    <option value="fixed" ${line.making_charge_type === 'fixed' ? 'selected' : ''}>${t('Fixed')}</option>
+                    <option value="per_gram" ${line.making_charge_type === 'per_gram' ? 'selected' : ''}>${t('Per gram')}</option>
                 </select>`)}
                 ${field('Making value', `<input type="number" step="0.01" min="0" class="input-field" data-field="making_charge_value" data-line="${index}" value="${escapeHtml(amountOrEmpty(line.making_charge_value))}" placeholder="0.00" />`)}`;
 
             const looseFields = `
-                ${field(line.weighed ? 'Pay grams' : 'Pay qty', `<input type="number" min="0" max="${line.outstanding}" step="${line.weighed ? '0.001' : '1'}" class="input-field" data-qty="${index}" value="${escapeHtml(line.payQty)}" placeholder="${line.weighed ? 'grams' : '0'}" />`)}
-                ${field(line.weighed ? 'Price / g' : 'Price / pc', `<input type="number" min="0" step="0.01" class="input-field" data-field="price_per_piece" data-line="${index}" value="${escapeHtml(amountOrEmpty(line.price_per_piece))}" placeholder="0.00" />`)}
+                ${field(line.weighed ? t('Pay grams') : t('Pay qty'), `<input type="number" min="0" max="${line.outstanding}" step="${line.weighed ? '0.001' : '1'}" class="input-field" data-qty="${index}" value="${escapeHtml(line.payQty)}" placeholder="${line.weighed ? 'grams' : '0'}" />`)}
+                ${field(line.weighed ? t('Price / g') : t('Price / pc'), `<input type="number" min="0" step="0.01" class="input-field" data-field="price_per_piece" data-line="${index}" value="${escapeHtml(amountOrEmpty(line.price_per_piece))}" placeholder="0.00" />`)}
                 ${field('Remaining', `<span class="font-data-mono">${left}</span>`)}`;
 
             const stonesHtml = isJewellery && line.stones?.length
                 ? `<div class="sale-line__stones">
                     ${line.stones.map((stone, stoneIndex) => `
                         <div class="sale-line__stone">
-                            <span class="sale-line__stone-name">${escapeHtml(stone.stone_name_snapshot)} (${escapeHtml(stone.carat_snapshot)}ct × ${escapeHtml(stone.quantity)})</span>
-                            <input type="number" step="0.01" min="0" class="input-field" data-stone-price data-line="${index}" data-stone="${stoneIndex}" value="${escapeHtml(amountOrEmpty(stone.price_per_piece))}" placeholder="0.00" aria-label="Price per piece" />
+                            <span class="sale-line__stone-name">${t(':stone_name_snapshot (:carat_snapshotct × :quantity)', { stone_name_snapshot: escapeHtml(stone.stone_name_snapshot), carat_snapshot: escapeHtml(stone.carat_snapshot), quantity: escapeHtml(stone.quantity) })}</span>
+                            <input type="number" step="0.01" min="0" class="input-field" data-stone-price data-line="${index}" data-stone="${stoneIndex}" value="${escapeHtml(amountOrEmpty(stone.price_per_piece))}" placeholder="0.00" aria-label="${t('Price per piece')}" />
                         </div>`).join('')}
                    </div>`
                 : '';
@@ -400,7 +401,7 @@ export function bindPerformaSettle() {
         const lines = selectedLines();
         if (!lines.length) {
             window.AnnigemsModal?.closeModal('settle-pay-modal');
-            window.AnnigemsAlert?.notifyError('Select at least one line and enter its price.');
+            window.AnnigemsAlert?.notifyError(t('Select at least one line and enter its price.'));
             return;
         }
 
@@ -425,13 +426,13 @@ export function bindPerformaSettle() {
         loading?.restore();
 
         if (ok) {
-            window.AnnigemsAlert?.notifySuccess(json.message || 'Payment recorded');
+            window.AnnigemsAlert?.notifySuccess(json.message || t('Payment recorded'));
             if (json.data?.uuid && routes.invoiceShow) {
                 window.location.href = routes.invoiceShow.replace('__UUID__', json.data.uuid);
             }
         } else {
             const messages = Object.values(json?.errors || {}).flat().filter(Boolean);
-            window.AnnigemsAlert?.notifyError(messages.join(' ') || json.message || 'The payment could not be saved.');
+            window.AnnigemsAlert?.notifyError(messages.join(' ') || json.message || t('The payment could not be saved.'));
         }
     });
 

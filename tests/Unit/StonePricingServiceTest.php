@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use App\Enums\StonePricingMode;
 use App\Services\StonePricingService;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 /**
  * The three locked stone formulas. These assertions are the contract the

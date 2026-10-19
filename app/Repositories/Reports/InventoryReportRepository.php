@@ -178,7 +178,7 @@ class InventoryReportRepository extends ReportRepository
 
         foreach ($edges as $edge) {
             $buckets[] = [
-                'label' => $previous === 0 ? "0–{$edge} days" : ($previous + 1)."–{$edge} days",
+                'label' => __(':from–:to days', ['from' => $previous === 0 ? 0 : $previous + 1, 'to' => $edge]),
                 // Newer than $edge days: created after (now - edge).
                 'from' => $now->subDays($edge)->startOfDay(),
                 'to' => $now->subDays($previous)->endOfDay(),
@@ -188,7 +188,7 @@ class InventoryReportRepository extends ReportRepository
 
         // Final open-ended bucket for everything older than the last edge.
         $buckets[] = [
-            'label' => "Over {$previous} days",
+            'label' => __('Over :days days', ['days' => $previous]),
             'from' => null,
             'to' => $now->subDays($previous)->endOfDay(),
         ];

@@ -18,11 +18,11 @@ enum DiscountType: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::NONE => 'None',
             self::FIXED => 'Fixed amount',
             self::PERCENTAGE => 'Percentage',
-        };
+        });
     }
 
     /**

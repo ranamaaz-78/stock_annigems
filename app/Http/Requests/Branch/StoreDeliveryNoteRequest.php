@@ -56,8 +56,8 @@ class StoreDeliveryNoteRequest extends FormRequest
     public function messages(): array
     {
         return array_merge($this->workspaceMessages(), [
-            'lines.required' => 'Add at least one item to the delivery note.',
-            'lines.min' => 'Add at least one item to the delivery note.',
+            'lines.required' => __('Add at least one item to the delivery note.'),
+            'lines.min' => __('Add at least one item to the delivery note.'),
         ]);
     }
 }

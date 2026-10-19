@@ -38,7 +38,7 @@
     // Prefer the enum's own label, then a humanised fallback.
     $text = $label
         ?? ($status instanceof \BackedEnum && method_exists($status, 'label') ? $status->label() : null)
-        ?? \Illuminate\Support\Str::headline($normalized);
+        ?? __(\Illuminate\Support\Str::headline($normalized));
 @endphp
 
 <span {{ $attributes->merge(['class' => "badge $modifier"]) }}>

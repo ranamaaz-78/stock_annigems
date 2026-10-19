@@ -176,7 +176,7 @@ class DeliveryNoteService
 
             if (! $note->canBeEdited()) {
                 throw ValidationException::withMessages([
-                    'delivery_note' => 'This delivery note can no longer be edited: a payment has been recorded or it is not open.',
+                    'delivery_note' => __('This delivery note can no longer be edited: a payment has been recorded or it is not open.'),
                 ]);
             }
 
@@ -250,7 +250,7 @@ class DeliveryNoteService
     {
         if (! $note->isOpen()) {
             throw ValidationException::withMessages([
-                'reason' => 'Only an issued delivery note can be cancelled.',
+                'reason' => __('Only an issued delivery note can be cancelled.'),
             ]);
         }
 
@@ -262,11 +262,11 @@ class DeliveryNoteService
             $note = DeliveryNote::query()->whereKey($note->id)->lockForUpdate()->with('items')->firstOrFail();
 
             if (! $note->isOpen()) {
-                throw ValidationException::withMessages(['reason' => 'This delivery note is no longer open.']);
+                throw ValidationException::withMessages(['reason' => __('This delivery note is no longer open.')]);
             }
 
             if ($note->payments()->exists()) {
-                throw ValidationException::withMessages(['reason' => 'This delivery note has been paid and cannot be cancelled.']);
+                throw ValidationException::withMessages(['reason' => __('This delivery note has been paid and cannot be cancelled.')]);
             }
 
             foreach ($note->items as $line) {
@@ -331,7 +331,7 @@ class DeliveryNoteService
     {
         if (! $note->isOpen()) {
             throw ValidationException::withMessages([
-                'delivery_note' => 'Only an issued delivery note can be turned into an invoice.',
+                'delivery_note' => __('Only an issued delivery note can be turned into an invoice.'),
             ]);
         }
 
@@ -347,7 +347,7 @@ class DeliveryNoteService
                 ->firstOrFail();
 
             if (! $note->isOpen()) {
-                throw ValidationException::withMessages(['delivery_note' => 'This delivery note is no longer open.']);
+                throw ValidationException::withMessages(['delivery_note' => __('This delivery note is no longer open.')]);
             }
 
             // IVA and recargo are chosen now (the note had none). A blank IVA
@@ -415,7 +415,7 @@ class DeliveryNoteService
             if (($payment['payment_status'] ?? 'paid') === PaymentStatus::PAID->value && $due > 0.005) {
                 if (blank($payment['payment_method'] ?? null)) {
                     throw ValidationException::withMessages([
-                        'payment_method' => 'Choose how the '.setting_money($due).' difference is being paid.',
+                        'payment_method' => __('Choose how the :due difference is being paid.', ['due' => setting_money($due)]),
                     ]);
                 }
 

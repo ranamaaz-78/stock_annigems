@@ -11,36 +11,36 @@
     $a4 = $a4 ?? false;
     $customer = $note->customer;
     $pct = static fn ($v): string => rtrim(rtrim(number_format((float) $v, 2), '0'), '.');
-    $discountLabel = 'Discount'.($note->discount_type === \App\Enums\DiscountType::PERCENTAGE && (float) $note->discount_value > 0 ? ' ('.$pct($note->discount_value).'%)' : '');
-    $terms = 'This delivery note is not a tax invoice.';
+    $discountLabel = __('Discount').($note->discount_type === \App\Enums\DiscountType::PERCENTAGE && (float) $note->discount_value > 0 ? ' ('.$pct($note->discount_value).'%)' : '');
+    $terms = __('This delivery note is not a tax invoice.');
 @endphp
 
 <article @class(['pd', 'pd--delivery', 'pd--a4' => $a4, 'pd--dense' => $note->items->count() > 12])>
     <div class="pd__page">
         <header class="pd__head" style="align-items: center">
-            <h1 class="pd__dtitle">Albarán</h1>
+            <h1 class="pd__dtitle">{{ __('Albarán') }}</h1>
             <div class="pd__numbox">
-                <div><p class="pd__label">No.</p><p>{{ $note->delivery_note_number }}</p></div>
-                <div><p class="pd__label">Date</p><p>{{ setting_date($note->delivery_date) }}</p></div>
+                <div><p class="pd__label">{{ __('No.') }}</p><p>{{ $note->delivery_note_number }}</p></div>
+                <div><p class="pd__label">{{ __('Date') }}</p><p>{{ setting_date($note->delivery_date) }}</p></div>
             </div>
         </header>
 
         @if($note->status === \App\Enums\DeliveryNoteStatus::CANCELLED)
-            <div class="pd__notice"><strong>This delivery note has been cancelled.</strong> {{ $note->cancel_reason }}</div>
+            <div class="pd__notice"><strong>{{ __('This delivery note has been cancelled.') }}</strong> {{ $note->cancel_reason }}</div>
         @endif
 
         <section class="pd__deliver">
-            <p class="pd__label">Deliver to</p>
+            <p class="pd__label">{{ __('Deliver to') }}</p>
             <div class="pd__fields">
-                <div class="pd__field"><span>Name</span><span>{{ $note->customer_name_snapshot }}</span></div>
+                <div class="pd__field"><span>{{ __('Name') }}</span><span>{{ $note->customer_name_snapshot }}</span></div>
                 @if($customer?->nie || $note->customer_phone_snapshot)
                     <div class="pd__fields-pair">
                         <div class="pd__field"><span>N.I.F / N.I.E</span><span>{{ $customer?->nie ?: '—' }}</span></div>
-                        <div class="pd__field"><span>Phone</span><span>{{ $note->customer_phone_snapshot ?: '—' }}</span></div>
+                        <div class="pd__field"><span>{{ __('Phone') }}</span><span>{{ $note->customer_phone_snapshot ?: '—' }}</span></div>
                     </div>
                 @endif
                 @if($note->customer_address_snapshot)
-                    <div class="pd__field"><span>Address</span><span>{{ $note->customer_address_snapshot }}</span></div>
+                    <div class="pd__field"><span>{{ __('Address') }}</span><span>{{ $note->customer_address_snapshot }}</span></div>
                 @endif
             </div>
         </section>
@@ -52,25 +52,25 @@
         <section class="pd__sums pd__sums--end" style="margin-top: 24px">
             <div class="pd__totals" style="width: 260px">
                 @if((float) $note->discount_amount > 0)
-                    <div class="pd__total-row"><span>Subtotal</span><span>{{ setting_money($note->subtotal) }}</span></div>
+                    <div class="pd__total-row"><span>{{ __('Subtotal') }}</span><span>{{ setting_money($note->subtotal) }}</span></div>
                     <div class="pd__total-row">
                         <span>{{ $discountLabel }}</span>
                         <span>−{{ setting_money($note->discount_amount) }}</span>
                     </div>
                 @endif
-                <div class="pd__net"><span>Total (net)</span><span>{{ setting_money($note->grand_total) }}</span></div>
+                <div class="pd__net"><span>{{ __('Total (net)') }}</span><span>{{ setting_money($note->grand_total) }}</span></div>
             </div>
         </section>
 
         <x-pd.notes :notes="$note->notes" :terms="$terms" />
 
         <section class="pd__sign">
-            <div><span></span><p>Received by</p></div>
-            <div><span></span><p>Date</p></div>
+            <div><span></span><p>{{ __('Received by') }}</p></div>
+            <div><span></span><p>{{ __('Date') }}</p></div>
         </section>
 
         <footer class="pd__footer pd__footer--dashed">
-            <span>Keep this slip with the goods.</span>
+            <span>{{ __('Keep this slip with the goods.') }}</span>
             <span>{{ $note->delivery_note_number }}</span>
         </footer>
     </div>

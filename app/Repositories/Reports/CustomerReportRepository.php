@@ -268,7 +268,7 @@ class CustomerReportRepository extends ReportRepository
                 'invoice_number' => (string) $row->invoice_number,
                 'invoice_date' => \Illuminate\Support\Carbon::parse($row->invoice_date)->toDateString(),
                 'branch' => (string) $row->branch_name,
-                'payment_method' => \App\Enums\PaymentMethod::tryFrom((string) $row->payment_method)?->label() ?? 'Pending',
+                'payment_method' => \App\Enums\PaymentMethod::tryFrom((string) $row->payment_method)?->label() ?? __('Pending'),
                 'grand_total' => $this->toFloat($row->grand_total),
             ]);
     }

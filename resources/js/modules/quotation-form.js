@@ -5,6 +5,7 @@
 import { attachBarcodeScanner } from './barcode-scanner';
 import { recalculate } from './pricing-calculator';
 import { destroySelects, enhanceSelects } from './select-search';
+import { t } from './i18n';
 
 function csrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -203,7 +204,7 @@ export function bindQuotationForm() {
 
         const count = state.lines.length;
         els.itemCount.textContent = count === 0
-            ? 'No items scanned'
+            ? t('No items scanned')
             : (count === 1 ? '1 item' : `${count} items`);
     }
 
@@ -212,7 +213,7 @@ export function bindQuotationForm() {
         const purities = [...new Set(state.lines.filter((l) => l.line_type === 'jewellery_item').map((l) => l.purity_snapshot).filter(Boolean))];
         els.purityNote.classList.toggle('hidden', purities.length <= 1);
         if (purities.length > 1) {
-            els.purityNote.textContent = `This quotation has ${purities.length} different purities (${purities.join(', ')}). Adjust gold rates per line as needed.`;
+            els.purityNote.textContent = t('This quotation has :purities different purities (:purities2). Adjust gold rates per line as needed.', { purities: purities.length, purities2: purities.join(', ') });
         }
     }
 
@@ -282,7 +283,7 @@ export function bindQuotationForm() {
             if (line.purity_snapshot) bits.push(escapeHtml(line.purity_snapshot));
             if (line.category_snapshot) bits.push(escapeHtml(line.category_snapshot));
         } else {
-            bits.push('Loose stone');
+            bits.push(t('Loose stone'));
             if (line.category_snapshot) bits.push(escapeHtml(line.category_snapshot));
         }
 
@@ -311,8 +312,8 @@ export function bindQuotationForm() {
                 ? `<div class="sale-line__stones">
                     ${line.stones.map((stone, stoneIndex) => `
                         <div class="sale-line__stone">
-                            <span class="sale-line__stone-name">${escapeHtml(stone.stone_name_snapshot)} (${escapeHtml(stone.carat_snapshot)}ct × ${escapeHtml(stone.quantity)})</span>
-                            <input type="number" step="0.01" min="0" class="input-field" data-stone-price data-line="${index}" data-stone="${stoneIndex}" value="${escapeHtml(amountOrEmpty(stone.price_per_piece))}" placeholder="0.00" aria-label="Price per piece" />
+                            <span class="sale-line__stone-name">${t(':stone_name_snapshot (:carat_snapshotct × :quantity)', { stone_name_snapshot: escapeHtml(stone.stone_name_snapshot), carat_snapshot: escapeHtml(stone.carat_snapshot), quantity: escapeHtml(stone.quantity) })}</span>
+                            <input type="number" step="0.01" min="0" class="input-field" data-stone-price data-line="${index}" data-stone="${stoneIndex}" value="${escapeHtml(amountOrEmpty(stone.price_per_piece))}" placeholder="0.00" aria-label="${t('Price per piece')}" />
                             <span class="sale-line__stone-total">${escapeHtml(formatMoney(stone.total_price || 0))}</span>
                         </div>`).join('')}
                    </div>`
@@ -321,9 +322,9 @@ export function bindQuotationForm() {
             const jewelleryFields = `
                 ${field('Gold rate / g', `<input type="number" step="0.01" min="0" class="input-field" data-field="gold_rate_applied" data-line="${index}" value="${escapeHtml(amountOrEmpty(line.gold_rate_applied))}" placeholder="0.00" />`)}
                 ${field('Making type', `<select class="input-field" data-field="making_charge_type" data-line="${index}">
-                    <option value="none" ${line.making_charge_type === 'none' ? 'selected' : ''}>None</option>
-                    <option value="fixed" ${line.making_charge_type === 'fixed' ? 'selected' : ''}>Fixed</option>
-                    <option value="per_gram" ${line.making_charge_type === 'per_gram' ? 'selected' : ''}>Per gram</option>
+                    <option value="none" ${line.making_charge_type === 'none' ? 'selected' : ''}>${t('None')}</option>
+                    <option value="fixed" ${line.making_charge_type === 'fixed' ? 'selected' : ''}>${t('Fixed')}</option>
+                    <option value="per_gram" ${line.making_charge_type === 'per_gram' ? 'selected' : ''}>${t('Per gram')}</option>
                 </select>`)}
                 ${field('Making value', `<input type="number" step="0.01" min="0" class="input-field" data-field="making_charge_value" data-line="${index}" value="${escapeHtml(amountOrEmpty(line.making_charge_value))}" placeholder="0.00" />`)}`;
 
@@ -344,7 +345,7 @@ export function bindQuotationForm() {
                         </div>
                         <div class="sale-line__end">
                             <span class="sale-line__amount">${escapeHtml(formatMoney(line.line_total || 0))}</span>
-                            <button type="button" class="sale-line__remove" data-remove-line="${index}" aria-label="Remove line">
+                            <button type="button" class="sale-line__remove" data-remove-line="${index}" aria-label="${t('Remove line')}">
                                 <span class="material-symbols-outlined icon icon--sm">delete</span>
                             </button>
                         </div>
@@ -397,7 +398,7 @@ export function bindQuotationForm() {
             body: JSON.stringify({ code }),
         });
         if (!ok) {
-            showScanError(json.message || 'Not found');
+            showScanError(json.message || t('Not found'));
             return;
         }
         clearScanError();
@@ -423,7 +424,7 @@ export function bindQuotationForm() {
         if (line.line_type === 'jewellery_item') {
             const exists = state.lines.some((l) => l.jewellery_item_id === line.jewellery_item_id);
             if (exists) {
-                showScanError(`${line.item_code_snapshot} is already on this quotation.`);
+                showScanError(t(':code is already on this quotation.', { code: line.item_code_snapshot }));
                 return;
             }
             const rate = config.rateMap?.[line.purity_id_snapshot];
@@ -632,7 +633,7 @@ export function bindQuotationForm() {
         const { ok, json } = await fetchJson(url, { method, body: JSON.stringify(buildFormPayload()) });
         loading?.restore();
         if (ok) {
-            window.AnnigemsAlert?.notifySuccess(json.message || 'Saved');
+            window.AnnigemsAlert?.notifySuccess(json.message || t('Saved'));
             if (json.data?.uuid) window.location.href = routes.show.replace('__UUID__', json.data.uuid);
         } else {
             window.AnnigemsAlert?.notifyError(describeErrors(json));
@@ -654,7 +655,7 @@ export function bindQuotationForm() {
 
         if (!state.lines.length) {
             window.AnnigemsModal?.closeModal('invoice-modal');
-            window.AnnigemsAlert?.notifyError('Add at least one item to the invoice.');
+            window.AnnigemsAlert?.notifyError(t('Add at least one item to the invoice.'));
             return;
         }
 
@@ -680,12 +681,12 @@ export function bindQuotationForm() {
         loading?.restore();
 
         if (ok) {
-            window.AnnigemsAlert?.notifySuccess(json.message || 'Invoice created');
+            window.AnnigemsAlert?.notifySuccess(json.message || t('Invoice created'));
             if (json.data?.uuid && routes.invoiceShow) {
                 window.location.href = routes.invoiceShow.replace('__UUID__', json.data.uuid);
             }
         } else {
-            window.AnnigemsAlert?.notifyError(describeErrors(json, 'The invoice could not be saved.'));
+            window.AnnigemsAlert?.notifyError(describeErrors(json, t('The invoice could not be saved.')));
         }
     });
 
@@ -707,7 +708,7 @@ export function bindQuotationForm() {
             return [...new Set(messages)].join(' ');
         }
 
-        return json?.message || fallback || 'The quotation could not be saved.';
+        return json?.message || fallback || t('The quotation could not be saved.');
     }
 
     /**

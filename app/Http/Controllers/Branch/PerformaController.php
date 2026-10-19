@@ -88,7 +88,7 @@ class PerformaController extends Controller
                 'exception' => $e,
             ]);
 
-            $message = 'The performa could not be saved. Please try again or contact support.';
+            $message = __('The performa could not be saved. Please try again or contact support.');
 
             if ($request->expectsJson()) {
                 return $this->jsonFailure($message, [], 500);
@@ -99,9 +99,9 @@ class PerformaController extends Controller
 
         if ($request->expectsJson()) {
             // The POS opens the document's page next; this is what that page shows.
-            session()->flash('success', 'Performa '.$performa->performa_number.' issued.');
+            session()->flash('success', __('Performa :number issued.', ['number' => $performa->performa_number]));
 
-            return $this->jsonSuccess('Performa '.$performa->performa_number.' issued.', [
+            return $this->jsonSuccess(__('Performa :number issued.', ['number' => $performa->performa_number]), [
                 'uuid' => $performa->uuid,
                 'number' => $performa->performa_number,
                 'print_url' => route('branch.performas.print', $performa),
@@ -109,7 +109,7 @@ class PerformaController extends Controller
             ]);
         }
 
-        return redirect()->route('branch.performas.show', $performa)->with('success', 'Performa issued.');
+        return redirect()->route('branch.performas.show', $performa)->with('success', __('Performa issued.'));
     }
 
     /**
@@ -141,7 +141,7 @@ class PerformaController extends Controller
                 'exception' => $e,
             ]);
 
-            $message = 'The performa could not be saved. Please try again or contact support.';
+            $message = __('The performa could not be saved. Please try again or contact support.');
 
             if ($request->expectsJson()) {
                 return $this->jsonFailure($message, [], 500);
@@ -151,7 +151,7 @@ class PerformaController extends Controller
         }
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Performa '.$performa->performa_number.' updated.', [
+            return $this->jsonSuccess(__('Performa :number updated.', ['number' => $performa->performa_number]), [
                 'uuid' => $performa->uuid,
                 'show_url' => route('branch.performas.show', $performa),
                 'number' => $performa->performa_number,
@@ -159,7 +159,7 @@ class PerformaController extends Controller
             ]);
         }
 
-        return redirect()->route('branch.performas.show', $performa)->with('success', 'Performa updated.');
+        return redirect()->route('branch.performas.show', $performa)->with('success', __('Performa updated.'));
     }
 
     /**
@@ -233,7 +233,7 @@ class PerformaController extends Controller
                 'exception' => $e,
             ]);
 
-            $message = 'The payment could not be saved. Please try again or contact support.';
+            $message = __('The payment could not be saved. Please try again or contact support.');
 
             if ($request->expectsJson()) {
                 return $this->jsonFailure($message, [], 500);
@@ -243,10 +243,10 @@ class PerformaController extends Controller
         }
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Payment recorded.', ['uuid' => $invoice->uuid]);
+            return $this->jsonSuccess(__('Payment recorded.'), ['uuid' => $invoice->uuid]);
         }
 
-        return redirect()->route('branch.invoices.show', $invoice)->with('success', 'Payment recorded.');
+        return redirect()->route('branch.invoices.show', $invoice)->with('success', __('Payment recorded.'));
     }
 
     /**
@@ -265,10 +265,10 @@ class PerformaController extends Controller
         }
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Unpaid goods returned to stock.');
+            return $this->jsonSuccess(__('Unpaid goods returned to stock.'));
         }
 
-        return redirect()->route('branch.performas.show', $performa)->with('success', 'Unpaid goods returned to stock.');
+        return redirect()->route('branch.performas.show', $performa)->with('success', __('Unpaid goods returned to stock.'));
     }
 
     /**
@@ -283,10 +283,10 @@ class PerformaController extends Controller
         $result = $this->lookupService->lookup($request->input('code'), $request->user());
 
         if ($result['status'] === 'found') {
-            return $this->jsonSuccess('Found.', ['line' => $result['line']]);
+            return $this->jsonSuccess(__('Found.'), ['line' => $result['line']]);
         }
 
-        return $this->jsonFailure($result['message'] ?? 'Not found.', ['code' => [$result['message'] ?? 'Not found.']], 422);
+        return $this->jsonFailure($result['message'] ?? __('Not found.'), ['code' => [$result['message'] ?? __('Not found.')]], 422);
     }
 
     /**
@@ -298,7 +298,7 @@ class PerformaController extends Controller
 
         $request->validate(['q' => ['nullable', 'string', 'max:80']]);
 
-        return $this->jsonSuccess('OK.', [
+        return $this->jsonSuccess(__('OK.'), [
             'items' => $this->lookupService->search((string) $request->query('q', ''), $request->user()),
         ]);
     }

@@ -2,9 +2,10 @@
 @props([
     'href',
     'icon' => 'visibility',
-    'label' => 'View',
+    'label' => null,
 ])
 
+@php($label ??= __('View'))
 <a
     href="{{ $href }}"
     class="table-admin__action"

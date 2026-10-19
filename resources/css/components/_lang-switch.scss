@@ -1,0 +1,87 @@
+/**
+ * Language button (ES | EN). Markup: components/shell/language-switch.blade.php.
+ *
+ * A two-option segmented control. Light tone sits on white (top bar, login
+ * and guest cards); dark tone sits on the slate sidebar (POS).
+ */
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 2px;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-container-lowest);
+}
+
+.lang-switch__form {
+  display: contents;
+}
+
+.lang-switch__option {
+  min-width: 2.25rem;
+  padding: 0.2rem 0.6rem;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-on-surface-variant);
+  font-family: var(--font-label-caps);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    background-color: var(--color-surface-container);
+    color: var(--color-on-surface);
+  }
+
+  &.is-on {
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+    cursor: default;
+  }
+}
+
+.lang-switch--dark {
+  border-color: color-mix(in srgb, var(--color-inverse-on-surface) 25%, transparent);
+  background-color: transparent;
+
+  .lang-switch__option {
+    color: var(--color-inverse-on-surface);
+
+    &:hover,
+    &:focus-visible {
+      background-color: color-mix(in srgb, var(--color-inverse-on-surface) 12%, transparent);
+      color: var(--color-inverse-on-surface);
+    }
+
+    &.is-on {
+      background-color: var(--color-primary-fixed-dim, var(--color-primary));
+      color: var(--color-inverse-surface, #293138);
+    }
+  }
+}
+
+/* Placement: top-right of the login form and of the guest cards. */
+.login-form,
+.guest-card {
+  position: relative;
+}
+
+.login-form__lang,
+.guest-card__lang {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+/* POS sidebar: centred above the full-screen tool. */
+.sa-sidebar__lang {
+  align-self: center;
+  margin-bottom: 0.35rem;
+}

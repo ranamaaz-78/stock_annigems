@@ -19,9 +19,9 @@ enum SettingScope: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::GLOBAL => 'Global',
             self::BRANCH => 'Branch',
-        };
+        });
     }
 }

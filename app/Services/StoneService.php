@@ -214,7 +214,7 @@ class StoneService
             ->first();
 
         if ($quotation?->quotation) {
-            return "{$stone->stone_code} is held by quotation {$quotation->quotation->quotation_number}. Cancel or convert it first.";
+            return __(':code is held by quotation :number. Cancel or convert it first.', ['code' => $stone->stone_code, 'number' => $quotation->quotation->quotation_number]);
         }
 
         $performa = PerformaItem::query()
@@ -224,7 +224,7 @@ class StoneService
             ->first(fn (PerformaItem $item): bool => $item->performa?->isOpen() && $item->outstandingAmount() > 0);
 
         if ($performa) {
-            return "{$stone->stone_code} is still out on performa {$performa->performa->performa_number}. Settle or return it first.";
+            return __(':code is still out on performa :number. Settle or return it first.', ['code' => $stone->stone_code, 'number' => $performa->performa->performa_number]);
         }
 
         $note = DeliveryNoteItem::query()
@@ -234,7 +234,7 @@ class StoneService
             ->first();
 
         if ($note?->deliveryNote) {
-            return "{$stone->stone_code} is on delivery note {$note->deliveryNote->delivery_note_number}. Cancel or invoice it first.";
+            return __(':code is on delivery note :number. Cancel or invoice it first.', ['code' => $stone->stone_code, 'number' => $note->deliveryNote->delivery_note_number]);
         }
 
         return null;

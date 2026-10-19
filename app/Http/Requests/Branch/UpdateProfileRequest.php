@@ -56,7 +56,7 @@ class UpdateProfileRequest extends FormRequest
     {
         $validator->after(function ($validator): void {
             if ($this->filled('new_password') && ! Hash::check($this->input('current_password'), $this->user()->password)) {
-                $validator->errors()->add('current_password', 'Current password is incorrect.');
+                $validator->errors()->add('current_password', __('Current password is incorrect.'));
             }
         });
     }
@@ -67,9 +67,9 @@ class UpdateProfileRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'phone.regex' => 'Enter a valid phone number.',
-            'current_password.required' => 'Enter your current password to set a new one.',
-            'new_password.confirmed' => 'New password confirmation does not match.',
+            'phone.regex' => __('Enter a valid phone number.'),
+            'current_password.required' => __('Enter your current password to set a new one.'),
+            'new_password.confirmed' => __('New password confirmation does not match.'),
         ];
     }
 }

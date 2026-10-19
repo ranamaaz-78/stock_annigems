@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureBranchMember;
 use App\Http\Middleware\EnsurePasswordChanged;
 use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\SetBranchContext;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -31,6 +32,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Idle timeout follows SESSION_LIFETIME, not a SuperAdmin setting.
         $middleware->appendToGroup('web', ApplySettingsSession::class);
+
+        // Interface language: the user's choice, else the cookie, else the default.
+        $middleware->appendToGroup('web', SetLocale::class);
 
         $middleware->redirectGuestsTo(fn () => route('login'));
 

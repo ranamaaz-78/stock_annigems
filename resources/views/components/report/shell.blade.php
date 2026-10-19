@@ -44,8 +44,7 @@
     <p class="report-notice">
         <span class="material-symbols-outlined icon icon--sm report-notice__icon" aria-hidden="true">info</span>
         <span>
-            These are <strong>revenue</strong> figures, not profit. Purchase cost is not recorded by the
-            system, so margin cannot be calculated. Voided invoices are excluded from every total below.
+            {{ __('These are') }} <strong>{{ __('revenue') }}</strong> {{ __('figures, not profit. Purchase cost is not recorded by the system, so margin cannot be calculated. Voided invoices are excluded from every total below.') }}
         </span>
     </p>
 @endif
@@ -96,9 +95,9 @@
         :columns="$result->columns"
         :rows="$result->rows"
         :totals="$result->totals"
-        :title="$result->meta('table_title', 'Breakdown')"
-        :empty-title="$result->meta('empty_title', 'No data for this period')"
-        :empty-message="$result->meta('empty_message', 'Nothing matched the selected date range and filters.')"
+        :title="$result->meta('table_title', __('Breakdown'))"
+        :empty-title="$result->meta('empty_title', __('No data for this period'))"
+        :empty-message="$result->meta('empty_message', __('Nothing matched the selected date range and filters.'))"
     />
 @endif
 

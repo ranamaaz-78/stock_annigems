@@ -9,6 +9,8 @@
  * All three answer the project envelope: { success, message, data, errors }.
  */
 
+import { t } from './i18n';
+
 /** Columns shown in the preview grid, in order, and how each is edited. */
 const PREVIEW_COLUMNS = [
     { key: 'name', wide: true },
@@ -22,9 +24,9 @@ const PREVIEW_COLUMNS = [
         key: 'pricing_mode',
         options: [
             ['', '—'],
-            ['per_carat', 'Per carat'],
-            ['per_piece', 'Per piece'],
-            ['per_gram', 'Per gram'],
+            ['per_carat', t('Per carat')],
+            ['per_piece', t('Per piece')],
+            ['per_gram', t('Per gram')],
         ],
     },
     { key: 'price_per_carat' },
@@ -79,7 +81,7 @@ async function post(url, body) {
         return { ok: response.ok, json };
     } catch (error) {
         // A dropped connection must not leave the wizard stuck on a spinner.
-        return { ok: false, json: { message: 'The server could not be reached. Check your connection and try again.' } };
+        return { ok: false, json: { message: t('The server could not be reached. Check your connection and try again.') } };
     }
 }
 
@@ -132,7 +134,7 @@ function postWithProgress(url, body, onProgress) {
         });
         xhr.addEventListener('error', () => resolve({
             ok: false,
-            json: { message: 'The server could not be reached. Check your connection and try again.' },
+            json: { message: t('The server could not be reached. Check your connection and try again.') },
             aborted: false,
         }));
         xhr.addEventListener('abort', () => resolve({ ok: false, json: {}, aborted: true }));
@@ -204,8 +206,8 @@ class InsertProgress {
         this.startedAt = Date.now();
         this.done = 0;
 
-        this.title.textContent = 'Importing stones';
-        this.message.textContent = 'Please keep this page open until it finishes.';
+        this.title.textContent = t('Importing stones');
+        this.message.textContent = t('Please keep this page open until it finishes.');
         this.message.classList.remove('is-error');
         this.actions.classList.add('is-hidden');
         this.historyLink.classList.add('is-hidden');
@@ -460,7 +462,7 @@ class StoneImport {
         const body = new FormData();
         body.append('file', this.file);
 
-        this.showBusy({ title: 'Uploading file', detail: this.file.name, percent: 0 });
+        this.showBusy({ title: t('Uploading file'), detail: this.file.name, percent: 0 });
 
         const request = postWithProgress(this.urls.stage, body, (percent) => {
             if (runId !== this.runId) {
@@ -468,9 +470,9 @@ class StoneImport {
             }
 
             if (percent >= 100) {
-                this.showBusy({ title: 'Reading spreadsheet', detail: 'Finding the columns…', percent: null });
+                this.showBusy({ title: t('Reading spreadsheet'), detail: t('Finding the columns…'), percent: null });
             } else {
-                this.showBusy({ title: 'Uploading file', detail: `${this.file.name} — ${percent}%`, percent });
+                this.showBusy({ title: t('Uploading file'), detail: `${this.file.name} — ${percent}%`, percent });
             }
         });
         this.activeRequest = request;
@@ -483,7 +485,7 @@ class StoneImport {
         this.hideBusy();
 
         if (!ok) {
-            window.AnnigemsAlert?.notifyError(messageOf(json, 'That file could not be read.'));
+            window.AnnigemsAlert?.notifyError(messageOf(json, t('That file could not be read.')));
             return;
         }
 
@@ -494,7 +496,7 @@ class StoneImport {
         this.rowCount = json.data.row_count || 0;
 
         this.renderMapping();
-        this.setStatus(`${json.data.row_count} rows found in ${json.data.filename}.`);
+        this.setStatus(t(':row_count rows found in :filename.', { row_count: json.data.row_count, filename: json.data.filename }));
         this.step = 'map';
         this.render();
     }
@@ -548,7 +550,7 @@ class StoneImport {
 
             const blank = document.createElement('option');
             blank.value = '';
-            blank.textContent = 'Not in this sheet';
+            blank.textContent = t('Not in this sheet');
             select.appendChild(blank);
 
             this.columns.forEach((column, index) => {
@@ -576,8 +578,8 @@ class StoneImport {
         const runId = this.runId;
 
         this.showBusy({
-            title: 'Calculating rows',
-            detail: `Costing ${this.rowCount.toLocaleString()} rows with your column choices…`,
+            title: t('Calculating rows'),
+            detail: t('Costing :count rows with your column choices…', { count: this.rowCount.toLocaleString() }),
             percent: null,
         });
         const { ok, json } = await post(this.urls.preview, { token: this.token, mapping: this.mapping });
@@ -587,7 +589,7 @@ class StoneImport {
         this.hideBusy();
 
         if (!ok) {
-            window.AnnigemsAlert?.notifyError(messageOf(json, 'Those columns could not be processed.'));
+            window.AnnigemsAlert?.notifyError(messageOf(json, t('Those columns could not be processed.')));
             return;
         }
 
@@ -622,11 +624,11 @@ class StoneImport {
         this.rowsHost.appendChild(fragment);
 
         this.insertBtn.disabled = okCount === 0;
-        this.insertBtn.textContent = errorCount > 0 ? `Insert ${okCount} ready rows` : 'Insert';
+        this.insertBtn.textContent = errorCount > 0 ? t('Insert :okCount ready rows', { okCount: okCount }) : t('Insert');
         this.setStatus(
             errorCount > 0
-                ? `${okCount} rows will be inserted. ${errorCount} red rows will be kept in Stones > Import History to download and fix.`
-                : 'Every row calculated. Review and insert.'
+                ? t(':okCount rows will be inserted. :errorCount red rows will be kept in Stones > Import History to download and fix.', { okCount: okCount, errorCount: errorCount })
+                : t('Every row calculated. Review and insert.')
         );
     }
 
@@ -666,7 +668,7 @@ class StoneImport {
         calc.className = 'stone-import__calc';
         calc.textContent = row.cost_formula || '—';
         if (row.mismatch) {
-            calc.textContent += ` (sheet said ${row.sheet_total})`;
+            calc.textContent += t(' (sheet said :sheet_total)', { sheet_total: row.sheet_total });
         }
         tr.appendChild(calc);
 
@@ -754,11 +756,11 @@ class StoneImport {
         const bad = this.rows.filter((row) => (row.issues || []).length > 0);
 
         const confirmed = await window.AnnigemsAlert?.confirmAction({
-            title: `Import ${ready.length} stones?`,
+            title: t('Import :ready stones?', { ready: ready.length }),
             text: bad.length > 0
-                ? `Each ready row becomes a stone lot. ${bad.length} rows with problems will not be inserted; download them later from Stones > Import History.`
-                : 'Each row becomes a stone lot with its own code and barcode.',
-            confirmButtonText: 'Insert',
+                ? t('Each ready row becomes a stone lot. :bad rows with problems will not be inserted; download them later from Stones > Import History.', { bad: bad.length })
+                : t('Each row becomes a stone lot with its own code and barcode.'),
+            confirmButtonText: t('Insert'),
         });
         if (!confirmed) {
             return;
@@ -793,7 +795,7 @@ class StoneImport {
      */
     async runInsert({ ready, bad, token, headers, mapping, filename }) {
         const stop = (message, history = false) => this.progress?.finish({
-            title: 'Import stopped',
+            title: t('Import stopped'),
             message,
             error: true,
             history,
@@ -804,7 +806,7 @@ class StoneImport {
             total_rows: ready.length + bad.length,
         });
         if (!begun.ok) {
-            stop(messageOf(begun.json, 'The import could not be started.'));
+            stop(messageOf(begun.json, t('The import could not be started.')));
             return;
         }
 
@@ -823,7 +825,7 @@ class StoneImport {
 
             if (!ok) {
                 stop(
-                    `${messageOf(json, 'A batch could not be inserted.')} Rows already inserted stay in your stock; see Import History.`,
+                    t(':inserted Rows already inserted stay in your stock; see Import History.', { inserted: messageOf(json, 'A batch could not be inserted.') }),
                     true
                 );
                 return;
@@ -843,7 +845,7 @@ class StoneImport {
         });
         if (!finished.ok) {
             stop(
-                `${messageOf(finished.json, 'The import could not be closed.')} The rows were inserted; see Import History.`,
+                t(':closed The rows were inserted; see Import History.', { closed: messageOf(finished.json, 'The import could not be closed.') }),
                 true
             );
             return;
@@ -852,10 +854,10 @@ class StoneImport {
         const { inserted, rejected: notInserted } = finished.json.data;
         const seconds = formatDuration((Date.now() - this.progress.startedAt) / 1000);
         this.progress?.finish({
-            title: 'Import finished',
+            title: t('Import finished'),
             message: notInserted > 0
-                ? `${inserted.toLocaleString()} rows inserted in ${seconds}. ${notInserted.toLocaleString()} rows were not inserted: download them from Import History, fix them, and import again.`
-                : `${inserted.toLocaleString()} rows inserted in ${seconds}.`,
+                ? t(':inserted rows inserted in :seconds. :failed rows were not inserted: download them from Import History, fix them, and import again.', { inserted: inserted.toLocaleString(), seconds: seconds, failed: notInserted.toLocaleString() })
+                : t(':inserted rows inserted in :seconds.', { inserted: inserted.toLocaleString(), seconds: seconds }),
             history: notInserted > 0,
         });
     }
@@ -897,9 +899,9 @@ class StoneImport {
         });
 
         const headings = {
-            upload: 'Upload Excel',
-            map: 'Confirm columns',
-            preview: 'Review rows before inserting',
+            upload: t('Upload Excel'),
+            map: t('Confirm columns'),
+            preview: t('Review rows before inserting'),
         };
         this.heading.textContent = headings[this.step];
 

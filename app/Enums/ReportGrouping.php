@@ -20,11 +20,11 @@ enum ReportGrouping: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::DAY => 'Daily',
             self::WEEK => 'Weekly',
             self::MONTH => 'Monthly',
-        };
+        });
     }
 
     /**

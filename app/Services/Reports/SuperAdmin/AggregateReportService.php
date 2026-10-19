@@ -91,7 +91,7 @@ abstract class AggregateReportService
      */
     protected function branchColumn(): array
     {
-        return ['key' => 'branch', 'label' => 'Branch', 'format' => 'branch'];
+        return ['key' => 'branch', 'label' => __('Branch'), 'format' => 'branch'];
     }
 
     /**
@@ -105,7 +105,7 @@ abstract class AggregateReportService
     {
         return array_merge([
             'aggregate_only' => true,
-            'empty_title' => 'No activity in this period',
+            'empty_title' => __('No activity in this period'),
         ], $extra);
     }
 }

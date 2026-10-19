@@ -59,7 +59,7 @@ class StoneIntakeService
 
         if ($rows === []) {
             throw ValidationException::withMessages([
-                'rows' => 'Scan or add at least one stone before saving.',
+                'rows' => __('Scan or add at least one stone before saving.'),
             ]);
         }
 
@@ -162,13 +162,13 @@ class StoneIntakeService
 
             if ($uuid === '') {
                 throw ValidationException::withMessages([
-                    "rows.{$index}.uuid" => 'Each row needs an active stone.',
+                    "rows.{$index}.uuid" => __('Each row needs an active stone.'),
                 ]);
             }
 
             if (isset($seen[$uuid])) {
                 throw ValidationException::withMessages([
-                    "rows.{$index}.uuid" => 'The same stone appears twice. Combine quantities on one row.',
+                    "rows.{$index}.uuid" => __('The same stone appears twice. Combine quantities on one row.'),
                 ]);
             }
             $seen[$uuid] = true;
@@ -177,7 +177,7 @@ class StoneIntakeService
 
             if (! $stone || (int) $stone->branch_id !== $branchId || ! $stone->is_active) {
                 throw ValidationException::withMessages([
-                    "rows.{$index}.uuid" => 'A scanned stone is missing, inactive, or belongs to another branch. Remove it and scan again.',
+                    "rows.{$index}.uuid" => __('A scanned stone is missing, inactive, or belongs to another branch. Remove it and scan again.'),
                 ]);
             }
 
@@ -187,13 +187,13 @@ class StoneIntakeService
 
             if ($isGram && $grams <= 0) {
                 throw ValidationException::withMessages([
-                    "rows.{$index}.weight_grams" => "Enter the grams received for {$stone->name}.",
+                    "rows.{$index}.weight_grams" => __('Enter the grams received for :name.', ['name' => $stone->name]),
                 ]);
             }
 
             if (! $isGram && $qty < 1) {
                 throw ValidationException::withMessages([
-                    "rows.{$index}.quantity" => "Enter at least 1 piece for {$stone->name}.",
+                    "rows.{$index}.quantity" => __('Enter at least 1 piece for :name.', ['name' => $stone->name]),
                 ]);
             }
 

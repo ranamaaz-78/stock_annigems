@@ -19,12 +19,12 @@ enum StoneOrigin: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::NATURAL => 'Natural',
             self::LAB_GROWN => 'Lab grown',
             self::SYNTHETIC => 'Synthetic',
             self::UNKNOWN => 'Unknown',
-        };
+        });
     }
 
     /**

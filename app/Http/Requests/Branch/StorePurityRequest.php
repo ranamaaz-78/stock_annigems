@@ -58,11 +58,11 @@ class StorePurityRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'metal_type_id.required' => 'Select a metal type.',
-            'name.required' => 'Enter a purity name (e.g. 22K).',
-            'name.unique' => 'That purity already exists for this metal.',
-            'value.required' => 'Enter the fineness ratio (e.g. 0.9166).',
-            'value.lte' => 'Fineness cannot be greater than 1.',
+            'metal_type_id.required' => __('Select a metal type.'),
+            'name.required' => __('Enter a purity name (e.g. 22K).'),
+            'name.unique' => __('That purity already exists for this metal.'),
+            'value.required' => __('Enter the fineness ratio (e.g. 0.9166).'),
+            'value.lte' => __('Fineness cannot be greater than 1.'),
         ];
     }
 }

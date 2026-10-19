@@ -252,7 +252,7 @@ class CustomerService
     {
         if (! $this->canDeactivate($customer)) {
             throw ValidationException::withMessages([
-                'customer' => 'This customer has quotations or invoices and cannot be deleted. Deactivate only when they have no history, or leave them active.',
+                'customer' => __('This customer has quotations or invoices and cannot be deleted. Deactivate only when they have no history, or leave them active.'),
             ]);
         }
 

@@ -47,8 +47,8 @@ class ReturnPerformaRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'lines.required_without' => 'Select at least one unpaid line to return.',
-            'lines.*.quantity.gt' => 'Enter an amount above zero.',
+            'lines.required_without' => __('Select at least one unpaid line to return.'),
+            'lines.*.quantity.gt' => __('Enter an amount above zero.'),
         ];
     }
 }

@@ -52,10 +52,10 @@ class SaveTaxRateRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Give the rate a name, e.g. IVA 21%.',
-            'rate.required' => 'Enter the percentage.',
-            'rate.max' => 'A rate cannot be more than 100%.',
-            'rate.decimal' => 'Use at most three decimal places.',
+            'name.required' => __('Give the rate a name, e.g. IVA 21%.'),
+            'rate.required' => __('Enter the percentage.'),
+            'rate.max' => __('A rate cannot be more than 100%.'),
+            'rate.decimal' => __('Use at most three decimal places.'),
         ];
     }
 }

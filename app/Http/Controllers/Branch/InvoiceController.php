@@ -59,19 +59,19 @@ class InvoiceController extends Controller
             throw $e;
         } catch (Throwable $e) {
             Log::error('Invoice update failed.', ['user_id' => $request->user()?->id, 'exception' => $e]);
-            $message = 'The invoice could not be saved. Please try again or contact support.';
+            $message = __('The invoice could not be saved. Please try again or contact support.');
 
             return $request->expectsJson()
                 ? response()->json(['success' => false, 'message' => $message, 'errors' => []], 500)
                 : back()->withInput()->withErrors(['invoice' => $message]);
         }
 
-        session()->flash('success', 'Invoice '.$invoice->invoice_number.' updated.');
+        session()->flash('success', __('Invoice :number updated.', ['number' => $invoice->invoice_number]));
 
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Invoice '.$invoice->invoice_number.' updated.',
+                'message' => __('Invoice :number updated.', ['number' => $invoice->invoice_number]),
                 'data' => ['uuid' => $invoice->uuid, 'show_url' => route('branch.invoices.show', $invoice)],
             ]);
         }
@@ -118,6 +118,6 @@ class InvoiceController extends Controller
     {
         $this->invoiceService->void($invoice, $request->validated('void_reason'), $request->user());
 
-        return redirect()->route('branch.invoices.show', $invoice)->with('success', 'Invoice voided.');
+        return redirect()->route('branch.invoices.show', $invoice)->with('success', __('Invoice voided.'));
     }
 }

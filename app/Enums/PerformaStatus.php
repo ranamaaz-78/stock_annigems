@@ -21,12 +21,12 @@ enum PerformaStatus: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::OPEN => 'Open',
             self::PARTIAL => 'Partial',
             self::SETTLED => 'Settled',
             self::CANCELLED => 'Cancelled',
-        };
+        });
     }
 
     /**

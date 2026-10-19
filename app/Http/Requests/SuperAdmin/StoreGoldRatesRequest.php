@@ -71,13 +71,13 @@ class StoreGoldRatesRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'effective_date.required' => 'Please choose the date these rates take effect.',
-            'effective_date.before_or_equal' => 'The effective date cannot be in the future.',
-            'rates.required' => 'Enter at least one gold rate.',
-            'rates.*.required' => 'Enter a rate or leave the field blank.',
-            'rates.*.numeric' => 'The rate must be a number.',
-            'rates.*.gt' => 'Each rate must be greater than zero.',
-            'rates.*.max' => 'The rate entered is unrealistically high. Please check for a typo.',
+            'effective_date.required' => __('Please choose the date these rates take effect.'),
+            'effective_date.before_or_equal' => __('The effective date cannot be in the future.'),
+            'rates.required' => __('Enter at least one gold rate.'),
+            'rates.*.required' => __('Enter a rate or leave the field blank.'),
+            'rates.*.numeric' => __('The rate must be a number.'),
+            'rates.*.gt' => __('Each rate must be greater than zero.'),
+            'rates.*.max' => __('The rate entered is unrealistically high. Please check for a typo.'),
         ];
     }
 

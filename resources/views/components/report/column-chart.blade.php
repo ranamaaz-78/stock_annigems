@@ -22,13 +22,13 @@
     <div class="p-4">
         @if(empty($points))
             <x-empty-state
-                title="No activity in this period"
-                message="Once sales are recorded in the selected range they will appear here."
+                :title="__('No activity in this period')"
+                :message="__('Once sales are recorded in the selected range they will appear here.')"
                 icon="show_chart"
             />
         @else
             @if(! empty($chart['unit']))
-                <p class="chart-unit">Measured in {{ $chart['unit'] }}.</p>
+                <p class="chart-unit">{{ __('Measured in :unit.', ['unit' => $chart['unit']]) }}</p>
             @endif
 
             <div class="chart-columns">

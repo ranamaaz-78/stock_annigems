@@ -17,10 +17,10 @@ enum InvoiceStatus: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::COMPLETED => 'Completed',
             self::VOIDED => 'Voided',
-        };
+        });
     }
 
     /**

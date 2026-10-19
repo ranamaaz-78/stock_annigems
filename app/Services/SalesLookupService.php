@@ -386,7 +386,7 @@ class SalesLookupService
 
                 if (! $stone) {
                     throw ValidationException::withMessages([
-                        "lines.{$index}" => "Line {$lineNum}: this stone is no longer in your branch. Remove the line and scan it again.",
+                        "lines.{$index}" => __('Line :line: this stone is no longer in your branch. Remove the line and scan it again.', ['line' => $lineNum]),
                     ]);
                 }
 
@@ -404,7 +404,7 @@ class SalesLookupService
 
                     if ($grams <= 0) {
                         throw ValidationException::withMessages([
-                            "lines.{$index}" => "Line {$lineNum}: enter how many grams of {$stone->stone_code}.",
+                            "lines.{$index}" => __('Line :line: enter how many grams of :code.', ['line' => $lineNum, 'code' => $stone->stone_code]),
                         ]);
                     }
 
@@ -429,7 +429,7 @@ class SalesLookupService
 
             if (! $item) {
                 throw ValidationException::withMessages([
-                    "lines.{$index}" => "Line {$lineNum}: this item is no longer in your branch. Remove the line and scan it again.",
+                    "lines.{$index}" => __('Line :line: this item is no longer in your branch. Remove the line and scan it again.', ['line' => $lineNum]),
                 ]);
             }
 

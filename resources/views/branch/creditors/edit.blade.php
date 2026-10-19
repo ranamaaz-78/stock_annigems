@@ -1,13 +1,13 @@
 {{-- Edit an existing branch creditor. --}}
 @extends('layouts.branch')
 
-@section('title', 'Edit Creditor')
-@section('page-title', 'Edit Creditor')
+@section('title', __('Edit Creditor'))
+@section('page-title', __('Edit Creditor'))
 
 @section('content')
-<x-page-header title="Edit {{ $creditor->name }}" :subtitle="$creditor->creditor_code">
+<x-page-header :title="__('Edit').' '.$creditor->name" :subtitle="$creditor->creditor_code">
     <x-slot:actions>
-        <x-btn href="{{ route('branch.creditors.show', $creditor) }}" variant="secondary">Back</x-btn>
+        <x-btn href="{{ route('branch.creditors.show', $creditor) }}" variant="secondary">{{ __('Back') }}</x-btn>
     </x-slot:actions>
 </x-page-header>
 
@@ -19,8 +19,8 @@
             @include('branch.creditors._form', ['creditor' => $creditor])
 
             <div class="form-actions">
-                <x-btn href="{{ route('branch.creditors.show', $creditor) }}" variant="secondary">Cancel</x-btn>
-                <x-btn type="submit" loading-text="Saving...">Update creditor</x-btn>
+                <x-btn href="{{ route('branch.creditors.show', $creditor) }}" variant="secondary">{{ __('Cancel') }}</x-btn>
+                <x-btn type="submit" :loading-text="__('Saving...')">{{ __('Update creditor') }}</x-btn>
             </div>
         </form>
     </div>

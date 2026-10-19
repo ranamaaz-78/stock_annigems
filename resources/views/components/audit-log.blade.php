@@ -4,7 +4,7 @@
 ])
 
 @if($logs->isEmpty())
-    <p class="attribution attribution--empty">No activity recorded yet.</p>
+    <p class="attribution attribution--empty">{{ __('No activity recorded yet.') }}</p>
 @else
     <ul {{ $attributes->merge(['class' => 'audit-log']) }}>
         @foreach($logs as $log)

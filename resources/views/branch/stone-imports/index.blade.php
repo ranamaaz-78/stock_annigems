@@ -1,33 +1,33 @@
 {{-- History of stone Excel imports and the rows each one set aside. --}}
 @extends('layouts.branch')
 
-@section('title', 'Import History')
-@section('page-title', 'Import History')
+@section('title', __('Import History'))
+@section('page-title', __('Import History'))
 
 @section('content')
-<x-page-header title="Import History" subtitle="Every Excel import: how many rows went in and how many need a fix.">
+<x-page-header :title="__('Import History')" :subtitle="__('Every Excel import: how many rows went in and how many need a fix.')">
     <x-slot:actions>
-        <x-btn href="{{ route('branch.stones.index') }}" variant="secondary">Back to Stones</x-btn>
+        <x-btn href="{{ route('branch.stones.index') }}" variant="secondary">{{ __('Back to Stones') }}</x-btn>
     </x-slot:actions>
 </x-page-header>
 
 <div class="panel">
     @if($imports->isEmpty())
         <div class="panel__body">
-            <x-empty-state title="No imports yet" message="Use Upload Excel on the Stones page to import a supplier sheet." icon="upload_file" />
+            <x-empty-state :title="__('No imports yet')" :message="__('Use Upload Excel on the Stones page to import a supplier sheet.')" icon="upload_file" />
         </div>
     @else
         <div class="panel__scroll">
             <table class="table-admin">
                 <thead>
                     <tr>
-                        <th>File</th>
-                        <th>Date &amp; time</th>
-                        <th>Imported by</th>
-                        <th class="table-admin__num">Total rows</th>
-                        <th class="table-admin__num">Inserted</th>
-                        <th class="table-admin__num">Not inserted</th>
-                        <th class="table-admin__actions-col">Bad rows</th>
+                        <th>{{ __('File') }}</th>
+                        <th>{{ __('Date & time') }}</th>
+                        <th>{{ __('Imported by') }}</th>
+                        <th class="table-admin__num">{{ __('Total rows') }}</th>
+                        <th class="table-admin__num">{{ __('Inserted') }}</th>
+                        <th class="table-admin__num">{{ __('Not inserted') }}</th>
+                        <th class="table-admin__actions-col">{{ __('Bad rows') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -39,7 +39,7 @@
                                     icon="upload_file"
                                 />
                                 @unless($import->isFinished())
-                                    <span class="stone-import__chip stone-import__chip--error" title="The import stopped before it finished. The rows shown as inserted are in your stock.">Stopped early</span>
+                                    <span class="stone-import__chip stone-import__chip--error" title="{{ __('The import stopped before it finished. The rows shown as inserted are in your stock.') }}">{{ __('Stopped early') }}</span>
                                 @endunless
                             </td>
                             <td class="font-data-mono">{{ setting_datetime($import->created_at) }}</td>
@@ -57,10 +57,10 @@
                                 @if($import->hasRejects())
                                     <a href="{{ route('branch.stone-imports.rejects', $import) }}" class="btn btn--danger">
                                         <span class="material-symbols-outlined icon icon--sm">download</span>
-                                        Download
+                                        {{ __('Download') }}
                                     </a>
                                 @else
-                                    <span class="table-meta">None</span>
+                                    <span class="table-meta">{{ __('None') }}</span>
                                 @endif
                             </td>
                         </tr>

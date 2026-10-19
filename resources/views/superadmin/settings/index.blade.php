@@ -7,17 +7,17 @@
 --}}
 @extends('layouts.superadmin')
 
-@section('title', 'Global Settings')
-@section('page-title', 'Global Settings')
+@section('title', __('Global Settings'))
+@section('page-title', __('Global Settings'))
 
 @section('content')
 <x-page-header
-    title="Global Settings"
-    subtitle="Business rules that apply to every branch. Changing a toggle stops new generation only — existing codes and links keep working."
+    :title="__('Global Settings')"
+    :subtitle="__('Business rules that apply to every branch. Changing a toggle stops new generation only — existing codes and links keep working.')"
 >
     <x-slot:actions>
         <x-btn href="{{ route('superadmin.settings.history') }}" variant="secondary">
-            Change history
+            {{ __('Change history') }}
         </x-btn>
     </x-slot:actions>
 </x-page-header>

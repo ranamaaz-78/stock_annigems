@@ -2,7 +2,7 @@
 @props([
     'name' => 'search',
     'value' => '',
-    'placeholder' => 'Search…',
+    'placeholder' => null,
 ])
 
 <div class="filter-bar__wide">
@@ -14,7 +14,7 @@
             type="search"
             name="{{ $name }}"
             value="{{ $value }}"
-            placeholder="{{ $placeholder }}"
+            placeholder="{{ $placeholder ?? __('Search…') }}"
             class="input-with-icon__field"
             {{ $attributes }}
         >

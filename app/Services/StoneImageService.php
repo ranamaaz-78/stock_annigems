@@ -169,7 +169,7 @@ class StoneImageService
             Storage::disk('stone-images')->delete($path);
 
             throw ValidationException::withMessages([
-                'name' => "A file named {$name} is already in this folder.",
+                'name' => __('A file named :name is already in this folder.', ['name' => $name]),
             ]);
         }
 
@@ -242,7 +242,7 @@ class StoneImageService
             $image->save();
         } catch (UniqueConstraintViolationException) {
             throw ValidationException::withMessages([
-                'name' => "A file named {$name} is already in this folder.",
+                'name' => __('A file named :name is already in this folder.', ['name' => $name]),
             ]);
         }
 
@@ -299,14 +299,14 @@ class StoneImageService
         $maxKb = (int) config('annigems.stones.image_max_kilobytes', 5120);
         if ($file->getSize() > $maxKb * 1024) {
             throw ValidationException::withMessages([
-                'files' => $file->getClientOriginalName().' is larger than '.$maxKb.' KB.',
+                'files' => __(':getClientOriginalName is larger than :maxKb KB.', ['getClientOriginalName' => $file->getClientOriginalName(), 'maxKb' => $maxKb]),
             ]);
         }
 
         $mime = $this->realMime($file);
         if (! isset(self::ALLOWED[$mime])) {
             throw ValidationException::withMessages([
-                'files' => $file->getClientOriginalName().' must be a JPEG, PNG, WebP, or GIF image.',
+                'files' => __(':getClientOriginalName must be a JPEG, PNG, WebP, or GIF image.', ['getClientOriginalName' => $file->getClientOriginalName()]),
             ]);
         }
 
@@ -325,7 +325,7 @@ class StoneImageService
 
         if (! in_array($extension, $allowed, true)) {
             throw ValidationException::withMessages([
-                'files' => "{$original} does not match the image type inside the file.",
+                'files' => __(':original does not match the image type inside the file.', ['original' => $original]),
             ]);
         }
 
@@ -347,7 +347,7 @@ class StoneImageService
 
         if ($name === '' || $name === '.' || $name === '..') {
             throw ValidationException::withMessages([
-                'name' => 'Enter a file name.',
+                'name' => __('Enter a file name.'),
             ]);
         }
 
@@ -366,13 +366,13 @@ class StoneImageService
 
         if ($name === '' || $name === '.' || $name === '..' || str_contains($name, '/')) {
             throw ValidationException::withMessages([
-                'name' => 'Enter a file name.',
+                'name' => __('Enter a file name.'),
             ]);
         }
 
         if (mb_strlen($name) > 180) {
             throw ValidationException::withMessages([
-                'name' => 'File name must be 180 characters or fewer.',
+                'name' => __('File name must be 180 characters or fewer.'),
             ]);
         }
 
@@ -393,7 +393,7 @@ class StoneImageService
 
         if ($taken) {
             throw ValidationException::withMessages([
-                'name' => "A file named {$name} is already in this folder.",
+                'name' => __('A file named :name is already in this folder.', ['name' => $name]),
             ]);
         }
     }

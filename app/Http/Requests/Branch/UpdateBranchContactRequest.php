@@ -43,11 +43,11 @@ class UpdateBranchContactRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Enter the name printed on documents.',
-            'address.required' => 'Enter the branch address.',
-            'city.required' => 'Enter the city.',
-            'contact_number.required' => 'Enter the branch phone number.',
-            'email.email' => 'Enter a valid email address.',
+            'name.required' => __('Enter the name printed on documents.'),
+            'address.required' => __('Enter the branch address.'),
+            'city.required' => __('Enter the city.'),
+            'contact_number.required' => __('Enter the branch phone number.'),
+            'email.email' => __('Enter a valid email address.'),
         ];
     }
 }

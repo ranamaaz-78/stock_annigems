@@ -78,9 +78,18 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    'locale' => env('APP_LOCALE', 'es'),
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
+
+    /*
+     * Languages a user can switch between (SetLocale middleware, language
+     * button). Keys are locale codes, values are each language's own name.
+     */
+    'supported_locales' => [
+        'es' => 'Español',
+        'en' => 'English',
+    ],
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 

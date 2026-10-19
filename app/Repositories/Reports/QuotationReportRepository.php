@@ -118,7 +118,7 @@ class QuotationReportRepository extends ReportRepository
                 'quotation_number' => (string) $row->quotation_number,
                 'quotation_date' => (string) $row->quotation_date,
                 // A quotation is either against a customer record or a walk-in.
-                'customer' => (string) ($row->customer_name ?: $row->walkin_name ?: 'Walk-in'),
+                'customer' => (string) ($row->customer_name ?: $row->walkin_name ?: __('Walk-in')),
                 'value' => (float) $row->grand_total,
                 'age_days' => (int) \Illuminate\Support\Carbon::parse($row->quotation_date)->diffInDays(now()),
             ]);
@@ -276,7 +276,7 @@ class QuotationReportRepository extends ReportRepository
                 'uuid' => (string) $row->uuid,
                 'quotation_number' => (string) $row->quotation_number,
                 'quotation_date' => (string) $row->quotation_date,
-                'customer' => (string) ($row->customer_name ?: $row->walkin_name ?: 'Walk-in'),
+                'customer' => (string) ($row->customer_name ?: $row->walkin_name ?: __('Walk-in')),
                 'value' => (float) $row->grand_total,
                 'actor_name' => $row->actor_name,
                 'actor_role' => $row->actor_role,

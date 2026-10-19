@@ -2,6 +2,8 @@
  * Performa unpaid return: selected lines or every outstanding qty.
  */
 
+import { t } from './i18n';
+
 function csrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 }
@@ -86,26 +88,26 @@ export function bindPerformaReturn() {
         }
 
         if (response.ok) {
-            window.AnnigemsAlert?.notifySuccess(json.message || 'Unpaid goods returned to stock.');
+            window.AnnigemsAlert?.notifySuccess(json.message || t('Unpaid goods returned to stock.'));
             window.location.href = routes.show || window.location.href;
             return;
         }
 
         const messages = Object.values(json?.errors || {}).flat().filter(Boolean);
-        window.AnnigemsAlert?.notifyError(messages.join(' ') || json.message || 'The return could not be saved.');
+        window.AnnigemsAlert?.notifyError(messages.join(' ') || json.message || t('The return could not be saved.'));
     }
 
     form.querySelector('[data-return-selected]')?.addEventListener('click', async () => {
         const lines = selectedLines();
         if (!lines.length) {
-            window.AnnigemsAlert?.notifyError('Select a piece or enter a stone quantity to return.');
+            window.AnnigemsAlert?.notifyError(t('Select a piece or enter a stone quantity to return.'));
             return;
         }
 
         const ok = await window.AnnigemsAlert?.confirmAction({
-            title: 'Return selected goods?',
-            text: 'Only the pieces and stone qty you chose go back to stock. Settled lines stay sold.',
-            confirmButtonText: 'Return selected',
+            title: t('Return selected goods?'),
+            text: t('Only the pieces and stone qty you chose go back to stock. Settled lines stay sold.'),
+            confirmButtonText: t('Return selected'),
         });
         if (!ok) return;
 
@@ -114,9 +116,9 @@ export function bindPerformaReturn() {
 
     form.querySelector('[data-return-all]')?.addEventListener('click', async () => {
         const ok = await window.AnnigemsAlert?.confirmAction({
-            title: 'Return all unpaid goods?',
-            text: 'Every unpaid jewellery piece and leftover stone qty goes back to stock. Settled lines stay sold.',
-            confirmButtonText: 'Return all unpaid',
+            title: t('Return all unpaid goods?'),
+            text: t('Every unpaid jewellery piece and leftover stone qty goes back to stock. Settled lines stay sold.'),
+            confirmButtonText: t('Return all unpaid'),
         });
         if (!ok) return;
 

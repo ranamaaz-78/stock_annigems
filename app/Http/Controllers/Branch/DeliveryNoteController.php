@@ -70,7 +70,7 @@ class DeliveryNoteController extends Controller
                 'exception' => $e,
             ]);
 
-            $message = 'The delivery note could not be saved. Please try again or contact support.';
+            $message = __('The delivery note could not be saved. Please try again or contact support.');
 
             if ($request->expectsJson()) {
                 return $this->jsonFailure($message, [], 500);
@@ -81,9 +81,9 @@ class DeliveryNoteController extends Controller
 
         if ($request->expectsJson()) {
             // The POS opens the document's page next; this is what that page shows.
-            session()->flash('success', 'Delivery note '.$note->delivery_note_number.' created.');
+            session()->flash('success', __('Delivery note :number created.', ['number' => $note->delivery_note_number]));
 
-            return $this->jsonSuccess('Delivery note '.$note->delivery_note_number.' created.', [
+            return $this->jsonSuccess(__('Delivery note :number created.', ['number' => $note->delivery_note_number]), [
                 'uuid' => $note->uuid,
                 'number' => $note->delivery_note_number,
                 'print_url' => route('branch.delivery-notes.print', $note),
@@ -93,7 +93,7 @@ class DeliveryNoteController extends Controller
 
         return redirect()
             ->route('branch.delivery-notes.show', $note)
-            ->with('success', 'Delivery note '.$note->delivery_note_number.' created.');
+            ->with('success', __('Delivery note :number created.', ['number' => $note->delivery_note_number]));
     }
 
     /**
@@ -111,15 +111,15 @@ class DeliveryNoteController extends Controller
             throw $e;
         } catch (Throwable $e) {
             Log::error('Delivery note update failed.', ['user_id' => $request->user()?->id, 'exception' => $e]);
-            $message = 'The delivery note could not be saved. Please try again or contact support.';
+            $message = __('The delivery note could not be saved. Please try again or contact support.');
 
             return $request->expectsJson() ? $this->jsonFailure($message, [], 500) : back()->withInput()->withErrors(['delivery_note' => $message]);
         }
 
-        session()->flash('success', 'Delivery note '.$note->delivery_note_number.' updated.');
+        session()->flash('success', __('Delivery note :number updated.', ['number' => $note->delivery_note_number]));
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Delivery note '.$note->delivery_note_number.' updated.', [
+            return $this->jsonSuccess(__('Delivery note :number updated.', ['number' => $note->delivery_note_number]), [
                 'uuid' => $note->uuid,
                 'show_url' => route('branch.delivery-notes.show', $note),
             ]);
@@ -167,7 +167,7 @@ class DeliveryNoteController extends Controller
 
         return redirect()
             ->route('branch.delivery-notes.show', $deliveryNote)
-            ->with('success', 'Delivery note cancelled. The goods are back in stock.');
+            ->with('success', __('Delivery note cancelled. The goods are back in stock.'));
     }
 
     /**
@@ -179,6 +179,6 @@ class DeliveryNoteController extends Controller
 
         return redirect()
             ->route('branch.invoices.show', $invoice)
-            ->with('success', 'Invoice '.$invoice->invoice_number.' created from delivery note '.$deliveryNote->delivery_note_number.'.');
+            ->with('success', __('Invoice :invoice created from delivery note :note.', ['invoice' => $invoice->invoice_number, 'note' => $deliveryNote->delivery_note_number]));
     }
 }

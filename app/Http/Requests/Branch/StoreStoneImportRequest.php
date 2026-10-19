@@ -45,8 +45,8 @@ class StoreStoneImportRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'rows.required' => 'There is nothing to import.',
-            'rows.max' => 'Too many rows for one import. Split the sheet and try again.',
+            'rows.required' => __('There is nothing to import.'),
+            'rows.max' => __('Too many rows for one import. Split the sheet and try again.'),
         ];
     }
 }

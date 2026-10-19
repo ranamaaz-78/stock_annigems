@@ -10,6 +10,8 @@
  * grid of fixed labels; rolls print one label per page, sized to the label.
  */
 
+import { t } from './i18n';
+
 /** Mobile-safe localStorage key for the last choices. */
 const STORAGE_KEY = 'annigems.stones.labelOptions';
 
@@ -20,7 +22,7 @@ const STORAGE_KEY = 'annigems.stones.labelOptions';
  * @type {Array<{group: string, items: Array<object>}>}
  */
 const PRESETS = (() => {
-    const roll = (w, h) => ({ id: `roll-${w}x${h}`, name: `Roll label ${w} × ${h} mm`, kind: 'roll', w, h });
+    const roll = (w, h) => ({ id: `roll-${w}x${h}`, name: t('Roll label :w × :h mm', { w: w, h: h }), kind: 'roll', w, h });
     const rollSizes = [
         [20, 10], [20, 40], [22.5, 22.5], [25, 15], [25, 25], [30, 15], [30, 20], [30, 30], [30, 50],
         [35, 35], [38, 25], [40, 20], [40, 25], [40, 30], [40, 40], [45, 30], [50, 25], [50, 30],
@@ -36,11 +38,11 @@ const PRESETS = (() => {
             ],
         },
         {
-            group: 'Thermal roll',
-            items: [{ id: 'thermal-58', name: 'Thermal roll 58 mm', kind: 'roll', w: 58, h: 30 }],
+            group: t('Thermal roll'),
+            items: [{ id: 'thermal-58', name: t('Thermal roll 58 mm'), kind: 'roll', w: 58, h: 30 }],
         },
-        { group: 'Roll labels', items: rollSizes.map(([w, h]) => roll(w, h)) },
-        { group: 'Other', items: [{ id: 'custom', name: 'Custom size…', kind: 'roll', w: 50, h: 30, custom: true }] },
+        { group: t('Roll labels'), items: rollSizes.map(([w, h]) => roll(w, h)) },
+        { group: t('Other'), items: [{ id: 'custom', name: t('Custom size…'), kind: 'roll', w: 50, h: 30, custom: true }] },
     ];
 })();
 
@@ -261,7 +263,7 @@ function labelCss() {
 function printDocument(built, stock) {
     const pageSize = stock.kind === 'roll' ? `${stock.w}mm ${stock.h}mm` : 'A4 portrait';
 
-    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Stone labels</title><style>
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${t('Stone labels')}</title><style>
         @page { size: ${pageSize}; margin: 0; }
         html, body { margin: 0; padding: 0; background: #fff; }
         .pg { break-after: page; page-break-after: always; }
@@ -331,9 +333,7 @@ export function bindStoneLabels() {
 
     // Label stock list, built from the presets so there is one source of truth.
     const stockSelect = field('preset');
-    stockSelect.innerHTML = PRESETS.map((group) => `<optgroup label="${esc(group.group)}">${
-        group.items.map((item) => `<option value="${item.id}">${esc(item.name)}</option>`).join('')
-    }</optgroup>`).join('');
+    stockSelect.innerHTML = PRESETS.map((group) => `<optgroup label="${esc(group.group)}">${group.items.map((item) => `<option value="${item.id}">${esc(item.name)}</option>`).join('')}</optgroup>`).join('');
 
     /**
      * Put the stored choices into the controls.
@@ -380,7 +380,7 @@ export function bindStoneLabels() {
 
         if (!stones.length) {
             preview.innerHTML = '';
-            summary.textContent = 'Nothing to print.';
+            summary.textContent = t('Nothing to print.');
             printBtn.disabled = true;
 
             return;
@@ -410,8 +410,10 @@ export function bindStoneLabels() {
 
         preview.innerHTML = `<style>${labelCss()}</style>${zoomed}${thumbnail}`;
 
-        const perPage = built.sheet ? `${built.perPage} per page` : '1 per label';
-        summary.textContent = `${built.total} ${built.total === 1 ? 'label' : 'labels'} · ${stock.name} · ${perPage}${built.sheet ? ` · ${built.pageCount} ${built.pageCount === 1 ? 'page' : 'pages'}` : ''} · barcodes print as sharp vectors`;
+        const perPage = built.sheet ? t(':perPage per page', { perPage: built.perPage }) : t('1 per label');
+        const labelCount = built.total === 1 ? t(':count label', { count: built.total }) : t(':count labels', { count: built.total });
+        const pageCount = built.sheet ? ' · ' + (built.pageCount === 1 ? t(':count page', { count: built.pageCount }) : t(':count pages', { count: built.pageCount })) : '';
+        summary.textContent = `${labelCount} · ${stock.name} · ${perPage}${pageCount} · ${t('barcodes print as sharp vectors')}`;
         printBtn.disabled = false;
     }
 
@@ -422,7 +424,7 @@ export function bindStoneLabels() {
      */
     async function open(uuids) {
         if (!uuids.length) {
-            window.AnnigemsAlert?.notifyError('Select at least one stone to print.');
+            window.AnnigemsAlert?.notifyError(t('Select at least one stone to print.'));
 
             return;
         }
@@ -447,7 +449,7 @@ export function bindStoneLabels() {
         }
 
         if (!ok) {
-            window.AnnigemsAlert?.notifyError(json.message || 'The labels could not be prepared.');
+            window.AnnigemsAlert?.notifyError(json.message || t('The labels could not be prepared.'));
 
             return;
         }
@@ -456,13 +458,17 @@ export function bindStoneLabels() {
         const skipped = Number(json.data?.skipped || 0);
 
         if (!stones.length) {
-            window.AnnigemsAlert?.notifyError('None of the selected stones has a packet barcode, so there is nothing to print.');
+            window.AnnigemsAlert?.notifyError(t('None of the selected stones has a packet barcode, so there is nothing to print.'));
 
             return;
         }
 
         modal.querySelector('[data-label-count]').textContent = `${stones.length} ${stones.length === 1 ? 'stone' : 'stones'} selected`;
-        notice.textContent = skipped > 0 ? `${skipped} selected ${skipped === 1 ? 'stone has' : 'stones have'} no packet barcode and ${skipped === 1 ? 'is' : 'are'} left out.` : '';
+        notice.textContent = skipped > 0
+            ? (skipped === 1
+                ? t(':count selected stone has no packet barcode and is left out.', { count: skipped })
+                : t(':count selected stones have no packet barcode and are left out.', { count: skipped }))
+            : '';
         notice.classList.toggle('is-hidden', skipped === 0);
 
         applyOptionsToControls();

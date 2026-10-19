@@ -82,7 +82,7 @@ class Performa extends Model
             return $this->creditor->name;
         }
 
-        return 'Creditor';
+        return __('Creditor');
     }
 
     /**

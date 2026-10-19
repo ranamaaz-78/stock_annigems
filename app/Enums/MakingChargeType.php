@@ -18,11 +18,11 @@ enum MakingChargeType: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::NONE => 'None',
             self::FIXED => 'Fixed amount',
             self::PER_GRAM => 'Per gram',
-        };
+        });
     }
 
     /**

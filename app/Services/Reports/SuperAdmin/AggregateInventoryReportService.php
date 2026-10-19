@@ -40,19 +40,19 @@ class AggregateInventoryReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'stock-summary',
-            title: 'Stock Summary',
+            title: __('Stock Summary'),
             summary: [
-                $this->card('total_pieces', 'Total Pieces', ReportFormatter::count($rows->sum('total_pieces')), 'inventory_2'),
-                $this->card('available', 'Available', ReportFormatter::count($rows->sum('available_pieces')), 'check_circle'),
-                $this->card('gold_weight', 'Gold Weight in Stock', ReportFormatter::grams($rows->sum('gold_weight')), 'scale',
-                    hint: 'Available pieces only'),
+                $this->card('total_pieces', __('Total Pieces'), ReportFormatter::count($rows->sum('total_pieces')), 'inventory_2'),
+                $this->card('available', __('Available'), ReportFormatter::count($rows->sum('available_pieces')), 'check_circle'),
+                $this->card('gold_weight', __('Gold Weight in Stock'), ReportFormatter::grams($rows->sum('gold_weight')), 'scale',
+                    hint: __('Available pieces only')),
             ],
             rows: $rows,
             columns: [
                 $this->branchColumn(),
-                ['key' => 'total_pieces', 'label' => 'Total Pieces', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'available_pieces', 'label' => 'Available', 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
-                ['key' => 'gold_weight', 'label' => 'Gold in Stock', 'align' => 'right', 'format' => 'grams'],
+                ['key' => 'total_pieces', 'label' => __('Total Pieces'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'available_pieces', 'label' => __('Available'), 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
+                ['key' => 'gold_weight', 'label' => __('Gold in Stock'), 'align' => 'right', 'format' => 'grams'],
             ],
             totals: [
                 'branch' => 'All Branches',
@@ -60,25 +60,25 @@ class AggregateInventoryReportService extends AggregateReportService
                 'available_pieces' => $rows->sum('available_pieces'),
                 'gold_weight' => $rows->sum('gold_weight'),
             ],
-            chart: ReportResult::chart('Available pieces by branch', 'pieces', $rows->map(fn (array $row): array => [
+            chart: ReportResult::chart(__('Available pieces by branch'), 'pieces', $rows->map(fn (array $row): array => [
                 'label' => $row['branch'],
                 'value' => $row['available_pieces'],
                 'display' => ReportFormatter::count($row['available_pieces']),
             ])->all()),
             meta: $this->meta([
-                'table_title' => 'Stock by branch',
+                'table_title' => __('Stock by branch'),
                 'live_snapshot' => true,
                 'extra_tables' => [
                     [
-                        'title' => 'Pieces by lifecycle status',
+                        'title' => __('Pieces by lifecycle status'),
                         'columns' => [
-                            ['key' => 'label', 'label' => 'Status'],
-                            ['key' => 'pieces', 'label' => 'Pieces', 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
-                            ['key' => 'net_weight', 'label' => 'Net Weight', 'align' => 'right', 'format' => 'grams'],
+                            ['key' => 'label', 'label' => __('Status')],
+                            ['key' => 'pieces', 'label' => __('Pieces'), 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
+                            ['key' => 'net_weight', 'label' => __('Net Weight'), 'align' => 'right', 'format' => 'grams'],
                         ],
                         'rows' => $byStatus,
                         'totals' => [
-                            'label' => 'Total',
+                            'label' => __('Total'),
                             'pieces' => $byStatus->sum('pieces'),
                             'net_weight' => $byStatus->sum('net_weight'),
                         ],
@@ -97,31 +97,31 @@ class AggregateInventoryReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'gold-weight-in-stock',
-            title: 'Gold Weight in Stock',
+            title: __('Gold Weight in Stock'),
             summary: [
-                $this->card('net_weight', 'Net Weight Held', ReportFormatter::grams($rows->sum('net_weight')), 'scale'),
-                $this->card('gross_weight', 'Gross Weight Held', ReportFormatter::grams($rows->sum('gross_weight')), 'monitor_weight'),
-                $this->card('pieces', 'Available Pieces', ReportFormatter::count($rows->sum('pieces')), 'inventory_2'),
+                $this->card('net_weight', __('Net Weight Held'), ReportFormatter::grams($rows->sum('net_weight')), 'scale'),
+                $this->card('gross_weight', __('Gross Weight Held'), ReportFormatter::grams($rows->sum('gross_weight')), 'monitor_weight'),
+                $this->card('pieces', __('Available Pieces'), ReportFormatter::count($rows->sum('pieces')), 'inventory_2'),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'purity', 'label' => 'Metal & Purity'],
-                ['key' => 'pieces', 'label' => 'Pieces', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'gross_weight', 'label' => 'Gross Weight', 'align' => 'right', 'format' => 'grams'],
-                ['key' => 'net_weight', 'label' => 'Net Weight', 'align' => 'right', 'format' => 'grams', 'emphasis' => 'strong'],
+                ['key' => 'purity', 'label' => __('Metal & Purity')],
+                ['key' => 'pieces', 'label' => __('Pieces'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'gross_weight', 'label' => __('Gross Weight'), 'align' => 'right', 'format' => 'grams'],
+                ['key' => 'net_weight', 'label' => __('Net Weight'), 'align' => 'right', 'format' => 'grams', 'emphasis' => 'strong'],
             ],
             totals: [
-                'purity' => 'Total',
+                'purity' => __('Total'),
                 'pieces' => $rows->sum('pieces'),
                 'gross_weight' => $rows->sum('gross_weight'),
                 'net_weight' => $rows->sum('net_weight'),
             ],
-            chart: ReportResult::chart('Net weight held by purity', 'grams', $rows->map(fn (array $row): array => [
+            chart: ReportResult::chart(__('Net weight held by purity'), 'grams', $rows->map(fn (array $row): array => [
                 'label' => $row['purity'],
                 'value' => $row['net_weight'],
                 'display' => ReportFormatter::grams($row['net_weight']),
             ])->all()),
-            meta: $this->meta(['table_title' => 'Weight held by purity', 'live_snapshot' => true]),
+            meta: $this->meta(['table_title' => __('Weight held by purity'), 'live_snapshot' => true]),
         );
     }
 
@@ -134,25 +134,25 @@ class AggregateInventoryReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'category-stock',
-            title: 'Category Stock',
+            title: __('Category Stock'),
             summary: [
-                $this->card('pieces', 'Pieces', ReportFormatter::count($rows->sum('pieces')), 'inventory_2'),
-                $this->card('net_weight', 'Net Weight', ReportFormatter::grams($rows->sum('net_weight')), 'scale'),
-                $this->card('groups', 'Category Groups', ReportFormatter::count($rows->count()), 'category'),
+                $this->card('pieces', __('Pieces'), ReportFormatter::count($rows->sum('pieces')), 'inventory_2'),
+                $this->card('net_weight', __('Net Weight'), ReportFormatter::grams($rows->sum('net_weight')), 'scale'),
+                $this->card('groups', __('Category Groups'), ReportFormatter::count($rows->count()), 'category'),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'category', 'label' => 'Category'],
-                ['key' => 'sub_category', 'label' => 'Sub-Category'],
-                ['key' => 'pieces', 'label' => 'Pieces', 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
-                ['key' => 'net_weight', 'label' => 'Net Weight', 'align' => 'right', 'format' => 'grams'],
+                ['key' => 'category', 'label' => __('Category')],
+                ['key' => 'sub_category', 'label' => __('Sub-Category')],
+                ['key' => 'pieces', 'label' => __('Pieces'), 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
+                ['key' => 'net_weight', 'label' => __('Net Weight'), 'align' => 'right', 'format' => 'grams'],
             ],
             totals: [
-                'category' => 'Total',
+                'category' => __('Total'),
                 'pieces' => $rows->sum('pieces'),
                 'net_weight' => $rows->sum('net_weight'),
             ],
-            meta: $this->meta(['table_title' => 'Stock by category', 'live_snapshot' => true]),
+            meta: $this->meta(['table_title' => __('Stock by category'), 'live_snapshot' => true]),
         );
     }
 
@@ -168,30 +168,30 @@ class AggregateInventoryReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'aging-stock',
-            title: 'Aging Stock',
+            title: __('Aging Stock'),
             summary: [
-                $this->card('pieces', 'Available Pieces', ReportFormatter::count($rows->sum('pieces')), 'inventory_2'),
-                $this->card('overdue', 'Held Over '.$oldest.' Days', ReportFormatter::count($overdue['pieces'] ?? 0), 'hourglass_bottom',
-                    hint: ReportFormatter::grams($overdue['net_weight'] ?? 0).' of metal idle'),
-                $this->card('net_weight', 'Net Weight Held', ReportFormatter::grams($rows->sum('net_weight')), 'scale'),
+                $this->card('pieces', __('Available Pieces'), ReportFormatter::count($rows->sum('pieces')), 'inventory_2'),
+                $this->card('overdue', __('Held Over ').$oldest.' Days', ReportFormatter::count($overdue['pieces'] ?? 0), 'hourglass_bottom',
+                    hint: __(':grams of metal idle', ['grams' => ReportFormatter::grams($overdue['net_weight'] ?? 0)])),
+                $this->card('net_weight', __('Net Weight Held'), ReportFormatter::grams($rows->sum('net_weight')), 'scale'),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'bucket', 'label' => 'Age'],
-                ['key' => 'pieces', 'label' => 'Pieces', 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
-                ['key' => 'net_weight', 'label' => 'Net Weight', 'align' => 'right', 'format' => 'grams'],
+                ['key' => 'bucket', 'label' => __('Age')],
+                ['key' => 'pieces', 'label' => __('Pieces'), 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
+                ['key' => 'net_weight', 'label' => __('Net Weight'), 'align' => 'right', 'format' => 'grams'],
             ],
             totals: [
-                'bucket' => 'Total',
+                'bucket' => __('Total'),
                 'pieces' => $rows->sum('pieces'),
                 'net_weight' => $rows->sum('net_weight'),
             ],
-            chart: ReportResult::chart('Available pieces by age', 'pieces', $rows->map(fn (array $row): array => [
+            chart: ReportResult::chart(__('Available pieces by age'), 'pieces', $rows->map(fn (array $row): array => [
                 'label' => $row['bucket'],
                 'value' => $row['pieces'],
                 'display' => ReportFormatter::count($row['pieces']),
             ])->all()),
-            meta: $this->meta(['table_title' => 'Age buckets', 'live_snapshot' => true]),
+            meta: $this->meta(['table_title' => __('Age buckets'), 'live_snapshot' => true]),
         );
     }
 }

@@ -60,7 +60,7 @@ class SettingController extends Controller
 
         return redirect()
             ->route('branch.settings.index')
-            ->with('success', 'Branch contact details saved.');
+            ->with('success', __('Branch contact details saved.'));
     }
 
     /**
@@ -79,7 +79,7 @@ class SettingController extends Controller
 
         return redirect()
             ->route('branch.settings.index')
-            ->with('success', $request->group()->label().' saved.');
+            ->with('success', __(':group saved.', ['group' => $request->group()->label()]));
     }
 
     /**

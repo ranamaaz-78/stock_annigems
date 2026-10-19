@@ -1,13 +1,13 @@
 {{-- Register a new branch creditor. --}}
 @extends('layouts.branch')
 
-@section('title', 'Add Creditor')
-@section('page-title', 'Add Creditor')
+@section('title', __('Add Creditor'))
+@section('page-title', __('Add Creditor'))
 
 @section('content')
-<x-page-header title="Add Creditor" subtitle="Register the party first, then issue a performa against them.">
+<x-page-header :title="__('Add Creditor')" :subtitle="__('Register the party first, then issue a performa against them.')">
     <x-slot:actions>
-        <x-btn href="{{ route('branch.creditors.index') }}" variant="secondary">Back</x-btn>
+        <x-btn href="{{ route('branch.creditors.index') }}" variant="secondary">{{ __('Back') }}</x-btn>
     </x-slot:actions>
 </x-page-header>
 
@@ -18,8 +18,8 @@
             @include('branch.creditors._form')
 
             <div class="form-actions">
-                <x-btn href="{{ route('branch.creditors.index') }}" variant="secondary">Cancel</x-btn>
-                <x-btn type="submit" loading-text="Saving...">Save creditor</x-btn>
+                <x-btn href="{{ route('branch.creditors.index') }}" variant="secondary">{{ __('Cancel') }}</x-btn>
+                <x-btn type="submit" :loading-text="__('Saving...')">{{ __('Save creditor') }}</x-btn>
             </div>
         </form>
     </div>

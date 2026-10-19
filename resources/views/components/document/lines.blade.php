@@ -12,17 +12,17 @@
 <table class="sheet-table">
     <thead>
         <tr>
-            <th>Item</th>
+            <th>{{ __('Item') }}</th>
             @if($split)
-                <th class="sheet-table__num">Weight</th>
-                <th class="sheet-table__num">Metal</th>
-                <th class="sheet-table__num">Stones</th>
-                <th class="sheet-table__num">Making</th>
+                <th class="sheet-table__num">{{ __('Weight') }}</th>
+                <th class="sheet-table__num">{{ __('Metal') }}</th>
+                <th class="sheet-table__num">{{ __('Stones') }}</th>
+                <th class="sheet-table__num">{{ __('Making') }}</th>
             @else
-                <th class="sheet-table__num">Qty / weight</th>
-                <th class="sheet-table__num">Price</th>
+                <th class="sheet-table__num">{{ __('Qty / weight') }}</th>
+                <th class="sheet-table__num">{{ __('Price') }}</th>
             @endif
-            <th class="sheet-table__num">Amount</th>
+            <th class="sheet-table__num">{{ __('Amount') }}</th>
         </tr>
     </thead>
     <tbody>
@@ -43,12 +43,12 @@
                     <span class="sheet-table__code">{{ $item->item_code_snapshot }}</span>
                     <span class="sheet-table__name">{{ $item->name_snapshot }}</span>
                     @if($isGramLine)
-                        <span class="sheet-table__sub">Loose stone · {{ $gramsText }} × {{ setting_amount($gramRate) }} per g</span>
+                        <span class="sheet-table__sub">{{ __('Loose stone') }} · {{ $gramsText }} × {{ setting_amount($gramRate) }} {{ __('per g') }}</span>
                     @elseif($isLooseStone)
-                        <span class="sheet-table__sub">Loose stone · {{ $item->quantity }} {{ $item->quantity == 1 ? 'pc' : 'pcs' }}</span>
+                        <span class="sheet-table__sub">{{ __('Loose stone') }} · {{ $item->quantity }} {{ $item->quantity == 1 ? __('pc') : __('pcs') }}</span>
                     @elseif($metalName !== '')
                         <span class="sheet-table__sub">
-                            {{ $metalName }}@if($weight && $rate > 0) · {{ $weight }} × {{ setting_amount($rate) }} per g @endif
+                            {{ $metalName }}@if($weight && $rate > 0) · {{ $weight }} × {{ setting_amount($rate) }} {{ __('per g') }} @endif
                         </span>
                     @endif
 
@@ -77,7 +77,7 @@
                     <td class="sheet-table__num">{{ (float) $item->making_charges > 0 ? setting_amount($item->making_charges) : '—' }}</td>
                 @else
                     <td class="sheet-table__num">
-                        {{ $isGramLine ? $gramsText : ($isLooseStone ? $item->quantity.($item->quantity == 1 ? ' pc' : ' pcs') : '1 pc'.($weight ? ' · '.$weight : '')) }}
+                        {{ $isGramLine ? $gramsText : ($isLooseStone ? $item->quantity.($item->quantity == 1 ? ' '.__('pc') : ' '.__('pcs')) : '1 '.__('pc').($weight ? ' · '.$weight : '')) }}
                     </td>
                     <td class="sheet-table__num">{{ setting_amount($isGramLine ? $gramRate : ($isLooseStone && $item->quantity > 0 ? (float) $item->line_total / $item->quantity : $item->line_total)) }}</td>
                 @endif

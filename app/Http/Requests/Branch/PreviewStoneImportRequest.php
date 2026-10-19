@@ -53,8 +53,8 @@ class PreviewStoneImportRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'token.required' => 'Upload the spreadsheet again.',
-            'mapping.required' => 'Confirm which column holds each field.',
+            'token.required' => __('Upload the spreadsheet again.'),
+            'mapping.required' => __('Confirm which column holds each field.'),
         ];
     }
 }

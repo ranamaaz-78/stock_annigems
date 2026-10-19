@@ -112,7 +112,7 @@ class StoneController extends Controller
         }
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Stone registered.', [
+            return $this->jsonSuccess(__('Stone registered.'), [
                 'stone' => $this->stoneService->toScanPayload($stone),
                 'show_url' => route('branch.stones.show', $stone),
             ], 201);
@@ -120,7 +120,7 @@ class StoneController extends Controller
 
         return redirect()
             ->route('branch.stones.show', $stone)
-            ->with('success', 'Stone registered. Print a packet label next.');
+            ->with('success', __('Stone registered. Print a packet label next.'));
     }
 
     /**
@@ -163,7 +163,7 @@ class StoneController extends Controller
 
         return redirect()
             ->route('branch.stones.show', $stone)
-            ->with('success', 'Stone updated.');
+            ->with('success', __('Stone updated.'));
     }
 
     /**
@@ -176,7 +176,7 @@ class StoneController extends Controller
 
         return redirect()
             ->route('branch.stones.show', $stone)
-            ->with('success', 'Stone deactivated. Existing stock is unchanged.');
+            ->with('success', __('Stone deactivated. Existing stock is unchanged.'));
     }
 
     /**
@@ -196,7 +196,7 @@ class StoneController extends Controller
 
         return redirect()
             ->route('branch.stones.index')
-            ->with('success', $stone->stone_code.' deleted.'.($result['written_off'] !== '0' ? ' '.$result['written_off'].' written off.' : ''));
+            ->with('success', __(':code deleted.', ['code' => $stone->stone_code]).($result['written_off'] !== '0' ? ' '.__(':amount written off.', ['amount' => $result['written_off']]) : ''));
     }
 
     /**
@@ -209,7 +209,7 @@ class StoneController extends Controller
 
         return redirect()
             ->route('branch.stones.show', $stone)
-            ->with('success', 'Stone reactivated.');
+            ->with('success', __('Stone reactivated.'));
     }
 
     /**

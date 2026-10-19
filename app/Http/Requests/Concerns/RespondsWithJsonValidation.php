@@ -22,7 +22,7 @@ trait RespondsWithJsonValidation
         if ($this->expectsJson()) {
             throw new HttpResponseException(response()->json([
                 'success' => false,
-                'message' => 'Please correct the highlighted fields.',
+                'message' => __('Please correct the highlighted fields.'),
                 'data' => null,
                 'errors' => $validator->errors()->toArray(),
             ], 422));

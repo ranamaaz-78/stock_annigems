@@ -146,7 +146,7 @@ class GoldRateService
             ));
 
             throw ValidationException::withMessages([
-                'rates' => "These rates differ from the current rate by more than {$threshold}%: {$names}. Confirm the change to save it.",
+                'rates' => __('These rates differ from the current rate by more than :threshold%: :names. Confirm the change to save it.', ['threshold' => $threshold, 'names' => $names]),
             ]);
         }
     }

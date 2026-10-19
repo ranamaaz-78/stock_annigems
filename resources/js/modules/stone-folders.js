@@ -7,6 +7,8 @@
  * identical in both modes, only the layout class changes.
  */
 
+import { t } from './i18n';
+
 /** localStorage key holding "box" or "list". */
 const STORAGE_KEY = 'annigems.stones.folderView';
 
@@ -99,7 +101,7 @@ function beginRename(nameButton) {
     input.className = 'input-field folder-tile__rename';
     input.value = current;
     input.maxLength = 120;
-    input.setAttribute('aria-label', 'Folder name');
+    input.setAttribute('aria-label', t('Folder name'));
     nameButton.replaceWith(input);
     input.focus();
     input.select();

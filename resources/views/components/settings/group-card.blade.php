@@ -46,8 +46,8 @@
                 @endforeach
             </div>
             <div class="settings-card__footer">
-                <x-btn type="button" data-settings-save loading-text="Saving...">
-                    Save {{ $group->label() }}
+                <x-btn type="button" data-settings-save :loading-text="__('Saving...')">
+                    {{ __('Save :group', ['group' => $group->label()]) }}
                 </x-btn>
             </div>
         </form>

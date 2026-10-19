@@ -26,7 +26,7 @@
 <div {{ $attributes->class(['table-admin__identity']) }}>
     @if($imageUrl)
         {{-- A picture replaces the icon; clicking opens it full size in a new tab. --}}
-        <a href="{{ $imageUrl }}" target="_blank" rel="noopener" class="table-admin__mark table-admin__mark--image" title="Open image">
+        <a href="{{ $imageUrl }}" target="_blank" rel="noopener" class="table-admin__mark table-admin__mark--image" title="{{ __('Open image') }}">
             <img src="{{ $imageUrl }}" alt="{{ $imageAlt }}" loading="lazy">
         </a>
     @elseif($icon)

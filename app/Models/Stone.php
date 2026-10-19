@@ -229,9 +229,9 @@ class Stone extends Model
             $size !== '' && ! in_array(strtoupper($size), ['N/A', '0X0', '0X0X0'], true) ? $size : null,
             $this->carat !== null && (float) $this->carat > 0 ? $this->caratLabel().' ct' : null,
             match ($this->pricing_mode) {
-                StonePricingMode::PER_CARAT => 'Per carat',
-                StonePricingMode::PER_PIECE => 'Per piece',
-                StonePricingMode::PER_GRAM => 'Per gram',
+                StonePricingMode::PER_CARAT => __('Per carat'),
+                StonePricingMode::PER_PIECE => __('Per piece'),
+                StonePricingMode::PER_GRAM => __('Per gram'),
                 default => null,
             },
         ]));

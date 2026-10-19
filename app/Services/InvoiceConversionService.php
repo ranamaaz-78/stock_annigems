@@ -70,7 +70,7 @@ class InvoiceConversionService
     {
         if ($quotation->status !== QuotationStatus::DRAFT) {
             throw ValidationException::withMessages([
-                'quotation' => 'Only draft quotations can be converted.',
+                'quotation' => __('Only draft quotations can be converted.'),
             ]);
         }
 
@@ -88,7 +88,7 @@ class InvoiceConversionService
                 ->firstOrFail();
 
             if ($quotation->status !== QuotationStatus::DRAFT) {
-                throw ValidationException::withMessages(['quotation' => 'This quotation has already been converted or cancelled.']);
+                throw ValidationException::withMessages(['quotation' => __('This quotation has already been converted or cancelled.')]);
             }
 
             $this->revalidateLines($quotation, $actor);
@@ -254,7 +254,7 @@ class InvoiceConversionService
 
             if (! $invoice->canBeEdited()) {
                 throw ValidationException::withMessages([
-                    'invoice' => 'This invoice can no longer be edited: a payment has been recorded or it is voided.',
+                    'invoice' => __('This invoice can no longer be edited: a payment has been recorded or it is voided.'),
                 ]);
             }
 
@@ -362,7 +362,7 @@ class InvoiceConversionService
 
                 if (! $item) {
                     throw ValidationException::withMessages([
-                        'lines' => "Line {$lineNum}: {$code} was not found in this branch.",
+                        'lines' => __('Line :line: :code was not found in this branch.', ['line' => $lineNum, 'code' => $code]),
                     ]);
                 }
 
@@ -370,7 +370,7 @@ class InvoiceConversionService
                 // only still valid for drafts created before that hold existed.
                 if (! in_array($item->status, [JewelleryItemStatus::AVAILABLE, JewelleryItemStatus::RESERVED], true)) {
                     throw ValidationException::withMessages([
-                        'lines' => "Line {$lineNum}: {$code} has already been sold or is not available.",
+                        'lines' => __('Line :line: :code has already been sold or is not available.', ['line' => $lineNum, 'code' => $code]),
                     ]);
                 }
             } else {
@@ -387,7 +387,7 @@ class InvoiceConversionService
 
                     if ($availableGrams + 0.0005 < $grams) {
                         throw ValidationException::withMessages([
-                            'lines' => "Line {$lineNum}: {$code} has only {$availableGrams} g in stock, {$grams} g were quoted.",
+                            'lines' => __('Line :line: :code has only :availableGrams g in stock, :grams g were quoted.', ['line' => $lineNum, 'code' => $code, 'availableGrams' => $availableGrams, 'grams' => $grams]),
                         ]);
                     }
 
@@ -401,7 +401,7 @@ class InvoiceConversionService
                 $available = $stone ? (int) $stone->quantity + $held : 0;
                 if (! $stone || $available < $qty) {
                     throw ValidationException::withMessages([
-                        'lines' => "Line {$lineNum}: {$code} has only {$available} in stock, {$qty} were quoted.",
+                        'lines' => __('Line :line: :code has only :available in stock, :qty were quoted.', ['line' => $lineNum, 'code' => $code, 'available' => $available, 'qty' => $qty]),
                     ]);
                 }
             }
@@ -637,7 +637,7 @@ class InvoiceConversionService
 
         if ($type === DiscountType::PERCENTAGE && (float) $quotation->discount_value > $max) {
             throw ValidationException::withMessages([
-                'discount_value' => 'Discount cannot exceed '.$max.'%. Edit the quotation before converting.',
+                'discount_value' => __('Discount cannot exceed :max%. Edit the quotation before converting.', ['max' => $max]),
             ]);
         }
 
@@ -646,7 +646,7 @@ class InvoiceConversionService
             $percent = ((float) $quotation->discount_amount / $subtotal) * 100;
             if ($percent > $max + 0.009) {
                 throw ValidationException::withMessages([
-                    'discount_value' => 'Discount cannot exceed '.$max.'%. Edit the quotation before converting.',
+                    'discount_value' => __('Discount cannot exceed :max%. Edit the quotation before converting.', ['max' => $max]),
                 ]);
             }
         }

@@ -43,9 +43,9 @@ class StageStoneImportRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'file.required' => 'Choose a spreadsheet to import.',
-            'file.extensions' => 'Upload an .xlsx, .xls, or .csv file.',
-            'file.max' => 'That file is too large to import.',
+            'file.required' => __('Choose a spreadsheet to import.'),
+            'file.extensions' => __('Upload an .xlsx, .xls, or .csv file.'),
+            'file.max' => __('That file is too large to import.'),
         ];
     }
 }

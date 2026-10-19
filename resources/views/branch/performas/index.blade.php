@@ -1,39 +1,39 @@
 {{-- Performa list for the current branch. --}}
 @extends('layouts.branch')
 
-@section('title', 'Performas')
-@section('page-title', 'Performas')
+@section('title', __('Performas'))
+@section('page-title', __('Performas'))
 
 @section('content')
-<x-page-header title="Performas" subtitle="Goods issued on credit against a creditor. Prices are captured when they pay.">
+<x-page-header :title="__('Performas')" :subtitle="__('Goods issued on credit against a creditor. Prices are captured when they pay.')">
     <x-slot:actions>
         @can('create', \App\Models\Performa::class)
-            <x-btn href="{{ route('branch.performas.create') }}">New Performa</x-btn>
+            <x-btn href="{{ route('branch.performas.create') }}">{{ __('New Performa') }}</x-btn>
         @endcan
     </x-slot:actions>
 </x-page-header>
 
 <form method="GET" class="filter-bar">
-    <x-filter.search name="search" :value="$filters['search'] ?? ''" placeholder="Search number or creditor…" aria-label="Search performas" />
-    <select name="status" class="input-field" aria-label="Filter by status">
-        <option value="">All statuses</option>
+    <x-filter.search name="search" :value="$filters['search'] ?? ''" :placeholder="__('Search number or creditor…')" :aria-label="__('Search performas')" />
+    <select name="status" class="input-field" aria-label="{{ __('Filter by status') }}">
+        <option value="">{{ __('All statuses') }}</option>
         @foreach(\App\Enums\PerformaStatus::cases() as $status)
             <option value="{{ $status->value }}" @selected(($filters['status'] ?? '') === $status->value)>{{ $status->label() }}</option>
         @endforeach
     </select>
     <div class="filter-bar__actions">
-        <x-btn type="submit" variant="secondary">Filter</x-btn>
-        <a href="{{ route('branch.performas.index') }}" class="btn btn--secondary">Reset</a>
+        <x-btn type="submit" variant="secondary">{{ __('Filter') }}</x-btn>
+        <a href="{{ route('branch.performas.index') }}" class="btn btn--secondary">{{ __('Reset') }}</a>
     </div>
 </form>
 
 <div class="panel">
     @if($performas->isEmpty())
         <div class="panel__body">
-            <x-empty-state title="No performas yet" message="Register a creditor, then issue a performa when they take jewellery or stones on credit." icon="assignment">
+            <x-empty-state :title="__('No performas yet')" :message="__('Register a creditor, then issue a performa when they take jewellery or stones on credit.')" icon="assignment">
                 <x-slot:actions>
                     @can('create', \App\Models\Performa::class)
-                        <x-btn href="{{ route('branch.performas.create') }}">New Performa</x-btn>
+                        <x-btn href="{{ route('branch.performas.create') }}">{{ __('New Performa') }}</x-btn>
                     @endcan
                 </x-slot:actions>
             </x-empty-state>
@@ -43,13 +43,13 @@
             <table class="table-admin">
                 <thead>
                     <tr>
-                        <th>Performa</th>
-                        <th>Creditor</th>
-                        <th class="table-admin__num">Lines</th>
-                        <th>Outstanding</th>
-                        <th>Status</th>
-                        <th>Created by</th>
-                        <th class="table-admin__actions-col">Actions</th>
+                        <th>{{ __('Performa') }}</th>
+                        <th>{{ __('Creditor') }}</th>
+                        <th class="table-admin__num">{{ __('Lines') }}</th>
+                        <th>{{ __('Outstanding') }}</th>
+                        <th>{{ __('Status') }}</th>
+                        <th>{{ __('Created by') }}</th>
+                        <th class="table-admin__actions-col">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -67,8 +67,8 @@
                             <td>{{ $performa->displayCreditorName() }}</td>
                             <td class="table-admin__num">{{ $performa->items_count }}</td>
                             <td>
-                                <span class="font-data-mono">{{ $outstanding['jewellery'] }} pc</span>
-                                <span class="table-meta">{{ $outstanding['stones'] }} st</span>
+                                <span class="font-data-mono">{{ $outstanding['jewellery'] }} {{ __('pc') }}</span>
+                                <span class="table-meta">{{ $outstanding['stones'] }} {{ __('st') }}</span>
                             </td>
                             <td><x-status-badge :status="$performa->status" /></td>
                             <td>

@@ -3,7 +3,7 @@
     'type' => 'button',
     'variant' => 'primary',
     'href' => null,
-    'loadingText' => 'Please wait...',
+    'loadingText' => null,
     'block' => false,
     'disabled' => false,
 ])
@@ -26,7 +26,7 @@
 @else
     <button
         type="{{ $type }}"
-        data-loading-text="{{ $loadingText }}"
+        data-loading-text="{{ $loadingText ?? __('Please wait...') }}"
         @disabled($disabled)
         {{ $attributes->merge(['class' => $classes]) }}
     >

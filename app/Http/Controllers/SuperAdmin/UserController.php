@@ -70,7 +70,7 @@ class UserController extends Controller
 
         return redirect()
             ->route('superadmin.users.index')
-            ->with('success', 'Branch Admin created successfully.')
+            ->with('success', __('Branch Admin created successfully.'))
             ->with('generated_credentials', [
                 'name' => $result['user']->name,
                 'email' => $result['user']->email,
@@ -103,7 +103,7 @@ class UserController extends Controller
 
         $this->userService->setStatus($user, UserStatus::INACTIVE, $request->user());
 
-        return back()->with('success', 'User deactivated.');
+        return back()->with('success', __('User deactivated.'));
     }
 
     /**
@@ -115,7 +115,7 @@ class UserController extends Controller
 
         $this->userService->setStatus($user, UserStatus::ACTIVE, $request->user());
 
-        return back()->with('success', 'User activated.');
+        return back()->with('success', __('User activated.'));
     }
 
     /**
@@ -128,7 +128,7 @@ class UserController extends Controller
         $result = $this->userService->resetPassword($user, $request->user());
 
         return back()
-            ->with('success', 'Password reset. Share the new temporary password securely.')
+            ->with('success', __('Password reset. Share the new temporary password securely.'))
             ->with('generated_credentials', [
                 'name' => $result['user']->name,
                 'email' => $result['user']->email,

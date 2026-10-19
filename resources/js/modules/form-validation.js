@@ -3,6 +3,8 @@
  * Validates on blur and submit; shows inline field errors (never alert()).
  */
 
+import { t } from './i18n';
+
 /**
  * Clear previous error state for a field.
  *
@@ -54,27 +56,27 @@ export function validateField(field) {
     }
 
     if (field.required && !String(field.value || '').trim()) {
-        showFieldError(field, field.dataset.errorRequired || 'This field is required.');
+        showFieldError(field, field.dataset.errorRequired || t('This field is required.'));
         return false;
     }
 
     if (field.type === 'email' && field.value) {
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailPattern.test(field.value)) {
-            showFieldError(field, field.dataset.errorEmail || 'Enter a valid email address.');
+            showFieldError(field, field.dataset.errorEmail || t('Enter a valid email address.'));
             return false;
         }
     }
 
     if (field.minLength > 0 && field.value.length > 0 && field.value.length < field.minLength) {
-        showFieldError(field, field.dataset.errorMinlength || `Must be at least ${field.minLength} characters.`);
+        showFieldError(field, field.dataset.errorMinlength || t('Must be at least :minLength characters.', { minLength: field.minLength }));
         return false;
     }
 
     if (field.dataset.match) {
         const other = document.querySelector(field.dataset.match);
         if (other && field.value !== other.value) {
-            showFieldError(field, field.dataset.errorMatch || 'Values do not match.');
+            showFieldError(field, field.dataset.errorMatch || t('Values do not match.'));
             return false;
         }
     }
@@ -82,7 +84,7 @@ export function validateField(field) {
     if (field.dataset.pattern) {
         const re = new RegExp(field.dataset.pattern);
         if (field.value && !re.test(field.value)) {
-            showFieldError(field, field.dataset.errorPattern || 'Invalid format.');
+            showFieldError(field, field.dataset.errorPattern || t('Invalid format.'));
             return false;
         }
     }

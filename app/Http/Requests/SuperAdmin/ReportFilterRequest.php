@@ -60,9 +60,9 @@ class ReportFilterRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'branch.exists' => 'That branch no longer exists. Choose another.',
-            'from.required_if' => 'Enter a start date for the custom range.',
-            'to.required_if' => 'Enter an end date for the custom range.',
+            'branch.exists' => __('That branch no longer exists. Choose another.'),
+            'from.required_if' => __('Enter a start date for the custom range.'),
+            'to.required_if' => __('Enter an end date for the custom range.'),
         ];
     }
 
@@ -80,7 +80,7 @@ class ReportFilterRequest extends FormRequest
             [$from, $to] = $this->resolveRange();
 
             if ($from->greaterThan($to)) {
-                $validator->errors()->add('to', 'The end date must be on or after the start date.');
+                $validator->errors()->add('to', __('The end date must be on or after the start date.'));
 
                 return;
             }
@@ -90,7 +90,7 @@ class ReportFilterRequest extends FormRequest
             if ($from->diffInDays($to) + 1 > $maxDays) {
                 $validator->errors()->add(
                     'to',
-                    'That range covers more than '.$maxDays.' days. Choose a narrower range — for example one month or one quarter at a time.'
+                    __('That range covers more than :days days. Choose a narrower range — for example one month or one quarter at a time.', ['days' => $maxDays])
                 );
             }
         });

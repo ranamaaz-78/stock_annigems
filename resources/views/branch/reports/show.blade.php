@@ -35,12 +35,12 @@
     @if($result->meta('live_snapshot', false))
         <p class="report-notice">
             <span class="material-symbols-outlined icon icon--sm report-notice__icon" aria-hidden="true">inventory_2</span>
-            <span>This report describes stock held <strong>right now</strong>. The date range above does not narrow it.</span>
+            <span>{{ __('This report describes stock held') }} <strong>{{ __('right now') }}</strong>{{ __('. The date range above does not narrow it.') }}</span>
         </p>
     @elseif($result->meta('ignores_date_range', false))
         <p class="report-notice">
             <span class="material-symbols-outlined icon icon--sm report-notice__icon" aria-hidden="true">schedule</span>
-            <span>This report covers the whole history rather than the selected date range, because that is the question it answers.</span>
+            <span>{{ __('This report covers the whole history rather than the selected date range, because that is the question it answers.') }}</span>
         </p>
     @endif
 </x-report.shell>

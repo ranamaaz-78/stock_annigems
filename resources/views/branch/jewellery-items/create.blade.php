@@ -1,13 +1,13 @@
 {{-- Create jewellery piece. Codes, QR, and derived weights are assigned on save. --}}
 @extends('layouts.branch')
 
-@section('title', 'Add item')
-@section('page-title', 'Add item')
+@section('title', __('Add item'))
+@section('page-title', __('Add item'))
 
 @section('content')
-<x-page-header title="Add item" subtitle="One physical piece. Pricing is not captured here.">
+<x-page-header :title="__('Add item')" :subtitle="__('One physical piece. Pricing is not captured here.')">
     <x-slot:actions>
-        <x-btn href="{{ route('branch.jewellery-items.index') }}" variant="secondary">Back</x-btn>
+        <x-btn href="{{ route('branch.jewellery-items.index') }}" variant="secondary">{{ __('Back') }}</x-btn>
     </x-slot:actions>
 </x-page-header>
 

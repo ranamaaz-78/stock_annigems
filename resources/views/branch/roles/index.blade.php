@@ -1,11 +1,11 @@
 {{-- Read-only roles and default permissions reference (Admin). --}}
 @extends('layouts.branch')
 
-@section('title', 'Roles & Permissions')
-@section('page-title', 'Roles & Permissions')
+@section('title', __('Roles & Permissions'))
+@section('page-title', __('Roles & Permissions'))
 
 @section('content')
-<x-page-header title="Roles & Permissions" subtitle="System-defined roles and their default permissions. Read-only reference." />
+<x-page-header :title="__('Roles & Permissions')" :subtitle="__('System-defined roles and their default permissions. Read-only reference.')" />
 
 <div class="space-y-4">
     @foreach($roles as $role)

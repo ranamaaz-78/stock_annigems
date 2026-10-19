@@ -202,7 +202,7 @@ class CreditorService
 
         if (! $creditor->status) {
             throw ValidationException::withMessages([
-                'creditor' => 'This creditor is already deactivated.',
+                'creditor' => __('This creditor is already deactivated.'),
             ]);
         }
 
@@ -226,7 +226,7 @@ class CreditorService
 
         if ($creditor->status) {
             throw ValidationException::withMessages([
-                'creditor' => 'This creditor is already active.',
+                'creditor' => __('This creditor is already active.'),
             ]);
         }
 

@@ -26,12 +26,12 @@ enum ReportExportStatus: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::PENDING => 'Queued',
             self::PROCESSING => 'Generating',
             self::COMPLETED => 'Ready',
             self::STREAMED => 'Downloaded',
             self::FAILED => 'Failed',
-        };
+        });
     }
 }

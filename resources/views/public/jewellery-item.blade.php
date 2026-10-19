@@ -1,13 +1,13 @@
 {{-- Public jewellery product page. No price, staff, branch, notes, or stone codes. --}}
 @extends('layouts.public')
 
-@section('title', $visible ? $payload['name'] : 'Item')
+@section('title', $visible ? $payload['name'] : __('Item'))
 
 @section('content')
 @if(! $visible)
     <div class="p-8 text-center">
         <span class="material-symbols-outlined icon icon--lg icon--secondary">diamond</span>
-        <p class="text-headline-sm mt-4">This item is no longer available</p>
+        <p class="text-headline-sm mt-4">{{ __('This item is no longer available') }}</p>
     </div>
 @else
     @php
@@ -35,22 +35,22 @@
         <p class="text-body-sm text-on-surface-variant">{{ $payload['category'] }}@if($payload['sub_category']) / {{ $payload['sub_category'] }}@endif</p>
     </div>
     <div class="p-6">
-        <h2 class="text-label-caps text-on-surface-variant mb-4">Item specifications</h2>
+        <h2 class="text-label-caps text-on-surface-variant mb-4">{{ __('Item specifications') }}</h2>
         <dl class="flex flex-col gap-3">
             <div class="flex justify-between py-2 border-b border-outline-variant">
-                <dt class="text-body-sm text-on-surface-variant">Metal</dt>
+                <dt class="text-body-sm text-on-surface-variant">{{ __('Metal') }}</dt>
                 <dd class="text-body-md">{{ $payload['metal'] }}</dd>
             </div>
             <div class="flex justify-between py-2 border-b border-outline-variant">
-                <dt class="text-body-sm text-on-surface-variant">Purity</dt>
+                <dt class="text-body-sm text-on-surface-variant">{{ __('Purity') }}</dt>
                 <dd class="text-body-md">{{ $payload['purity'] }}</dd>
             </div>
             <div class="flex justify-between py-2 border-b border-outline-variant">
-                <dt class="text-body-sm text-on-surface-variant">Gross weight</dt>
+                <dt class="text-body-sm text-on-surface-variant">{{ __('Gross weight') }}</dt>
                 <dd class="font-data-mono">{{ $payload['gross_weight'] }} g</dd>
             </div>
             <div class="flex justify-between py-2 border-b border-outline-variant">
-                <dt class="text-body-sm text-on-surface-variant">Net weight</dt>
+                <dt class="text-body-sm text-on-surface-variant">{{ __('Net weight') }}</dt>
                 <dd class="font-data-mono">{{ $payload['net_weight'] }} g</dd>
             </div>
             @foreach($payload['stones'] as $stone)

@@ -18,10 +18,10 @@ enum BranchStatus: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::ACTIVE => 'Active',
             self::INACTIVE => 'Inactive',
-        };
+        });
     }
 
     /**

@@ -57,17 +57,17 @@ class UpdateGlobalSettingsRequest extends FormRequest
     public function messages(): array
     {
         return [
-            '*.required' => 'This setting is required.',
-            '*.boolean' => 'That must be yes or no.',
+            '*.required' => __('This setting is required.'),
+            '*.boolean' => __('That must be yes or no.'),
 
-            'max_discount_percentage.max' => 'The discount ceiling cannot exceed 100%.',
-            'numbering_jewellery_prefix.regex' => 'Use uppercase letters, numbers and an optional trailing dash. No spaces.',
-            'numbering_stone_prefix.regex' => 'Use uppercase letters, numbers and an optional trailing dash. No spaces.',
-            'numbering_customer_prefix.regex' => 'Use uppercase letters, numbers and an optional trailing dash. No spaces.',
-            'numbering_quotation_prefix.regex' => 'Use uppercase letters, numbers and an optional trailing dash. No spaces.',
-            'numbering_invoice_prefix.regex' => 'Use uppercase letters, numbers and an optional trailing dash. No spaces.',
-            'numbering_intake_prefix.regex' => 'Use uppercase letters, numbers and an optional trailing dash. No spaces.',
-            'timezone.timezone' => 'Choose a valid timezone identifier.',
+            'max_discount_percentage.max' => __('The discount ceiling cannot exceed 100%.'),
+            'numbering_jewellery_prefix.regex' => __('Use uppercase letters, numbers and an optional trailing dash. No spaces.'),
+            'numbering_stone_prefix.regex' => __('Use uppercase letters, numbers and an optional trailing dash. No spaces.'),
+            'numbering_customer_prefix.regex' => __('Use uppercase letters, numbers and an optional trailing dash. No spaces.'),
+            'numbering_quotation_prefix.regex' => __('Use uppercase letters, numbers and an optional trailing dash. No spaces.'),
+            'numbering_invoice_prefix.regex' => __('Use uppercase letters, numbers and an optional trailing dash. No spaces.'),
+            'numbering_intake_prefix.regex' => __('Use uppercase letters, numbers and an optional trailing dash. No spaces.'),
+            'timezone.timezone' => __('Choose a valid timezone identifier.'),
         ];
     }
 
@@ -85,7 +85,7 @@ class UpdateGlobalSettingsRequest extends FormRequest
             if ($unknown !== []) {
                 $validator->errors()->add(
                     'settings',
-                    'Unknown setting: '.implode(', ', $unknown).'. Keys cannot be created from a form.'
+                    __('Unknown setting: :unknown. Keys cannot be created from a form.', ['unknown' => implode(', ', $unknown)])
                 );
             }
         });

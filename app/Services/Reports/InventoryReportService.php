@@ -37,34 +37,34 @@ class InventoryReportService
 
         return new ReportResult(
             key: 'stock-summary',
-            title: 'Stock Summary',
+            title: __('Stock Summary'),
             summary: [
-                $this->card('total_pieces', 'Total Pieces', ReportFormatter::count($rows->sum('pieces')), 'inventory_2'),
-                $this->card('available', 'Available', ReportFormatter::count($this->inventory->availablePieceCount($filter->branchId)), 'check_circle'),
-                $this->card('gold_weight', 'Gold Weight in Stock', ReportFormatter::grams($this->inventory->goldWeightInStock($filter->branchId)), 'scale',
-                    hint: 'Available pieces only'),
+                $this->card('total_pieces', __('Total Pieces'), ReportFormatter::count($rows->sum('pieces')), 'inventory_2'),
+                $this->card('available', __('Available'), ReportFormatter::count($this->inventory->availablePieceCount($filter->branchId)), 'check_circle'),
+                $this->card('gold_weight', __('Gold Weight in Stock'), ReportFormatter::grams($this->inventory->goldWeightInStock($filter->branchId)), 'scale',
+                    hint: __('Available pieces only')),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'label', 'label' => 'Status'],
-                ['key' => 'pieces', 'label' => 'Pieces', 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
-                ['key' => 'net_weight', 'label' => 'Net Weight', 'align' => 'right', 'format' => 'grams'],
+                ['key' => 'label', 'label' => __('Status')],
+                ['key' => 'pieces', 'label' => __('Pieces'), 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
+                ['key' => 'net_weight', 'label' => __('Net Weight'), 'align' => 'right', 'format' => 'grams'],
             ],
             totals: [
-                'label' => 'Total',
+                'label' => __('Total'),
                 'pieces' => $rows->sum('pieces'),
                 'net_weight' => $rows->sum('net_weight'),
             ],
-            chart: ReportResult::chart('Pieces by status', 'pieces', $rows->map(fn (array $row): array => [
+            chart: ReportResult::chart(__('Pieces by status'), 'pieces', $rows->map(fn (array $row): array => [
                 'label' => $row['label'],
                 'value' => $row['pieces'],
                 'display' => ReportFormatter::count($row['pieces']),
             ])->all()),
             meta: [
-                'table_title' => 'Stock by status',
+                'table_title' => __('Stock by status'),
                 'live_snapshot' => true,
-                'empty_title' => 'No jewellery items yet',
-                'empty_message' => 'Add your first piece to start tracking stock.',
+                'empty_title' => __('No jewellery items yet'),
+                'empty_message' => __('Add your first piece to start tracking stock.'),
             ],
         );
     }
@@ -78,36 +78,36 @@ class InventoryReportService
 
         return new ReportResult(
             key: 'gold-weight-in-stock',
-            title: 'Gold Weight in Stock',
+            title: __('Gold Weight in Stock'),
             summary: [
-                $this->card('net_weight', 'Net Weight Held', ReportFormatter::grams($rows->sum('net_weight')), 'scale'),
-                $this->card('gross_weight', 'Gross Weight Held', ReportFormatter::grams($rows->sum('gross_weight')), 'monitor_weight',
-                    hint: 'Includes stone weight'),
-                $this->card('pieces', 'Available Pieces', ReportFormatter::count($rows->sum('pieces')), 'inventory_2'),
+                $this->card('net_weight', __('Net Weight Held'), ReportFormatter::grams($rows->sum('net_weight')), 'scale'),
+                $this->card('gross_weight', __('Gross Weight Held'), ReportFormatter::grams($rows->sum('gross_weight')), 'monitor_weight',
+                    hint: __('Includes stone weight')),
+                $this->card('pieces', __('Available Pieces'), ReportFormatter::count($rows->sum('pieces')), 'inventory_2'),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'purity', 'label' => 'Metal & Purity'],
-                ['key' => 'pieces', 'label' => 'Pieces', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'gross_weight', 'label' => 'Gross Weight', 'align' => 'right', 'format' => 'grams'],
-                ['key' => 'net_weight', 'label' => 'Net Weight', 'align' => 'right', 'format' => 'grams', 'emphasis' => 'strong'],
+                ['key' => 'purity', 'label' => __('Metal & Purity')],
+                ['key' => 'pieces', 'label' => __('Pieces'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'gross_weight', 'label' => __('Gross Weight'), 'align' => 'right', 'format' => 'grams'],
+                ['key' => 'net_weight', 'label' => __('Net Weight'), 'align' => 'right', 'format' => 'grams', 'emphasis' => 'strong'],
             ],
             totals: [
-                'purity' => 'Total',
+                'purity' => __('Total'),
                 'pieces' => $rows->sum('pieces'),
                 'gross_weight' => $rows->sum('gross_weight'),
                 'net_weight' => $rows->sum('net_weight'),
             ],
-            chart: ReportResult::chart('Net weight held by purity', 'grams', $rows->map(fn (array $row): array => [
+            chart: ReportResult::chart(__('Net weight held by purity'), 'grams', $rows->map(fn (array $row): array => [
                 'label' => $row['purity'],
                 'value' => $row['net_weight'],
                 'display' => ReportFormatter::grams($row['net_weight']),
             ])->all()),
             meta: [
-                'table_title' => 'Weight held by purity',
+                'table_title' => __('Weight held by purity'),
                 'live_snapshot' => true,
-                'empty_title' => 'No available stock',
-                'empty_message' => 'Reserved, sold, damaged and lost pieces are excluded — this counts metal you can actually work with.',
+                'empty_title' => __('No available stock'),
+                'empty_message' => __('Reserved, sold, damaged and lost pieces are excluded — this counts metal you can actually work with.'),
             ],
         );
     }
@@ -124,28 +124,28 @@ class InventoryReportService
 
         return new ReportResult(
             key: 'category-stock',
-            title: 'Category Stock',
+            title: __('Category Stock'),
             summary: [
-                $this->card('pieces', 'Pieces', ReportFormatter::count($rows->sum('pieces')), 'inventory_2'),
-                $this->card('net_weight', 'Net Weight', ReportFormatter::grams($rows->sum('net_weight')), 'scale'),
-                $this->card('groups', 'Category Groups', ReportFormatter::count($rows->count()), 'category'),
+                $this->card('pieces', __('Pieces'), ReportFormatter::count($rows->sum('pieces')), 'inventory_2'),
+                $this->card('net_weight', __('Net Weight'), ReportFormatter::grams($rows->sum('net_weight')), 'scale'),
+                $this->card('groups', __('Category Groups'), ReportFormatter::count($rows->count()), 'category'),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'category', 'label' => 'Category'],
-                ['key' => 'sub_category', 'label' => 'Sub-Category'],
-                ['key' => 'pieces', 'label' => 'Pieces', 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
-                ['key' => 'net_weight', 'label' => 'Net Weight', 'align' => 'right', 'format' => 'grams'],
+                ['key' => 'category', 'label' => __('Category')],
+                ['key' => 'sub_category', 'label' => __('Sub-Category')],
+                ['key' => 'pieces', 'label' => __('Pieces'), 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
+                ['key' => 'net_weight', 'label' => __('Net Weight'), 'align' => 'right', 'format' => 'grams'],
             ],
             totals: [
-                'category' => 'Total',
+                'category' => __('Total'),
                 'pieces' => $rows->sum('pieces'),
                 'net_weight' => $rows->sum('net_weight'),
             ],
             meta: [
-                'table_title' => 'Stock by category',
+                'table_title' => __('Stock by category'),
                 'live_snapshot' => true,
-                'empty_title' => 'No stock in this category',
+                'empty_title' => __('No stock in this category'),
             ],
         );
     }
@@ -166,33 +166,33 @@ class InventoryReportService
 
         return new ReportResult(
             key: 'aging-stock',
-            title: 'Aging Stock',
+            title: __('Aging Stock'),
             summary: [
-                $this->card('pieces', 'Available Pieces', ReportFormatter::count($rows->sum('pieces')), 'inventory_2'),
-                $this->card('overdue', 'Held Over '.$oldest.' Days', ReportFormatter::count($overdue['pieces'] ?? 0), 'hourglass_bottom',
-                    hint: ReportFormatter::grams($overdue['net_weight'] ?? 0).' of metal idle'),
-                $this->card('net_weight', 'Net Weight Held', ReportFormatter::grams($rows->sum('net_weight')), 'scale'),
+                $this->card('pieces', __('Available Pieces'), ReportFormatter::count($rows->sum('pieces')), 'inventory_2'),
+                $this->card('overdue', __('Held Over ').$oldest.' Days', ReportFormatter::count($overdue['pieces'] ?? 0), 'hourglass_bottom',
+                    hint: __(':grams of metal idle', ['grams' => ReportFormatter::grams($overdue['net_weight'] ?? 0)])),
+                $this->card('net_weight', __('Net Weight Held'), ReportFormatter::grams($rows->sum('net_weight')), 'scale'),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'bucket', 'label' => 'Age'],
-                ['key' => 'pieces', 'label' => 'Pieces', 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
-                ['key' => 'net_weight', 'label' => 'Net Weight', 'align' => 'right', 'format' => 'grams'],
+                ['key' => 'bucket', 'label' => __('Age')],
+                ['key' => 'pieces', 'label' => __('Pieces'), 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
+                ['key' => 'net_weight', 'label' => __('Net Weight'), 'align' => 'right', 'format' => 'grams'],
             ],
             totals: [
-                'bucket' => 'Total',
+                'bucket' => __('Total'),
                 'pieces' => $rows->sum('pieces'),
                 'net_weight' => $rows->sum('net_weight'),
             ],
-            chart: ReportResult::chart('Available pieces by age', 'pieces', $rows->map(fn (array $row): array => [
+            chart: ReportResult::chart(__('Available pieces by age'), 'pieces', $rows->map(fn (array $row): array => [
                 'label' => $row['bucket'],
                 'value' => $row['pieces'],
                 'display' => ReportFormatter::count($row['pieces']),
             ])->all()),
             meta: [
-                'table_title' => 'Age buckets',
+                'table_title' => __('Age buckets'),
                 'live_snapshot' => true,
-                'empty_title' => 'No available stock to age',
+                'empty_title' => __('No available stock to age'),
             ],
         );
     }
@@ -209,30 +209,30 @@ class InventoryReportService
 
         return new ReportResult(
             key: 'no-movement-items',
-            title: 'Items With No Movement',
+            title: __('Items With No Movement'),
             summary: [
-                $this->card('pieces', 'Untouched Pieces', ReportFormatter::count($rows->count()), 'do_not_touch'),
-                $this->card('net_weight', 'Net Weight Idle', ReportFormatter::grams($rows->sum('net_weight')), 'scale'),
-                $this->card('oldest', 'Longest Held',
+                $this->card('pieces', __('Untouched Pieces'), ReportFormatter::count($rows->count()), 'do_not_touch'),
+                $this->card('net_weight', __('Net Weight Idle'), ReportFormatter::grams($rows->sum('net_weight')), 'scale'),
+                $this->card('oldest', __('Longest Held'),
                     $rows->isNotEmpty() ? ReportFormatter::days($rows->max('days_held')) : '—', 'hourglass_bottom'),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'item_code', 'label' => 'Code'],
-                ['key' => 'name', 'label' => 'Item'],
-                ['key' => 'created_at', 'label' => 'Added'],
-                ['key' => 'days_held', 'label' => 'Days Held', 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
-                ['key' => 'net_weight', 'label' => 'Net Weight', 'align' => 'right', 'format' => 'grams'],
+                ['key' => 'item_code', 'label' => __('Code')],
+                ['key' => 'name', 'label' => __('Item')],
+                ['key' => 'created_at', 'label' => __('Added')],
+                ['key' => 'days_held', 'label' => __('Days Held'), 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
+                ['key' => 'net_weight', 'label' => __('Net Weight'), 'align' => 'right', 'format' => 'grams'],
             ],
             totals: [
-                'item_code' => 'Total',
+                'item_code' => __('Total'),
                 'net_weight' => $rows->sum('net_weight'),
             ],
             meta: [
-                'table_title' => 'Untouched since creation',
+                'table_title' => __('Untouched since creation'),
                 'live_snapshot' => true,
-                'empty_title' => 'Every piece has moved at least once',
-                'empty_message' => 'No available item is sitting with only its creation record.',
+                'empty_title' => __('Every piece has moved at least once'),
+                'empty_message' => __('No available item is sitting with only its creation record.'),
             ],
         );
     }
@@ -255,26 +255,26 @@ class InventoryReportService
 
         return new ReportResult(
             key: 'item-movement-log',
-            title: 'Jewellery Movement Log',
+            title: __('Jewellery Movement Log'),
             summary: [
-                $this->card('movements', 'Movements Recorded', ReportFormatter::count($rows->count()), 'history'),
-                $this->card('items', 'Pieces Touched', ReportFormatter::count($rows->pluck('item_code')->unique()->count()), 'inventory_2'),
-                $this->card('actors', 'Staff Involved', ReportFormatter::count($rows->pluck('actor')->unique()->count()), 'group'),
+                $this->card('movements', __('Movements Recorded'), ReportFormatter::count($rows->count()), 'history'),
+                $this->card('items', __('Pieces Touched'), ReportFormatter::count($rows->pluck('item_code')->unique()->count()), 'inventory_2'),
+                $this->card('actors', __('Staff Involved'), ReportFormatter::count($rows->pluck('actor')->unique()->count()), 'group'),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'created_at', 'label' => 'When', 'format' => 'datetime'],
-                ['key' => 'item_code', 'label' => 'Code'],
-                ['key' => 'item_name', 'label' => 'Item'],
-                ['key' => 'type', 'label' => 'Movement'],
-                ['key' => 'transition', 'label' => 'Status Change'],
-                ['key' => 'actor', 'label' => 'By'],
-                ['key' => 'notes', 'label' => 'Notes'],
+                ['key' => 'created_at', 'label' => __('When'), 'format' => 'datetime'],
+                ['key' => 'item_code', 'label' => __('Code')],
+                ['key' => 'item_name', 'label' => __('Item')],
+                ['key' => 'type', 'label' => __('Movement')],
+                ['key' => 'transition', 'label' => __('Status Change')],
+                ['key' => 'actor', 'label' => __('By')],
+                ['key' => 'notes', 'label' => __('Notes')],
             ],
             meta: [
-                'table_title' => 'Movement history',
-                'empty_title' => 'No movements in this period',
-                'empty_message' => 'Nothing was created, reserved, sold or restatused in the selected range.',
+                'table_title' => __('Movement history'),
+                'empty_title' => __('No movements in this period'),
+                'empty_message' => __('Nothing was created, reserved, sold or restatused in the selected range.'),
             ],
         );
     }

@@ -36,8 +36,8 @@ class RenameStoneImageRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Enter a file name.',
-            'name.max' => 'File name must be 180 characters or fewer.',
+            'name.required' => __('Enter a file name.'),
+            'name.max' => __('File name must be 180 characters or fewer.'),
         ];
     }
 }

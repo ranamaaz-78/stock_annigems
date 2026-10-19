@@ -16,7 +16,7 @@
         <div class="bg-surface-container-lowest border border-outline-variant rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.08)]">
             <div class="flex items-center justify-between px-4 py-3 border-b border-outline-variant">
                 <h2 id="{{ $id }}-title" class="font-headline-sm text-headline-sm text-on-surface">{{ $title }}</h2>
-                <button type="button" class="text-on-surface-variant hover:text-on-surface" data-modal-close aria-label="Close">
+                <button type="button" class="text-on-surface-variant hover:text-on-surface" data-modal-close aria-label="{{ __('Close') }}">
                     <span class="material-symbols-outlined">close</span>
                 </button>
             </div>

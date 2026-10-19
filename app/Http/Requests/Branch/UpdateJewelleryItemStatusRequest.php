@@ -47,7 +47,7 @@ class UpdateJewelleryItemStatusRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'status.in' => 'That status cannot be set from jewellery management.',
+            'status.in' => __('That status cannot be set from jewellery management.'),
         ];
     }
 }

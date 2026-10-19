@@ -20,11 +20,11 @@ enum StonePricingMode: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::PER_CARAT => 'Per carat price',
             self::PER_PIECE => 'Per piece price',
             self::PER_GRAM => 'Per gram price',
-        };
+        });
     }
 
     /**

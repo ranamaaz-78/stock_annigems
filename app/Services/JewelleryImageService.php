@@ -38,7 +38,7 @@ class JewelleryImageService
 
         if ($kept + $incoming > $maxCount) {
             throw ValidationException::withMessages([
-                'images' => 'At most '.$maxCount.' images are allowed.',
+                'images' => __('At most :maxCount images are allowed.', ['maxCount' => $maxCount]),
             ]);
         }
 
@@ -131,14 +131,14 @@ class JewelleryImageService
         $maxKb = (int) config('annigems.jewellery.image_max_kilobytes', 2048);
         if ($file->getSize() > $maxKb * 1024) {
             throw ValidationException::withMessages([
-                'images' => 'Each image must be at most '.$maxKb.' KB.',
+                'images' => __('Each image must be at most :maxKb KB.', ['maxKb' => $maxKb]),
             ]);
         }
 
         $mime = $this->realMime($file);
         if (! in_array($mime, self::ALLOWED_MIMES, true)) {
             throw ValidationException::withMessages([
-                'images' => 'Images must be JPEG, PNG, or WebP.',
+                'images' => __('Images must be JPEG, PNG, or WebP.'),
             ]);
         }
     }

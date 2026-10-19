@@ -11,6 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-shell.boot />
+    <x-shell.i18n />
     <title>@yield('title', 'POS') — {{ setting('company_name', config('app.name', 'Aanigemas')) }}</title>
     <x-brand.favicon />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -26,7 +27,7 @@
         @yield('content')
     </div>
     {{-- Hidden host for the saved document; print() runs here so POS never leaves. --}}
-    <iframe id="pos-print-frame" class="pos-print-frame" title="Print document" aria-hidden="true"></iframe>
+    <iframe id="pos-print-frame" class="pos-print-frame" title="{{ __('Print document') }}" aria-hidden="true"></iframe>
     @stack('scripts')
 </body>
 </html>

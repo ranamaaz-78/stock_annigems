@@ -5,6 +5,7 @@
 
 import { attachBarcodeScanner } from './barcode-scanner';
 import { enhanceSelects } from './select-search';
+import { t } from './i18n';
 
 function csrfToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -87,7 +88,7 @@ export function bindPerformaForm() {
         if (!els.itemCount) return;
         const count = state.lines.length;
         els.itemCount.textContent = count === 0
-            ? 'No items scanned'
+            ? t('No items scanned')
             : (count === 1 ? '1 item' : `${count} items`);
     }
 
@@ -105,9 +106,9 @@ export function bindPerformaForm() {
         els.lines.innerHTML = state.lines.map((line, index) => {
             const isJewellery = line.line_type === 'jewellery_item';
             const qtyControl = isJewellery
-                ? `<span class="sale-line__meta">1 piece</span>`
+                ? `<span class="sale-line__meta">${t('1 piece')}</span>`
                 : `<div class="field-inline">
-                    <span class="field-inline__label">Qty</span>
+                    <span class="field-inline__label">${t('Qty')}</span>
                     <input type="number" min="1" step="1" class="input-field" data-field="quantity" data-line="${index}" value="${escapeHtml(line.quantity || 1)}" />
                    </div>`;
 
@@ -120,11 +121,11 @@ export function bindPerformaForm() {
                         <div class="sale-line__identity">
                             <p class="sale-line__name">${escapeHtml(line.name_snapshot)}</p>
                             <p class="sale-line__code">${escapeHtml(line.item_code_snapshot)}</p>
-                            <p class="sale-line__meta">${isJewellery ? escapeHtml([line.metal_snapshot, line.purity_snapshot].filter(Boolean).join(' · ')) : 'Loose stone'}</p>
+                            <p class="sale-line__meta">${isJewellery ? escapeHtml([line.metal_snapshot, line.purity_snapshot].filter(Boolean).join(' · ')) : t('Loose stone')}</p>
                         </div>
                         <div class="sale-line__end">
                             ${qtyControl}
-                            <button type="button" class="sale-line__remove" data-remove-line="${index}" aria-label="Remove line">
+                            <button type="button" class="sale-line__remove" data-remove-line="${index}" aria-label="${t('Remove line')}">
                                 <span class="material-symbols-outlined icon icon--sm">delete</span>
                             </button>
                         </div>
@@ -179,7 +180,7 @@ export function bindPerformaForm() {
             body: JSON.stringify({ code }),
         });
         if (!ok) {
-            showScanError(json.message || 'Not found');
+            showScanError(json.message || t('Not found'));
             return;
         }
         clearScanError();
@@ -193,7 +194,7 @@ export function bindPerformaForm() {
         if (line.line_type === 'jewellery_item') {
             const exists = state.lines.some((row) => row.jewellery_item_id === line.jewellery_item_id);
             if (exists) {
-                showScanError(`${line.item_code_snapshot} is already on this performa.`);
+                showScanError(t(':code is already on this performa.', { code: line.item_code_snapshot }));
                 return;
             }
             state.lines.push(line);
@@ -256,7 +257,7 @@ export function bindPerformaForm() {
         event.preventDefault();
         if (!validateCreditor()) return;
         if (!state.lines.length) {
-            window.AnnigemsAlert?.notifyError('Add at least one item to the performa.');
+            window.AnnigemsAlert?.notifyError(t('Add at least one item to the performa.'));
             return;
         }
 
@@ -269,11 +270,11 @@ export function bindPerformaForm() {
         loading?.restore();
 
         if (ok) {
-            window.AnnigemsAlert?.notifySuccess(json.message || 'Issued');
+            window.AnnigemsAlert?.notifySuccess(json.message || t('Issued'));
             if (json.data?.uuid) window.location.href = routes.show.replace('__UUID__', json.data.uuid);
         } else {
             const messages = Object.values(json?.errors || {}).flat().filter(Boolean);
-            window.AnnigemsAlert?.notifyError(messages.join(' ') || json.message || 'The performa could not be saved.');
+            window.AnnigemsAlert?.notifyError(messages.join(' ') || json.message || t('The performa could not be saved.'));
         }
     });
 

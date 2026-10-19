@@ -25,12 +25,12 @@
             rel="noopener"
         >
             <span class="material-symbols-outlined icon icon--sm" aria-hidden="true">print</span>
-            Print / PDF
+            {{ __('Print / PDF') }}
         </x-btn>
 
         <x-btn :href="route($exportRoute, array_merge($query, ['format' => 'csv']))">
             <span class="material-symbols-outlined icon icon--sm" aria-hidden="true">download</span>
-            Export CSV
+            {{ __('Export CSV') }}
         </x-btn>
     </div>
 @endif

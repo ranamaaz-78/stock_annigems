@@ -112,11 +112,11 @@ class TaxRateService
     public function setDefault(TaxRate $rate): TaxRate
     {
         if ($rate->kind !== TaxRate::KIND_IVA) {
-            throw ValidationException::withMessages(['rate' => 'Only an IVA rate can be the default.']);
+            throw ValidationException::withMessages(['rate' => __('Only an IVA rate can be the default.')]);
         }
 
         if (! $rate->is_active) {
-            throw ValidationException::withMessages(['rate' => 'Activate this rate before making it the default.']);
+            throw ValidationException::withMessages(['rate' => __('Activate this rate before making it the default.')]);
         }
 
         DB::transaction(function () use ($rate): void {
@@ -134,7 +134,7 @@ class TaxRateService
     {
         if ($rate->is_active && $rate->is_default) {
             throw ValidationException::withMessages([
-                'rate' => 'Choose another default IVA rate before turning this one off.',
+                'rate' => __('Choose another default IVA rate before turning this one off.'),
             ]);
         }
 
@@ -151,7 +151,7 @@ class TaxRateService
     {
         if ($rate->is_default) {
             throw ValidationException::withMessages([
-                'rate' => 'Choose another default IVA rate before deleting this one.',
+                'rate' => __('Choose another default IVA rate before deleting this one.'),
             ]);
         }
 

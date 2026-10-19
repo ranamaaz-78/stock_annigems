@@ -3,6 +3,7 @@
  * Loads shared helpers used across auth and SuperAdmin screens.
  */
 import './bootstrap';
+import './modules/i18n';
 import './modules/alerts';
 import './modules/button-loading';
 import './modules/form-validation';

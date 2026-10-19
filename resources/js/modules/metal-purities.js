@@ -2,6 +2,8 @@
  * Metals / purities tabbed CRUD.
  */
 
+import { t } from './i18n';
+
 /**
  * CSRF token from the layout meta tag.
  *
@@ -167,7 +169,7 @@ export function bindMetalPurities() {
         metalForm.querySelector('input[name="_method"]').value = values.uuid ? 'PUT' : 'POST';
         const title = metalModal.querySelector('h2');
         if (title) {
-            title.textContent = values.uuid ? 'Edit metal' : 'Add metal';
+            title.textContent = values.uuid ? t('Edit metal') : t('Add metal');
         }
     }
 
@@ -185,7 +187,7 @@ export function bindMetalPurities() {
         purityForm.querySelector('input[name="_method"]').value = values.uuid ? 'PUT' : 'POST';
         const title = purityModal.querySelector('h2');
         if (title) {
-            title.textContent = values.uuid ? 'Edit purity' : 'Add purity';
+            title.textContent = values.uuid ? t('Edit purity') : t('Add purity');
         }
     }
 }
@@ -205,7 +207,7 @@ async function submitCatalog(form, url) {
     const { ok, json } = await send(url, 'POST', new FormData(form));
     if (!ok) {
         window.AnnigemsForm?.applyServerErrors(form, json.errors || {});
-        window.AnnigemsAlert?.notifyError(json.message || 'Could not save.');
+        window.AnnigemsAlert?.notifyError(json.message || t('Could not save.'));
         loader?.restore();
         return;
     }
@@ -221,10 +223,10 @@ async function submitCatalog(form, url) {
  */
 async function destroyRow(url, name, items) {
     const ok = await window.AnnigemsAlert?.confirmAction({
-        title: `Delete ${name}?`,
+        title: t('Delete :name?', { name: name }),
         text: items === '0'
-            ? 'This value will be removed if nothing else depends on it.'
-            : `${items} jewellery item(s) use this value. Delete will be blocked — deactivate instead.`,
+            ? t('This value will be removed if nothing else depends on it.')
+            : t(':items jewellery item(s) use this value. Delete will be blocked — deactivate instead.', { items: items }),
         confirmButtonText: 'Delete',
     });
     if (!ok) {
@@ -234,7 +236,7 @@ async function destroyRow(url, name, items) {
     body.append('_method', 'DELETE');
     const { ok: saved, json } = await send(url, 'POST', body);
     if (!saved) {
-        window.AnnigemsAlert?.notifyError(json.message || 'Could not delete this value.');
+        window.AnnigemsAlert?.notifyError(json.message || t('Could not delete this value.'));
         return;
     }
     window.location.reload();

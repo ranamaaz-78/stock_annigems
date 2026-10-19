@@ -1,29 +1,29 @@
 {{-- Delivery note (albarán) list. New notes are made from the POS. --}}
 @extends('layouts.branch')
 
-@section('title', 'Delivery Notes')
-@section('page-title', 'Delivery Notes')
+@section('title', __('Delivery Notes'))
+@section('page-title', __('Delivery Notes'))
 
 @section('content')
-<x-page-header title="Delivery Notes" subtitle="Goods handed over with price and discount, no tax. Stock leaves when the note is issued.">
+<x-page-header :title="__('Delivery Notes')" :subtitle="__('Goods handed over with price and discount, no tax. Stock leaves when the note is issued.')">
     <x-slot:actions>
         @can('create', \App\Models\DeliveryNote::class)
-            <x-btn href="{{ route('branch.pos.show', ['kind' => 'delivery_note']) }}">New Delivery Note</x-btn>
+            <x-btn href="{{ route('branch.pos.show', ['kind' => 'delivery_note']) }}">{{ __('New Delivery Note') }}</x-btn>
         @endcan
     </x-slot:actions>
 </x-page-header>
 
 <form method="GET" class="filter-bar">
-    <x-filter.search name="search" :value="$filters['search'] ?? ''" placeholder="Search number or client…" aria-label="Search delivery notes" />
-    <select name="status" class="input-field" aria-label="Filter by status">
-        <option value="">All statuses</option>
+    <x-filter.search name="search" :value="$filters['search'] ?? ''" :placeholder="__('Search number or client…')" :aria-label="__('Search delivery notes')" />
+    <select name="status" class="input-field" aria-label="{{ __('Filter by status') }}">
+        <option value="">{{ __('All statuses') }}</option>
         @foreach(\App\Enums\DeliveryNoteStatus::cases() as $status)
             <option value="{{ $status->value }}" @selected(($filters['status'] ?? '') === $status->value)>{{ $status->label() }}</option>
         @endforeach
     </select>
     <div class="filter-bar__actions">
-        <x-btn type="submit" variant="secondary">Filter</x-btn>
-        <a href="{{ route('branch.delivery-notes.index') }}" class="btn btn--secondary">Reset</a>
+        <x-btn type="submit" variant="secondary">{{ __('Filter') }}</x-btn>
+        <a href="{{ route('branch.delivery-notes.index') }}" class="btn btn--secondary">{{ __('Reset') }}</a>
     </div>
 </form>
 
@@ -31,13 +31,13 @@
     @if($notes->isEmpty())
         <div class="panel__body">
             <x-empty-state
-                title="No delivery notes yet"
-                message="Open POS, choose Delivery Note and add the items to hand over."
+                :title="__('No delivery notes yet')"
+                :message="__('Open POS, choose Delivery Note and add the items to hand over.')"
                 icon="local_shipping"
             >
                 <x-slot:actions>
                     @can('create', \App\Models\DeliveryNote::class)
-                        <x-btn href="{{ route('branch.pos.show', ['kind' => 'delivery_note']) }}">New Delivery Note</x-btn>
+                        <x-btn href="{{ route('branch.pos.show', ['kind' => 'delivery_note']) }}">{{ __('New Delivery Note') }}</x-btn>
                     @endcan
                 </x-slot:actions>
             </x-empty-state>
@@ -47,14 +47,14 @@
             <table class="table-admin">
                 <thead>
                     <tr>
-                        <th>Delivery note</th>
-                        <th>Client</th>
-                        <th class="table-admin__num">Lines</th>
-                        <th class="table-admin__num">Total</th>
-                        <th>Invoice</th>
-                        <th>Payment</th>
-                        <th>Status</th>
-                        <th class="table-admin__actions-col">Actions</th>
+                        <th>{{ __('Delivery note') }}</th>
+                        <th>{{ __('Client') }}</th>
+                        <th class="table-admin__num">{{ __('Lines') }}</th>
+                        <th class="table-admin__num">{{ __('Total') }}</th>
+                        <th>{{ __('Invoice') }}</th>
+                        <th>{{ __('Payment') }}</th>
+                        <th>{{ __('Status') }}</th>
+                        <th class="table-admin__actions-col">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>

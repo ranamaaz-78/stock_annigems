@@ -26,7 +26,7 @@ enum JewelleryItemStatus: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::AVAILABLE => 'Available',
             self::RESERVED => 'Reserved',
             self::DAMAGED => 'Damaged',
@@ -36,7 +36,7 @@ enum JewelleryItemStatus: string
             self::ON_MEMO => 'On memo',
             self::DELIVERED => 'Delivered',
             self::TRANSFERRED => 'Transferred',
-        };
+        });
     }
 
     /**

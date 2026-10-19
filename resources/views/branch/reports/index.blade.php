@@ -8,13 +8,13 @@
 --}}
 @extends('layouts.branch')
 
-@section('title', 'Reports')
-@section('page-title', 'Reports')
+@section('title', __('Reports'))
+@section('page-title', __('Reports'))
 
 @section('content')
 <x-page-header
-    title="Reports"
-    subtitle="Revenue, stock, customer and audit reporting for this branch."
+    :title="__('Reports')"
+    :subtitle="__('Revenue, stock, customer and audit reporting for this branch.')"
 />
 
 {{-- The disclaimer belongs here as much as on a report: this is where someone
@@ -22,8 +22,7 @@
 <p class="report-notice">
     <span class="material-symbols-outlined icon icon--sm report-notice__icon" aria-hidden="true">info</span>
     <span>
-        Money figures throughout these reports are <strong>revenue</strong>, not profit. Purchase cost is not
-        recorded by the system, so margin cannot be calculated. Voided invoices are excluded from every total.
+        {{ __('Money figures throughout these reports are') }} <strong>{{ __('revenue') }}</strong>{{ __(', not profit. Purchase cost is not recorded by the system, so margin cannot be calculated. Voided invoices are excluded from every total.') }}
     </span>
 </p>
 
@@ -57,17 +56,17 @@
 @if($recentExports->isNotEmpty())
     <div class="panel">
         <div class="panel-header">
-            <h2 class="panel-header__title text-headline-sm">Recent Exports</h2>
+            <h2 class="panel-header__title text-headline-sm">{{ __('Recent Exports') }}</h2>
         </div>
         <div class="table-scroll">
             <table class="table-admin table-admin--dense">
                 <thead>
                     <tr>
-                        <th>Report</th>
-                        <th>Requested</th>
-                        <th>Format</th>
-                        <th class="table-admin__num">Rows</th>
-                        <th>Status</th>
+                        <th>{{ __('Report') }}</th>
+                        <th>{{ __('Requested') }}</th>
+                        <th>{{ __('Format') }}</th>
+                        <th class="table-admin__num">{{ __('Rows') }}</th>
+                        <th>{{ __('Status') }}</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -81,7 +80,7 @@
                             <td><x-status-badge :status="$export->status" /></td>
                             <td>
                                 @if($export->isDownloadable())
-                                    <a href="{{ route('branch.reports.download', $export) }}" class="form-link">Download</a>
+                                    <a href="{{ route('branch.reports.download', $export) }}" class="form-link">{{ __('Download') }}</a>
                                 @elseif($export->failure_reason)
                                     <span class="text-body-sm">{{ $export->failure_reason }}</span>
                                 @endif

@@ -43,7 +43,7 @@ class StoneFolderService
         $name = trim((string) preg_replace('/\s+/u', ' ', $name));
 
         if ($name === '') {
-            throw ValidationException::withMessages(['name' => 'Enter a folder name.']);
+            throw ValidationException::withMessages(['name' => __('Enter a folder name.')]);
         }
 
         $key = StoneCategory::matchKeyFor($name);
@@ -60,7 +60,7 @@ class StoneFolderService
 
         if ($clash !== null) {
             throw ValidationException::withMessages([
-                'name' => "A folder named {$clash->name} already exists.",
+                'name' => __('A folder named :clash already exists.', ['clash' => $clash->name]),
             ]);
         }
 
@@ -155,9 +155,9 @@ class StoneFolderService
         $more = $total - count($reasons);
 
         throw ValidationException::withMessages([
-            'folder' => 'Folder not deleted: '.$total.' '.Str::plural('lot', $total).' still held by open documents. '
-                .implode(' ', $reasons)
-                .($more > 0 ? " …and {$more} more." : ''),
+            'folder' => trans_choice('Folder not deleted: :count lot still held by open documents.|Folder not deleted: :count lots still held by open documents.', $total)
+                .' '.implode(' ', $reasons)
+                .($more > 0 ? ' '.__('…and :count more.', ['count' => $more]) : ''),
         ]);
     }
 }

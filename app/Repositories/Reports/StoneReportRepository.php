@@ -59,7 +59,7 @@ class StoneReportRepository extends ReportRepository
     public function stockByShape(?int $branchId): Collection
     {
         return $this->stockSummary($branchId)
-            ->groupBy(fn (array $lot): string => $lot['shape'] === 'â€”' || $lot['shape'] === '' ? 'Unspecified' : $lot['shape'])
+            ->groupBy(fn (array $lot): string => $lot['shape'] === 'â€”' || $lot['shape'] === '' ? __('Unspecified') : $lot['shape'])
             ->map(fn (Collection $lots, string $shape): array => [
                 'shape' => $shape,
                 'stone_count' => $lots->count(),
@@ -98,7 +98,7 @@ class StoneReportRepository extends ReportRepository
                 : $lot['quantity'] <= $pieceLimit)
             ->map(fn (array $lot): array => $lot + [
                 // Zero is out of stock; anything else here is merely low.
-                'severity' => $lot['on_hand'] <= 0 ? 'Out of stock' : 'Low stock',
+                'severity' => $lot['on_hand'] <= 0 ? __('Out of stock') : __('Low stock'),
             ])
             ->sortBy([
                 fn (array $a, array $b): int => ($a['on_hand'] <=> $b['on_hand']),
@@ -276,7 +276,7 @@ class StoneReportRepository extends ReportRepository
             $code = (string) $row->stone_code;
 
             if (! isset($byStone[$code])) {
-                $byStone[$code] = ['stone_code' => $code, 'name' => (string) $row->name, 'shape' => (string) $row->shape,
+                $byStone[$code] = ['stone_code' => $code, 'name' => (string) $row->name, 'shape' => $row->shape === 'Unspecified' ? __('Unspecified') : (string) $row->shape,
                     'back' => 0, 'back_g' => 0.0, 'total_out' => 0, 'total_out_g' => 0.0];
                 foreach ($buckets as $bucket) {
                     $byStone[$code][$bucket] = 0;

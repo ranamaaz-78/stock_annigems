@@ -3,6 +3,8 @@
  * Prevents double submission across the entire application.
  */
 
+import { t } from './i18n';
+
 /**
  * Put a button into its loading state immediately.
  *
@@ -10,7 +12,7 @@
  * @param {string} [loadingText='Please wait...']
  * @returns {{ restore: Function }}
  */
-export function startButtonLoading(button, loadingText = 'Please wait...') {
+export function startButtonLoading(button, loadingText = t('Please wait...')) {
     if (!button) {
         return { restore: () => {} };
     }

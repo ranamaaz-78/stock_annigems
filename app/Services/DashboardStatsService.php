@@ -142,7 +142,7 @@ class DashboardStatsService
         $role = $user->role instanceof UserRole ? $user->role : UserRole::from((string) $user->role);
 
         $dashboard = [
-            'branch_name' => $user->branch?->name ?? 'Branch',
+            'branch_name' => $user->branch?->name ?? __('Branch'),
             'role_label' => $role->label(),
             'cards' => [],
             'secondary_cards' => [],
@@ -191,7 +191,7 @@ class DashboardStatsService
                 "Today's Revenue",
                 ReportFormatter::money($todayTotals['net_revenue']),
                 icon: 'payments',
-                hint: ReportFormatter::count($todayTotals['invoice_count']).' invoices today',
+                hint: __(':count invoices today', ['count' => ReportFormatter::count($todayTotals['invoice_count'])]),
             );
 
             $dashboard['cards'][] = $this->card(
@@ -217,7 +217,7 @@ class DashboardStatsService
                 'Gold Weight Sold This Month',
                 ReportFormatter::grams($this->sales->goldWeightSold($month)),
                 icon: 'scale',
-                hint: 'Net metal weight, revenue not profit',
+                hint: __('Net metal weight, revenue not profit'),
             );
 
             $dashboard['chart'] = $this->revenueTrendChart($branchId);
@@ -238,7 +238,7 @@ class DashboardStatsService
                 'Gold Weight in Stock',
                 ReportFormatter::grams($this->inventory->goldWeightInStock($branchId)),
                 icon: 'diamond',
-                hint: 'Available pieces only',
+                hint: __('Available pieces only'),
             );
 
             $dashboard['aging_items'] = $this->inventory->agingItems($branchId, 5, $this->oldestAgingEdge());
@@ -252,7 +252,7 @@ class DashboardStatsService
                 'Pending Quotations',
                 ReportFormatter::count($pending['count']),
                 icon: 'request_quote',
-                hint: ReportFormatter::money($pending['value']).' quoted',
+                hint: __(':value quoted', ['value' => ReportFormatter::money($pending['value'])]),
             );
 
             $dashboard['pending_quotations'] = $this->quotations->pendingDrafts($branchId, 5);
@@ -265,8 +265,7 @@ class DashboardStatsService
                 'Stones in Stock',
                 ReportFormatter::count($this->stones->totalStonesInStock($branchId)),
                 icon: 'diamond',
-                hint: ReportFormatter::grams($this->stones->totalStockGrams($branchId)).' by weight, '
-                    .ReportFormatter::carats($this->stones->totalCaratInStock($branchId)),
+                hint: __(':grams by weight, :carats', ['grams' => ReportFormatter::grams($this->stones->totalStockGrams($branchId)), 'carats' => ReportFormatter::carats($this->stones->totalCaratInStock($branchId))]),
             );
 
             // Stone worth is purchase cost, so it is shown only to users who may see cost.
@@ -276,7 +275,7 @@ class DashboardStatsService
                     'Stone Stock Value',
                     ReportFormatter::money($this->stones->stockValue($branchId)),
                     icon: 'payments',
-                    hint: 'At purchase rate',
+                    hint: __('At purchase rate'),
                 );
             }
 
@@ -285,7 +284,7 @@ class DashboardStatsService
                 'Stones at Zero Stock',
                 ReportFormatter::count($this->stones->zeroStockCount($branchId)),
                 icon: 'warning',
-                hint: 'Reorder needed',
+                hint: __('Reorder needed'),
             );
 
             $dashboard['low_stones'] = $this->stones->zeroAndLowStock($branchId)->take(5);
@@ -303,8 +302,7 @@ class DashboardStatsService
                 'Out With Clients',
                 ReportFormatter::money($onCredit + (float) $uninvoiced->sum('grand_total')),
                 icon: 'local_shipping',
-                hint: ReportFormatter::money($onCredit).' on performa, '
-                    .ReportFormatter::count($uninvoiced->count()).' delivery notes to invoice',
+                hint: __(':value on performa, :count delivery notes to invoice', ['value' => ReportFormatter::money($onCredit), 'count' => ReportFormatter::count($uninvoiced->count())]),
             );
         }
 
@@ -317,7 +315,7 @@ class DashboardStatsService
                 'Awaiting Payment',
                 ReportFormatter::money($awaiting['invoice_due'] + $awaiting['note_due']),
                 icon: 'hourglass_top',
-                hint: ReportFormatter::count($awaiting['invoices']).' invoices, '.ReportFormatter::count($awaiting['notes']).' delivery notes',
+                hint: __(':invoices invoices, :notes delivery notes', ['invoices' => ReportFormatter::count($awaiting['invoices']), 'notes' => ReportFormatter::count($awaiting['notes'])]),
             );
         }
 
@@ -354,7 +352,7 @@ class DashboardStatsService
                 'My Invoices Today',
                 ReportFormatter::count($mine['count']),
                 icon: 'receipt_long',
-                hint: ReportFormatter::money($mine['revenue']).' billed by me',
+                hint: __(':value billed by me', ['value' => ReportFormatter::money($mine['revenue'])]),
             );
 
             $dashboard['cards'][] = $this->card(
@@ -373,7 +371,7 @@ class DashboardStatsService
                 'My Pending Quotations',
                 ReportFormatter::count($pending['count']),
                 icon: 'request_quote',
-                hint: ReportFormatter::money($pending['value']).' quoted',
+                hint: __(':value quoted', ['value' => ReportFormatter::money($pending['value'])]),
             );
         }
 
@@ -408,7 +406,7 @@ class DashboardStatsService
                 'Gold Weight in Stock',
                 ReportFormatter::grams($this->inventory->goldWeightInStock($branchId)),
                 icon: 'scale',
-                hint: 'Available pieces only',
+                hint: __('Available pieces only'),
             );
 
             $dashboard['aging_items'] = $this->inventory->agingItems($branchId, 8, $this->oldestAgingEdge());
@@ -420,8 +418,7 @@ class DashboardStatsService
                 'Stones in Stock',
                 ReportFormatter::count($this->stones->totalStonesInStock($branchId)),
                 icon: 'diamond',
-                hint: ReportFormatter::carats($this->stones->totalCaratInStock($branchId)).' held, '
-                    .ReportFormatter::grams($this->stones->totalStockGrams($branchId)).' by weight',
+                hint: __(':carats held, :grams by weight', ['carats' => ReportFormatter::carats($this->stones->totalCaratInStock($branchId)), 'grams' => ReportFormatter::grams($this->stones->totalStockGrams($branchId))]),
             );
 
             if ($user->hasPermission('items.view_cost')) {
@@ -430,7 +427,7 @@ class DashboardStatsService
                     'Stone Stock Value',
                     ReportFormatter::money($this->stones->stockValue($branchId)),
                     icon: 'payments',
-                    hint: 'At purchase rate',
+                    hint: __('At purchase rate'),
                 );
             }
 
@@ -439,7 +436,7 @@ class DashboardStatsService
                 'Stones at Zero Stock',
                 ReportFormatter::count($this->stones->zeroStockCount($branchId)),
                 icon: 'warning',
-                hint: 'Reorder needed',
+                hint: __('Reorder needed'),
             );
 
             $dashboard['low_stones'] = $this->stones->zeroAndLowStock($branchId)->take(8);
@@ -464,8 +461,8 @@ class DashboardStatsService
         $dashboard = [
             'mode' => $branchId === null ? 'all' : 'single',
             'branch_name' => $branchId === null
-                ? 'All Branches'
-                : (string) (Branch::query()->whereKey($branchId)->value('name') ?? 'Branch'),
+                ? __('All Branches')
+                : (string) (Branch::query()->whereKey($branchId)->value('name') ?? __('Branch')),
             'cards' => [],
             'chart' => $this->revenueTrendChart($branchId),
             'comparison' => collect(),
@@ -473,10 +470,10 @@ class DashboardStatsService
 
         if ($branchId === null) {
             $dashboard['cards'] = [
-                $this->card('total_branches', 'Total Branches', ReportFormatter::count(Branch::query()->count()), icon: 'store'),
-                $this->card('active_branches', 'Active Branches', ReportFormatter::count(Branch::query()->where('status', BranchStatus::ACTIVE)->count()), icon: 'check_circle'),
-                $this->card('total_users', 'Total Users', ReportFormatter::count(User::query()->withTrashed()->count()), icon: 'group', hint: ReportFormatter::count(User::query()->where('status', UserStatus::ACTIVE)->count()).' active'),
-                $this->card('total_revenue', 'Revenue This Month', ReportFormatter::money($this->sales->totals($month)['net_revenue']), icon: 'payments', hint: 'Completed invoices only'),
+                $this->card('total_branches', __('Total Branches'), ReportFormatter::count(Branch::query()->count()), icon: 'store'),
+                $this->card('active_branches', __('Active Branches'), ReportFormatter::count(Branch::query()->where('status', BranchStatus::ACTIVE)->count()), icon: 'check_circle'),
+                $this->card('total_users', __('Total Users'), ReportFormatter::count(User::query()->withTrashed()->count()), icon: 'group', hint: __(':count active', ['count' => ReportFormatter::count(User::query()->where('status', UserStatus::ACTIVE)->count())])),
+                $this->card('total_revenue', __('Revenue This Month'), ReportFormatter::money($this->sales->totals($month)['net_revenue']), icon: 'payments', hint: __('Completed invoices only')),
             ];
 
             $dashboard['comparison'] = $this->branchComparison($month);
@@ -485,10 +482,10 @@ class DashboardStatsService
         }
 
         $dashboard['cards'] = [
-            $this->card('branch_revenue', 'Revenue This Month', ReportFormatter::money($this->sales->totals($month)['net_revenue']), icon: 'payments'),
-            $this->card('pieces_sold', 'Pieces Sold This Month', ReportFormatter::count($this->sales->piecesSold($month)), icon: 'shopping_bag'),
-            $this->card('available_pieces', 'Available Pieces', ReportFormatter::count($this->inventory->availablePieceCount($branchId)), icon: 'inventory_2'),
-            $this->card('gold_weight_stock', 'Gold Weight in Stock', ReportFormatter::grams($this->inventory->goldWeightInStock($branchId)), icon: 'scale'),
+            $this->card('branch_revenue', __('Revenue This Month'), ReportFormatter::money($this->sales->totals($month)['net_revenue']), icon: 'payments'),
+            $this->card('pieces_sold', __('Pieces Sold This Month'), ReportFormatter::count($this->sales->piecesSold($month)), icon: 'shopping_bag'),
+            $this->card('available_pieces', __('Available Pieces'), ReportFormatter::count($this->inventory->availablePieceCount($branchId)), icon: 'inventory_2'),
+            $this->card('gold_weight_stock', __('Gold Weight in Stock'), ReportFormatter::grams($this->inventory->goldWeightInStock($branchId)), icon: 'scale'),
         ];
 
         return $dashboard;
@@ -553,7 +550,7 @@ class DashboardStatsService
             ])
             ->all();
 
-        return ReportResult::chart('Revenue — last 30 days', 'revenue', $points, 'vertical');
+        return ReportResult::chart(__('Revenue — last 30 days'), 'revenue', $points, 'vertical');
     }
 
     /**

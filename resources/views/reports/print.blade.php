@@ -26,12 +26,12 @@
     <div class="report-print__page">
         <header class="report-print__header">
             <div>
-                <p class="text-label-caps">{{ $result->meta('branch_label', 'All Branches') }}</p>
+                <p class="text-label-caps">{{ $result->meta('branch_label', __('All Branches')) }}</p>
                 <h1 class="text-headline-sm">{{ $result->title }}</h1>
             </div>
             {{-- Hidden on paper: a printed page needs no print button. --}}
             <div class="report-print-hide">
-                <button type="button" class="btn btn--primary" onclick="window.print()">Print</button>
+                <button type="button" class="btn btn--primary" onclick="window.print()">{{ __('Print') }}</button>
             </div>
         </header>
 
@@ -48,8 +48,7 @@
         @if($result->meta('money', false))
             <p class="report-notice">
                 <span>
-                    These are <strong>revenue</strong> figures, not profit. Purchase cost is not recorded by the
-                    system, so margin cannot be calculated. Voided invoices are excluded from every total below.
+                    {{ __('These are') }} <strong>{{ __('revenue') }}</strong> {{ __('figures, not profit. Purchase cost is not recorded by the system, so margin cannot be calculated. Voided invoices are excluded from every total below.') }}
                 </span>
             </p>
         @endif
@@ -72,7 +71,7 @@
                 :columns="$result->columns"
                 :rows="$result->rows"
                 :totals="$result->totals"
-                :title="$result->meta('table_title', 'Breakdown')"
+                :title="$result->meta('table_title', __('Breakdown'))"
             />
         @endif
 
@@ -87,7 +86,7 @@
 
         <footer class="report-print__footer">
             <span>{{ $result->title }} — {{ $result->meta('range_label', '') }}</span>
-            <span>Generated {{ $result->meta('generated_at', '') }}</span>
+            <span>{{ __('Generated :date', ['date' => $result->meta('generated_at', '')]) }}</span>
         </footer>
     </div>
 </body>

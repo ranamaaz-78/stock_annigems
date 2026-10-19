@@ -42,8 +42,8 @@ class VoidInvoiceRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'void_reason.required' => 'Please provide a reason for voiding this invoice.',
-            'void_reason.min' => 'The void reason must be at least 10 characters.',
+            'void_reason.required' => __('Please provide a reason for voiding this invoice.'),
+            'void_reason.min' => __('The void reason must be at least 10 characters.'),
         ];
     }
 }

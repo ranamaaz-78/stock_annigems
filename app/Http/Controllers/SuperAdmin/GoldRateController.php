@@ -59,6 +59,6 @@ class GoldRateController extends Controller
 
         return redirect()
             ->route('superadmin.gold-rates.index')
-            ->with('success', 'Gold rates updated successfully.');
+            ->with('success', __('Gold rates updated successfully.'));
     }
 }

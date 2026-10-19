@@ -1,29 +1,29 @@
 {{-- Invoice list. New invoices open POS. --}}
 @extends('layouts.branch')
 
-@section('title', 'Invoices')
-@section('page-title', 'Invoices')
+@section('title', __('Invoices'))
+@section('page-title', __('Invoices'))
 
 @section('content')
-<x-page-header title="Invoices" subtitle="Finalised sales. Corrections are made by voiding, never editing.">
+<x-page-header :title="__('Invoices')" :subtitle="__('Finalised sales. Corrections are made by voiding, never editing.')">
     <x-slot:actions>
         @can('create', \App\Models\Quotation::class)
-            <x-btn href="{{ route('branch.pos.show', ['kind' => 'invoice']) }}">New Invoice</x-btn>
+            <x-btn href="{{ route('branch.pos.show', ['kind' => 'invoice']) }}">{{ __('New Invoice') }}</x-btn>
         @endcan
     </x-slot:actions>
 </x-page-header>
 
 <form method="GET" class="filter-bar">
-    <x-filter.search name="search" :value="$filters['search'] ?? ''" placeholder="Search number or customer…" aria-label="Search invoices" />
-    <select name="status" class="input-field" aria-label="Filter by status">
-        <option value="">All statuses</option>
+    <x-filter.search name="search" :value="$filters['search'] ?? ''" :placeholder="__('Search number or customer…')" :aria-label="__('Search invoices')" />
+    <select name="status" class="input-field" aria-label="{{ __('Filter by status') }}">
+        <option value="">{{ __('All statuses') }}</option>
         @foreach(\App\Enums\InvoiceStatus::cases() as $status)
             <option value="{{ $status->value }}" @selected(($filters['status'] ?? '') === $status->value)>{{ $status->label() }}</option>
         @endforeach
     </select>
     <div class="filter-bar__actions">
-        <x-btn type="submit" variant="secondary">Filter</x-btn>
-        <a href="{{ route('branch.invoices.index') }}" class="btn btn--secondary">Reset</a>
+        <x-btn type="submit" variant="secondary">{{ __('Filter') }}</x-btn>
+        <a href="{{ route('branch.invoices.index') }}" class="btn btn--secondary">{{ __('Reset') }}</a>
     </div>
 </form>
 
@@ -31,13 +31,13 @@
     @if($invoices->isEmpty())
         <div class="panel__body">
             <x-empty-state
-                title="No invoices yet"
-                message="Open POS to take payment and print the first invoice."
+                :title="__('No invoices yet')"
+                :message="__('Open POS to take payment and print the first invoice.')"
                 icon="receipt_long"
             >
                 <x-slot:actions>
                     @can('create', \App\Models\Quotation::class)
-                        <x-btn href="{{ route('branch.pos.show', ['kind' => 'invoice']) }}">New Invoice</x-btn>
+                        <x-btn href="{{ route('branch.pos.show', ['kind' => 'invoice']) }}">{{ __('New Invoice') }}</x-btn>
                     @endcan
                 </x-slot:actions>
             </x-empty-state>
@@ -47,13 +47,13 @@
             <table class="table-admin">
                 <thead>
                     <tr>
-                        <th>Invoice</th>
-                        <th>Customer</th>
-                        <th class="table-admin__num">Lines</th>
-                        <th class="table-admin__num">Total</th>
-                        <th>Payment</th>
-                        <th>Status</th>
-                        <th class="table-admin__actions-col">Actions</th>
+                        <th>{{ __('Invoice') }}</th>
+                        <th>{{ __('Customer') }}</th>
+                        <th class="table-admin__num">{{ __('Lines') }}</th>
+                        <th class="table-admin__num">{{ __('Total') }}</th>
+                        <th>{{ __('Payment') }}</th>
+                        <th>{{ __('Status') }}</th>
+                        <th class="table-admin__actions-col">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>

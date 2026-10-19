@@ -13,8 +13,8 @@
 --}}
 @extends('layouts.superadmin')
 
-@section('title', 'Dashboard')
-@section('page-title', 'Dashboard')
+@section('title', __('Dashboard'))
+@section('page-title', __('Dashboard'))
 
 @php
     use App\Support\Reports\ReportFormatter;
@@ -22,17 +22,17 @@
 
 @section('content')
 <x-page-header
-    title="Dashboard"
-    :subtitle="$dashboard['branch_name'].' · aggregate figures only'"
+    :title="__('Dashboard')"
+    :subtitle="$dashboard['branch_name'].' · '.__('aggregate figures only')"
 />
 
 {{-- Scope selector. Choosing a branch narrows the figures; it unlocks no
      additional detail, which is the whole point of spec 7.3. --}}
 <form method="GET" action="{{ route('superadmin.dashboard') }}" class="filter-bar mb-4">
     <div>
-        <label for="branch" class="form-label">Scope</label>
+        <label for="branch" class="form-label">{{ __('Scope') }}</label>
         <select id="branch" name="branch" class="input-field" onchange="this.form.submit()">
-            <option value="">All Branches</option>
+            <option value="">{{ __('All Branches') }}</option>
             @foreach($branches as $branch)
                 <option value="{{ $branch->uuid }}" @selected($selectedBranch === $branch->uuid)>{{ $branch->name }}</option>
             @endforeach
@@ -40,7 +40,7 @@
     </div>
     {{-- Submit button for keyboard users and browsers without JS. --}}
     <div class="filter-bar__actions">
-        <x-btn type="submit" variant="secondary">Apply</x-btn>
+        <x-btn type="submit" variant="secondary">{{ __('Apply') }}</x-btn>
     </div>
 </form>
 
@@ -65,15 +65,15 @@
 @if($dashboard['mode'] === 'all')
     <div class="panel">
         <div class="panel-header">
-            <h2 class="panel-header__title text-headline-sm">Branch Comparison — This Month</h2>
-            <a href="{{ route('superadmin.branches.index') }}" class="form-link">Manage branches</a>
+            <h2 class="panel-header__title text-headline-sm">{{ __('Branch Comparison — This Month') }}</h2>
+            <a href="{{ route('superadmin.branches.index') }}" class="form-link">{{ __('Manage branches') }}</a>
         </div>
 
         @if($dashboard['comparison']->isEmpty())
             <div class="panel-body">
-                <x-empty-state title="No branches yet" message="Create your first branch to start assigning Branch Admins." icon="store">
+                <x-empty-state :title="__('No branches yet')" :message="__('Create your first branch to start assigning Branch Admins.')" icon="store">
                     <x-slot:actions>
-                        <x-btn href="{{ route('superadmin.branches.create') }}">+ Add Branch</x-btn>
+                        <x-btn href="{{ route('superadmin.branches.create') }}">{{ __('+ Add Branch') }}</x-btn>
                     </x-slot:actions>
                 </x-empty-state>
             </div>
@@ -82,13 +82,13 @@
                 <table class="table-admin table-admin--dense">
                     <thead>
                         <tr>
-                            <th>Branch</th>
-                            <th>Status</th>
-                            <th class="table-admin__num">Revenue</th>
-                            <th class="table-admin__num">Invoices</th>
-                            <th class="table-admin__num">Pieces Sold</th>
-                            <th class="table-admin__num">Pieces in Stock</th>
-                            <th class="table-admin__num">Gold in Stock</th>
+                            <th>{{ __('Branch') }}</th>
+                            <th>{{ __('Status') }}</th>
+                            <th class="table-admin__num">{{ __('Revenue') }}</th>
+                            <th class="table-admin__num">{{ __('Invoices') }}</th>
+                            <th class="table-admin__num">{{ __('Pieces Sold') }}</th>
+                            <th class="table-admin__num">{{ __('Pieces in Stock') }}</th>
+                            <th class="table-admin__num">{{ __('Gold in Stock') }}</th>
                         </tr>
                     </thead>
                     <tbody>

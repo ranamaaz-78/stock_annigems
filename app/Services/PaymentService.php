@@ -156,11 +156,11 @@ class PaymentService
     private function assertPayable(Invoice|DeliveryNote $payable): void
     {
         if ($payable instanceof Invoice && $payable->status !== InvoiceStatus::COMPLETED) {
-            throw ValidationException::withMessages(['payment' => 'A voided invoice cannot take payment.']);
+            throw ValidationException::withMessages(['payment' => __('A voided invoice cannot take payment.')]);
         }
 
         if ($payable instanceof DeliveryNote && $payable->status !== DeliveryNoteStatus::ISSUED) {
-            throw ValidationException::withMessages(['payment' => 'Only an issued delivery note can take payment.']);
+            throw ValidationException::withMessages(['payment' => __('Only an issued delivery note can take payment.')]);
         }
     }
 }

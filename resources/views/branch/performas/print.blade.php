@@ -12,7 +12,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Performa {{ $performa->performa_number }}</title>
+    <title>{{ __('Performa') }} {{ $performa->performa_number }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap" rel="stylesheet">
@@ -20,7 +20,7 @@
 </head>
 <body class="doc-page doc-page--a4">
     <div class="doc-page__toolbar no-print">
-        <button type="button" class="btn btn--primary" onclick="window.print()">Print</button>
+        <button type="button" class="btn btn--primary" onclick="window.print()">{{ __('Print') }}</button>
     </div>
 
     @include('branch.performas._sheet', ['performa' => $performa, 'a4' => true])

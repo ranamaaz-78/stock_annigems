@@ -48,7 +48,7 @@ class CreditorController extends Controller
 
         $term = (string) $request->query('q', '');
 
-        return $this->jsonSuccess('OK', [
+        return $this->jsonSuccess(__('OK'), [
             // values() so JSON is a list. Eloquent map() keeps row ids as
             // keys; that encodes as an object and Select2's .map() throws.
             'creditors' => ($request->boolean('catalog') ? $this->creditorService->catalog() : $this->creditorService->search($term))->map(fn (Creditor $c): array => [
@@ -82,7 +82,7 @@ class CreditorController extends Controller
         $creditor = $this->creditorService->create($request->validated(), $request->user());
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Creditor created.', [
+            return $this->jsonSuccess(__('Creditor created.'), [
                 'creditor' => [
                     'uuid' => $creditor->uuid,
                     'creditor_code' => $creditor->creditor_code,
@@ -94,7 +94,7 @@ class CreditorController extends Controller
 
         return redirect()
             ->route('branch.creditors.show', $creditor)
-            ->with('success', 'Creditor created successfully.');
+            ->with('success', __('Creditor created successfully.'));
     }
 
     /**
@@ -129,7 +129,7 @@ class CreditorController extends Controller
 
         return redirect()
             ->route('branch.creditors.show', $creditor)
-            ->with('success', 'Creditor updated successfully.');
+            ->with('success', __('Creditor updated successfully.'));
     }
 
     /**
@@ -142,14 +142,14 @@ class CreditorController extends Controller
         $request->validate([
             'confirm' => ['accepted'],
         ], [
-            'confirm.accepted' => 'Please confirm deactivation.',
+            'confirm.accepted' => __('Please confirm deactivation.'),
         ]);
 
         $this->creditorService->deactivate($creditor, $request->user());
 
         return redirect()
             ->route('branch.creditors.show', $creditor)
-            ->with('success', 'Creditor deactivated. They no longer appear when issuing a performa.');
+            ->with('success', __('Creditor deactivated. They no longer appear when issuing a performa.'));
     }
 
     /**
@@ -163,6 +163,6 @@ class CreditorController extends Controller
 
         return redirect()
             ->route('branch.creditors.show', $creditor)
-            ->with('success', 'Creditor activated.');
+            ->with('success', __('Creditor activated.'));
     }
 }

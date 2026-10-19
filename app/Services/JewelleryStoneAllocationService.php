@@ -164,13 +164,13 @@ class JewelleryStoneAllocationService
 
             if (! $stone) {
                 throw ValidationException::withMessages([
-                    'stones' => 'A selected stone could not be found.',
+                    'stones' => __('A selected stone could not be found.'),
                 ]);
             }
 
             if ((int) $stone->branch_id !== (int) $item->branch_id) {
                 throw ValidationException::withMessages([
-                    'stones' => 'Barcode not found.',
+                    'stones' => __('Barcode not found.'),
                 ]);
             }
 
@@ -185,19 +185,19 @@ class JewelleryStoneAllocationService
 
             if (isset($oldByUuid[$uuid]) && $isGram !== ($oldByUuid[$uuid]['weight_grams'] > 0)) {
                 throw ValidationException::withMessages([
-                    'stones' => "{$stone->stone_code} changed how it is counted since it was added. Remove it and add it again.",
+                    'stones' => __(':code changed how it is counted since it was added. Remove it and add it again.', ['code' => $stone->stone_code]),
                 ]);
             }
 
             if ($isGram && $present && $newGrams <= 0) {
                 throw ValidationException::withMessages([
-                    'stones' => "Enter the grams of {$stone->stone_code} used in this piece.",
+                    'stones' => __('Enter the grams of :code used in this piece.', ['code' => $stone->stone_code]),
                 ]);
             }
 
             if (! $isGram && $present && $newQty < 1) {
                 throw ValidationException::withMessages([
-                    'stones' => "Enter how many pieces of {$stone->stone_code} are used in this piece.",
+                    'stones' => __('Enter how many pieces of :code are used in this piece.', ['code' => $stone->stone_code]),
                 ]);
             }
 
@@ -213,7 +213,7 @@ class JewelleryStoneAllocationService
             if ($increased) {
                 if (! $stone->is_active) {
                     throw ValidationException::withMessages([
-                        'stones' => "{$stone->stone_code} is deactivated and cannot be allocated.",
+                        'stones' => __(':code is deactivated and cannot be allocated.', ['code' => $stone->stone_code]),
                     ]);
                 }
 
@@ -221,7 +221,7 @@ class JewelleryStoneAllocationService
                     $availableGrams = round((float) ($stone->weight_grams ?? 0), 3);
                     if ($availableGrams < $deltaGrams) {
                         throw ValidationException::withMessages([
-                            'stones' => "{$stone->stone_code} has only {$availableGrams} g available; {$deltaGrams} g more requested.",
+                            'stones' => __(':code has only :availableGrams g available; :deltaGrams g more requested.', ['code' => $stone->stone_code, 'availableGrams' => $availableGrams, 'deltaGrams' => $deltaGrams]),
                         ]);
                     }
 
@@ -237,7 +237,7 @@ class JewelleryStoneAllocationService
                     $available = (int) $stone->quantity;
                     if ($available < $delta) {
                         throw ValidationException::withMessages([
-                            'stones' => "{$stone->stone_code} has only {$available} available; {$delta} more requested.",
+                            'stones' => __(':code has only :available available; :delta more requested.', ['code' => $stone->stone_code, 'available' => $available, 'delta' => $delta]),
                         ]);
                     }
 
@@ -310,7 +310,7 @@ class JewelleryStoneAllocationService
 
         if ((float) $weights['stone_weight_grams'] > (float) $item->gross_weight + 0.0005) {
             throw ValidationException::withMessages([
-                'gross_weight' => 'Stone weight in grams cannot exceed gross weight. That is physically impossible — check carat or gross weight.',
+                'gross_weight' => __('Stone weight in grams cannot exceed gross weight. That is physically impossible — check carat or gross weight.'),
             ]);
         }
 

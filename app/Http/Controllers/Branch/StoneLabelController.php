@@ -37,7 +37,7 @@ class StoneLabelController extends Controller
             abort_unless($request->user()->can('printLabel', $stone) || ! $stone->hasPacketBarcode(), 403);
         }
 
-        return $this->jsonSuccess('Labels ready.', $this->labelService->dialogData($stones));
+        return $this->jsonSuccess(__('Labels ready.'), $this->labelService->dialogData($stones));
     }
 
     /**

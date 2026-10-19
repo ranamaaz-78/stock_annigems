@@ -1,13 +1,13 @@
 {{-- Edit branch staff user with permission grid. --}}
 @extends('layouts.branch')
 
-@section('title', 'Edit User')
-@section('page-title', 'Edit User')
+@section('title', __('Edit User'))
+@section('page-title', __('Edit User'))
 
 @section('content')
-<x-page-header :title="'Edit ' . $user->name" :subtitle="$user->email">
+<x-page-header :title="__('Edit').' '.$user->name" :subtitle="$user->email">
     <x-slot:actions>
-        <x-btn href="{{ route('branch.users.show', $user) }}" variant="secondary">Cancel</x-btn>
+        <x-btn href="{{ route('branch.users.show', $user) }}" variant="secondary">{{ __('Cancel') }}</x-btn>
     </x-slot:actions>
 </x-page-header>
 
@@ -17,7 +17,7 @@
         @method('PUT')
         @include('branch.users._form')
         <div class="flex justify-end gap-2 pt-2 border-t border-outline-variant">
-            <x-btn type="submit" loading-text="Saving...">Save Changes</x-btn>
+            <x-btn type="submit" :loading-text="__('Saving...')">{{ __('Save Changes') }}</x-btn>
         </div>
     </form>
 </div>

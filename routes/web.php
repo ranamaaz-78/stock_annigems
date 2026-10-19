@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
 
+// Language button: open to guests (login screen) and signed-in users alike.
+Route::post('/locale/{locale}', [\App\Http\Controllers\LocaleController::class, 'update'])
+    ->whereIn('locale', array_keys(config('app.supported_locales', [])))
+    ->name('locale.switch');
+
 Route::get('/session-expired', function () {
     return view('errors.session-expired');
 })->name('session.expired');

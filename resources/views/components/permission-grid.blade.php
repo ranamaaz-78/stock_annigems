@@ -6,8 +6,8 @@
     data-initial-role="{{ $initialRole }}"
 >
     <div class="flex items-center justify-between mb-3">
-        <p class="font-label-caps text-on-surface">Permissions</p>
-        <p class="text-body-sm text-on-surface-variant">Adjust individual permissions or select a role to load defaults.</p>
+        <p class="font-label-caps text-on-surface">{{ __('Permissions') }}</p>
+        <p class="text-body-sm text-on-surface-variant">{{ __('Adjust individual permissions or select a role to load defaults.') }}</p>
     </div>
 
     @foreach($permissionsByModule as $module => $permissions)
@@ -33,7 +33,7 @@
                         <span>
                             {{ $permission->display_name }}
                             @if($isAdminOnly)
-                                <span class="block text-xs text-on-surface-variant">Admin only</span>
+                                <span class="block text-xs text-on-surface-variant">{{ __('Admin only') }}</span>
                             @endif
                         </span>
                     </label>

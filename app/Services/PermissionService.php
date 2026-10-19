@@ -201,7 +201,7 @@ class PermissionService
 
         if ($invalid !== []) {
             throw ValidationException::withMessages([
-                'permissions' => 'One or more selected permissions are invalid.',
+                'permissions' => __('One or more selected permissions are invalid.'),
             ]);
         }
 
@@ -210,7 +210,7 @@ class PermissionService
         foreach ($requested as $name) {
             if (in_array($name, $disabled, true)) {
                 throw ValidationException::withMessages([
-                    'permissions' => "Permission {$name} cannot be assigned to this role.",
+                    'permissions' => __('Permission :name cannot be assigned to this role.', ['name' => $name]),
                 ]);
             }
         }
@@ -311,7 +311,7 @@ class PermissionService
     {
         if (! in_array($roleName, self::ASSIGNABLE_STAFF_ROLES, true)) {
             throw ValidationException::withMessages([
-                'role' => 'Invalid role selection.',
+                'role' => __('Invalid role selection.'),
             ]);
         }
     }

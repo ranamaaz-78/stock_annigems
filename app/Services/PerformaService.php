@@ -115,7 +115,7 @@ class PerformaService
             $creditorId = $this->resolveCreditorId($data, $actor);
             if ($creditorId === null) {
                 throw ValidationException::withMessages([
-                    'creditor_uuid' => 'Select a creditor. Register them under Creditors first.',
+                    'creditor_uuid' => __('Select a creditor. Register them under Creditors first.'),
                 ]);
             }
 
@@ -180,7 +180,7 @@ class PerformaService
 
             if (! $performa->status->isOpen()) {
                 throw ValidationException::withMessages([
-                    'performa' => 'Only an open performa can be edited.',
+                    'performa' => __('Only an open performa can be edited.'),
                 ]);
             }
 
@@ -190,12 +190,12 @@ class PerformaService
             $creditorId = $kept->isNotEmpty() ? (int) $performa->creditor_id : $this->resolveCreditorId($data, $actor);
             if ($creditorId === null) {
                 throw ValidationException::withMessages([
-                    'creditor_uuid' => 'Select a creditor. Register them under Creditors first.',
+                    'creditor_uuid' => __('Select a creditor. Register them under Creditors first.'),
                 ]);
             }
 
             if ($lines === [] && $kept->isEmpty()) {
-                throw ValidationException::withMessages(['lines' => 'Add at least one item to the performa.']);
+                throw ValidationException::withMessages(['lines' => __('Add at least one item to the performa.')]);
             }
 
             // Take the untouched lines back first so their own stock counts as available again.
@@ -315,7 +315,7 @@ class PerformaService
 
         if (! $performa->isOpen()) {
             throw ValidationException::withMessages([
-                'performa' => 'This performa has no unpaid goods to return.',
+                'performa' => __('This performa has no unpaid goods to return.'),
             ]);
         }
 
@@ -324,7 +324,7 @@ class PerformaService
 
             if (! $performa->status->isOpen()) {
                 throw ValidationException::withMessages([
-                    'performa' => 'This performa has no unpaid goods to return.',
+                    'performa' => __('This performa has no unpaid goods to return.'),
                 ]);
             }
 
@@ -340,7 +340,7 @@ class PerformaService
                 // Pieces come whole; only grams may carry decimals.
                 if (! $item->isWeighed() && floor($qty) !== (float) $qty) {
                     throw ValidationException::withMessages([
-                        "lines.{$item->id}" => "{$item->item_code_snapshot} is returned in whole pieces.",
+                        "lines.{$item->id}" => __(':code is returned in whole pieces.', ['code' => $item->item_code_snapshot]),
                     ]);
                 }
 
@@ -348,7 +348,7 @@ class PerformaService
                 if ($qty > $outstanding + 0.0005) {
                     $unit = $item->isWeighed() ? ' g' : '';
                     throw ValidationException::withMessages([
-                        "lines.{$item->id}" => "{$item->item_code_snapshot} has only {$outstanding}{$unit} unpaid.",
+                        "lines.{$item->id}" => __(':code has only :outstanding:unit unpaid.', ['code' => $item->item_code_snapshot, 'outstanding' => $outstanding, 'unit' => $unit]),
                     ]);
                 }
 
@@ -364,7 +364,7 @@ class PerformaService
 
             if (! $returnedAny) {
                 throw ValidationException::withMessages([
-                    'lines' => 'Select at least one unpaid line to return.',
+                    'lines' => __('Select at least one unpaid line to return.'),
                 ]);
             }
 
@@ -604,7 +604,7 @@ class PerformaService
     private function assertLinesAvailable(array $lines, User $actor): void
     {
         if ($lines === []) {
-            throw ValidationException::withMessages(['lines' => 'Add at least one item to the performa.']);
+            throw ValidationException::withMessages(['lines' => __('Add at least one item to the performa.')]);
         }
 
         $jewelleryIds = [];
@@ -617,7 +617,7 @@ class PerformaService
                 $itemId = (int) ($line['jewellery_item_id'] ?? 0);
                 if (isset($jewelleryIds[$itemId])) {
                     throw ValidationException::withMessages([
-                        "lines.{$index}" => "{$line['item_code_snapshot']} is already on this performa.",
+                        "lines.{$index}" => __(':code is already on this performa.', ['code' => $line['item_code_snapshot']]),
                     ]);
                 }
                 $jewelleryIds[$itemId] = true;
@@ -630,7 +630,7 @@ class PerformaService
 
                 if (! $item || $item->status !== JewelleryItemStatus::AVAILABLE) {
                     throw ValidationException::withMessages([
-                        "lines.{$index}" => "Line {$lineNum}: {$line['item_code_snapshot']} is not available.",
+                        "lines.{$index}" => __('Line :line: :code is not available.', ['line' => $lineNum, 'code' => $line['item_code_snapshot']]),
                     ]);
                 }
             } else {
@@ -651,7 +651,7 @@ class PerformaService
 
                     if ($wanted <= 0 || $available + 0.0005 < $wanted) {
                         throw ValidationException::withMessages([
-                            "lines.{$index}" => "Line {$lineNum}: {$line['item_code_snapshot']} has only {$available} g in stock, {$wanted} g requested.",
+                            "lines.{$index}" => __('Line :line: :code has only :available g in stock, :wanted g requested.', ['line' => $lineNum, 'code' => $line['item_code_snapshot'], 'available' => $available, 'wanted' => $wanted]),
                         ]);
                     }
 
@@ -661,7 +661,7 @@ class PerformaService
                 if (! $stone || (int) $stone->quantity < $qty) {
                     $available = $stone ? (int) $stone->quantity : 0;
                     throw ValidationException::withMessages([
-                        "lines.{$index}" => "Line {$lineNum}: {$line['item_code_snapshot']} has only {$available} in stock, {$qty} requested.",
+                        "lines.{$index}" => __('Line :line: :code has only :available in stock, :qty requested.', ['line' => $lineNum, 'code' => $line['item_code_snapshot'], 'available' => $available, 'qty' => $qty]),
                     ]);
                 }
             }
@@ -770,7 +770,7 @@ class PerformaService
         if ($item->line_type === LineType::JEWELLERY_ITEM) {
             if ((int) $qty !== 1 || $item->outstandingQuantity() !== 1) {
                 throw ValidationException::withMessages([
-                    "lines.{$item->id}" => 'A jewellery piece must be returned in full.',
+                    "lines.{$item->id}" => __('A jewellery piece must be returned in full.'),
                 ]);
             }
 

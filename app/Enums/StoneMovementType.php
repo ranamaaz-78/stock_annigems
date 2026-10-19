@@ -36,7 +36,7 @@ enum StoneMovementType: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::INTAKE => 'Intake',
             self::USED_IN_ITEM => 'Used in item',
             self::SOLD => 'Sold',
@@ -55,7 +55,7 @@ enum StoneMovementType: string
             self::TRANSFERRED_OUT => 'Transferred out',
             self::RESERVED_ON_QUOTATION => 'Reserved on quotation',
             self::RELEASED_FROM_QUOTATION => 'Released from quotation',
-        };
+        });
     }
 
     /**

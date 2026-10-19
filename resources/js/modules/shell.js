@@ -3,6 +3,8 @@
  * fullscreen. Persistence is localStorage so density and kiosk survive navigation.
  */
 
+import { t } from './i18n';
+
 const STORAGE_DENSITY = 'annigems.sidebar';
 const STORAGE_OPEN = 'annigems.navOpen';
 const STORAGE_FULLSCREEN = 'annigems.fullscreen';
@@ -39,7 +41,7 @@ function syncDensityButton() {
     const mini = density() === 'mini';
     document.querySelectorAll('[data-shell-density]').forEach((button) => {
         button.setAttribute('aria-pressed', mini ? 'true' : 'false');
-        button.title = mini ? 'Expand sidebar' : 'Collapse sidebar';
+        button.title = mini ? t('Expand sidebar') : t('Collapse sidebar');
         const icon = button.querySelector('[data-shell-density-icon]');
         if (icon) {
             icon.textContent = mini ? 'chevron_right' : 'chevron_left';
@@ -128,14 +130,14 @@ function syncFullscreenButton() {
     const on = isFullscreen();
     document.querySelectorAll('[data-shell-fullscreen]').forEach((button) => {
         button.setAttribute('aria-pressed', on ? 'true' : 'false');
-        button.title = on ? 'Exit full screen' : 'Full screen';
+        button.title = on ? t('Exit full screen') : t('Full screen');
         const icon = button.querySelector('[data-shell-fullscreen-icon]');
         const label = button.querySelector('[data-shell-fullscreen-label]');
         if (icon) {
             icon.textContent = on ? 'fullscreen_exit' : 'fullscreen';
         }
         if (label) {
-            label.textContent = on ? 'Exit full screen' : 'Full screen';
+            label.textContent = on ? t('Exit full screen') : t('Full screen');
         }
     });
 }

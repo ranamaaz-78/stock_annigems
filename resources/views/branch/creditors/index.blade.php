@@ -1,38 +1,38 @@
 {{-- Creditor registry for the current branch. --}}
 @extends('layouts.branch')
 
-@section('title', 'Creditors')
-@section('page-title', 'Creditors')
+@section('title', __('Creditors'))
+@section('page-title', __('Creditors'))
 
 @section('content')
-<x-page-header title="Creditors" subtitle="Parties who take goods on performa. Register them here, then issue a performa against them.">
+<x-page-header :title="__('Creditors')" :subtitle="__('Parties who take goods on performa. Register them here, then issue a performa against them.')">
     <x-slot:actions>
         @can('create', \App\Models\Creditor::class)
-            <x-btn href="{{ route('branch.creditors.create') }}">Add Creditor</x-btn>
+            <x-btn href="{{ route('branch.creditors.create') }}">{{ __('Add Creditor') }}</x-btn>
         @endcan
     </x-slot:actions>
 </x-page-header>
 
 <form method="GET" class="filter-bar">
-    <x-filter.search name="search" :value="$filters['search'] ?? ''" placeholder="Search name, phone, code…" aria-label="Search creditors" />
-    <select name="status" class="input-field" aria-label="Filter by status">
-        <option value="">All statuses</option>
-        <option value="active" @selected(($filters['status'] ?? '') === 'active')>Active</option>
-        <option value="inactive" @selected(($filters['status'] ?? '') === 'inactive')>Inactive</option>
+    <x-filter.search name="search" :value="$filters['search'] ?? ''" :placeholder="__('Search name, phone, code…')" :aria-label="__('Search creditors')" />
+    <select name="status" class="input-field" aria-label="{{ __('Filter by status') }}">
+        <option value="">{{ __('All statuses') }}</option>
+        <option value="active" @selected(($filters['status'] ?? '') === 'active')>{{ __('Active') }}</option>
+        <option value="inactive" @selected(($filters['status'] ?? '') === 'inactive')>{{ __('Inactive') }}</option>
     </select>
     <div class="filter-bar__actions">
-        <x-btn type="submit" variant="secondary">Filter</x-btn>
-        <a href="{{ route('branch.creditors.index') }}" class="btn btn--secondary">Reset</a>
+        <x-btn type="submit" variant="secondary">{{ __('Filter') }}</x-btn>
+        <a href="{{ route('branch.creditors.index') }}" class="btn btn--secondary">{{ __('Reset') }}</a>
     </div>
 </form>
 
 <div class="panel">
     @if($creditors->isEmpty())
         <div class="panel__body">
-            <x-empty-state title="No creditors found" message="Register a creditor before issuing a performa." icon="handshake">
+            <x-empty-state :title="__('No creditors found')" :message="__('Register a creditor before issuing a performa.')" icon="handshake">
                 <x-slot:actions>
                     @can('create', \App\Models\Creditor::class)
-                        <x-btn href="{{ route('branch.creditors.create') }}">Add Creditor</x-btn>
+                        <x-btn href="{{ route('branch.creditors.create') }}">{{ __('Add Creditor') }}</x-btn>
                     @endcan
                 </x-slot:actions>
             </x-empty-state>
@@ -42,12 +42,12 @@
             <table class="table-admin">
                 <thead>
                     <tr>
-                        <th>Creditor</th>
-                        <th>Contact</th>
-                        <th>City</th>
-                        <th class="table-admin__num">Performas</th>
-                        <th>Status</th>
-                        <th class="table-admin__actions-col">Actions</th>
+                        <th>{{ __('Creditor') }}</th>
+                        <th>{{ __('Contact') }}</th>
+                        <th>{{ __('City') }}</th>
+                        <th class="table-admin__num">{{ __('Performas') }}</th>
+                        <th>{{ __('Status') }}</th>
+                        <th class="table-admin__actions-col">{{ __('Actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>

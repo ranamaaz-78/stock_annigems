@@ -17,6 +17,7 @@
 
 import $ from 'jquery';
 import select2 from 'select2';
+import { t } from './i18n';
 
 // Select2's CJS build is a factory that attaches $.fn.select2. Vite ESM
 // must hand it the same jQuery instance we imported.
@@ -55,7 +56,7 @@ function shouldEnhance(select) {
 function placeholderOf(select) {
     const empty = [...select.options].find((option) => option.value === '');
 
-    return empty?.textContent?.trim() || 'Select…';
+    return empty?.textContent?.trim() || t('Select…');
 }
 
 /**
@@ -205,7 +206,7 @@ function select2Options(select) {
         dropdownParent: modal ? $(modal) : $(document.body),
         language: {
             noResults: () => 'No matches',
-            searching: () => 'Searching…',
+            searching: () => t('Searching…'),
         },
     };
 }

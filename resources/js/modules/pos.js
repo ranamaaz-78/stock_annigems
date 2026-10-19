@@ -17,6 +17,7 @@
 import { attachBarcodeScanner } from './barcode-scanner';
 import { recalculate } from './pricing-calculator';
 import { destroySelects } from './select-search';
+import { t } from './i18n';
 
 /** Short month names for the "d M Y" date format. */
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -366,7 +367,7 @@ export function bindPos() {
     function renderDocumentNumber() {
         if (!els.previewNumber) return;
 
-        els.previewNumber.textContent = documentNumbers[documentKind] || 'Draft';
+        els.previewNumber.textContent = documentNumbers[documentKind] || t('Draft');
     }
 
     /**
@@ -390,13 +391,15 @@ export function bindPos() {
         if (!els.kindNote) return;
 
         if (documentKind === 'invoice') {
-            els.kindNote.textContent = 'Payment is taken next. Stock is deducted when the invoice is saved.';
+            els.kindNote.textContent = t('Payment is taken next. Stock is deducted when the invoice is saved.');
         } else if (documentKind === 'performa') {
-            els.kindNote.textContent = 'Issued to a creditor. No discount, no tax. Stock leaves now; the creditor pays later.';
+            els.kindNote.textContent = t('Issued to a creditor. No discount, no tax. Stock leaves now; the creditor pays later.');
         } else if (documentKind === 'delivery_note') {
-            els.kindNote.textContent = 'No tax is added. Stock leaves now; the note can be cancelled or invoiced later.';
+            els.kindNote.textContent = t('No tax is added. Stock leaves now; the note can be cancelled or invoiced later.');
         } else {
-            els.kindNote.textContent = `Valid until ${formatDate(addDays(state.quotation_date, validityDays))} — ${validityDays} ${validityDays === 1 ? 'day' : 'days'} from the issue date.`;
+            els.kindNote.textContent = validityDays === 1
+                ? t('Valid until :date — :count day from the issue date.', { date: formatDate(addDays(state.quotation_date, validityDays)), count: validityDays })
+                : t('Valid until :date — :count days from the issue date.', { date: formatDate(addDays(state.quotation_date, validityDays)), count: validityDays });
         }
     }
 
@@ -408,7 +411,7 @@ export function bindPos() {
         const purities = [...new Set(state.lines.filter((l) => l.line_type === 'jewellery_item').map((l) => l.purity_snapshot).filter(Boolean))];
         els.purityNote.classList.toggle('hidden', purities.length <= 1);
         if (purities.length > 1) {
-            els.purityNote.textContent = `This ticket has ${purities.length} different purities (${purities.join(', ')}). Adjust gold rates per line as needed.`;
+            els.purityNote.textContent = t('This ticket has :purities different purities (:purities2). Adjust gold rates per line as needed.', { purities: purities.length, purities2: purities.join(', ') });
         }
     }
 
@@ -462,7 +465,7 @@ export function bindPos() {
      */
     function stockCell(line, index) {
         if (line.line_type === 'jewellery_item') {
-            return '<span class="pos-stock__note">Unique piece</span>';
+            return '<span class="pos-stock__note">' + t('Unique piece') + '</span>';
         }
 
         // A weighed stone's stock is grams.
@@ -488,7 +491,7 @@ export function bindPos() {
      */
     function quantityCell(line, index) {
         if (line.line_type === 'jewellery_item') {
-            return '<span class="pos-chip"><span class="pos-num">1</span> · Unique piece</span>';
+            return '<span class="pos-chip"><span class="pos-num">1</span>' + t('· Unique piece') + '</span>';
         }
 
         // A weighed stone is sold by the gram: ask for grams instead of pieces.
@@ -512,7 +515,7 @@ export function bindPos() {
         const canAdd = onHand < 1 || qty < onHand;
 
         return `<span class="pos-qty-step">
-            <button type="button" class="pos-qty-step__btn" data-qty-step="-1" data-line="${index}" aria-label="Decrease quantity" ${qty <= 1 ? 'disabled' : ''}>
+            <button type="button" class="pos-qty-step__btn" data-qty-step="-1" data-line="${index}" aria-label="${t('Decrease quantity')}" ${qty <= 1 ? 'disabled' : ''}>
                 <span class="material-symbols-outlined icon icon--xs">remove</span>
             </button>
             ${cellInput({
@@ -524,7 +527,7 @@ export function bindPos() {
                 extra: `data-field="quantity" data-line="${index}"${onHand > 0 ? ` max="${onHand}"` : ''}`,
                 aria: 'Quantity',
             })}
-            <button type="button" class="pos-qty-step__btn" data-qty-step="1" data-line="${index}" aria-label="Increase quantity" ${canAdd ? '' : 'disabled'}>
+            <button type="button" class="pos-qty-step__btn" data-qty-step="1" data-line="${index}" aria-label="${t('Increase quantity')}" ${canAdd ? '' : 'disabled'}>
                 <span class="material-symbols-outlined icon icon--xs">add</span>
             </button>
         </span>`;
@@ -548,8 +551,8 @@ export function bindPos() {
         if (emptyTicket) {
             els.lines.innerHTML = `<div class="pos-lines__empty">
                 <span class="pos-lines__empty-icon" aria-hidden="true"><span class="material-symbols-outlined icon icon--lg">barcode_scanner</span></span>
-                <p class="pos-lines__empty-title">Scan or search to add the first line.</p>
-                <p class="pos-lines__empty-copy">Jewellery adds as a single unique piece. Loose stones add by quantity.</p>
+                <p class="pos-lines__empty-title">${t('Scan or search to add the first line.')}</p>
+                <p class="pos-lines__empty-copy">${t('Jewellery adds as a single unique piece. Loose stones add by quantity.')}</p>
             </div>`;
             return;
         }
@@ -574,7 +577,7 @@ export function bindPos() {
             // price per piece to type on the right, under a single heading.
             const stoneRows = isJewellery
                 ? (line.stones || []).map((stone, stoneIndex) => {
-                    const name = stone.stone_name_snapshot || stone.stone_type_snapshot || 'Stone';
+                    const name = stone.stone_name_snapshot || stone.stone_type_snapshot || t('Stone');
                     const detail = [
                         Number(stone.carat_snapshot) > 0 ? `${Number(stone.carat_snapshot)} ct` : '',
                         `× ${stone.quantity}`,
@@ -596,32 +599,32 @@ export function bindPos() {
             // metal + stones rather than one unexplained number.
             const goldRate = Number(line.gold_rate_applied) || 0;
             const goldValue = Number(line.gold_value) || 0;
-            const metalName = [line.purity_snapshot, line.metal_snapshot].filter(Boolean).join(' ') || 'Metal';
+            const metalName = [line.purity_snapshot, line.metal_snapshot].filter(Boolean).join(' ') || t('Metal');
             const metalRow = isJewellery
-                ? `<div class="pos-stone__head"><span>Metal</span><span>Value</span></div>
+                ? `<div class="pos-stone__head"><span>${t('Metal')}</span><span>${t('Value')}</span></div>
                     <div class="pos-stone">
                         <span class="pos-stone__name">${escapeHtml(metalName)}<small>${goldRate > 0
                             ? `${weight.toFixed(3)} g × ${formatAmount(goldRate)} / g`
-                            : 'No gold rate for this purity today'}</small></span>
+                            : t('No gold rate for this purity today')}</small></span>
                         <span class="pos-stone__value${goldRate > 0 ? '' : ' pos-stone__value--missing'}">${goldRate > 0 ? formatAmount(goldValue) : '—'}</span>
                     </div>`
                 : '';
 
             const stonesHtml = isJewellery
-                ? `${metalRow}${stoneRows ? `<div class="pos-stone__head"><span>Set stones</span><span>Price / pc</span></div>${stoneRows}` : ''}`
+                ? `${metalRow}${stoneRows ? `<div class="pos-stone__head"><span>${t('Set stones')}</span><span>${t('Price / pc')}</span></div>${stoneRows}` : ''}`
                 : '';
 
             const makingCell = isJewellery
                 ? cellInput({
                     value: amountOrEmpty(line.making_charges),
                     extra: `data-making data-line="${index}"`,
-                    aria: 'Making charges',
+                    aria: t('Making charges'),
                 })
                 : '<span class="pos-line__weight">—</span>';
 
             const meta = isJewellery
                 ? [line.purity_snapshot, line.metal_snapshot, 'Jewellery'].filter(Boolean).join(' · ')
-                : [line.category_snapshot, 'Loose stone'].filter(Boolean).join(' · ');
+                : [line.category_snapshot, t('Loose stone')].filter(Boolean).join(' · ');
 
             return `<div class="pos-line" data-line-index="${index}">
                 <span class="pos-line__n">${index + 1}</span>
@@ -636,18 +639,18 @@ export function bindPos() {
                         ${stonesHtml ? `<div class="pos-line__stones">${stonesHtml}</div>` : ''}
                     </div>
                 </div>
-                ${isJewellery ? '<span class="pos-line__stock">Unique</span>' : stockCell(line, index)}
+                ${isJewellery ? '<span class="pos-line__stock">' + t('Unique') + '</span>' : stockCell(line, index)}
                 <div class="pos-lines__center">${quantityCell(line, index)}</div>
                 <span class="pos-line__weight">${weightLabel}</span>
                 ${cellInput({
                     value: amountOrEmpty(rateValue),
                     extra: `data-material data-line="${index}"`,
                     placeholder: line.weighed ? 'per g' : '0.00',
-                    aria: line.weighed ? 'Rate per gram' : 'Rate',
+                    aria: line.weighed ? t('Rate per gram') : 'Rate',
                 })}
                 ${makingCell}
                 <span class="pos-line__amount">${escapeHtml(formatAmount(line.line_total))}</span>
-                <button type="button" class="pos-icon-btn" data-remove-line="${index}" aria-label="Remove line">
+                <button type="button" class="pos-icon-btn" data-remove-line="${index}" aria-label="${t('Remove line')}">
                     <span class="material-symbols-outlined icon icon--xs">close</span>
                 </button>
             </div>`;
@@ -773,7 +776,7 @@ export function bindPos() {
         return [
             pieces ? `${pieces} ${pieces === 1 ? 'piece' : 'pieces'}` : null,
             stones ? `${stones} ${stones === 1 ? 'stone' : 'stones'}` : null,
-            grams > 0 ? `${formatGrams(grams)} g of stone` : null,
+            grams > 0 ? t(':grams g of stone', { grams: formatGrams(grams) }) : null,
         ].filter(Boolean).join(' · ') || `${state.lines.length} ${state.lines.length === 1 ? 'line' : 'lines'}`;
     }
 
@@ -786,7 +789,7 @@ export function bindPos() {
         if (els.previewCountLines) {
             els.previewCountLines.textContent = `${lineCount} ${lineCount === 1 ? 'line' : 'lines'}`;
         }
-        if (els.previewItemsNote) els.previewItemsNote.textContent = `${summary} on this ticket`;
+        if (els.previewItemsNote) els.previewItemsNote.textContent = t(':summary on this ticket', { summary: summary });
         renderDocumentNumber();
 
         if (els.previewSubtotal) els.previewSubtotal.textContent = formatMoney(documentTotals.subtotal);
@@ -809,15 +812,15 @@ export function bindPos() {
 
         if (els.previewTotalNote) {
             const notes = [
-                discountAmount > 0 ? `After ${formatMoney(discountAmount)} discount` : null,
+                discountAmount > 0 ? t('After :discountAmount discount', { discountAmount: formatMoney(discountAmount) }) : null,
                 taxAmount > 0 ? `incl. ${config.taxLabel || 'tax'}` : null,
             ].filter(Boolean);
-            els.previewTotalNote.textContent = notes.join(', ') || 'No discount or tax applied';
+            els.previewTotalNote.textContent = notes.join(', ') || t('No discount or tax applied');
         }
 
         if (els.previewGrand) els.previewGrand.textContent = money;
         if (els.payTotal) els.payTotal.textContent = money;
-        if (els.payCustomer) els.payCustomer.textContent = (els.name?.value || '').trim() || 'Customer';
+        if (els.payCustomer) els.payCustomer.textContent = (els.name?.value || '').trim() || t('Customer');
     }
 
     /**
@@ -830,7 +833,7 @@ export function bindPos() {
         documentKind = kind;
         const isInvoice = kind === 'invoice';
         const isQuotation = kind === 'quotation';
-        const labels = { invoice: 'Grand Total', quotation: 'Quotation Total', delivery_note: 'Delivery Note Total', performa: 'Performa Value' };
+        const labels = { invoice: t('Grand Total'), quotation: t('Quotation Total'), delivery_note: t('Delivery Note Total'), performa: t('Performa Value') };
         if (els.previewGrandLabel) els.previewGrandLabel.textContent = labels[kind] || labels.quotation;
         els.validUntilRows?.forEach((row) => row.classList.toggle('is-hidden', !isQuotation));
 
@@ -841,18 +844,18 @@ export function bindPos() {
             option.setAttribute('aria-checked', on ? 'true' : 'false');
         });
         els.kindOnly?.forEach((control) => control.classList.toggle('is-hidden', !control.dataset.kindOnly.split(' ').includes(kind)));
-        if (els.kindChip) els.kindChip.textContent = { invoice: 'Invoice', quotation: 'Quotation', delivery_note: 'Delivery Note', performa: 'Performa' }[kind] || 'Quotation';
+        if (els.kindChip) els.kindChip.textContent = { invoice: t('Invoice'), quotation: t('Quotation'), delivery_note: t('Delivery Note'), performa: t('Performa') }[kind] || t('Quotation');
         if (els.actionHelp) {
             els.actionHelp.textContent = {
-                invoice: 'An invoice takes payment and marks stock sold. It prints, then clears the ticket.',
-                quotation: 'A quotation holds stock until it is converted or cancelled. It prints, then clears the ticket.',
-                delivery_note: 'A delivery note takes the stock out now and prints the client\'s copy. No tax, no payment.',
-                performa: 'A performa takes the stock out now against a creditor. No discount, no tax; payment comes later on an invoice.',
+                invoice: t('An invoice takes payment and marks stock sold. It prints, then clears the ticket.'),
+                quotation: t('A quotation holds stock until it is converted or cancelled. It prints, then clears the ticket.'),
+                delivery_note: t('A delivery note takes the stock out now and prints the client\'s copy. No tax, no payment.'),
+                performa: t('A performa takes the stock out now against a creditor. No discount, no tax; payment comes later on an invoice.'),
             }[kind] || '';
         }
 
         // Who the ticket is for: a creditor on a performa, a customer otherwise.
-        if (els.billtoTitle) els.billtoTitle.textContent = kind === 'performa' ? 'Issued to (creditor)' : 'Billed to';
+        if (els.billtoTitle) els.billtoTitle.textContent = kind === 'performa' ? t('Issued to (creditor)') : t('Billed to');
         const group = kind === 'performa' ? 'creditor' : 'customer';
         if (group !== identityGroup) {
             identityGroup = group;
@@ -878,7 +881,7 @@ export function bindPos() {
             body: JSON.stringify({ code }),
         });
         if (!ok) {
-            showScanError(json.message || 'Not found');
+            showScanError(json.message || t('Not found'));
             return;
         }
         clearScanError();
@@ -907,7 +910,7 @@ export function bindPos() {
         if (line.line_type === 'jewellery_item') {
             const exists = state.lines.some((l) => l.jewellery_item_id === line.jewellery_item_id);
             if (exists) {
-                showScanError(`${line.item_code_snapshot} is already on this ticket.`);
+                showScanError(t(':code is already on this ticket.', { code: line.item_code_snapshot }));
                 return;
             }
             const rate = config.rateMap?.[line.purity_id_snapshot];
@@ -920,13 +923,13 @@ export function bindPos() {
             // cashier is asked how many grams.
             const existing = state.lines.findIndex((l) => Number(l.stone_id) === Number(line.stone_id));
             if (existing >= 0) {
-                showScanError(`${line.item_code_snapshot} is already on this ticket. Change its grams.`);
+                showScanError(t(':code is already on this ticket. Change its grams.', { code: line.item_code_snapshot }));
                 pendingGramsFocus = existing;
                 render();
                 return;
             }
             if (remainingForLine(line) <= 0) {
-                showScanError(`${line.item_code_snapshot} has no stock on hand.`);
+                showScanError(t(':code has no stock on hand.', { code: line.item_code_snapshot }));
                 return;
             }
             line.weight_grams = '';
@@ -934,7 +937,7 @@ export function bindPos() {
             pendingGramsFocus = state.lines.length - 1;
         } else {
             if (remainingForStone(line.stone_id, line.available_quantity) < 1) {
-                showScanError(`${line.item_code_snapshot} has no remaining stock on this ticket.`);
+                showScanError(t(':code has no remaining stock on this ticket.', { code: line.item_code_snapshot }));
                 return;
             }
             const idx = state.lines.findIndex((l) => Number(l.stone_id) === Number(line.stone_id));
@@ -1179,7 +1182,7 @@ export function bindPos() {
         if (leftover.length) {
             window.AnnigemsAlert?.notifyError([...new Set(leftover)].join(' '));
         } else if (!mapped) {
-            window.AnnigemsAlert?.notifyError(fallback || 'Please check the highlighted fields.');
+            window.AnnigemsAlert?.notifyError(fallback || t('Please check the highlighted fields.'));
         }
     }
 
@@ -1225,7 +1228,7 @@ export function bindPos() {
     function printDocument(printUrl) {
         const frame = printFrame();
         if (!frame) {
-            window.AnnigemsAlert?.notifyError('Document saved. Print could not start.');
+            window.AnnigemsAlert?.notifyError(t('Document saved. Print could not start.'));
             return;
         }
 
@@ -1238,7 +1241,7 @@ export function bindPos() {
             const win = frame.contentWindow;
             const doc = frame.contentDocument;
             if (!win || !doc) {
-                window.AnnigemsAlert?.notifyError('Document saved. Print could not start.');
+                window.AnnigemsAlert?.notifyError(t('Document saved. Print could not start.'));
                 return;
             }
 
@@ -1248,7 +1251,7 @@ export function bindPos() {
                 win.print();
             } catch (error) {
                 console.error('pos: print failed', error);
-                window.AnnigemsAlert?.notifyError('Document saved. Print could not start.');
+                window.AnnigemsAlert?.notifyError(t('Document saved. Print could not start.'));
             }
         };
 
@@ -1312,13 +1315,13 @@ export function bindPos() {
     async function generateQuotation(button) {
         if (!validateTicket()) return;
         if (!state.lines.length) {
-            window.AnnigemsAlert?.notifyError('Add at least one item to the quotation.');
+            window.AnnigemsAlert?.notifyError(t('Add at least one item to the quotation.'));
             return;
         }
 
         setDocumentKind('quotation');
 
-        const loading = window.AnnigemsButton?.startButtonLoading(button, 'Saving…');
+        const loading = window.AnnigemsButton?.startButtonLoading(button, t('Saving…'));
         const { ok, json } = await fetchJson(routes.store, {
             method: 'POST',
             body: JSON.stringify(buildFormPayload()),
@@ -1326,12 +1329,12 @@ export function bindPos() {
         loading?.restore();
 
         if (ok) {
-            finishAndPrint(json.data, json.message || 'Quotation saved.');
+            finishAndPrint(json.data, json.message || t('Quotation saved.'));
             refreshDocumentNumbers();
         } else if (json.errors && Object.keys(json.errors).length) {
             showErrors(json.errors, json.message);
         } else {
-            window.AnnigemsAlert?.notifyError(json.message || 'The quotation could not be saved.');
+            window.AnnigemsAlert?.notifyError(json.message || t('The quotation could not be saved.'));
         }
     }
 
@@ -1345,13 +1348,13 @@ export function bindPos() {
         if (!validateTicket()) return;
         // An edited performa may keep only its locked (paid or returned) lines.
         if (!state.lines.length && !(editing && editing.locked.length)) {
-            window.AnnigemsAlert?.notifyError('Add at least one item to the performa.');
+            window.AnnigemsAlert?.notifyError(t('Add at least one item to the performa.'));
             return;
         }
 
         setDocumentKind('performa');
 
-        const loading = window.AnnigemsButton?.startButtonLoading(button, 'Saving…');
+        const loading = window.AnnigemsButton?.startButtonLoading(button, t('Saving…'));
         const { ok, json } = await fetchJson(editing ? routes.performaUpdate : routes.performa, {
             method: editing ? 'PUT' : 'POST',
             body: JSON.stringify({
@@ -1367,17 +1370,17 @@ export function bindPos() {
 
         if (ok && editing) {
             // Back to the performa's page, where it can be printed.
-            window.AnnigemsAlert?.notifySuccess(json.message || 'Performa updated.');
+            window.AnnigemsAlert?.notifySuccess(json.message || t('Performa updated.'));
             state.lines = [];
             window.location.href = json.data?.show_url || json.data?.print_url;
         } else if (ok) {
-            finishAndPrint(json.data, json.message || 'Performa issued.');
+            finishAndPrint(json.data, json.message || t('Performa issued.'));
             refreshDocumentNumbers();
             loadCreditors();
         } else if (json.errors && Object.keys(json.errors).length) {
             showErrors(json.errors, json.message);
         } else {
-            window.AnnigemsAlert?.notifyError(json.message || 'The performa could not be saved.');
+            window.AnnigemsAlert?.notifyError(json.message || t('The performa could not be saved.'));
         }
     }
 
@@ -1389,7 +1392,7 @@ export function bindPos() {
     async function generateDeliveryNote(button) {
         if (!validateTicket()) return;
         if (!state.lines.length) {
-            window.AnnigemsAlert?.notifyError('Add at least one item to the delivery note.');
+            window.AnnigemsAlert?.notifyError(t('Add at least one item to the delivery note.'));
             return;
         }
 
@@ -1414,7 +1417,7 @@ export function bindPos() {
     async function postDeliveryNote(button, payment, afterOk) {
         setDocumentKind('delivery_note');
 
-        const loading = window.AnnigemsButton?.startButtonLoading(button, 'Saving…');
+        const loading = window.AnnigemsButton?.startButtonLoading(button, t('Saving…'));
         const { ok, json } = await fetchJson(routes.deliveryNote, {
             method: 'POST',
             body: JSON.stringify({ ...buildFormPayload(), apply_tax: false, ...payment }),
@@ -1423,12 +1426,12 @@ export function bindPos() {
 
         if (ok) {
             afterOk?.();
-            finishAndPrint(json.data, json.message || 'Delivery note saved.');
+            finishAndPrint(json.data, json.message || t('Delivery note saved.'));
             refreshDocumentNumbers();
         } else if (json.errors && Object.keys(json.errors).length) {
             showErrors(json.errors, json.message);
         } else {
-            window.AnnigemsAlert?.notifyError(json.message || 'The delivery note could not be saved.');
+            window.AnnigemsAlert?.notifyError(json.message || t('The delivery note could not be saved.'));
         }
     }
 
@@ -1444,7 +1447,7 @@ export function bindPos() {
         }
         if (!state.lines.length) {
             window.AnnigemsModal?.closeModal('pos-invoice-modal');
-            window.AnnigemsAlert?.notifyError('Add at least one item to the ' + (payTarget === 'delivery_note' ? 'delivery note.' : 'invoice.'));
+            window.AnnigemsAlert?.notifyError(payTarget === 'delivery_note' ? t('Add at least one item to the delivery note.') : t('Add at least one item to the invoice.'));
             return;
         }
 
@@ -1485,15 +1488,15 @@ export function bindPos() {
         payTarget = target;
         const note = target === 'delivery_note';
         const title = document.getElementById('pos-invoice-modal-title');
-        if (title) title.textContent = note ? 'Take payment for the delivery note' : 'Take payment';
+        if (title) title.textContent = note ? t('Take payment for the delivery note') : t('Take payment');
         const help = document.querySelector('[data-pay-help]');
         if (help) {
             help.textContent = note
-                ? 'Confirming creates the delivery note, takes the stock out and records the payment.'
-                : 'Confirming creates the invoice, marks stock sold and records the payment.';
+                ? t('Confirming creates the delivery note, takes the stock out and records the payment.')
+                : t('Confirming creates the invoice, marks stock sold and records the payment.');
         }
         const confirm = document.querySelector('[data-pay-confirm]');
-        if (confirm) confirm.textContent = note ? 'Confirm & create delivery note' : 'Confirm & create invoice';
+        if (confirm) confirm.textContent = note ? t('Confirm & create delivery note') : t('Confirm & create invoice');
         window.AnnigemsModal?.openModal('pos-invoice-modal');
     }
 
@@ -1507,7 +1510,7 @@ export function bindPos() {
     async function postInvoice(button, payment, afterOk) {
         setDocumentKind('invoice');
 
-        const loading = window.AnnigemsButton?.startButtonLoading(button, 'Saving…');
+        const loading = window.AnnigemsButton?.startButtonLoading(button, t('Saving…'));
         const payload = { ...buildFormPayload(), ...payment };
         const { ok, json } = await fetchJson(routes.invoice, {
             method: 'POST',
@@ -1517,12 +1520,12 @@ export function bindPos() {
 
         if (ok) {
             afterOk?.();
-            finishAndPrint(json.data, json.message || 'Invoice created.');
+            finishAndPrint(json.data, json.message || t('Invoice created.'));
             refreshDocumentNumbers();
         } else if (json.errors && Object.keys(json.errors).length) {
             showErrors(json.errors, json.message);
         } else {
-            window.AnnigemsAlert?.notifyError(json.message || 'The invoice could not be created.');
+            window.AnnigemsAlert?.notifyError(json.message || t('The invoice could not be created.'));
         }
     }
 
@@ -1675,11 +1678,11 @@ export function bindPos() {
     async function saveEditedDocument(button) {
         if (!validateTicket()) return;
         if (!state.lines.length) {
-            window.AnnigemsAlert?.notifyError('Add at least one item.');
+            window.AnnigemsAlert?.notifyError(t('Add at least one item.'));
             return;
         }
 
-        const loading = window.AnnigemsButton?.startButtonLoading(button, 'Saving…');
+        const loading = window.AnnigemsButton?.startButtonLoading(button, t('Saving…'));
         const { ok, json } = await fetchJson(editingDoc.update_url, {
             method: 'PUT',
             body: JSON.stringify({
@@ -1696,7 +1699,7 @@ export function bindPos() {
         } else if (json.errors && Object.keys(json.errors).length) {
             showErrors(json.errors, json.message);
         } else {
-            window.AnnigemsAlert?.notifyError(json.message || 'It could not be saved.');
+            window.AnnigemsAlert?.notifyError(json.message || t('It could not be saved.'));
         }
     }
 
@@ -1734,12 +1737,12 @@ export function bindPos() {
         });
         root.querySelector('[data-pay-state-group]')?.classList.add('is-hidden');
         root.querySelectorAll('[data-generate-label]').forEach((label) => {
-            label.textContent = 'Save Changes';
+            label.textContent = t('Save Changes');
         });
 
         const banner = root.querySelector('[data-edit-banner]');
         if (banner) {
-            banner.innerHTML = `<strong>Editing ${escapeHtml(editingDoc.number)}.</strong> Changing a line puts its stock back and takes it out again. Once a payment is recorded it can no longer be edited.`;
+            banner.innerHTML = `<strong>${t('Editing :number.', { number: escapeHtml(editingDoc.number) })}</strong> Changing a line puts its stock back and takes it out again. Once a payment is recorded it can no longer be edited.`;
             banner.classList.remove('is-hidden');
         }
         render();
@@ -1749,7 +1752,7 @@ export function bindPos() {
         event.preventDefault();
         if (!validateTicket()) return;
         if (!state.lines.length) {
-            window.AnnigemsAlert?.notifyError('Add at least one item to the invoice.');
+            window.AnnigemsAlert?.notifyError(t('Add at least one item to the invoice.'));
             return;
         }
         setDocumentKind('invoice');
@@ -1889,7 +1892,7 @@ export function bindPos() {
         const room = Math.round((lineOnHand(line) - ticketStoneGrams(line.stone_id, line)) * 1000) / 1000;
         if (room >= 0 && grams > room) {
             grams = Math.max(0, room);
-            showScanError(`${line.item_code_snapshot} has only ${formatGrams(room)} g in stock.`);
+            showScanError(t(':code has only :room g in stock.', { code: line.item_code_snapshot, room: formatGrams(room) }));
         }
 
         return grams > 0 ? String(grams) : '';
@@ -1904,7 +1907,7 @@ export function bindPos() {
         const missing = state.lines.findIndex((line) => line.weighed && !(parseFloat(line.weight_grams) > 0));
         if (missing < 0) return true;
 
-        window.AnnigemsAlert?.notifyError(`Enter how many grams of ${state.lines[missing].item_code_snapshot}.`);
+        window.AnnigemsAlert?.notifyError(t('Enter how many grams of :code.', { code: state.lines[missing].item_code_snapshot }));
         pendingGramsFocus = missing;
         render();
 
@@ -1955,7 +1958,7 @@ export function bindPos() {
         let qty = Math.max(1, parseInt(value, 10) || 1);
         if (max > 0 && qty > max) {
             qty = max;
-            showScanError(`${line.item_code_snapshot} has only ${max} in stock.`);
+            showScanError(t(':code has only :max in stock.', { code: line.item_code_snapshot, max: max }));
         }
 
         return qty;
@@ -2097,7 +2100,7 @@ export function bindPos() {
             code,
             title: name,
             meta: row.meta || String(row.label || ''),
-            badge: isJewellery ? 'In stock' : (line.weighed ? `${formatGrams(remaining)} g in stock` : `${remaining} in stock`),
+            badge: isJewellery ? t('In stock') : (line.weighed ? t(':remaining g in stock', { remaining: formatGrams(remaining) }) : t(':remaining in stock', { remaining: remaining })),
             badgeStrong: true,
         };
     }
@@ -2114,7 +2117,7 @@ export function bindPos() {
                 hideSuggestions();
                 return;
             }
-            els.scanSuggest.innerHTML = '<li class="pos-suggest__empty">No in-stock item matches. Reserved, sold and sold-out items are hidden.</li>';
+            els.scanSuggest.innerHTML = '<li class="pos-suggest__empty">' + t('No in-stock item matches. Reserved, sold and sold-out items are hidden.') + '</li>';
             togglePanel(els.scanSuggest, els.scanInput, true);
             positionPanel(els.scanWrap, els.scanSuggest);
             return;
@@ -2482,15 +2485,15 @@ export function bindPos() {
             option.classList.toggle('is-hidden', option.dataset.kind !== 'performa');
         });
         const label = root.querySelector('[data-generate-performa-label]');
-        if (label) label.textContent = 'Save Performa Changes';
+        if (label) label.textContent = t('Save Performa Changes');
 
         const banner = root.querySelector('[data-edit-banner]');
         if (banner) {
             const locked = (editing.locked || [])
                 .map((row) => `<li>${escapeHtml(row.code)} — ${escapeHtml(row.name)} (${escapeHtml(row.summary)})</li>`)
                 .join('');
-            banner.innerHTML = `<strong>Editing ${escapeHtml(editing.number)}.</strong> Changing a line puts its stock back and takes it out again.`
-                + (locked ? `<br>These lines are already paid or returned and stay as they are:<ul class="pos-edit-banner__locked">${locked}</ul>` : '');
+            banner.innerHTML = `<strong>${t('Editing :number.', { number: escapeHtml(editing.number) })}</strong> Changing a line puts its stock back and takes it out again.`
+                + (locked ? `<br>${t('These lines are already paid or returned and stay as they are:')}<ul class="pos-edit-banner__locked">${locked}</ul>` : '');
             banner.classList.remove('is-hidden');
         }
         render();

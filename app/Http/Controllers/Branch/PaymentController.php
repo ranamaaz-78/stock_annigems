@@ -26,7 +26,7 @@ class PaymentController extends Controller
     {
         $this->payments->record($invoice, $request->validated('payment_method'), $request->validated('payment_reference'), $request->user());
 
-        return redirect()->route('branch.invoices.show', $invoice)->with('success', 'Payment recorded.');
+        return redirect()->route('branch.invoices.show', $invoice)->with('success', __('Payment recorded.'));
     }
 
     /**
@@ -36,6 +36,6 @@ class PaymentController extends Controller
     {
         $this->payments->record($deliveryNote, $request->validated('payment_method'), $request->validated('payment_reference'), $request->user());
 
-        return redirect()->route('branch.delivery-notes.show', $deliveryNote)->with('success', 'Payment recorded.');
+        return redirect()->route('branch.delivery-notes.show', $deliveryNote)->with('success', __('Payment recorded.'));
     }
 }

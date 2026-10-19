@@ -18,8 +18,8 @@ enum QuotationPrintFormat: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::A4 => 'A4 sheet',
-        };
+        });
     }
 }

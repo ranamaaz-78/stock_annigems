@@ -40,7 +40,7 @@ class PasswordResetController extends Controller
         // Always show a neutral success message to avoid account enumeration.
         return back()->with(
             'success',
-            'If that email is registered, a password reset link has been sent.'
+            __('If that email is registered, a password reset link has been sent.')
         )->with('status', $status);
     }
 
@@ -63,7 +63,7 @@ class PasswordResetController extends Controller
         $status = $this->passwordService->resetPassword($request->validated());
 
         if ($status === Password::PASSWORD_RESET) {
-            return redirect()->route('login')->with('success', 'Password reset successfully. You can log in now.');
+            return redirect()->route('login')->with('success', __('Password reset successfully. You can log in now.'));
         }
 
         return back()->withErrors(['email' => __($status)]);

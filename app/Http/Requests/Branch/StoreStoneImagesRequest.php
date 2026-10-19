@@ -43,11 +43,11 @@ class StoreStoneImagesRequest extends FormRequest
         $maxKb = (int) config('annigems.stones.image_max_kilobytes', 5120);
 
         return [
-            'files.required' => 'Choose at least one image.',
-            'files.max' => 'Upload at most 40 images at a time.',
-            'files.*.required' => 'Choose an image file.',
-            'files.*.file' => 'Each upload must be a file.',
-            'files.*.max' => 'Each image must be at most '.$maxKb.' KB.',
+            'files.required' => __('Choose at least one image.'),
+            'files.max' => __('Upload at most 40 images at a time.'),
+            'files.*.required' => __('Choose an image file.'),
+            'files.*.file' => __('Each upload must be a file.'),
+            'files.*.max' => __('Each image must be at most :maxKb KB.', ['maxKb' => $maxKb]),
         ];
     }
 }

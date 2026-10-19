@@ -50,14 +50,14 @@ class StoreStoneIntakeRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'rows.required' => 'Scan or add at least one stone before saving.',
-            'rows.min' => 'Scan or add at least one stone before saving.',
-            'intake_date.before_or_equal' => 'Intake date cannot be in the future.',
-            'rows.*.quantity.max' => 'Quantity is unusually high. Check for a stuck scanner or typing error.',
-            'rows.*.quantity.required_without' => 'Enter a quantity for every stone.',
-            'rows.*.weight_grams.required_without' => 'Enter the grams for every per-gram stone.',
-            'rows.*.weight_grams.gt' => 'Grams must be greater than zero.',
-            'rows.*.weight_grams.decimal' => 'Grams allow at most three decimal places.',
+            'rows.required' => __('Scan or add at least one stone before saving.'),
+            'rows.min' => __('Scan or add at least one stone before saving.'),
+            'intake_date.before_or_equal' => __('Intake date cannot be in the future.'),
+            'rows.*.quantity.max' => __('Quantity is unusually high. Check for a stuck scanner or typing error.'),
+            'rows.*.quantity.required_without' => __('Enter a quantity for every stone.'),
+            'rows.*.weight_grams.required_without' => __('Enter the grams for every per-gram stone.'),
+            'rows.*.weight_grams.gt' => __('Grams must be greater than zero.'),
+            'rows.*.weight_grams.decimal' => __('Grams allow at most three decimal places.'),
         ];
     }
 }

@@ -64,10 +64,10 @@ class StoneImportRunRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'total_rows.required' => 'There is nothing to import.',
-            'total_rows.max' => 'Too many rows for one import. Split the sheet and try again.',
-            'rows.required' => 'There is nothing to import.',
-            'rows.max' => 'That batch is too large.',
+            'total_rows.required' => __('There is nothing to import.'),
+            'total_rows.max' => __('Too many rows for one import. Split the sheet and try again.'),
+            'rows.required' => __('There is nothing to import.'),
+            'rows.max' => __('That batch is too large.'),
         ];
     }
 }

@@ -35,59 +35,59 @@ class ReportCatalog
     {
         return [
             'sales' => [
-                'label' => 'Sales',
+                'label' => __('Sales'),
                 'icon' => 'payments',
                 'reports' => [
                     'sales-summary' => [
-                        'label' => 'Sales Summary',
+                        'label' => __('Sales Summary'),
                         'summary' => 'Invoice count, gross sales, discount, tax and net revenue for the period.',
                         'filters' => ['grouping', 'payment_method', 'staff'],
                         'chart' => true,
                     ],
                     'sales-by-payment-method' => [
-                        'label' => 'By Payment Method',
+                        'label' => __('By Payment Method'),
                         'summary' => 'How customers paid, with each method’s share of revenue.',
                         'filters' => [],
                         'chart' => true,
                     ],
                     'sales-by-category' => [
-                        'label' => 'By Category',
+                        'label' => __('By Category'),
                         'summary' => 'Which jewellery categories sell, by revenue and piece count.',
                         'filters' => ['category'],
                         'chart' => true,
                     ],
                     'sales-by-staff' => [
-                        'label' => 'By Staff',
+                        'label' => __('By Staff'),
                         'summary' => 'Invoice count and revenue per seller, with the role held at the time.',
                         'filters' => [],
                         'chart' => true,
                     ],
                     'gold-weight-sold' => [
-                        'label' => 'Gold Weight Sold',
+                        'label' => __('Gold Weight Sold'),
                         'summary' => 'Net grams of metal sold, broken down by purity.',
                         'filters' => ['purity'],
                         'chart' => true,
                     ],
                     'discount-report' => [
-                        'label' => 'Discounts',
+                        'label' => __('Discounts'),
                         'summary' => 'Discount given per invoice and per staff member, as a share of gross.',
                         'filters' => ['staff'],
                         'chart' => false,
                     ],
                     'tax-collected' => [
-                        'label' => 'Tax Collected',
+                        'label' => __('Tax Collected'),
                         'summary' => 'IVA and recargo collected per period and per rate, for filing.',
                         'filters' => ['grouping'],
                         'chart' => true,
                     ],
                     'voided-invoices' => [
-                        'label' => 'Voided Invoices',
+                        'label' => __('Voided Invoices'),
                         'summary' => 'Reversed sales with reason and actor. Excluded from every revenue figure.',
                         'filters' => [],
                         'chart' => false,
                     ],
                     'loose-stone-sales' => [
-                        'label' => 'Loose Stone Sales',
+                        'label' => __('Loose Stone Sales'),
                         'summary' => 'Stones sold loose rather than set into a piece, in pieces or grams, with revenue.',
                         'filters' => [],
                         'chart' => false,
@@ -95,29 +95,29 @@ class ReportCatalog
                 ],
             ],
             'quotations' => [
-                'label' => 'Quotations',
+                'label' => __('Quotations'),
                 'icon' => 'request_quote',
                 'reports' => [
                     'quotation-funnel' => [
-                        'label' => 'Funnel',
+                        'label' => __('Funnel'),
                         'summary' => 'Draft, converted and cancelled counts and values, with the conversion rate.',
                         'filters' => [],
                         'chart' => true,
                     ],
                     'pending-quotations' => [
-                        'label' => 'Pending',
+                        'label' => __('Pending'),
                         'summary' => 'Drafts still open, with age in days — old drafts carry stale gold rates.',
                         'filters' => [],
                         'chart' => false,
                     ],
                     'time-to-convert' => [
-                        'label' => 'Time to Convert',
+                        'label' => __('Time to Convert'),
                         'summary' => 'How long customers take to decide, from quotation to invoice.',
                         'filters' => [],
                         'chart' => false,
                     ],
                     'cancelled-quotations' => [
-                        'label' => 'Cancelled',
+                        'label' => __('Cancelled'),
                         'summary' => 'Cancelled quotations with value and who cancelled them.',
                         'filters' => [],
                         'chart' => false,
@@ -125,35 +125,35 @@ class ReportCatalog
                 ],
             ],
             'inventory' => [
-                'label' => 'Inventory',
+                'label' => __('Inventory'),
                 'icon' => 'inventory_2',
                 'reports' => [
                     'stock-summary' => [
-                        'label' => 'Stock Summary',
+                        'label' => __('Stock Summary'),
                         'summary' => 'Piece count and net weight by lifecycle status.',
                         'filters' => [],
                         'chart' => true,
                     ],
                     'gold-weight-in-stock' => [
-                        'label' => 'Gold Weight in Stock',
+                        'label' => __('Gold Weight in Stock'),
                         'summary' => 'Gross and net grams held per purity, for available pieces only.',
                         'filters' => [],
                         'chart' => true,
                     ],
                     'category-stock' => [
-                        'label' => 'Category Stock',
+                        'label' => __('Category Stock'),
                         'summary' => 'Piece count and net weight per category and sub-category.',
                         'filters' => ['category'],
                         'chart' => false,
                     ],
                     'aging-stock' => [
-                        'label' => 'Aging Stock',
+                        'label' => __('Aging Stock'),
                         'summary' => 'How long available pieces have been held, in configurable buckets.',
                         'filters' => [],
                         'chart' => true,
                     ],
                     'no-movement-items' => [
-                        'label' => 'No Movement',
+                        'label' => __('No Movement'),
                         'summary' => 'Pieces untouched since creation, oldest first.',
                         'filters' => [],
                         'chart' => false,
@@ -161,41 +161,41 @@ class ReportCatalog
                 ],
             ],
             'stones' => [
-                'label' => 'Stones',
+                'label' => __('Stones'),
                 'icon' => 'diamond',
                 'reports' => [
                     'stone-stock-summary' => [
-                        'label' => 'Stone Stock',
+                        'label' => __('Stone Stock'),
                         'summary' => 'Pieces, grams, carat and worth of every registered stone lot.',
                         'filters' => [],
                         'chart' => true,
                     ],
                     'stone-valuation' => [
-                        'label' => 'Valuation',
+                        'label' => __('Valuation'),
                         'summary' => 'What the stone in hand is worth at each lot\'s own rate, by lot, pricing mode and shape.',
                         'filters' => [],
                         'chart' => true,
                     ],
                     'stone-low-stock' => [
-                        'label' => 'Zero & Low Stock',
+                        'label' => __('Zero & Low Stock'),
                         'summary' => 'Lots out of stock or below the reorder threshold, judged in pieces or grams.',
                         'filters' => [],
                         'chart' => false,
                     ],
                     'stone-intake-history' => [
-                        'label' => 'Intake History',
+                        'label' => __('Intake History'),
                         'summary' => 'Every intake batch with pieces, grams, carat and who performed it.',
                         'filters' => [],
                         'chart' => false,
                     ],
                     'stone-consumption' => [
-                        'label' => 'Consumption',
+                        'label' => __('Consumption'),
                         'summary' => 'Which stones actually move: set into pieces, sold, delivered, on credit or written off, in pieces and grams.',
                         'filters' => ['stone'],
                         'chart' => false,
                     ],
                     'stone-movement-ledger' => [
-                        'label' => 'Movement Ledger',
+                        'label' => __('Movement Ledger'),
                         'summary' => 'Full movement trail with pieces or grams before and after each change.',
                         'filters' => ['stone', 'movement_type', 'staff'],
                         'chart' => false,
@@ -203,17 +203,17 @@ class ReportCatalog
                 ],
             ],
             'credit' => [
-                'label' => 'Credit & Delivery',
+                'label' => __('Credit & Delivery'),
                 'icon' => 'local_shipping',
                 'reports' => [
                     'performa-outstanding' => [
-                        'label' => 'Performa Outstanding',
+                        'label' => __('Performa Outstanding'),
                         'summary' => 'What each creditor still holds on open and part-paid performas, at the price fixed on issue.',
                         'filters' => [],
                         'chart' => true,
                     ],
                     'delivery-notes' => [
-                        'label' => 'Delivery Notes',
+                        'label' => __('Delivery Notes'),
                         'summary' => 'Delivery notes by status, and the ones handed out but not yet invoiced.',
                         'filters' => [],
                         'chart' => false,
@@ -221,35 +221,35 @@ class ReportCatalog
                 ],
             ],
             'customers' => [
-                'label' => 'Customers',
+                'label' => __('Customers'),
                 'icon' => 'group',
                 'reports' => [
                     'top-customers' => [
-                        'label' => 'Top Customers',
+                        'label' => __('Top Customers'),
                         'summary' => 'Highest spending and most frequent customers, across all branches.',
                         'filters' => [],
                         'chart' => true,
                     ],
                     'cross-branch-customers' => [
-                        'label' => 'Cross-Branch',
+                        'label' => __('Cross-Branch'),
                         'summary' => 'Customers who have purchased at more than one branch.',
                         'filters' => [],
                         'chart' => false,
                     ],
                     'new-customers' => [
-                        'label' => 'New Customers',
+                        'label' => __('New Customers'),
                         'summary' => 'Customers first registered in the period, with their first purchase.',
                         'filters' => [],
                         'chart' => false,
                     ],
                     'repeat-customers' => [
-                        'label' => 'Repeat Customers',
+                        'label' => __('Repeat Customers'),
                         'summary' => 'Customers with more than one completed invoice, and the repeat rate.',
                         'filters' => [],
                         'chart' => false,
                     ],
                     'customer-purchase-history' => [
-                        'label' => 'Purchase History',
+                        'label' => __('Purchase History'),
                         'summary' => 'One customer’s purchases across every branch, branch named on each row.',
                         'filters' => ['customer'],
                         'chart' => false,
@@ -257,35 +257,35 @@ class ReportCatalog
                 ],
             ],
             'audit' => [
-                'label' => 'Audit',
+                'label' => __('Audit'),
                 'icon' => 'history',
                 'reports' => [
                     'item-movement-log' => [
-                        'label' => 'Item Movements',
+                        'label' => __('Item Movements'),
                         'summary' => 'Chain of custody for every jewellery piece on the branch.',
                         'filters' => ['item', 'movement_type', 'staff'],
                         'chart' => false,
                     ],
                     'stone-movement-log' => [
-                        'label' => 'Stone Movements',
+                        'label' => __('Stone Movements'),
                         'summary' => 'Stone quantity changes with before and after values.',
                         'filters' => ['stone', 'movement_type', 'staff'],
                         'chart' => false,
                     ],
                     'user-activity' => [
-                        'label' => 'User Activity',
+                        'label' => __('User Activity'),
                         'summary' => 'Who created, edited or deleted what, with the role held at the time.',
                         'filters' => ['staff'],
                         'chart' => false,
                     ],
                     'gold-rate-history' => [
-                        'label' => 'Gold Rate History',
+                        'label' => __('Gold Rate History'),
                         'summary' => 'Every rate change with purity, rate, effective date and who set it.',
                         'filters' => ['purity'],
                         'chart' => false,
                     ],
                     'document-audit' => [
-                        'label' => 'Invoice & Quotation Audit',
+                        'label' => __('Invoice & Quotation Audit'),
                         'summary' => 'Every creation, conversion, cancellation and void, with actor and role.',
                         'filters' => [],
                         'chart' => false,
@@ -372,17 +372,17 @@ class ReportCatalog
 
         // The two reports that only make sense above a single branch.
         $families['comparison'] = [
-            'label' => 'Cross-Branch',
+            'label' => __('Cross-Branch'),
             'icon' => 'compare_arrows',
             'reports' => [
                 'branch-comparison' => [
-                    'label' => 'Branch Comparison',
+                    'label' => __('Branch Comparison'),
                     'summary' => 'Every branch side by side on revenue, invoices, pieces sold and stock.',
                     'filters' => [],
                     'chart' => true,
                 ],
                 'stock-distribution' => [
-                    'label' => 'Stock Distribution',
+                    'label' => __('Stock Distribution'),
                     'summary' => 'How pieces, gold weight and stone quantity are spread across branches.',
                     'filters' => [],
                     'chart' => true,

@@ -1,13 +1,13 @@
 {{-- Edit jewellery piece. Stone stock uses allocation deltas only. --}}
 @extends('layouts.branch')
 
-@section('title', 'Edit '.$item->item_code)
-@section('page-title', 'Edit '.$item->item_code)
+@section('title', __('Edit').' '.$item->item_code)
+@section('page-title', __('Edit').' '.$item->item_code)
 
 @section('content')
-<x-page-header :title="'Edit '.$item->name" :subtitle="$item->item_code">
+<x-page-header :title="__('Edit').' '.$item->name" :subtitle="$item->item_code">
     <x-slot:actions>
-        <x-btn href="{{ route('branch.jewellery-items.show', $item) }}" variant="secondary">Back</x-btn>
+        <x-btn href="{{ route('branch.jewellery-items.show', $item) }}" variant="secondary">{{ __('Back') }}</x-btn>
     </x-slot:actions>
 </x-page-header>
 

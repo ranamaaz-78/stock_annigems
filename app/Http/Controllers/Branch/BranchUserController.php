@@ -63,7 +63,7 @@ class BranchUserController extends Controller
 
         return redirect()
             ->route('branch.users.index')
-            ->with('success', 'User created successfully.')
+            ->with('success', __('User created successfully.'))
             ->with('generated_credentials', [
                 'name' => $result['user']->name,
                 'email' => $result['user']->email,
@@ -111,7 +111,7 @@ class BranchUserController extends Controller
 
         return redirect()
             ->route('branch.users.show', $user)
-            ->with('success', 'User updated successfully.');
+            ->with('success', __('User updated successfully.'));
     }
 
     /**
@@ -125,7 +125,7 @@ class BranchUserController extends Controller
 
         return redirect()
             ->route('branch.users.index')
-            ->with('success', 'User deactivated successfully.');
+            ->with('success', __('User deactivated successfully.'));
     }
 
     /**
@@ -139,7 +139,7 @@ class BranchUserController extends Controller
 
         return redirect()
             ->route('branch.users.show', $user)
-            ->with('success', 'User activated successfully.');
+            ->with('success', __('User activated successfully.'));
     }
 
     /**
@@ -153,7 +153,7 @@ class BranchUserController extends Controller
 
         return redirect()
             ->route('branch.users.show', $user)
-            ->with('success', 'Password reset successfully.')
+            ->with('success', __('Password reset successfully.'))
             ->with('generated_credentials', [
                 'name' => $result['user']->name,
                 'email' => $result['user']->email,

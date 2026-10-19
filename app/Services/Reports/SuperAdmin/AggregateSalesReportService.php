@@ -45,23 +45,23 @@ class AggregateSalesReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'sales-summary',
-            title: 'Sales Summary',
+            title: __('Sales Summary'),
             summary: [
-                $this->card('net_revenue', 'Net Revenue', ReportFormatter::money($totals['net_revenue']), 'payments',
+                $this->card('net_revenue', __('Net Revenue'), ReportFormatter::money($totals['net_revenue']), 'payments',
                     trend: ReportFormatter::trend($totals['net_revenue'], $previous['net_revenue'])),
-                $this->card('invoice_count', 'Invoices', ReportFormatter::count($totals['invoice_count']), 'receipt_long',
+                $this->card('invoice_count', __('Invoices'), ReportFormatter::count($totals['invoice_count']), 'receipt_long',
                     trend: ReportFormatter::trend($totals['invoice_count'], $previous['invoice_count'])),
-                $this->card('average_sale', 'Average Sale', ReportFormatter::money($totals['average_sale']), 'analytics'),
-                $this->card('gold_weight_sold', 'Gold Weight Sold', ReportFormatter::grams($this->sales->goldWeightSold($filter)), 'scale',
-                    hint: 'Net metal, revenue not profit'),
+                $this->card('average_sale', __('Average Sale'), ReportFormatter::money($totals['average_sale']), 'analytics'),
+                $this->card('gold_weight_sold', __('Gold Weight Sold'), ReportFormatter::grams($this->sales->goldWeightSold($filter)), 'scale',
+                    hint: __('Net metal, revenue not profit')),
             ],
             rows: $rows,
             columns: [
                 $this->branchColumn(),
-                ['key' => 'invoice_count', 'label' => 'Invoices', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'average_sale', 'label' => 'Average Sale', 'align' => 'right', 'format' => 'money'],
-                ['key' => 'gold_weight_sold', 'label' => 'Gold Sold', 'align' => 'right', 'format' => 'grams'],
-                ['key' => 'net_revenue', 'label' => 'Net Revenue', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+                ['key' => 'invoice_count', 'label' => __('Invoices'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'average_sale', 'label' => __('Average Sale'), 'align' => 'right', 'format' => 'money'],
+                ['key' => 'gold_weight_sold', 'label' => __('Gold Sold'), 'align' => 'right', 'format' => 'grams'],
+                ['key' => 'net_revenue', 'label' => __('Net Revenue'), 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
             ],
             totals: [
                 'branch' => 'All Branches',
@@ -79,7 +79,7 @@ class AggregateSalesReportService extends AggregateReportService
                 ])->all(),
                 'vertical'
             ),
-            meta: $this->meta(['table_title' => 'Revenue by branch', 'money' => true]),
+            meta: $this->meta(['table_title' => __('Revenue by branch'), 'money' => true]),
         );
     }
 
@@ -97,30 +97,30 @@ class AggregateSalesReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'sales-by-payment-method',
-            title: 'Sales by Payment Method',
+            title: __('Sales by Payment Method'),
             summary: [
-                $this->card('net_revenue', 'Net Revenue', ReportFormatter::money($rows->sum('net_revenue')), 'payments'),
-                $this->card('methods', 'Methods Used', ReportFormatter::count($rows->count()), 'account_balance_wallet'),
-                $this->card('top_method', 'Largest Method', (string) ($rows->first()['payment_method'] ?? '—'), 'star'),
+                $this->card('net_revenue', __('Net Revenue'), ReportFormatter::money($rows->sum('net_revenue')), 'payments'),
+                $this->card('methods', __('Methods Used'), ReportFormatter::count($rows->count()), 'account_balance_wallet'),
+                $this->card('top_method', __('Largest Method'), (string) ($rows->first()['payment_method'] ?? '—'), 'star'),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'payment_method', 'label' => 'Payment Method'],
-                ['key' => 'invoice_count', 'label' => 'Invoices', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'share', 'label' => 'Share', 'align' => 'right', 'format' => 'percent'],
-                ['key' => 'net_revenue', 'label' => 'Net Revenue', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+                ['key' => 'payment_method', 'label' => __('Payment Method')],
+                ['key' => 'invoice_count', 'label' => __('Invoices'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'share', 'label' => __('Share'), 'align' => 'right', 'format' => 'percent'],
+                ['key' => 'net_revenue', 'label' => __('Net Revenue'), 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
             ],
             totals: [
-                'payment_method' => 'Total',
+                'payment_method' => __('Total'),
                 'invoice_count' => $rows->sum('invoice_count'),
                 'net_revenue' => $rows->sum('net_revenue'),
             ],
-            chart: ReportResult::chart('Revenue by payment method', 'revenue', $rows->map(fn (array $row): array => [
+            chart: ReportResult::chart(__('Revenue by payment method'), 'revenue', $rows->map(fn (array $row): array => [
                 'label' => $row['payment_method'],
                 'value' => $row['net_revenue'],
                 'display' => ReportFormatter::moneyCompact($row['net_revenue']),
             ])->all()),
-            meta: $this->meta(['table_title' => 'Payment method breakdown', 'money' => true]),
+            meta: $this->meta(['table_title' => __('Payment method breakdown'), 'money' => true]),
         );
     }
 
@@ -133,29 +133,29 @@ class AggregateSalesReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'sales-by-category',
-            title: 'Sales by Category',
+            title: __('Sales by Category'),
             summary: [
-                $this->card('categories', 'Categories Sold', ReportFormatter::count($rows->count()), 'category'),
-                $this->card('pieces', 'Pieces Sold', ReportFormatter::count($rows->sum('pieces')), 'shopping_bag'),
-                $this->card('revenue', 'Revenue', ReportFormatter::money($rows->sum('revenue')), 'payments'),
+                $this->card('categories', __('Categories Sold'), ReportFormatter::count($rows->count()), 'category'),
+                $this->card('pieces', __('Pieces Sold'), ReportFormatter::count($rows->sum('pieces')), 'shopping_bag'),
+                $this->card('revenue', __('Revenue'), ReportFormatter::money($rows->sum('revenue')), 'payments'),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'category', 'label' => 'Category'],
-                ['key' => 'pieces', 'label' => 'Pieces', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'revenue', 'label' => 'Revenue', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+                ['key' => 'category', 'label' => __('Category')],
+                ['key' => 'pieces', 'label' => __('Pieces'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'revenue', 'label' => __('Revenue'), 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
             ],
             totals: [
-                'category' => 'Total',
+                'category' => __('Total'),
                 'pieces' => $rows->sum('pieces'),
                 'revenue' => $rows->sum('revenue'),
             ],
-            chart: ReportResult::chart('Revenue by category', 'revenue', $rows->take(10)->map(fn (array $row): array => [
+            chart: ReportResult::chart(__('Revenue by category'), 'revenue', $rows->take(10)->map(fn (array $row): array => [
                 'label' => $row['category'],
                 'value' => $row['revenue'],
                 'display' => ReportFormatter::moneyCompact($row['revenue']),
             ])->all()),
-            meta: $this->meta(['table_title' => 'Category breakdown', 'money' => true]),
+            meta: $this->meta(['table_title' => __('Category breakdown'), 'money' => true]),
         );
     }
 
@@ -177,25 +177,25 @@ class AggregateSalesReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'sales-by-staff',
-            title: 'Sales by Staff',
+            title: __('Sales by Staff'),
             summary: [
-                $this->card('sellers', 'Sellers Active', ReportFormatter::count($rows->count()), 'group'),
-                $this->card('invoices', 'Invoices', ReportFormatter::count($rows->sum('invoice_count')), 'receipt_long'),
-                $this->card('revenue', 'Net Revenue', ReportFormatter::money($rows->sum('net_revenue')), 'payments'),
+                $this->card('sellers', __('Sellers Active'), ReportFormatter::count($rows->count()), 'group'),
+                $this->card('invoices', __('Invoices'), ReportFormatter::count($rows->sum('invoice_count')), 'receipt_long'),
+                $this->card('revenue', __('Net Revenue'), ReportFormatter::money($rows->sum('net_revenue')), 'payments'),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'staff', 'label' => 'Staff Member'],
-                ['key' => 'invoice_count', 'label' => 'Invoices', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'average_sale', 'label' => 'Average Sale', 'align' => 'right', 'format' => 'money'],
-                ['key' => 'net_revenue', 'label' => 'Net Revenue', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+                ['key' => 'staff', 'label' => __('Staff Member')],
+                ['key' => 'invoice_count', 'label' => __('Invoices'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'average_sale', 'label' => __('Average Sale'), 'align' => 'right', 'format' => 'money'],
+                ['key' => 'net_revenue', 'label' => __('Net Revenue'), 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
             ],
             totals: [
-                'staff' => 'Total',
+                'staff' => __('Total'),
                 'invoice_count' => $rows->sum('invoice_count'),
                 'net_revenue' => $rows->sum('net_revenue'),
             ],
-            meta: $this->meta(['table_title' => 'Staff breakdown', 'money' => true]),
+            meta: $this->meta(['table_title' => __('Staff breakdown'), 'money' => true]),
         );
     }
 
@@ -208,33 +208,33 @@ class AggregateSalesReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'gold-weight-sold',
-            title: 'Gold Weight Sold',
+            title: __('Gold Weight Sold'),
             summary: [
-                $this->card('net_weight', 'Net Weight Sold', ReportFormatter::grams($rows->sum('net_weight')), 'scale'),
-                $this->card('pieces', 'Pieces Sold', ReportFormatter::count($rows->sum('pieces')), 'shopping_bag'),
-                $this->card('revenue', 'Revenue', ReportFormatter::money($rows->sum('revenue')), 'payments'),
+                $this->card('net_weight', __('Net Weight Sold'), ReportFormatter::grams($rows->sum('net_weight')), 'scale'),
+                $this->card('pieces', __('Pieces Sold'), ReportFormatter::count($rows->sum('pieces')), 'shopping_bag'),
+                $this->card('revenue', __('Revenue'), ReportFormatter::money($rows->sum('revenue')), 'payments'),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'purity', 'label' => 'Purity'],
-                ['key' => 'pieces', 'label' => 'Pieces', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'gross_weight', 'label' => 'Gross Weight', 'align' => 'right', 'format' => 'grams'],
-                ['key' => 'net_weight', 'label' => 'Net Weight', 'align' => 'right', 'format' => 'grams', 'emphasis' => 'strong'],
-                ['key' => 'revenue', 'label' => 'Revenue', 'align' => 'right', 'format' => 'money'],
+                ['key' => 'purity', 'label' => __('Purity')],
+                ['key' => 'pieces', 'label' => __('Pieces'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'gross_weight', 'label' => __('Gross Weight'), 'align' => 'right', 'format' => 'grams'],
+                ['key' => 'net_weight', 'label' => __('Net Weight'), 'align' => 'right', 'format' => 'grams', 'emphasis' => 'strong'],
+                ['key' => 'revenue', 'label' => __('Revenue'), 'align' => 'right', 'format' => 'money'],
             ],
             totals: [
-                'purity' => 'Total',
+                'purity' => __('Total'),
                 'pieces' => $rows->sum('pieces'),
                 'gross_weight' => $rows->sum('gross_weight'),
                 'net_weight' => $rows->sum('net_weight'),
                 'revenue' => $rows->sum('revenue'),
             ],
-            chart: ReportResult::chart('Net weight sold by purity', 'grams', $rows->map(fn (array $row): array => [
+            chart: ReportResult::chart(__('Net weight sold by purity'), 'grams', $rows->map(fn (array $row): array => [
                 'label' => $row['purity'],
                 'value' => $row['net_weight'],
                 'display' => ReportFormatter::grams($row['net_weight']),
             ])->all()),
-            meta: $this->meta(['table_title' => 'Weight sold by purity', 'money' => true]),
+            meta: $this->meta(['table_title' => __('Weight sold by purity'), 'money' => true]),
         );
     }
 
@@ -271,21 +271,21 @@ class AggregateSalesReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'discount-report',
-            title: 'Discount Report',
+            title: __('Discount Report'),
             summary: [
-                $this->card('discount_total', 'Total Discount', ReportFormatter::money($totals['discount_total']), 'percent'),
-                $this->card('gross_sales', 'Gross Sales', ReportFormatter::money($totals['gross_sales']), 'sell'),
-                $this->card('discount_share', 'Discount as % of Gross',
+                $this->card('discount_total', __('Total Discount'), ReportFormatter::money($totals['discount_total']), 'percent'),
+                $this->card('gross_sales', __('Gross Sales'), ReportFormatter::money($totals['gross_sales']), 'sell'),
+                $this->card('discount_share', __('Discount as % of Gross'),
                     ReportFormatter::percent($totals['gross_sales'] > 0 ? $totals['discount_total'] / $totals['gross_sales'] * 100 : 0),
                     'trending_down'),
             ],
             rows: $rows,
             columns: [
                 $this->branchColumn(),
-                ['key' => 'invoice_count', 'label' => 'Invoices', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'gross_sales', 'label' => 'Gross', 'align' => 'right', 'format' => 'money'],
-                ['key' => 'discount_percent', 'label' => 'Discount %', 'align' => 'right', 'format' => 'percent'],
-                ['key' => 'discount_total', 'label' => 'Discount', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+                ['key' => 'invoice_count', 'label' => __('Invoices'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'gross_sales', 'label' => __('Gross'), 'align' => 'right', 'format' => 'money'],
+                ['key' => 'discount_percent', 'label' => __('Discount %'), 'align' => 'right', 'format' => 'percent'],
+                ['key' => 'discount_total', 'label' => __('Discount'), 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
             ],
             totals: [
                 'branch' => 'All Branches',
@@ -294,21 +294,21 @@ class AggregateSalesReportService extends AggregateReportService
                 'discount_total' => $rows->sum('discount_total'),
             ],
             meta: $this->meta([
-                'table_title' => 'Discounting by branch',
+                'table_title' => __('Discounting by branch'),
                 'money' => true,
                 'extra_tables' => [
                     [
-                        'title' => 'Discounting by staff member',
+                        'title' => __('Discounting by staff member'),
                         'columns' => [
-                            ['key' => 'staff', 'label' => 'Staff Member'],
-                            ['key' => 'invoice_count', 'label' => 'Invoices', 'align' => 'right', 'format' => 'count'],
-                            ['key' => 'gross_total', 'label' => 'Gross', 'align' => 'right', 'format' => 'money'],
-                            ['key' => 'discount_percent', 'label' => 'Discount %', 'align' => 'right', 'format' => 'percent'],
-                            ['key' => 'discount_total', 'label' => 'Discount', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+                            ['key' => 'staff', 'label' => __('Staff Member')],
+                            ['key' => 'invoice_count', 'label' => __('Invoices'), 'align' => 'right', 'format' => 'count'],
+                            ['key' => 'gross_total', 'label' => __('Gross'), 'align' => 'right', 'format' => 'money'],
+                            ['key' => 'discount_percent', 'label' => __('Discount %'), 'align' => 'right', 'format' => 'percent'],
+                            ['key' => 'discount_total', 'label' => __('Discount'), 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
                         ],
                         'rows' => $byStaff,
                         'totals' => [
-                            'staff' => 'Total',
+                            'staff' => __('Total'),
                             'invoice_count' => $byStaff->sum('invoice_count'),
                             'gross_total' => $byStaff->sum('gross_total'),
                             'discount_total' => $byStaff->sum('discount_total'),
@@ -333,32 +333,32 @@ class AggregateSalesReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'tax-collected',
-            title: 'Tax Collected',
+            title: __('Tax Collected'),
             summary: [
-                $this->card('tax_total', 'Tax Collected', ReportFormatter::money($rows->sum('tax_total')), 'receipt'),
-                $this->card('taxable_base', 'Taxable Base', ReportFormatter::money($rows->sum('taxable_base')), 'sell',
-                    hint: 'Gross less discount'),
-                $this->card('invoices', 'Invoices', ReportFormatter::count($rows->sum('invoice_count')), 'receipt_long'),
+                $this->card('tax_total', __('Tax Collected'), ReportFormatter::money($rows->sum('tax_total')), 'receipt'),
+                $this->card('taxable_base', __('Taxable Base'), ReportFormatter::money($rows->sum('taxable_base')), 'sell',
+                    hint: __('Gross less discount')),
+                $this->card('invoices', __('Invoices'), ReportFormatter::count($rows->sum('invoice_count')), 'receipt_long'),
             ],
             rows: $rows,
             columns: [
                 ['key' => 'bucket', 'label' => $filter->grouping->label()],
-                ['key' => 'invoice_count', 'label' => 'Invoices', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'taxable_base', 'label' => 'Taxable Base', 'align' => 'right', 'format' => 'money'],
-                ['key' => 'tax_total', 'label' => 'Tax', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+                ['key' => 'invoice_count', 'label' => __('Invoices'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'taxable_base', 'label' => __('Taxable Base'), 'align' => 'right', 'format' => 'money'],
+                ['key' => 'tax_total', 'label' => __('Tax'), 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
             ],
             totals: [
-                'bucket' => 'Total',
+                'bucket' => __('Total'),
                 'invoice_count' => $rows->sum('invoice_count'),
                 'taxable_base' => $rows->sum('taxable_base'),
                 'tax_total' => $rows->sum('tax_total'),
             ],
-            chart: ReportResult::chart('Tax by '.strtolower($filter->grouping->label()), 'tax', $rows->map(fn (array $row): array => [
+            chart: ReportResult::chart(__('Tax by ').strtolower($filter->grouping->label()), 'tax', $rows->map(fn (array $row): array => [
                 'label' => $row['bucket'],
                 'value' => $row['tax_total'],
                 'display' => ReportFormatter::moneyCompact($row['tax_total']),
             ])->all(), 'vertical'),
-            meta: $this->meta(['table_title' => 'Tax by period', 'money' => true]),
+            meta: $this->meta(['table_title' => __('Tax by period'), 'money' => true]),
         );
     }
 
@@ -385,12 +385,12 @@ class AggregateSalesReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'voided-invoices',
-            title: 'Voided Invoices',
+            title: __('Voided Invoices'),
             summary: [
-                $this->card('void_count', 'Voided Invoices', ReportFormatter::count($rows->sum('void_count')), 'block'),
-                $this->card('void_value', 'Value Reversed', ReportFormatter::money($rows->sum('void_value')), 'money_off',
-                    hint: 'Excluded from all revenue figures'),
-                $this->card('void_rate', 'Void Rate',
+                $this->card('void_count', __('Voided Invoices'), ReportFormatter::count($rows->sum('void_count')), 'block'),
+                $this->card('void_value', __('Value Reversed'), ReportFormatter::money($rows->sum('void_value')), 'money_off',
+                    hint: __('Excluded from all revenue figures')),
+                $this->card('void_rate', __('Void Rate'),
                     ReportFormatter::percent(
                         ($rows->sum('void_count') + $rows->sum('completed_count')) > 0
                             ? $rows->sum('void_count') / ($rows->sum('void_count') + $rows->sum('completed_count')) * 100
@@ -400,10 +400,10 @@ class AggregateSalesReportService extends AggregateReportService
             rows: $rows,
             columns: [
                 $this->branchColumn(),
-                ['key' => 'completed_count', 'label' => 'Completed', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'void_count', 'label' => 'Voided', 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
-                ['key' => 'void_rate', 'label' => 'Void Rate', 'align' => 'right', 'format' => 'percent'],
-                ['key' => 'void_value', 'label' => 'Value Reversed', 'align' => 'right', 'format' => 'money'],
+                ['key' => 'completed_count', 'label' => __('Completed'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'void_count', 'label' => __('Voided'), 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
+                ['key' => 'void_rate', 'label' => __('Void Rate'), 'align' => 'right', 'format' => 'percent'],
+                ['key' => 'void_value', 'label' => __('Value Reversed'), 'align' => 'right', 'format' => 'money'],
             ],
             totals: [
                 'branch' => 'All Branches',
@@ -411,7 +411,7 @@ class AggregateSalesReportService extends AggregateReportService
                 'void_count' => $rows->sum('void_count'),
                 'void_value' => $rows->sum('void_value'),
             ],
-            meta: $this->meta(['table_title' => 'Voids by branch', 'money' => true]),
+            meta: $this->meta(['table_title' => __('Voids by branch'), 'money' => true]),
         );
     }
 

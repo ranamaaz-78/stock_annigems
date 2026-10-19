@@ -39,33 +39,33 @@ class AggregateAuditReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'user-activity',
-            title: 'User Activity',
+            title: __('User Activity'),
             summary: [
-                $this->card('actions', 'Actions Recorded', ReportFormatter::count($rows->sum('actions')), 'history'),
-                $this->card('users', 'Users Active', ReportFormatter::count($rows->count()), 'group'),
-                $this->card('destructive', 'Voids, Cancellations & Deactivations',
+                $this->card('actions', __('Actions Recorded'), ReportFormatter::count($rows->sum('actions')), 'history'),
+                $this->card('users', __('Users Active'), ReportFormatter::count($rows->count()), 'group'),
+                $this->card('destructive', __('Voids, Cancellations & Deactivations'),
                     ReportFormatter::count($rows->sum('deletes')), 'delete',
-                    hint: 'The actions worth reviewing'),
+                    hint: __('The actions worth reviewing')),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'actor', 'label' => 'User'],
-                ['key' => 'creates', 'label' => 'Created', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'updates', 'label' => 'Updated', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'deletes', 'label' => 'Removed', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'actions', 'label' => 'Total Actions', 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
-                ['key' => 'last_action_at', 'label' => 'Last Action', 'format' => 'datetime'],
+                ['key' => 'actor', 'label' => __('User')],
+                ['key' => 'creates', 'label' => __('Created'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'updates', 'label' => __('Updated'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'deletes', 'label' => __('Removed'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'actions', 'label' => __('Total Actions'), 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
+                ['key' => 'last_action_at', 'label' => __('Last Action'), 'format' => 'datetime'],
             ],
             totals: [
-                'actor' => 'Total',
+                'actor' => __('Total'),
                 'creates' => $rows->sum('creates'),
                 'updates' => $rows->sum('updates'),
                 'deletes' => $rows->sum('deletes'),
                 'actions' => $rows->sum('actions'),
             ],
             meta: $this->meta([
-                'table_title' => 'Activity by user',
-                'empty_title' => 'No recorded activity in this period',
+                'table_title' => __('Activity by user'),
+                'empty_title' => __('No recorded activity in this period'),
             ]),
         );
     }
@@ -88,28 +88,28 @@ class AggregateAuditReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'gold-rate-history',
-            title: 'Gold Rate History',
+            title: __('Gold Rate History'),
             summary: [
-                $this->card('changes', 'Rate Changes', ReportFormatter::count($rows->count()), 'trending_up'),
-                $this->card('purities', 'Purities Updated', ReportFormatter::count($rows->pluck('purity')->unique()->count()), 'diamond'),
-                $this->card('latest', 'Most Recent Rate',
+                $this->card('changes', __('Rate Changes'), ReportFormatter::count($rows->count()), 'trending_up'),
+                $this->card('purities', __('Purities Updated'), ReportFormatter::count($rows->pluck('purity')->unique()->count()), 'diamond'),
+                $this->card('latest', __('Most Recent Rate'),
                     $rows->isNotEmpty() ? ReportFormatter::money($rows->first()['rate_per_gram']) : '—', 'payments',
                     hint: $rows->isNotEmpty() ? $rows->first()['metal'].' '.$rows->first()['purity'] : null),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'effective_date', 'label' => 'Effective'],
-                ['key' => 'metal', 'label' => 'Metal'],
-                ['key' => 'purity', 'label' => 'Purity'],
-                ['key' => 'change', 'label' => 'Change', 'align' => 'right', 'format' => 'money'],
-                ['key' => 'rate_per_gram', 'label' => 'Rate / gram', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
-                ['key' => 'set_by', 'label' => 'Set By'],
+                ['key' => 'effective_date', 'label' => __('Effective')],
+                ['key' => 'metal', 'label' => __('Metal')],
+                ['key' => 'purity', 'label' => __('Purity')],
+                ['key' => 'change', 'label' => __('Change'), 'align' => 'right', 'format' => 'money'],
+                ['key' => 'rate_per_gram', 'label' => __('Rate / gram'), 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+                ['key' => 'set_by', 'label' => __('Set By')],
             ],
             meta: $this->meta([
-                'table_title' => 'Rate changes in this period',
+                'table_title' => __('Rate changes in this period'),
                 'money' => true,
                 'global_data' => true,
-                'empty_title' => 'No rate changes in this period',
+                'empty_title' => __('No rate changes in this period'),
             ]),
         );
     }

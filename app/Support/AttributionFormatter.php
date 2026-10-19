@@ -48,7 +48,7 @@ class AttributionFormatter
         }
 
         if ($roleSnapshot === self::SYSTEM_ROLE) {
-            return self::SYSTEM_NAME;
+            return __(self::SYSTEM_NAME);
         }
 
         return UserRole::tryFrom($roleSnapshot)?->label()
@@ -106,14 +106,14 @@ class AttributionFormatter
     public static function actorName(?User $user, ?string $roleSnapshot): string
     {
         if ($user !== null) {
-            return $user->name !== '' ? $user->name : self::FALLBACK_NAME;
+            return $user->name !== '' ? $user->name : __(self::FALLBACK_NAME);
         }
 
         if ($roleSnapshot === self::SYSTEM_ROLE || $roleSnapshot === null || $roleSnapshot === '') {
-            return self::SYSTEM_NAME;
+            return __(self::SYSTEM_NAME);
         }
 
-        return self::FALLBACK_NAME;
+        return __(self::FALLBACK_NAME);
     }
 
     /**
@@ -129,7 +129,7 @@ class AttributionFormatter
         $inactive = $user->trashed()
             || $user->status === UserStatus::INACTIVE;
 
-        return $inactive ? ' (inactive)' : '';
+        return $inactive ? ' ('.__('inactive').')' : '';
     }
 
     /**

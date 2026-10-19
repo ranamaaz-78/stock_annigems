@@ -6,6 +6,8 @@
  * the server will store, but the server always recalculates before saving.
  */
 
+import { t } from './i18n';
+
 /**
  * Read a field as a number. Blank or non-numeric returns null so the
  * preview stays quiet instead of showing NaN.
@@ -71,7 +73,7 @@ function calculate(root) {
         const total = round3(piecePrice * pieces);
 
         return {
-            formula: `${tidy(carat)} ct x ${tidy(rate)} = ${tidy(piecePrice)} per piece, x ${pieces} pcs = ${tidy(total)}`,
+            formula: t(':carat ct x :rate = :piecePrice per piece, x :pieces pcs = :total', { carat: tidy(carat), rate: tidy(rate), piecePrice: tidy(piecePrice), pieces: pieces, total: tidy(total) }),
             total,
         };
     }
@@ -113,7 +115,7 @@ function renderCalculation(root) {
     }
 
     const { formula, total } = calculate(root);
-    formulaEl.textContent = formula || 'Fill in the priced fields to see the calculation.';
+    formulaEl.textContent = formula || t('Fill in the priced fields to see the calculation.');
     totalEl.textContent = total === null ? '—' : tidy(total);
 }
 
@@ -191,10 +193,10 @@ function bindDeleteConfirms() {
             const remaining = form.dataset.remaining;
             const left = remaining && remaining !== '0 pcs' && remaining !== '0 g';
             const ok = await window.AnnigemsAlert?.confirmAction({
-                title: 'Delete this stone?',
+                title: t('Delete this stone?'),
                 text: left
-                    ? `${remaining} still in stock will be written off. Invoices and history keep their record.`
-                    : 'It has no stock left. Invoices and history keep their record.',
+                    ? t(':remaining still in stock will be written off. Invoices and history keep their record.', { remaining: remaining })
+                    : t('It has no stock left. Invoices and history keep their record.'),
                 confirmButtonText: 'Delete',
             });
             if (ok) {
@@ -213,11 +215,13 @@ function bindFolderDeleteConfirms() {
             event.preventDefault();
             const lots = Number(form.dataset.lotCount || 0);
             const ok = await window.AnnigemsAlert?.confirmAction({
-                title: `Delete folder ${form.dataset.folderName}?`,
+                title: t('Delete folder :folderName?', { folderName: form.dataset.folderName }),
                 text: lots > 0
-                    ? `All ${lots} ${lots === 1 ? 'lot' : 'lots'} inside will be deleted and their remaining stock written off. Invoices and history keep their record.`
-                    : 'This folder has no lots.',
-                confirmButtonText: 'Delete folder',
+                    ? (lots === 1
+                        ? t('The :count lot inside will be deleted and its remaining stock written off. Invoices and history keep their record.', { count: lots })
+                        : t('All :count lots inside will be deleted and their remaining stock written off. Invoices and history keep their record.', { count: lots }))
+                    : t('This folder has no lots.'),
+                confirmButtonText: t('Delete folder'),
             });
             if (ok) {
                 submitConfirmed(form);
@@ -234,9 +238,9 @@ function bindDeactivateConfirms() {
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
             const ok = await window.AnnigemsAlert?.confirmAction({
-                title: 'Deactivate this stone?',
-                text: 'It cannot be added on Stone Intake until reactivated. Existing quantity is unchanged.',
-                confirmButtonText: 'Deactivate',
+                title: t('Deactivate this stone?'),
+                text: t('It cannot be added on Stone Intake until reactivated. Existing quantity is unchanged.'),
+                confirmButtonText: t('Deactivate'),
             });
             if (ok) {
                 submitConfirmed(form);

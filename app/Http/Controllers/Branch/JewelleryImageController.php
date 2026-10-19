@@ -44,6 +44,6 @@ class JewelleryImageController extends Controller
 
         return redirect()
             ->route('branch.jewellery-items.edit', $jewelleryItem)
-            ->with('success', 'Image removed.');
+            ->with('success', __('Image removed.'));
     }
 }

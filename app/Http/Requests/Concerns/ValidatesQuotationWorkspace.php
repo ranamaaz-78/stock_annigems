@@ -151,17 +151,17 @@ trait ValidatesQuotationWorkspace
     protected function workspaceMessages(): array
     {
         return [
-            'lines.required' => 'Add at least one item to the quotation.',
-            'lines.min' => 'Add at least one item to the quotation.',
-            'walkin_name.required_without_all' => 'Select a customer or enter a walk-in name and phone.',
-            'walkin_phone.required_without_all' => 'Enter the walk-in customer phone.',
-            'walkin_phone.regex' => 'Enter a valid phone number.',
-            'walkin_email.email' => 'Enter a valid email address.',
-            'quotation_date.required' => 'Quotation date is required.',
-            'lines.*.jewellery_item_id.required' => 'A scanned item on this quotation is missing its reference. Remove the line and scan it again.',
-            'lines.*.jewellery_item_id.integer' => 'A scanned item on this quotation is missing its reference. Remove the line and scan it again.',
-            'lines.*.stone_id.required' => 'A loose stone line is missing its reference. Remove the line and scan it again.',
-            'lines.*.stone_id.integer' => 'A loose stone line is missing its reference. Remove the line and scan it again.',
+            'lines.required' => __('Add at least one item to the quotation.'),
+            'lines.min' => __('Add at least one item to the quotation.'),
+            'walkin_name.required_without_all' => __('Select a customer or enter a walk-in name and phone.'),
+            'walkin_phone.required_without_all' => __('Enter the walk-in customer phone.'),
+            'walkin_phone.regex' => __('Enter a valid phone number.'),
+            'walkin_email.email' => __('Enter a valid email address.'),
+            'quotation_date.required' => __('Quotation date is required.'),
+            'lines.*.jewellery_item_id.required' => __('A scanned item on this quotation is missing its reference. Remove the line and scan it again.'),
+            'lines.*.jewellery_item_id.integer' => __('A scanned item on this quotation is missing its reference. Remove the line and scan it again.'),
+            'lines.*.stone_id.required' => __('A loose stone line is missing its reference. Remove the line and scan it again.'),
+            'lines.*.stone_id.integer' => __('A loose stone line is missing its reference. Remove the line and scan it again.'),
         ];
     }
 

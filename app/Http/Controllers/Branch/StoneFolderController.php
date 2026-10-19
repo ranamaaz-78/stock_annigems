@@ -40,7 +40,7 @@ class StoneFolderController extends Controller
         }
 
         return ($fromList ? back() : redirect()->route('branch.stones.index', ['category' => $category->uuid]))
-            ->with('success', 'Folder renamed to '.$category->name.'.');
+            ->with('success', __('Folder renamed to :name.', ['name' => $category->name]));
     }
 
     /**
@@ -61,7 +61,7 @@ class StoneFolderController extends Controller
 
         return redirect()
             ->route('branch.stones.index')
-            ->with('success', "Folder {$name} deleted with {$result['lots']} ".Str::plural('lot', $result['lots']).'.');
+            ->with('success', trans_choice('Folder :name deleted with :count lot.|Folder :name deleted with :count lots.', $result['lots'], ['name' => $name]));
     }
 
     /**

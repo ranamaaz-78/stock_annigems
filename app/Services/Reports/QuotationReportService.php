@@ -34,38 +34,38 @@ class QuotationReportService
 
         return new ReportResult(
             key: 'quotation-funnel',
-            title: 'Quotation Funnel',
+            title: __('Quotation Funnel'),
             summary: [
-                $this->card('total', 'Quotations Raised', ReportFormatter::count($totals['total']), 'request_quote',
+                $this->card('total', __('Quotations Raised'), ReportFormatter::count($totals['total']), 'request_quote',
                     trend: ReportFormatter::trend($totals['total'], $previous['total'])),
-                $this->card('converted', 'Converted to Invoice', ReportFormatter::count($totals['converted']), 'task_alt',
-                    hint: ReportFormatter::money($totals['converted_value']).' billed'),
-                $this->card('conversion_rate', 'Conversion Rate', ReportFormatter::percent($totals['conversion_rate']), 'percent',
+                $this->card('converted', __('Converted to Invoice'), ReportFormatter::count($totals['converted']), 'task_alt',
+                    hint: __(':value billed', ['value' => ReportFormatter::money($totals['converted_value'])])),
+                $this->card('conversion_rate', __('Conversion Rate'), ReportFormatter::percent($totals['conversion_rate']), 'percent',
                     trend: ReportFormatter::trend($totals['conversion_rate'], $previous['conversion_rate'])),
-                $this->card('open', 'Still Open', ReportFormatter::count($totals['draft']), 'pending',
-                    hint: ReportFormatter::money($totals['total_value']).' quoted in total'),
+                $this->card('open', __('Still Open'), ReportFormatter::count($totals['draft']), 'pending',
+                    hint: __(':value quoted in total', ['value' => ReportFormatter::money($totals['total_value'])])),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'label', 'label' => 'Status'],
-                ['key' => 'quotations', 'label' => 'Quotations', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'share', 'label' => 'Share', 'align' => 'right', 'format' => 'percent'],
-                ['key' => 'value', 'label' => 'Quoted Value', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+                ['key' => 'label', 'label' => __('Status')],
+                ['key' => 'quotations', 'label' => __('Quotations'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'share', 'label' => __('Share'), 'align' => 'right', 'format' => 'percent'],
+                ['key' => 'value', 'label' => __('Quoted Value'), 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
             ],
             totals: [
-                'label' => 'Total',
+                'label' => __('Total'),
                 'quotations' => $totals['total'],
                 'value' => $totals['total_value'],
             ],
-            chart: ReportResult::chart('Quotations by status', 'quotations', $rows->map(fn (array $row): array => [
+            chart: ReportResult::chart(__('Quotations by status'), 'quotations', $rows->map(fn (array $row): array => [
                 'label' => $row['label'],
                 'value' => $row['quotations'],
                 'display' => ReportFormatter::count($row['quotations']),
             ])->all()),
             meta: [
-                'table_title' => 'Funnel breakdown',
+                'table_title' => __('Funnel breakdown'),
                 'money' => true,
-                'empty_title' => 'No quotations raised in this period',
+                'empty_title' => __('No quotations raised in this period'),
             ],
         );
     }
@@ -87,31 +87,31 @@ class QuotationReportService
 
         return new ReportResult(
             key: 'pending-quotations',
-            title: 'Pending Quotations',
+            title: __('Pending Quotations'),
             summary: [
-                $this->card('pending', 'Open Drafts', ReportFormatter::count($totals['count']), 'pending_actions'),
-                $this->card('value', 'Quoted Value Outstanding', ReportFormatter::money($totals['value']), 'request_quote'),
-                $this->card('stale', 'Older Than 7 Days', ReportFormatter::count($stale), 'schedule',
-                    hint: 'Priced at a gold rate that has since moved'),
+                $this->card('pending', __('Open Drafts'), ReportFormatter::count($totals['count']), 'pending_actions'),
+                $this->card('value', __('Quoted Value Outstanding'), ReportFormatter::money($totals['value']), 'request_quote'),
+                $this->card('stale', __('Older Than 7 Days'), ReportFormatter::count($stale), 'schedule',
+                    hint: __('Priced at a gold rate that has since moved')),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'quotation_number', 'label' => 'Quotation'],
-                ['key' => 'quotation_date', 'label' => 'Raised'],
-                ['key' => 'customer', 'label' => 'Customer'],
-                ['key' => 'age_days', 'label' => 'Age (days)', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'value', 'label' => 'Quoted Value', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+                ['key' => 'quotation_number', 'label' => __('Quotation')],
+                ['key' => 'quotation_date', 'label' => __('Raised')],
+                ['key' => 'customer', 'label' => __('Customer')],
+                ['key' => 'age_days', 'label' => __('Age (days)'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'value', 'label' => __('Quoted Value'), 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
             ],
             totals: [
-                'quotation_number' => 'Total',
+                'quotation_number' => __('Total'),
                 'value' => $rows->sum('value'),
             ],
             meta: [
-                'table_title' => 'Open drafts, oldest first',
+                'table_title' => __('Open drafts, oldest first'),
                 'money' => true,
                 'ignores_date_range' => true,
-                'empty_title' => 'No quotations are waiting',
-                'empty_message' => 'Every quotation raised has been converted or cancelled.',
+                'empty_title' => __('No quotations are waiting'),
+                'empty_message' => __('Every quotation raised has been converted or cancelled.'),
             ],
         );
     }
@@ -129,25 +129,25 @@ class QuotationReportService
 
         return new ReportResult(
             key: 'time-to-convert',
-            title: 'Time to Convert',
+            title: __('Time to Convert'),
             summary: [
-                $this->card('converted', 'Conversions', ReportFormatter::count($summary['count']), 'task_alt'),
-                $this->card('average', 'Average Time', ReportFormatter::days($summary['average_days']), 'timer'),
-                $this->card('median', 'Median Time', ReportFormatter::days($summary['median_days']), 'straighten',
-                    hint: 'Less distorted by one slow customer than the average'),
-                $this->card('slowest', 'Slowest', ReportFormatter::days($summary['slowest_days']), 'hourglass_bottom',
-                    hint: 'Fastest: '.ReportFormatter::days($summary['fastest_days'])),
+                $this->card('converted', __('Conversions'), ReportFormatter::count($summary['count']), 'task_alt'),
+                $this->card('average', __('Average Time'), ReportFormatter::days($summary['average_days']), 'timer'),
+                $this->card('median', __('Median Time'), ReportFormatter::days($summary['median_days']), 'straighten',
+                    hint: __('Less distorted by one slow customer than the average')),
+                $this->card('slowest', __('Slowest'), ReportFormatter::days($summary['slowest_days']), 'hourglass_bottom',
+                    hint: __('Fastest: :days', ['days' => ReportFormatter::days($summary['fastest_days'])])),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'quotation_number', 'label' => 'Quotation'],
-                ['key' => 'invoice_number', 'label' => 'Invoice'],
-                ['key' => 'days', 'label' => 'Time to Convert', 'align' => 'right', 'format' => 'days', 'emphasis' => 'strong'],
+                ['key' => 'quotation_number', 'label' => __('Quotation')],
+                ['key' => 'invoice_number', 'label' => __('Invoice')],
+                ['key' => 'days', 'label' => __('Time to Convert'), 'align' => 'right', 'format' => 'days', 'emphasis' => 'strong'],
             ],
             meta: [
-                'table_title' => 'Conversions in this period',
-                'empty_title' => 'No quotations were converted in this period',
-                'empty_message' => 'A quotation appears here once it has produced an invoice.',
+                'table_title' => __('Conversions in this period'),
+                'empty_title' => __('No quotations were converted in this period'),
+                'empty_message' => __('A quotation appears here once it has produced an invoice.'),
             ],
         );
     }
@@ -170,31 +170,31 @@ class QuotationReportService
 
         return new ReportResult(
             key: 'cancelled-quotations',
-            title: 'Cancelled Quotations',
+            title: __('Cancelled Quotations'),
             summary: [
-                $this->card('cancelled', 'Cancelled', ReportFormatter::count($totals['cancelled']), 'cancel'),
-                $this->card('value', 'Quoted Value Lost', ReportFormatter::money($rows->sum('value')), 'money_off'),
-                $this->card('rate', 'Cancellation Rate',
+                $this->card('cancelled', __('Cancelled'), ReportFormatter::count($totals['cancelled']), 'cancel'),
+                $this->card('value', __('Quoted Value Lost'), ReportFormatter::money($rows->sum('value')), 'money_off'),
+                $this->card('rate', __('Cancellation Rate'),
                     ReportFormatter::percent($totals['total'] > 0 ? $totals['cancelled'] / $totals['total'] * 100 : 0),
                     'percent'),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'quotation_number', 'label' => 'Quotation'],
-                ['key' => 'quotation_date', 'label' => 'Raised'],
-                ['key' => 'customer', 'label' => 'Customer'],
-                ['key' => 'cancelled_by', 'label' => 'Cancelled By'],
-                ['key' => 'cancelled_at', 'label' => 'Cancelled At', 'format' => 'datetime'],
-                ['key' => 'value', 'label' => 'Quoted Value', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+                ['key' => 'quotation_number', 'label' => __('Quotation')],
+                ['key' => 'quotation_date', 'label' => __('Raised')],
+                ['key' => 'customer', 'label' => __('Customer')],
+                ['key' => 'cancelled_by', 'label' => __('Cancelled By')],
+                ['key' => 'cancelled_at', 'label' => __('Cancelled At'), 'format' => 'datetime'],
+                ['key' => 'value', 'label' => __('Quoted Value'), 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
             ],
             totals: [
-                'quotation_number' => 'Total',
+                'quotation_number' => __('Total'),
                 'value' => $rows->sum('value'),
             ],
             meta: [
-                'table_title' => 'Cancelled quotations',
+                'table_title' => __('Cancelled quotations'),
                 'money' => true,
-                'empty_title' => 'No quotations were cancelled in this period',
+                'empty_title' => __('No quotations were cancelled in this period'),
             ],
         );
     }

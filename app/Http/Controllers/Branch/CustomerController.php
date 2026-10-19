@@ -58,7 +58,7 @@ class CustomerController extends Controller
             ? $this->customerService->catalog()
             : $this->customerService->search($term);
 
-        return $this->jsonSuccess('OK', [
+        return $this->jsonSuccess(__('OK'), [
             // values() so JSON is a list. Eloquent map() keeps row ids as
             // keys; that encodes as an object and Select2's .map() throws,
             // leaving the widget stuck on "Searching…".
@@ -93,10 +93,10 @@ class CustomerController extends Controller
         $customer = $this->customerService->findByPhone($phone);
 
         if ($customer === null) {
-            return $this->jsonSuccess('No matching customer.', ['customer' => null]);
+            return $this->jsonSuccess(__('No matching customer.'), ['customer' => null]);
         }
 
-        return $this->jsonSuccess('Found.', [
+        return $this->jsonSuccess(__('Found.'), [
             'customer' => [
                 'uuid' => $customer->uuid,
                 'customer_code' => $customer->customer_code,
@@ -127,7 +127,7 @@ class CustomerController extends Controller
         $customer = $this->customerService->create($request->validated(), $request->user());
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Customer created.', [
+            return $this->jsonSuccess(__('Customer created.'), [
                 'customer' => [
                     'uuid' => $customer->uuid,
                     'customer_code' => $customer->customer_code,
@@ -139,7 +139,7 @@ class CustomerController extends Controller
 
         return redirect()
             ->route('branch.customers.show', $customer)
-            ->with('success', 'Customer created successfully.');
+            ->with('success', __('Customer created successfully.'));
     }
 
     /**
@@ -176,7 +176,7 @@ class CustomerController extends Controller
 
         return redirect()
             ->route('branch.customers.show', $customer)
-            ->with('success', 'Customer updated successfully.');
+            ->with('success', __('Customer updated successfully.'));
     }
 
     /**
@@ -189,14 +189,14 @@ class CustomerController extends Controller
         $request->validate([
             'confirm' => ['accepted'],
         ], [
-            'confirm.accepted' => 'Please confirm deactivation.',
+            'confirm.accepted' => __('Please confirm deactivation.'),
         ]);
 
         $this->customerService->deactivate($customer, $request->user());
 
         return redirect()
             ->route('branch.customers.index')
-            ->with('success', 'Customer deactivated.');
+            ->with('success', __('Customer deactivated.'));
     }
 
     /**

@@ -51,11 +51,11 @@ class StoreBranchRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.unique' => 'A branch with this name already exists.',
-            'code.regex' => 'Branch code may only contain letters, numbers, and dashes.',
-            'code.unique' => 'This branch code is already in use.',
-            'contact_number.regex' => 'Enter a valid contact number.',
-            'email.unique' => 'This branch email is already in use.',
+            'name.unique' => __('A branch with this name already exists.'),
+            'code.regex' => __('Branch code may only contain letters, numbers, and dashes.'),
+            'code.unique' => __('This branch code is already in use.'),
+            'contact_number.regex' => __('Enter a valid contact number.'),
+            'email.unique' => __('This branch email is already in use.'),
         ];
     }
 }

@@ -59,12 +59,12 @@ class StoreCreditorRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Please enter the creditor name.',
-            'phone.required' => 'Phone number is required.',
-            'phone.unique' => 'This phone number is already registered to another creditor at this branch.',
-            'phone.regex' => 'Enter a valid phone number.',
-            'alternate_phone.regex' => 'Enter a valid alternate phone number.',
-            'email.email' => 'Enter a valid email address.',
+            'name.required' => __('Please enter the creditor name.'),
+            'phone.required' => __('Phone number is required.'),
+            'phone.unique' => __('This phone number is already registered to another creditor at this branch.'),
+            'phone.regex' => __('Enter a valid phone number.'),
+            'alternate_phone.regex' => __('Enter a valid alternate phone number.'),
+            'email.email' => __('Enter a valid email address.'),
         ];
     }
 }

@@ -64,10 +64,10 @@ class UpdateBranchStaffRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.unique' => 'This email is already registered.',
-            'phone.regex' => 'Enter a valid phone number.',
-            'role.in' => 'Select a valid staff role.',
-            'permissions.*.exists' => 'One or more selected permissions are invalid.',
+            'email.unique' => __('This email is already registered.'),
+            'phone.regex' => __('Enter a valid phone number.'),
+            'role.in' => __('Select a valid staff role.'),
+            'permissions.*.exists' => __('One or more selected permissions are invalid.'),
         ];
     }
 }

@@ -52,8 +52,8 @@ class StoreCategoryRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Enter a category name.',
-            'name.unique' => 'That category name already exists.',
+            'name.required' => __('Enter a category name.'),
+            'name.unique' => __('That category name already exists.'),
         ];
     }
 }

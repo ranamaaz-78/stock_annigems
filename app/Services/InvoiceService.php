@@ -95,7 +95,7 @@ class InvoiceService
     {
         if ($invoice->status !== InvoiceStatus::COMPLETED) {
             throw ValidationException::withMessages([
-                'reason' => 'Only a completed invoice can be voided.',
+                'reason' => __('Only a completed invoice can be voided.'),
             ]);
         }
 
@@ -107,7 +107,7 @@ class InvoiceService
             $invoice = Invoice::query()->whereKey($invoice->id)->lockForUpdate()->with('items')->firstOrFail();
 
             if ($invoice->status !== InvoiceStatus::COMPLETED) {
-                throw ValidationException::withMessages(['reason' => 'This invoice has already been voided.']);
+                throw ValidationException::withMessages(['reason' => __('This invoice has already been voided.')]);
             }
 
             // Settlement invoices already deducted stock at performa issue.

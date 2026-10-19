@@ -46,6 +46,6 @@ class RecordPaymentRequest extends FormRequest
      */
     public function messages(): array
     {
-        return ['payment_method.required' => 'Select a payment method.'];
+        return ['payment_method.required' => __('Select a payment method.')];
     }
 }

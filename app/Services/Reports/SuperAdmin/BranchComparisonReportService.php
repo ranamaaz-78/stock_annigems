@@ -58,25 +58,25 @@ class BranchComparisonReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'branch-comparison',
-            title: 'Branch Comparison',
+            title: __('Branch Comparison'),
             summary: [
-                $this->card('branches', 'Branches Compared', ReportFormatter::count($rows->count()), 'store'),
-                $this->card('revenue', 'Combined Revenue', ReportFormatter::money($revenue), 'payments'),
-                $this->card('leader', 'Highest Revenue', (string) ($rows->first()['branch'] ?? '—'), 'emoji_events',
+                $this->card('branches', __('Branches Compared'), ReportFormatter::count($rows->count()), 'store'),
+                $this->card('revenue', __('Combined Revenue'), ReportFormatter::money($revenue), 'payments'),
+                $this->card('leader', __('Highest Revenue'), (string) ($rows->first()['branch'] ?? '—'), 'emoji_events',
                     hint: $rows->isNotEmpty() ? ReportFormatter::money($rows->first()['net_revenue']) : null),
-                $this->card('average', 'Average per Branch',
+                $this->card('average', __('Average per Branch'),
                     ReportFormatter::money($rows->count() > 0 ? $revenue / $rows->count() : 0), 'analytics'),
             ],
             rows: $rows,
             columns: [
                 $this->branchColumn(),
-                ['key' => 'invoices', 'label' => 'Invoices', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'average_sale', 'label' => 'Average Sale', 'align' => 'right', 'format' => 'money'],
-                ['key' => 'pieces_sold', 'label' => 'Pieces Sold', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'gold_sold', 'label' => 'Gold Sold', 'align' => 'right', 'format' => 'grams'],
-                ['key' => 'conversion_rate', 'label' => 'Quote Conversion', 'align' => 'right', 'format' => 'percent'],
-                ['key' => 'available_pieces', 'label' => 'Pieces in Stock', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'net_revenue', 'label' => 'Net Revenue', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+                ['key' => 'invoices', 'label' => __('Invoices'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'average_sale', 'label' => __('Average Sale'), 'align' => 'right', 'format' => 'money'],
+                ['key' => 'pieces_sold', 'label' => __('Pieces Sold'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'gold_sold', 'label' => __('Gold Sold'), 'align' => 'right', 'format' => 'grams'],
+                ['key' => 'conversion_rate', 'label' => __('Quote Conversion'), 'align' => 'right', 'format' => 'percent'],
+                ['key' => 'available_pieces', 'label' => __('Pieces in Stock'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'net_revenue', 'label' => __('Net Revenue'), 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
             ],
             totals: [
                 'branch' => 'All Branches',
@@ -86,12 +86,12 @@ class BranchComparisonReportService extends AggregateReportService
                 'available_pieces' => $rows->sum('available_pieces'),
                 'net_revenue' => $revenue,
             ],
-            chart: ReportResult::chart('Revenue by branch', 'revenue', $rows->map(fn (array $row): array => [
+            chart: ReportResult::chart(__('Revenue by branch'), 'revenue', $rows->map(fn (array $row): array => [
                 'label' => $row['branch'],
                 'value' => $row['net_revenue'],
                 'display' => ReportFormatter::moneyCompact($row['net_revenue']),
             ])->all()),
-            meta: $this->meta(['table_title' => 'Branch performance', 'money' => true]),
+            meta: $this->meta(['table_title' => __('Branch performance'), 'money' => true]),
         );
     }
 
@@ -123,26 +123,26 @@ class BranchComparisonReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'stock-distribution',
-            title: 'Stock Distribution',
+            title: __('Stock Distribution'),
             summary: [
-                $this->card('pieces', 'Available Pieces', ReportFormatter::count($rows->sum('available_pieces')), 'inventory_2'),
-                $this->card('gold', 'Gold Weight in Stock', ReportFormatter::grams($totalGold), 'scale'),
-                $this->card('stones', 'Stones in Stock', ReportFormatter::count($rows->sum('stones')), 'diamond',
-                    hint: ReportFormatter::carats($rows->sum('stone_carat')).' held, '.ReportFormatter::grams($rows->sum('stone_grams')).' by weight'),
-                $this->card('concentration', 'Largest Holding',
+                $this->card('pieces', __('Available Pieces'), ReportFormatter::count($rows->sum('available_pieces')), 'inventory_2'),
+                $this->card('gold', __('Gold Weight in Stock'), ReportFormatter::grams($totalGold), 'scale'),
+                $this->card('stones', __('Stones in Stock'), ReportFormatter::count($rows->sum('stones')), 'diamond',
+                    hint: __(':carats held, :grams by weight', ['carats' => ReportFormatter::carats($rows->sum('stone_carat')), 'grams' => ReportFormatter::grams($rows->sum('stone_grams'))])),
+                $this->card('concentration', __('Largest Holding'),
                     $rows->isNotEmpty() ? ReportFormatter::percent($rows->first()['gold_share']) : '—', 'pie_chart',
-                    hint: $rows->isNotEmpty() ? $rows->first()['branch'].' holds this share of the metal' : null),
+                    hint: $rows->isNotEmpty() ? __(':branch holds this share of the metal', ['branch' => $rows->first()['branch']]) : null),
             ],
             rows: $rows,
             columns: [
                 $this->branchColumn(),
-                ['key' => 'total_pieces', 'label' => 'Total Pieces', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'available_pieces', 'label' => 'Available', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'gold_weight', 'label' => 'Gold in Stock', 'align' => 'right', 'format' => 'grams', 'emphasis' => 'strong'],
-                ['key' => 'gold_share', 'label' => 'Share of Metal', 'align' => 'right', 'format' => 'percent'],
-                ['key' => 'stones', 'label' => 'Stones', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'stone_grams', 'label' => 'Stone Grams', 'align' => 'right', 'format' => 'grams'],
-                ['key' => 'stone_carat', 'label' => 'Stone Carat', 'align' => 'right', 'format' => 'carats'],
+                ['key' => 'total_pieces', 'label' => __('Total Pieces'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'available_pieces', 'label' => __('Available'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'gold_weight', 'label' => __('Gold in Stock'), 'align' => 'right', 'format' => 'grams', 'emphasis' => 'strong'],
+                ['key' => 'gold_share', 'label' => __('Share of Metal'), 'align' => 'right', 'format' => 'percent'],
+                ['key' => 'stones', 'label' => __('Stones'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'stone_grams', 'label' => __('Stone Grams'), 'align' => 'right', 'format' => 'grams'],
+                ['key' => 'stone_carat', 'label' => __('Stone Carat'), 'align' => 'right', 'format' => 'carats'],
             ],
             totals: [
                 'branch' => 'All Branches',
@@ -153,15 +153,15 @@ class BranchComparisonReportService extends AggregateReportService
                 'stone_grams' => $rows->sum('stone_grams'),
                 'stone_carat' => $rows->sum('stone_carat'),
             ],
-            chart: ReportResult::chart('Gold weight held by branch', 'grams', $rows->map(fn (array $row): array => [
+            chart: ReportResult::chart(__('Gold weight held by branch'), 'grams', $rows->map(fn (array $row): array => [
                 'label' => $row['branch'],
                 'value' => $row['gold_weight'],
                 'display' => ReportFormatter::grams($row['gold_weight']),
             ])->all()),
             meta: $this->meta([
-                'table_title' => 'Stock by branch',
+                'table_title' => __('Stock by branch'),
                 'live_snapshot' => true,
-                'empty_title' => 'No stock recorded yet',
+                'empty_title' => __('No stock recorded yet'),
             ]),
         );
     }

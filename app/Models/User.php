@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -36,7 +37,7 @@ use Illuminate\Notifications\Notifiable;
  * column is a convenience mirror kept in sync by UserService / BranchStaffService.
  * Always trust role_id + roleRecord() for permission resolution.
  */
-class User extends Authenticatable
+class User extends Authenticatable implements HasLocalePreference
 {
     /** @use HasFactory<UserFactory> */
     use BelongsToBranch;
@@ -65,6 +66,7 @@ class User extends Authenticatable
         'status',
         'last_login_at',
         'must_change_password',
+        'locale',
     ];
 
     /**
@@ -77,6 +79,14 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    /**
+     * Language for mail sent to this user: their own choice, else the app default.
+     */
+    public function preferredLocale(): string
+    {
+        return $this->locale ?: (string) config('app.locale', 'es');
+    }
 
     /**
      * Get the attributes that should be cast.

@@ -18,10 +18,10 @@ enum LineType: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::JEWELLERY_ITEM => 'Jewellery item',
             self::LOOSE_STONE => 'Loose stone',
-        };
+        });
     }
 
     /**

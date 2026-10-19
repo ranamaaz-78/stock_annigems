@@ -14,7 +14,8 @@
     $key = $definition['key'];
     $widget = $definition['widget'];
     $parent = $definition['parent'] ?? null;
-    $label = \Illuminate\Support\Str::headline($key);
+    // Labels and help come from the settings catalogs in English; translate at render.
+    $label = __(\Illuminate\Support\Str::headline($key));
     $errorKey = $key;
     $hasError = $errors->has($errorKey);
     $fieldId = 'setting-'.$key;
@@ -33,13 +34,13 @@
         <p class="settings-row__label">
             <label for="{{ $fieldId }}">{{ $label }}</label>
         </p>
-        <p class="settings-row__help">{{ $definition['description'] }}</p>
+        <p class="settings-row__help">{{ __($definition['description']) }}</p>
         @if(is_array($hint) && isset($hint['sample']))
             <p class="settings-row__help">
                 @if(str_ends_with($key, '_start'))
-                    Highest issued: {{ $hint['highest'] }}. Next code: {{ $hint['sample'] }}.
+                    {{ __('Highest issued: :highest. Next code: :next.', ['highest' => $hint['highest'], 'next' => $hint['sample']]) }}
                 @else
-                    Next new code: {{ $hint['sample'] }}.
+                    {{ __('Next new code: :next.', ['next' => $hint['sample']]) }}
                 @endif
             </p>
         @endif
@@ -47,7 +48,7 @@
 
     <div>
         @if(! empty($definition['feature_note']))
-            <p class="settings-row__note">Disabling this stops new generation only. Existing codes and links will keep working.</p>
+            <p class="settings-row__note">{{ __('Disabling this stops new generation only. Existing codes and links will keep working.') }}</p>
         @endif
         <p data-error-for="{{ $key }}" class="form-error {{ $hasError ? '' : 'is-hidden' }}">
             {{ $errors->first($errorKey) }}
@@ -66,7 +67,7 @@
         @elseif($widget === 'select')
             <select id="{{ $fieldId }}" name="{{ $key }}" class="input-field {{ $hasError ? 'is-invalid' : '' }}">
                 @foreach($definition['options'] as $optionValue => $optionLabel)
-                    <option value="{{ $optionValue }}" @selected((string) $display === (string) $optionValue)>{{ $optionLabel }}</option>
+                    <option value="{{ $optionValue }}" @selected((string) $display === (string) $optionValue)>{{ __($optionLabel) }}</option>
                 @endforeach
             </select>
         @elseif($widget === 'textarea')
@@ -74,7 +75,7 @@
         @elseif($widget === 'json_list')
             <input id="{{ $fieldId }}" name="{{ $key }}" type="text" value="{{ $display }}" class="input-field {{ $hasError ? 'is-invalid' : '' }}" placeholder="30, 60, 90, 180">
         @elseif($widget === 'timezone')
-            <input id="{{ $fieldId }}" name="{{ $key }}" type="text" value="{{ $display }}" class="input-field {{ $hasError ? 'is-invalid' : '' }}" placeholder="Asia/Karachi">
+            <input id="{{ $fieldId }}" name="{{ $key }}" type="text" value="{{ $display }}" class="input-field {{ $hasError ? 'is-invalid' : '' }}" placeholder="{{ __('Asia/Karachi') }}">
         @elseif($widget === 'number')
             <input
                 id="{{ $fieldId }}"

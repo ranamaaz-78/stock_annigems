@@ -87,7 +87,7 @@ class AuditLog extends Model
      */
     public function actionLabel(): string
     {
-        return match ($this->action) {
+        return __(match ($this->action) {
             'branch.created' => 'Branch created',
             'branch.updated' => 'Branch updated',
             'branch.activated' => 'Branch activated',
@@ -109,6 +109,6 @@ class AuditLog extends Model
             'invoice.created' => 'Invoice created',
             'invoice.voided' => 'Invoice voided',
             default => ucfirst(str_replace(['.', '_'], [' — ', ' '], $this->action)),
-        };
+        });
     }
 }

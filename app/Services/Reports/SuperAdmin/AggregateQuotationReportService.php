@@ -44,24 +44,24 @@ class AggregateQuotationReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'quotation-funnel',
-            title: 'Quotation Funnel',
+            title: __('Quotation Funnel'),
             summary: [
-                $this->card('total', 'Quotations Raised', ReportFormatter::count($totals['total']), 'request_quote',
+                $this->card('total', __('Quotations Raised'), ReportFormatter::count($totals['total']), 'request_quote',
                     trend: ReportFormatter::trend($totals['total'], $previous['total'])),
-                $this->card('converted', 'Converted', ReportFormatter::count($totals['converted']), 'task_alt',
-                    hint: ReportFormatter::money($totals['converted_value']).' billed'),
-                $this->card('conversion_rate', 'Conversion Rate', ReportFormatter::percent($totals['conversion_rate']), 'percent',
+                $this->card('converted', __('Converted'), ReportFormatter::count($totals['converted']), 'task_alt',
+                    hint: __(':value billed', ['value' => ReportFormatter::money($totals['converted_value'])])),
+                $this->card('conversion_rate', __('Conversion Rate'), ReportFormatter::percent($totals['conversion_rate']), 'percent',
                     trend: ReportFormatter::trend($totals['conversion_rate'], $previous['conversion_rate'])),
-                $this->card('open', 'Still Open', ReportFormatter::count($totals['draft']), 'pending'),
+                $this->card('open', __('Still Open'), ReportFormatter::count($totals['draft']), 'pending'),
             ],
             rows: $rows,
             columns: [
                 $this->branchColumn(),
-                ['key' => 'total', 'label' => 'Raised', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'converted', 'label' => 'Converted', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'cancelled', 'label' => 'Cancelled', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'conversion_rate', 'label' => 'Conversion Rate', 'align' => 'right', 'format' => 'percent', 'emphasis' => 'strong'],
-                ['key' => 'converted_value', 'label' => 'Converted Value', 'align' => 'right', 'format' => 'money'],
+                ['key' => 'total', 'label' => __('Raised'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'converted', 'label' => __('Converted'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'cancelled', 'label' => __('Cancelled'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'conversion_rate', 'label' => __('Conversion Rate'), 'align' => 'right', 'format' => 'percent', 'emphasis' => 'strong'],
+                ['key' => 'converted_value', 'label' => __('Converted Value'), 'align' => 'right', 'format' => 'money'],
             ],
             totals: [
                 'branch' => 'All Branches',
@@ -70,15 +70,15 @@ class AggregateQuotationReportService extends AggregateReportService
                 'cancelled' => $rows->sum('cancelled'),
                 'converted_value' => $rows->sum('converted_value'),
             ],
-            chart: ReportResult::chart('Conversion rate by branch', 'percent', $rows->map(fn (array $row): array => [
+            chart: ReportResult::chart(__('Conversion rate by branch'), 'percent', $rows->map(fn (array $row): array => [
                 'label' => $row['branch'],
                 'value' => $row['conversion_rate'],
                 'display' => ReportFormatter::percent($row['conversion_rate']),
             ])->all()),
             meta: $this->meta([
-                'table_title' => 'Funnel by branch',
+                'table_title' => __('Funnel by branch'),
                 'money' => true,
-                'empty_title' => 'No quotations raised in this period',
+                'empty_title' => __('No quotations raised in this period'),
             ]),
         );
     }
@@ -104,21 +104,21 @@ class AggregateQuotationReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'cancelled-quotations',
-            title: 'Cancelled Quotations',
+            title: __('Cancelled Quotations'),
             summary: [
-                $this->card('cancelled', 'Cancelled', ReportFormatter::count($rows->sum('cancelled')), 'cancel'),
-                $this->card('value', 'Quoted Value Lost', ReportFormatter::money($rows->sum('value_lost')), 'money_off'),
-                $this->card('rate', 'Cancellation Rate',
+                $this->card('cancelled', __('Cancelled'), ReportFormatter::count($rows->sum('cancelled')), 'cancel'),
+                $this->card('value', __('Quoted Value Lost'), ReportFormatter::money($rows->sum('value_lost')), 'money_off'),
+                $this->card('rate', __('Cancellation Rate'),
                     ReportFormatter::percent($rows->sum('total') > 0 ? $rows->sum('cancelled') / $rows->sum('total') * 100 : 0),
                     'percent'),
             ],
             rows: $rows,
             columns: [
                 $this->branchColumn(),
-                ['key' => 'total', 'label' => 'Raised', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'cancelled', 'label' => 'Cancelled', 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
-                ['key' => 'cancellation_rate', 'label' => 'Rate', 'align' => 'right', 'format' => 'percent'],
-                ['key' => 'value_lost', 'label' => 'Quoted Value Lost', 'align' => 'right', 'format' => 'money'],
+                ['key' => 'total', 'label' => __('Raised'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'cancelled', 'label' => __('Cancelled'), 'align' => 'right', 'format' => 'count', 'emphasis' => 'strong'],
+                ['key' => 'cancellation_rate', 'label' => __('Rate'), 'align' => 'right', 'format' => 'percent'],
+                ['key' => 'value_lost', 'label' => __('Quoted Value Lost'), 'align' => 'right', 'format' => 'money'],
             ],
             totals: [
                 'branch' => 'All Branches',
@@ -126,7 +126,7 @@ class AggregateQuotationReportService extends AggregateReportService
                 'cancelled' => $rows->sum('cancelled'),
                 'value_lost' => $rows->sum('value_lost'),
             ],
-            meta: $this->meta(['table_title' => 'Cancellations by branch', 'money' => true]),
+            meta: $this->meta(['table_title' => __('Cancellations by branch'), 'money' => true]),
         );
     }
 }

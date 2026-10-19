@@ -42,30 +42,30 @@ class AggregateCustomerReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'top-customers',
-            title: 'Top Customers',
+            title: __('Top Customers'),
             summary: [
-                $this->card('buyers', 'Customers Who Bought', ReportFormatter::count($rate['buyers']), 'group'),
-                $this->card('spend', 'Attributed Spend', ReportFormatter::money($rows->sum('total_spent')), 'payments'),
-                $this->card('walk_ins', 'Walk-in Invoices', ReportFormatter::count($rate['walk_in_invoices']), 'directions_walk'),
+                $this->card('buyers', __('Customers Who Bought'), ReportFormatter::count($rate['buyers']), 'group'),
+                $this->card('spend', __('Attributed Spend'), ReportFormatter::money($rows->sum('total_spent')), 'payments'),
+                $this->card('walk_ins', __('Walk-in Invoices'), ReportFormatter::count($rate['walk_in_invoices']), 'directions_walk'),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'name', 'label' => 'Customer'],
-                ['key' => 'invoice_count', 'label' => 'Invoices', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'average_sale', 'label' => 'Average Sale', 'align' => 'right', 'format' => 'money'],
-                ['key' => 'total_spent', 'label' => 'Total Spent', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+                ['key' => 'name', 'label' => __('Customer')],
+                ['key' => 'invoice_count', 'label' => __('Invoices'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'average_sale', 'label' => __('Average Sale'), 'align' => 'right', 'format' => 'money'],
+                ['key' => 'total_spent', 'label' => __('Total Spent'), 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
             ],
             totals: [
-                'name' => 'Total',
+                'name' => __('Total'),
                 'invoice_count' => $rows->sum('invoice_count'),
                 'total_spent' => $rows->sum('total_spent'),
             ],
-            chart: ReportResult::chart('Spend by customer', 'revenue', $rows->take(10)->map(fn (array $row): array => [
+            chart: ReportResult::chart(__('Spend by customer'), 'revenue', $rows->take(10)->map(fn (array $row): array => [
                 'label' => $row['name'],
                 'value' => $row['total_spent'],
                 'display' => ReportFormatter::moneyCompact($row['total_spent']),
             ])->all()),
-            meta: $this->meta(['table_title' => 'Top customers by spend', 'money' => true]),
+            meta: $this->meta(['table_title' => __('Top customers by spend'), 'money' => true]),
         );
     }
 
@@ -88,25 +88,25 @@ class AggregateCustomerReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'cross-branch-customers',
-            title: 'Cross-Branch Customers',
+            title: __('Cross-Branch Customers'),
             summary: [
-                $this->card('customers', 'Cross-Branch Customers', ReportFormatter::count($rows->count()), 'hub'),
-                $this->card('spend', 'Combined Spend', ReportFormatter::money($rows->sum('total_spent')), 'payments'),
-                $this->card('invoices', 'Combined Invoices', ReportFormatter::count($rows->sum('invoice_count')), 'receipt_long'),
+                $this->card('customers', __('Cross-Branch Customers'), ReportFormatter::count($rows->count()), 'hub'),
+                $this->card('spend', __('Combined Spend'), ReportFormatter::money($rows->sum('total_spent')), 'payments'),
+                $this->card('invoices', __('Combined Invoices'), ReportFormatter::count($rows->sum('invoice_count')), 'receipt_long'),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'name', 'label' => 'Customer'],
-                ['key' => 'branch_count', 'label' => 'Branches', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'branches', 'label' => 'Visited'],
-                ['key' => 'invoice_count', 'label' => 'Invoices', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'total_spent', 'label' => 'Total Spent', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+                ['key' => 'name', 'label' => __('Customer')],
+                ['key' => 'branch_count', 'label' => __('Branches'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'branches', 'label' => __('Visited')],
+                ['key' => 'invoice_count', 'label' => __('Invoices'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'total_spent', 'label' => __('Total Spent'), 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
             ],
             meta: $this->meta([
-                'table_title' => 'Customers active at more than one branch',
+                'table_title' => __('Customers active at more than one branch'),
                 'money' => true,
                 'ignores_date_range' => true,
-                'empty_title' => 'No customer has purchased at more than one branch',
+                'empty_title' => __('No customer has purchased at more than one branch'),
             ]),
         );
     }
@@ -130,29 +130,29 @@ class AggregateCustomerReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'new-customers',
-            title: 'New Customers',
+            title: __('New Customers'),
             summary: [
-                $this->card('new', 'New Customers', ReportFormatter::count($total), 'person_add',
+                $this->card('new', __('New Customers'), ReportFormatter::count($total), 'person_add',
                     trend: ReportFormatter::trend($total, $previous)),
-                $this->card('bought', 'Bought Already', ReportFormatter::count($converted), 'task_alt'),
-                $this->card('spend', 'Spend From New Customers', ReportFormatter::money($rows->sum('total_spent')), 'payments'),
+                $this->card('bought', __('Bought Already'), ReportFormatter::count($converted), 'task_alt'),
+                $this->card('spend', __('Spend From New Customers'), ReportFormatter::money($rows->sum('total_spent')), 'payments'),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'name', 'label' => 'Customer'],
-                ['key' => 'registered_on', 'label' => 'Registered'],
-                ['key' => 'invoice_count', 'label' => 'Invoices', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'total_spent', 'label' => 'Total Spent', 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
+                ['key' => 'name', 'label' => __('Customer')],
+                ['key' => 'registered_on', 'label' => __('Registered')],
+                ['key' => 'invoice_count', 'label' => __('Invoices'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'total_spent', 'label' => __('Total Spent'), 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],
             ],
             totals: [
-                'name' => 'Total',
+                'name' => __('Total'),
                 'invoice_count' => $rows->sum('invoice_count'),
                 'total_spent' => $rows->sum('total_spent'),
             ],
             meta: $this->meta([
-                'table_title' => 'Registered in this period',
+                'table_title' => __('Registered in this period'),
                 'money' => true,
-                'empty_title' => 'No new customers registered in this period',
+                'empty_title' => __('No new customers registered in this period'),
             ]),
         );
     }
@@ -177,21 +177,21 @@ class AggregateCustomerReportService extends AggregateReportService
 
         return new ReportResult(
             key: 'repeat-customers',
-            title: 'Repeat Customers',
+            title: __('Repeat Customers'),
             summary: [
-                $this->card('repeat', 'Repeat Customers', ReportFormatter::count($overall['repeat_buyers']), 'repeat'),
-                $this->card('rate', 'Repeat Rate', ReportFormatter::percent($overall['repeat_rate']), 'percent',
-                    hint: 'of '.ReportFormatter::count($overall['buyers']).' customers who bought'),
-                $this->card('walk_ins', 'Walk-in Invoices', ReportFormatter::count($overall['walk_in_invoices']), 'directions_walk',
-                    hint: 'Not attributable, so not counted in the rate'),
+                $this->card('repeat', __('Repeat Customers'), ReportFormatter::count($overall['repeat_buyers']), 'repeat'),
+                $this->card('rate', __('Repeat Rate'), ReportFormatter::percent($overall['repeat_rate']), 'percent',
+                    hint: __('of :count customers who bought', ['count' => ReportFormatter::count($overall['buyers'])])),
+                $this->card('walk_ins', __('Walk-in Invoices'), ReportFormatter::count($overall['walk_in_invoices']), 'directions_walk',
+                    hint: __('Not attributable, so not counted in the rate')),
             ],
             rows: $rows,
             columns: [
                 $this->branchColumn(),
-                ['key' => 'buyers', 'label' => 'Customers', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'repeat_buyers', 'label' => 'Returned', 'align' => 'right', 'format' => 'count'],
-                ['key' => 'repeat_rate', 'label' => 'Repeat Rate', 'align' => 'right', 'format' => 'percent', 'emphasis' => 'strong'],
-                ['key' => 'walk_in_invoices', 'label' => 'Walk-ins', 'align' => 'right', 'format' => 'count'],
+                ['key' => 'buyers', 'label' => __('Customers'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'repeat_buyers', 'label' => __('Returned'), 'align' => 'right', 'format' => 'count'],
+                ['key' => 'repeat_rate', 'label' => __('Repeat Rate'), 'align' => 'right', 'format' => 'percent', 'emphasis' => 'strong'],
+                ['key' => 'walk_in_invoices', 'label' => __('Walk-ins'), 'align' => 'right', 'format' => 'count'],
             ],
             totals: [
                 'branch' => 'All Branches',
@@ -200,8 +200,8 @@ class AggregateCustomerReportService extends AggregateReportService
                 'walk_in_invoices' => $rows->sum('walk_in_invoices'),
             ],
             meta: $this->meta([
-                'table_title' => 'Retention by branch',
-                'empty_title' => 'No customer purchases in this period',
+                'table_title' => __('Retention by branch'),
+                'empty_title' => __('No customer purchases in this period'),
             ]),
         );
     }

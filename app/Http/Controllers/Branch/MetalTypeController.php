@@ -60,7 +60,7 @@ class MetalTypeController extends Controller
             'value' => (string) $purity->value,
         ]);
 
-        return $this->jsonSuccess('OK.', ['purities' => $rows]);
+        return $this->jsonSuccess(__('OK.'), ['purities' => $rows]);
     }
 
     /**
@@ -71,10 +71,10 @@ class MetalTypeController extends Controller
         $row = $this->catalogService->createMetal($request->validated(), $request->user());
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Metal saved.', ['uuid' => $row->uuid], 201);
+            return $this->jsonSuccess(__('Metal saved.'), ['uuid' => $row->uuid], 201);
         }
 
-        return redirect()->route('branch.metals.index')->with('success', 'Metal saved.');
+        return redirect()->route('branch.metals.index')->with('success', __('Metal saved.'));
     }
 
     /**
@@ -85,10 +85,10 @@ class MetalTypeController extends Controller
         $this->catalogService->updateMetal($metalType, $request->validated(), $request->user());
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Metal updated.');
+            return $this->jsonSuccess(__('Metal updated.'));
         }
 
-        return redirect()->route('branch.metals.index')->with('success', 'Metal updated.');
+        return redirect()->route('branch.metals.index')->with('success', __('Metal updated.'));
     }
 
     /**
@@ -108,10 +108,10 @@ class MetalTypeController extends Controller
         }
 
         if (request()->expectsJson()) {
-            return $this->jsonSuccess('Metal deleted.');
+            return $this->jsonSuccess(__('Metal deleted.'));
         }
 
-        return redirect()->route('branch.metals.index')->with('success', 'Metal deleted.');
+        return redirect()->route('branch.metals.index')->with('success', __('Metal deleted.'));
     }
 
     /**
@@ -122,10 +122,10 @@ class MetalTypeController extends Controller
         $row = $this->catalogService->createPurity($request->validated(), $request->user());
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Purity saved.', ['uuid' => $row->uuid], 201);
+            return $this->jsonSuccess(__('Purity saved.'), ['uuid' => $row->uuid], 201);
         }
 
-        return redirect()->route('branch.metals.index', ['tab' => 'purities'])->with('success', 'Purity saved.');
+        return redirect()->route('branch.metals.index', ['tab' => 'purities'])->with('success', __('Purity saved.'));
     }
 
     /**
@@ -136,10 +136,10 @@ class MetalTypeController extends Controller
         $this->catalogService->updatePurity($purity, $request->validated(), $request->user());
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Purity updated.');
+            return $this->jsonSuccess(__('Purity updated.'));
         }
 
-        return redirect()->route('branch.metals.index', ['tab' => 'purities'])->with('success', 'Purity updated.');
+        return redirect()->route('branch.metals.index', ['tab' => 'purities'])->with('success', __('Purity updated.'));
     }
 
     /**
@@ -159,9 +159,9 @@ class MetalTypeController extends Controller
         }
 
         if (request()->expectsJson()) {
-            return $this->jsonSuccess('Purity deleted.');
+            return $this->jsonSuccess(__('Purity deleted.'));
         }
 
-        return redirect()->route('branch.metals.index', ['tab' => 'purities'])->with('success', 'Purity deleted.');
+        return redirect()->route('branch.metals.index', ['tab' => 'purities'])->with('success', __('Purity deleted.'));
     }
 }

@@ -23,23 +23,23 @@
     $current = $showAll ? 'all' : $paginator->perPage();
 @endphp
 @if ($total > 0)
-    <nav class="pager" role="navigation" aria-label="Pagination">
+    <nav class="pager" role="navigation" aria-label="{{ __('Page navigation') }}">
         <p class="pager__summary">
-            Showing
+            {{ __('Showing') }}
             <strong>{{ $paginator->firstItem() }}</strong>&ndash;<strong>{{ $paginator->lastItem() }}</strong>
-            of
+            {{ __('of') }}
             <strong>{{ number_format($total) }}</strong>
         </p>
 
         <div class="pager__tools">
             @if ($sizeChoice && ($total > min($options) || $showAll))
                 <label class="pager__size">
-                    <span>Show</span>
-                    <select class="input-field pager__select" data-per-page data-no-select2="true" aria-label="Rows per page">
+                    <span>{{ __('Show') }}</span>
+                    <select class="input-field pager__select" data-per-page data-no-select2="true" aria-label="{{ __('Rows per page') }}">
                         @foreach ($options as $option)
                             <option value="{{ $option }}" @selected($current === $option)>{{ $option }}</option>
                         @endforeach
-                        <option value="all" @selected($showAll)>All</option>
+                        <option value="all" @selected($showAll)>{{ __('All') }}</option>
                     </select>
                 </label>
             @endif
@@ -48,11 +48,11 @@
                 <ul class="pager__list">
                     {{-- Previous --}}
                     @if ($paginator->onFirstPage())
-                        <li><span class="pager__item pager__item--arrow is-disabled" aria-disabled="true" aria-label="Previous">
+                        <li><span class="pager__item pager__item--arrow is-disabled" aria-disabled="true" aria-label="{{ __('Previous') }}">
                             <span class="material-symbols-outlined icon icon--sm">chevron_left</span>
                         </span></li>
                     @else
-                        <li><a class="pager__item pager__item--arrow" href="{{ $paginator->previousPageUrl() }}" rel="prev" aria-label="Previous">
+                        <li><a class="pager__item pager__item--arrow" href="{{ $paginator->previousPageUrl() }}" rel="prev" aria-label="{{ __('Previous') }}">
                             <span class="material-symbols-outlined icon icon--sm">chevron_left</span>
                         </a></li>
                     @endif
@@ -68,7 +68,7 @@
                                 @if ($page == $paginator->currentPage())
                                     <li><span class="pager__item is-current" aria-current="page">{{ $page }}</span></li>
                                 @else
-                                    <li><a class="pager__item" href="{{ $url }}" aria-label="Page {{ $page }}">{{ $page }}</a></li>
+                                    <li><a class="pager__item" href="{{ $url }}" aria-label="{{ __('Page :page', ['page' => $page]) }}">{{ $page }}</a></li>
                                 @endif
                             @endforeach
                         @endif
@@ -76,11 +76,11 @@
 
                     {{-- Next --}}
                     @if ($paginator->hasMorePages())
-                        <li><a class="pager__item pager__item--arrow" href="{{ $paginator->nextPageUrl() }}" rel="next" aria-label="Next">
+                        <li><a class="pager__item pager__item--arrow" href="{{ $paginator->nextPageUrl() }}" rel="next" aria-label="{{ __('Next') }}">
                             <span class="material-symbols-outlined icon icon--sm">chevron_right</span>
                         </a></li>
                     @else
-                        <li><span class="pager__item pager__item--arrow is-disabled" aria-disabled="true" aria-label="Next">
+                        <li><span class="pager__item pager__item--arrow is-disabled" aria-disabled="true" aria-label="{{ __('Next') }}">
                             <span class="material-symbols-outlined icon icon--sm">chevron_right</span>
                         </span></li>
                     @endif

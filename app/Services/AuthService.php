@@ -43,7 +43,7 @@ class AuthService
             RateLimiter::hit($this->throttleKey($request), $this->lockoutSeconds());
 
             throw ValidationException::withMessages([
-                'email' => 'Invalid email or password.',
+                'email' => __('Invalid email or password.'),
             ]);
         }
 
@@ -56,7 +56,7 @@ class AuthService
         if ($user->trashed()) {
             Auth::logout();
             throw ValidationException::withMessages([
-                'email' => 'Invalid email or password.',
+                'email' => __('Invalid email or password.'),
             ]);
         }
 
@@ -106,7 +106,7 @@ class AuthService
         if ($user->status !== UserStatus::ACTIVE) {
             Auth::logout();
             throw ValidationException::withMessages([
-                'email' => 'Your account is inactive. Please contact your administrator.',
+                'email' => __('Your account is inactive. Please contact your administrator.'),
             ]);
         }
 
@@ -119,7 +119,7 @@ class AuthService
         if (! $branch || ! $branch->isActive()) {
             Auth::logout();
             throw ValidationException::withMessages([
-                'email' => 'Your account is inactive. Please contact your administrator.',
+                'email' => __('Your account is inactive. Please contact your administrator.'),
             ]);
         }
     }

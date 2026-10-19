@@ -52,8 +52,8 @@ class StoreMetalTypeRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Enter a metal name.',
-            'name.unique' => 'That metal already exists.',
+            'name.required' => __('Enter a metal name.'),
+            'name.unique' => __('That metal already exists.'),
         ];
     }
 }

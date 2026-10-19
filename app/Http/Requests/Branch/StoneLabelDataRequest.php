@@ -35,8 +35,8 @@ class StoneLabelDataRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'uuids.required' => 'Select at least one stone to print.',
-            'uuids.max' => 'Print at most 300 stones at a time.',
+            'uuids.required' => __('Select at least one stone to print.'),
+            'uuids.max' => __('Print at most 300 stones at a time.'),
         ];
     }
 }

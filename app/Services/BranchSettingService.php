@@ -91,7 +91,7 @@ class BranchSettingService
     {
         if ($actor->branch_id !== $branchId) {
             throw ValidationException::withMessages([
-                'branch' => 'You can only change settings for your own branch.',
+                'branch' => __('You can only change settings for your own branch.'),
             ]);
         }
 
@@ -99,7 +99,7 @@ class BranchSettingService
 
         if ($definitions === []) {
             throw ValidationException::withMessages([
-                'group' => 'That settings group does not exist.',
+                'group' => __('That settings group does not exist.'),
             ]);
         }
 
@@ -108,7 +108,7 @@ class BranchSettingService
 
         if ($unknown !== []) {
             throw ValidationException::withMessages([
-                'settings' => 'Unknown setting: '.implode(', ', $unknown).'. Keys cannot be created from a form.',
+                'settings' => __('Unknown setting: :unknown. Keys cannot be created from a form.', ['unknown' => implode(', ', $unknown)]),
             ]);
         }
 

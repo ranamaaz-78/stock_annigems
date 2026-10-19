@@ -39,6 +39,6 @@ class ForceChangePasswordController extends Controller
 
         return redirect()
             ->route($this->authService->redirectRouteFor($user))
-            ->with('success', 'Password updated successfully.');
+            ->with('success', __('Password updated successfully.'));
     }
 }

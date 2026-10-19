@@ -398,7 +398,7 @@ class QuotationService
     private function validateLinesAvailability(array $lines, User $actor, ?Quotation $existing): void
     {
         if ($lines === []) {
-            throw ValidationException::withMessages(['lines' => 'Add at least one line to the quotation.']);
+            throw ValidationException::withMessages(['lines' => __('Add at least one line to the quotation.')]);
         }
 
         $jewelleryIds = [];
@@ -421,7 +421,7 @@ class QuotationService
                 $itemId = (int) ($line['jewellery_item_id'] ?? 0);
                 if (isset($jewelleryIds[$itemId])) {
                     throw ValidationException::withMessages([
-                        "lines.{$index}" => "{$line['item_code_snapshot']} is already on this quotation.",
+                        "lines.{$index}" => __(':code is already on this quotation.', ['code' => $line['item_code_snapshot']]),
                     ]);
                 }
                 $jewelleryIds[$itemId] = true;
@@ -434,7 +434,7 @@ class QuotationService
 
                 if (! $item || $item->status->value !== 'available') {
                     throw ValidationException::withMessages([
-                        "lines.{$index}" => "Line {$lineNum}: {$line['item_code_snapshot']} is not available.",
+                        "lines.{$index}" => __('Line :line: :code is not available.', ['line' => $lineNum, 'code' => $line['item_code_snapshot']]),
                     ]);
                 }
             } else {
@@ -452,7 +452,7 @@ class QuotationService
 
                     if ($wanted <= 0 || $available + 0.0005 < $wanted) {
                         throw ValidationException::withMessages([
-                            "lines.{$index}" => "Line {$lineNum}: {$line['item_code_snapshot']} has only {$available} g in stock, {$wanted} g requested.",
+                            "lines.{$index}" => __('Line :line: :code has only :available g in stock, :wanted g requested.', ['line' => $lineNum, 'code' => $line['item_code_snapshot'], 'available' => $available, 'wanted' => $wanted]),
                         ]);
                     }
 
@@ -462,7 +462,7 @@ class QuotationService
                 if (! $stone || (int) $stone->quantity < $qty) {
                     $available = $stone ? (int) $stone->quantity : 0;
                     throw ValidationException::withMessages([
-                        "lines.{$index}" => "Line {$lineNum}: {$line['item_code_snapshot']} has only {$available} in stock, {$qty} requested.",
+                        "lines.{$index}" => __('Line :line: :code has only :available in stock, :qty requested.', ['line' => $lineNum, 'code' => $line['item_code_snapshot'], 'available' => $available, 'qty' => $qty]),
                     ]);
                 }
             }
@@ -482,13 +482,13 @@ class QuotationService
         if (! setting('discount_enabled')) {
             if ($discountType && $discountType !== DiscountType::NONE) {
                 throw ValidationException::withMessages([
-                    'discount_type' => 'Discounts are turned off. Remove the discount to save this quotation.',
+                    'discount_type' => __('Discounts are turned off. Remove the discount to save this quotation.'),
                 ]);
             }
         } else {
             if ($discountType && $discountType !== DiscountType::NONE && ! $actor->hasPermission('invoices.discount')) {
                 throw ValidationException::withMessages([
-                    'discount_type' => 'You do not have permission to apply discounts.',
+                    'discount_type' => __('You do not have permission to apply discounts.'),
                 ]);
             }
 
@@ -498,7 +498,7 @@ class QuotationService
         if (! setting('tax_enabled')) {
             if ($taxType && $taxType !== TaxType::NONE && (float) ($data['tax_rate'] ?? 0) > 0) {
                 throw ValidationException::withMessages([
-                    'tax_type' => 'Tax is turned off. Remove the tax to save this quotation.',
+                    'tax_type' => __('Tax is turned off. Remove the tax to save this quotation.'),
                 ]);
             }
         }
@@ -526,7 +526,7 @@ class QuotationService
 
             if ($subtotal > 0 && ($amount / $subtotal) * 100 > $max + 0.009) {
                 throw ValidationException::withMessages([
-                    'discount_value' => 'Discount cannot exceed '.$max.'%.',
+                    'discount_value' => __('Discount cannot exceed :max%.', ['max' => $max]),
                 ]);
             }
         }
@@ -541,7 +541,7 @@ class QuotationService
 
         if ($value > $max) {
             throw ValidationException::withMessages([
-                'discount_value' => 'Discount cannot exceed '.$max.'%.',
+                'discount_value' => __('Discount cannot exceed :max%.', ['max' => $max]),
             ]);
         }
     }
@@ -599,7 +599,7 @@ class QuotationService
     {
         if ($quotation && $quotation->status !== QuotationStatus::DRAFT) {
             throw ValidationException::withMessages([
-                'quotation' => 'This quotation can no longer be edited.',
+                'quotation' => __('This quotation can no longer be edited.'),
             ]);
         }
     }

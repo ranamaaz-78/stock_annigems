@@ -106,15 +106,15 @@ class StorePerformaRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'creditor_uuid.required' => 'Select a creditor. Register them under Creditors first.',
-            'creditor_uuid.exists' => 'Select an active creditor from this branch.',
-            'lines.required' => 'Add at least one item to the performa.',
-            'lines.min' => 'Add at least one item to the performa.',
-            'performa_date.required' => 'Performa date is required.',
-            'lines.*.jewellery_item_id.required' => 'A scanned item is missing its reference. Remove the line and scan it again.',
-            'lines.*.jewellery_item_id.integer' => 'A scanned item is missing its reference. Remove the line and scan it again.',
-            'lines.*.stone_id.required' => 'A loose stone line is missing its reference. Remove the line and scan it again.',
-            'lines.*.stone_id.integer' => 'A loose stone line is missing its reference. Remove the line and scan it again.',
+            'creditor_uuid.required' => __('Select a creditor. Register them under Creditors first.'),
+            'creditor_uuid.exists' => __('Select an active creditor from this branch.'),
+            'lines.required' => __('Add at least one item to the performa.'),
+            'lines.min' => __('Add at least one item to the performa.'),
+            'performa_date.required' => __('Performa date is required.'),
+            'lines.*.jewellery_item_id.required' => __('A scanned item is missing its reference. Remove the line and scan it again.'),
+            'lines.*.jewellery_item_id.integer' => __('A scanned item is missing its reference. Remove the line and scan it again.'),
+            'lines.*.stone_id.required' => __('A loose stone line is missing its reference. Remove the line and scan it again.'),
+            'lines.*.stone_id.integer' => __('A loose stone line is missing its reference. Remove the line and scan it again.'),
         ];
     }
 }

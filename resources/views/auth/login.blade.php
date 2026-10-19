@@ -5,7 +5,7 @@
 --}}
 @extends('layouts.guest')
 
-@section('title', 'Login — '.setting('company_name', 'Aanigemas'))
+@section('title', __('Login').' — '.setting('company_name', 'Aanigemas'))
 
 @section('content')
 <div class="login-page">
@@ -16,25 +16,27 @@
                 class="login-brand__bg"
                 style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDlLE4Zdk75MfvKyaBmWbf60CmIibtNNDaFXw9LkUZtPqEG4IcquTc2BRMso7S-DIxyaB1EIROZ7MkS9kG3w36ar0I0jMMsmEVwJLvJqQXdZ0UL9-j1n0dANdWyd4gPQI-sWxBrEelGEpgTWVavJSz3CJ4B9tFDUVwhjhdgtKJZw2HZh3wRKB8e3iYPx-8VzmXrb4_zBGGmASDPLus_hBgxnI7c2UPNutrPhrz3yurtiWAryxubOm1fNg')"
                 role="img"
-                aria-label="Luxury jewellery macro photograph on dark slate"
+                aria-label="{{ __('Luxury jewellery macro photograph on dark slate') }}"
             ></div>
             <div class="login-brand__content">
                 {{-- Dark panel: the gold monogram and a gold name read here; the full logo's navy lettering would not. --}}
                 <img class="login-brand__logo" src="{{ brand_logo_url() }}" alt="">
                 <h1 class="login-brand__title text-display">{{ setting('company_name', 'Aanigemas') }}</h1>
-                <p class="login-brand__tagline text-body-md">Luxury Inventory Management</p>
+                <p class="login-brand__tagline text-body-md">{{ __('Luxury Inventory Management') }}</p>
             </div>
         </div>
 
         <div class="login-form">
+            <x-shell.language-switch class="login-form__lang" />
+
             <div class="login-form__mobile-brand">
                 {{-- Light background here, so the full logo (with its navy name) fits. --}}
                 <img class="login-form__mobile-logo" src="{{ brand_logo_url('full') }}" alt="{{ setting('company_name', 'Aanigemas') }}">
             </div>
 
             <div class="login-form__header">
-                <h2 class="login-form__title text-headline-sm">Welcome back</h2>
-                <p class="login-form__subtitle text-body-sm">Please enter your credentials to access the inventory system.</p>
+                <h2 class="login-form__title text-headline-sm">{{ __('Welcome back') }}</h2>
+                <p class="login-form__subtitle text-body-sm">{{ __('Please enter your credentials to access the inventory system.') }}</p>
             </div>
 
             @if($errors->any())
@@ -45,7 +47,7 @@
                 @csrf
 
                 <div class="form-field" data-field>
-                    <label class="form-label" for="email">Email / Username</label>
+                    <label class="form-label" for="email">{{ __('Email / Username') }}</label>
                     <div class="input-with-icon">
                         <span class="input-with-icon__icon">
                             <span class="material-symbols-outlined icon icon--sm icon--secondary">person</span>
@@ -57,7 +59,7 @@
                             value="{{ old('email') }}"
                             required
                             autocomplete="username"
-                            placeholder="admin@aanigemas.com"
+                            placeholder="{{ __('admin@aanigemas.com') }}"
                             class="input-with-icon__field {{ $errors->has('email') ? 'is-invalid' : '' }}"
                         >
                     </div>
@@ -65,7 +67,7 @@
                 </div>
 
                 <div class="form-field" data-field>
-                    <label class="form-label" for="password">Password</label>
+                    <label class="form-label" for="password">{{ __('Password') }}</label>
                     <div class="input-with-icon">
                         <span class="input-with-icon__icon">
                             <span class="material-symbols-outlined icon icon--sm icon--secondary">lock</span>
@@ -86,18 +88,18 @@
                 <div class="login-form__row">
                     <label class="form-check" for="remember">
                         <input id="remember" name="remember" type="checkbox" value="1">
-                        Remember me
+                        {{ __('Remember me') }}
                     </label>
-                    <a href="{{ route('password.request') }}" class="form-link">Forgot password?</a>
+                    <a href="{{ route('password.request') }}" class="form-link">{{ __('Forgot password?') }}</a>
                 </div>
 
                 <div class="login-form__submit">
                     <button
                         type="submit"
-                        data-loading-text="Signing in..."
+                        data-loading-text="{{ __('Signing in...') }}"
                         class="btn btn--primary btn--block btn--label-caps"
                     >
-                        Login
+                        {{ __('Login') }}
                     </button>
                 </div>
             </form>

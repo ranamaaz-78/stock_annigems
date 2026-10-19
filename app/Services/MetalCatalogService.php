@@ -81,13 +81,13 @@ class MetalCatalogService
         $count = JewelleryItem::query()->withoutGlobalScopes()->where('metal_type_id', $metal->id)->count();
         if ($count > 0) {
             throw ValidationException::withMessages([
-                'name' => "{$metal->name} is used by {$count} jewellery item(s) and cannot be deleted. Deactivate it instead.",
+                'name' => __(':metal is used by :count jewellery item(s) and cannot be deleted. Deactivate it instead.', ['metal' => $metal->name, 'count' => $count]),
             ]);
         }
 
         if ($metal->purities()->exists()) {
             throw ValidationException::withMessages([
-                'name' => "{$metal->name} still has purities. Remove those first, or deactivate the metal.",
+                'name' => __(':metal still has purities. Remove those first, or deactivate the metal.', ['metal' => $metal->name]),
             ]);
         }
 
@@ -128,7 +128,7 @@ class MetalCatalogService
         $count = JewelleryItem::query()->withoutGlobalScopes()->where('purity_id', $purity->id)->count();
         if ($count > 0) {
             throw ValidationException::withMessages([
-                'name' => "{$purity->name} is used by {$count} jewellery item(s) and cannot be deleted. Deactivate it instead.",
+                'name' => __(':purity is used by :count jewellery item(s) and cannot be deleted. Deactivate it instead.', ['purity' => $purity->name, 'count' => $count]),
             ]);
         }
 

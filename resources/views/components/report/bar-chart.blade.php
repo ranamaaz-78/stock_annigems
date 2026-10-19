@@ -24,13 +24,13 @@
         @if(empty($points))
             {{-- A period with no activity is a normal result, not a failure. --}}
             <x-empty-state
-                title="Nothing to chart"
-                message="There was no activity in the selected period."
+                :title="__('Nothing to chart')"
+                :message="__('There was no activity in the selected period.')"
                 icon="bar_chart"
             />
         @else
             @if(! empty($chart['unit']))
-                <p class="chart-unit">Measured in {{ $chart['unit'] }}.</p>
+                <p class="chart-unit">{{ __('Measured in :unit.', ['unit' => $chart['unit']]) }}</p>
             @endif
 
             <div class="chart-bars">

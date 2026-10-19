@@ -54,7 +54,7 @@ class UpdateBranchSettingsRequest extends FormRequest
             if ($unknown !== []) {
                 $validator->errors()->add(
                     'settings',
-                    'Unknown setting: '.implode(', ', $unknown).'. Keys cannot be created from a form.'
+                    __('Unknown setting: :unknown. Keys cannot be created from a form.', ['unknown' => implode(', ', $unknown)])
                 );
             }
         });
@@ -66,10 +66,10 @@ class UpdateBranchSettingsRequest extends FormRequest
     public function messages(): array
     {
         return [
-            '*.required' => 'This setting is required.',
-            '*.boolean' => 'That must be yes or no.',
-            'invoice_footer_note.max' => 'The invoice footer cannot exceed 500 characters.',
-            'quotation_footer_note.max' => 'The quotation footer cannot exceed 500 characters.',
+            '*.required' => __('This setting is required.'),
+            '*.boolean' => __('That must be yes or no.'),
+            'invoice_footer_note.max' => __('The invoice footer cannot exceed 500 characters.'),
+            'quotation_footer_note.max' => __('The quotation footer cannot exceed 500 characters.'),
         ];
     }
 

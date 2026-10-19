@@ -7,9 +7,9 @@
 <div class="panel">
     @if($stones->isEmpty())
         <div class="panel__body">
-            <x-empty-state title="No stones match" message="Clear the filters, or upload the inventory sheet with Upload Excel." icon="diamond">
+            <x-empty-state :title="__('No stones match')" :message="__('Clear the filters, or upload the inventory sheet with Upload Excel.')" icon="diamond">
                 <x-slot:actions>
-                    <a href="{{ route('branch.stones.index') }}" class="btn btn--secondary">Back to folders</a>
+                    <a href="{{ route('branch.stones.index') }}" class="btn btn--secondary">{{ __('Back to folders') }}</a>
                 </x-slot:actions>
             </x-empty-state>
         </div>
@@ -21,15 +21,15 @@
                         <tr>
                             <th class="lots-sticky lots-sticky--check">
                                 {{-- Ticks every lot on this page for "Print selected labels". --}}
-                                <input type="checkbox" class="form-check" data-select-all="uuids[]" aria-label="Select all lots on this page" title="Select all">
+                                <input type="checkbox" class="form-check" data-select-all="uuids[]" aria-label="{{ __('Select all lots on this page') }}" title="{{ __('Select all') }}">
                             </th>
-                            <th class="lots-sticky lots-sticky--stone">Stone</th>
-                            <th>Shape &middot; size</th>
-                            <th class="table-admin__num">On hand</th>
-                            <th class="table-admin__num">Rate</th>
-                            <th class="table-admin__num">Total cost</th>
-                            <th>Status</th>
-                            <th class="table-admin__actions-col lots-sticky lots-sticky--actions">Actions</th>
+                            <th class="lots-sticky lots-sticky--stone">{{ __('Stone') }}</th>
+                            <th>{{ __('Shape · size') }}</th>
+                            <th class="table-admin__num">{{ __('On hand') }}</th>
+                            <th class="table-admin__num">{{ __('Rate') }}</th>
+                            <th class="table-admin__num">{{ __('Total cost') }}</th>
+                            <th>{{ __('Status') }}</th>
+                            <th class="table-admin__actions-col lots-sticky lots-sticky--actions">{{ __('Actions') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -41,7 +41,7 @@
                                 // Carat (per-carat lots) and tray sit under the shape instead of taking a column each.
                                 $facts = array_filter([
                                     $stone->carat !== null ? $stone->caratLabel().' ct' : null,
-                                    filled($stone->tray_no) ? 'Tray '.$stone->tray_no : null,
+                                    filled($stone->tray_no) ? __('Tray').' '.$stone->tray_no : null,
                                 ]);
                                 // One status: an inactive lot reads as inactive, otherwise the lot's own state.
                                 $isPending = $stone->status === \App\Enums\StoneStatus::PENDING;
@@ -63,7 +63,7 @@
                                     >
                                         @if($stone->image_code)
                                             {{-- Muted when no picture with that name is in the image folder yet. --}}
-                                            <span class="table-meta" @if(! $stone->image) title="No image named {{ $stone->image_code }} yet" @endif>
+                                            <span class="table-meta" @if(! $stone->image) title="{{ __('No image named :name yet', ['name' => $stone->image_code]) }}" @endif>
                                                 <span class="material-symbols-outlined icon icon--xs">image</span>
                                                 {{ $stone->image_code }}
                                             </span>
@@ -84,7 +84,7 @@
                                 <td class="table-admin__num">
                                     <div>{{ $stone->rateLabel() }}</div>
                                     @if($stone->last_rate !== null)
-                                        <span class="table-meta" @if($stone->rate_changed_at) title="Changed {{ setting_datetime($stone->rate_changed_at) }}" @endif>was {{ $stone->lastRateLabel() }}</span>
+                                        <span class="table-meta" @if($stone->rate_changed_at) title="{{ __('Changed :date', ['date' => setting_datetime($stone->rate_changed_at)]) }}" @endif>{{ __('was :rate', ['rate' => $stone->lastRateLabel()]) }}</span>
                                     @endif
                                 </td>
                                 {{-- The stored formula explains the figure on hover. --}}
@@ -93,26 +93,26 @@
                                     @if(! $stone->is_active)
                                         <x-status-badge status="inactive" />
                                     @elseif($stone->status === \App\Enums\StoneStatus::OUT_OF_STOCK)
-                                        <x-status-badge status="out_of_stock" label="Out of stock" />
+                                        <x-status-badge status="out_of_stock" :label="__('Out of stock')" />
                                     @elseif($isPending)
-                                        <x-status-badge status="reserved" label="Pending" />
+                                        <x-status-badge status="reserved" :label="__('Pending')" />
                                     @else
-                                        <x-status-badge status="available" label="In stock" />
+                                        <x-status-badge status="available" :label="__('In stock')" />
                                     @endif
                                 </td>
                                 <td class="table-admin__actions-col lots-sticky lots-sticky--actions">
                                     <x-table.actions>
                                         <x-table.action :href="route('branch.stones.show', $stone)" />
                                         @can('update', $stone)
-                                            <x-table.action :href="route('branch.stones.edit', $stone)" icon="edit" label="Edit" />
+                                            <x-table.action :href="route('branch.stones.edit', $stone)" icon="edit" :label="__('Edit')" />
                                         @endcan
                                         @can('printLabel', $stone)
                                             {{-- Opens the print dialog over this page; the link is the no-script fallback. --}}
-                                            <x-table.action :href="route('branch.stones.label', $stone)" icon="print" label="Print label" data-label-open="{{ $stone->uuid }}" />
+                                            <x-table.action :href="route('branch.stones.label', $stone)" icon="print" :label="__('Print label')" data-label-open="{{ $stone->uuid }}" />
                                         @endcan
                                         @can('delete', $stone)
                                             {{-- Submits the form below the table (a form cannot sit inside the label form). --}}
-                                            <button type="submit" form="delete-stone-{{ $stone->uuid }}" class="table-admin__action table-admin__action--danger" aria-label="Delete" title="Delete">
+                                            <button type="submit" form="delete-stone-{{ $stone->uuid }}" class="table-admin__action table-admin__action--danger" aria-label="{{ __('Delete') }}" title="{{ __('Delete') }}">
                                                 <span class="material-symbols-outlined icon icon--sm">delete</span>
                                             </button>
                                         @endcan
@@ -127,7 +127,7 @@
                 <div class="panel__toolbar">
                     <x-btn type="button" variant="secondary" data-label-selected>
                         <span class="material-symbols-outlined icon icon--sm">print</span>
-                        Print selected labels
+                        {{ __('Print selected labels') }}
                     </x-btn>
                 </div>
             @endif

@@ -50,7 +50,7 @@ class StoneImportController extends Controller
             return $this->jsonFailure($e->getMessage(), $e->errors(), 422);
         }
 
-        return $this->jsonSuccess('Spreadsheet read.', $staged);
+        return $this->jsonSuccess(__('Spreadsheet read.'), $staged);
     }
 
     /**
@@ -68,7 +68,7 @@ class StoneImportController extends Controller
             return $this->jsonFailure($e->getMessage(), $e->errors(), 422);
         }
 
-        return $this->jsonSuccess('Rows processed.', $preview);
+        return $this->jsonSuccess(__('Rows processed.'), $preview);
     }
 
     /**
@@ -80,7 +80,7 @@ class StoneImportController extends Controller
     public function recheck(StoreStoneImportRequest $request): JsonResponse
     {
         return $this->jsonSuccess(
-            'Rows rechecked.',
+            __('Rows rechecked.'),
             $this->importService->revalidate((array) $request->input('rows', []))
         );
     }
@@ -101,7 +101,7 @@ class StoneImportController extends Controller
             (int) $request->input('total_rows')
         );
 
-        return $this->jsonSuccess('Import started.', [
+        return $this->jsonSuccess(__('Import started.'), [
             'import_uuid' => $import->uuid,
             'chunk_size' => $this->logService->chunkSize(),
         ], 201);
@@ -126,7 +126,7 @@ class StoneImportController extends Controller
             return $this->jsonFailure($e->getMessage(), $e->errors(), 422);
         }
 
-        return $this->jsonSuccess('Batch inserted.', $result);
+        return $this->jsonSuccess(__('Batch inserted.'), $result);
     }
 
     /**
@@ -157,9 +157,9 @@ class StoneImportController extends Controller
             );
         }
 
-        $message = $import->inserted_rows.' rows inserted.';
+        $message = __(':count rows inserted.', ['count' => $import->inserted_rows]);
         if ($import->rejected_rows > 0) {
-            $message .= ' '.$import->rejected_rows.' rows were not inserted. Download them from Stones > Import History.';
+            $message .= ' '.__(':count rows were not inserted. Download them from Stones > Import History.', ['count' => $import->rejected_rows]);
         }
 
         return $this->jsonSuccess($message, [

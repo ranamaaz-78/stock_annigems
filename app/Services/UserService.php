@@ -102,7 +102,7 @@ class UserService
 
         if ($branch->status !== BranchStatus::ACTIVE) {
             throw ValidationException::withMessages([
-                'branch' => 'The selected branch is inactive. Activate it before assigning an admin.',
+                'branch' => __('The selected branch is inactive. Activate it before assigning an admin.'),
             ]);
         }
 
@@ -143,7 +143,7 @@ class UserService
 
         // Optional email hook — works with MAIL_MAILER=log in local.
         if (! empty($data['send_credentials_email'])) {
-            Mail::to($user->email)->send(new BranchAdminCredentialsMail($user, $plainPassword));
+            Mail::to($user)->send(new BranchAdminCredentialsMail($user, $plainPassword));
         }
 
         return ['user' => $user, 'password' => $plainPassword];

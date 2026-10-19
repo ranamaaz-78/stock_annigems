@@ -67,6 +67,10 @@ class GenerateReportExport implements ShouldQueue
             return;
         }
 
+        // A queued job has no request, so SetLocale never ran: write the file
+        // in the language of whoever asked for it.
+        app()->setLocale($record->requester?->preferredLocale() ?? (string) config('app.locale', 'es'));
+
         $record->forceFill(['status' => ReportExportStatus::PROCESSING])->save();
 
         try {
@@ -111,7 +115,7 @@ class GenerateReportExport implements ShouldQueue
 
             $record->forceFill([
                 'status' => ReportExportStatus::FAILED,
-                'failure_reason' => 'The report could not be generated. Try a narrower date range.',
+                'failure_reason' => __('The report could not be generated. Try a narrower date range.'),
                 'completed_at' => now(),
             ])->save();
         }

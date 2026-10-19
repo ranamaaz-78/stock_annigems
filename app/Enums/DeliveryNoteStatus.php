@@ -19,11 +19,11 @@ enum DeliveryNoteStatus: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::ISSUED => 'Issued',
             self::INVOICED => 'Invoiced',
             self::CANCELLED => 'Cancelled',
-        };
+        });
     }
 
     /**

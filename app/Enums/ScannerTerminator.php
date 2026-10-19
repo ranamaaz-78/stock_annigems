@@ -19,11 +19,11 @@ enum ScannerTerminator: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::ENTER => 'Enter',
             self::TAB => 'Tab',
             self::BOTH => 'Enter or Tab',
-        };
+        });
     }
 
     /**

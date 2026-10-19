@@ -81,33 +81,33 @@ trait ValidatesStoneLot
     protected function lotMessages(): array
     {
         return [
-            'name.required' => 'Enter a stone name.',
-            'pricing_mode.required' => 'Choose per carat, per piece, or per gram.',
-            'status.required' => 'Choose a status.',
+            'name.required' => __('Enter a stone name.'),
+            'pricing_mode.required' => __('Choose per carat, per piece, or per gram.'),
+            'status.required' => __('Choose a status.'),
 
-            'carat.required' => 'Per carat pricing needs a carat weight.',
-            'carat.gt' => 'Carat must be greater than zero.',
-            'carat.max' => 'Carat is unusually high. Check for a typing error (e.g. 2.00 not 200).',
-            'carat.decimal' => 'Carat allows at most three decimal places.',
-            'price_per_carat.required' => 'Enter the price per carat.',
-            'price_per_carat.gt' => 'Price per carat must be greater than zero.',
-            'price_per_carat.decimal' => 'Price per carat allows at most three decimal places.',
+            'carat.required' => __('Per carat pricing needs a carat weight.'),
+            'carat.gt' => __('Carat must be greater than zero.'),
+            'carat.max' => __('Carat is unusually high. Check for a typing error (e.g. 2.00 not 200).'),
+            'carat.decimal' => __('Carat allows at most three decimal places.'),
+            'price_per_carat.required' => __('Enter the price per carat.'),
+            'price_per_carat.gt' => __('Price per carat must be greater than zero.'),
+            'price_per_carat.decimal' => __('Price per carat allows at most three decimal places.'),
 
-            'price_per_piece.required' => 'Enter the price per piece.',
-            'price_per_piece.gt' => 'Price per piece must be greater than zero.',
-            'price_per_piece.decimal' => 'Price per piece allows at most three decimal places.',
+            'price_per_piece.required' => __('Enter the price per piece.'),
+            'price_per_piece.gt' => __('Price per piece must be greater than zero.'),
+            'price_per_piece.decimal' => __('Price per piece allows at most three decimal places.'),
 
-            'weight_grams.required' => 'Per gram pricing needs a weight in grams.',
-            'weight_grams.gt' => 'Weight must be greater than zero.',
-            'price_per_gram.required' => 'Enter the price per gram.',
-            'price_per_gram.gt' => 'Price per gram must be greater than zero.',
-            'price_per_gram.decimal' => 'Price per gram allows at most three decimal places.',
-            'weight_grams.decimal' => 'Weight allows at most three decimal places.',
+            'weight_grams.required' => __('Per gram pricing needs a weight in grams.'),
+            'weight_grams.gt' => __('Weight must be greater than zero.'),
+            'price_per_gram.required' => __('Enter the price per gram.'),
+            'price_per_gram.gt' => __('Price per gram must be greater than zero.'),
+            'price_per_gram.decimal' => __('Price per gram allows at most three decimal places.'),
+            'weight_grams.decimal' => __('Weight allows at most three decimal places.'),
 
-            'pieces.required' => 'Enter how many pieces this lot holds.',
-            'pieces.min' => 'A lot must hold at least one piece.',
-            'pairs.min' => 'Pairs cannot be negative.',
-            'image_code.max' => 'Image code must be 180 characters or fewer.',
+            'pieces.required' => __('Enter how many pieces this lot holds.'),
+            'pieces.min' => __('A lot must hold at least one piece.'),
+            'pairs.min' => __('Pairs cannot be negative.'),
+            'image_code.max' => __('Image code must be 180 characters or fewer.'),
         ];
     }
 }

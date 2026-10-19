@@ -19,10 +19,10 @@ enum InvoicePrintFormat: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::A4 => 'A4 sheet',
             self::THERMAL_80 => 'Thermal 80 mm',
             self::THERMAL_58 => 'Thermal 58 mm',
-        };
+        });
     }
 }

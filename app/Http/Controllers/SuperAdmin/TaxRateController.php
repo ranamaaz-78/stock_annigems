@@ -39,7 +39,7 @@ class TaxRateController extends Controller
     {
         $rate = $this->taxRates->create($request->validated());
 
-        return back()->with('success', $rate->name.' added.');
+        return back()->with('success', __(':name added.', ['name' => $rate->name]));
     }
 
     /**
@@ -49,7 +49,7 @@ class TaxRateController extends Controller
     {
         $this->taxRates->update($taxRate, $request->validated());
 
-        return back()->with('success', $taxRate->name.' updated.');
+        return back()->with('success', __(':name updated.', ['name' => $taxRate->name]));
     }
 
     /**
@@ -59,7 +59,7 @@ class TaxRateController extends Controller
     {
         $this->taxRates->setDefault($taxRate);
 
-        return back()->with('success', $taxRate->name.' is now the default IVA rate.');
+        return back()->with('success', __(':name is now the default IVA rate.', ['name' => $taxRate->name]));
     }
 
     /**
@@ -69,7 +69,7 @@ class TaxRateController extends Controller
     {
         $rate = $this->taxRates->toggle($taxRate);
 
-        return back()->with('success', $rate->name.($rate->is_active ? ' is on.' : ' is off.'));
+        return back()->with('success', $rate->is_active ? __(':name is on.', ['name' => $rate->name]) : __(':name is off.', ['name' => $rate->name]));
     }
 
     /**
@@ -80,6 +80,6 @@ class TaxRateController extends Controller
         $name = $taxRate->name;
         $this->taxRates->delete($taxRate);
 
-        return back()->with('success', $name.' deleted.');
+        return back()->with('success', __(':name deleted.', ['name' => $name]));
     }
 }

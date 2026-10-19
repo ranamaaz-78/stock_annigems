@@ -116,7 +116,7 @@ class Quotation extends Model
             return $this->customer->name;
         }
 
-        return (string) ($this->walkin_name ?: 'Walk-in');
+        return (string) ($this->walkin_name ?: __('Walk-in'));
     }
 
     /**

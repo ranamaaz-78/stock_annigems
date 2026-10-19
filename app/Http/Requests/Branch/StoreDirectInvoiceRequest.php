@@ -63,9 +63,9 @@ class StoreDirectInvoiceRequest extends FormRequest
     public function messages(): array
     {
         return array_merge($this->workspaceMessages(), [
-            'lines.required' => 'Add at least one item to the invoice.',
-            'lines.min' => 'Add at least one item to the invoice.',
-            'payment_method.required' => 'Select a payment method.',
+            'lines.required' => __('Add at least one item to the invoice.'),
+            'lines.min' => __('Add at least one item to the invoice.'),
+            'payment_method.required' => __('Select a payment method.'),
         ]);
     }
 }

@@ -58,8 +58,8 @@ class StoreSubCategoryRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Enter a sub-category name.',
-            'name.unique' => 'That name already exists in this category.',
+            'name.required' => __('Enter a sub-category name.'),
+            'name.unique' => __('That name already exists in this category.'),
         ];
     }
 }

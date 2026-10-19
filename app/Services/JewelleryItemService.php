@@ -200,7 +200,7 @@ class JewelleryItemService
     {
         if ($item->status !== JewelleryItemStatus::AVAILABLE) {
             throw ValidationException::withMessages([
-                'lines' => $item->item_code.' is not available.',
+                'lines' => __(':code is not available.', ['code' => $item->item_code]),
             ]);
         }
 
@@ -254,7 +254,7 @@ class JewelleryItemService
     {
         if ($item->status !== JewelleryItemStatus::AVAILABLE) {
             throw ValidationException::withMessages([
-                'lines' => $item->item_code.' is not available.',
+                'lines' => __(':code is not available.', ['code' => $item->item_code]),
             ]);
         }
 
@@ -329,7 +329,7 @@ class JewelleryItemService
     {
         if ($item->status !== JewelleryItemStatus::AVAILABLE) {
             throw ValidationException::withMessages([
-                'lines' => $item->item_code.' is not available.',
+                'lines' => __(':code is not available.', ['code' => $item->item_code]),
             ]);
         }
 
@@ -428,7 +428,7 @@ class JewelleryItemService
     {
         if (! in_array($status, JewelleryItemStatus::usableInThisModule(), true)) {
             throw ValidationException::withMessages([
-                'status' => 'That status cannot be set from jewellery management.',
+                'status' => __('That status cannot be set from jewellery management.'),
             ]);
         }
 
@@ -462,7 +462,7 @@ class JewelleryItemService
 
             if (! $item->canBeDeleted()) {
                 throw ValidationException::withMessages([
-                    'item' => "{$item->item_code} is {$item->status->label()} and cannot be deleted.",
+                    'item' => __(':code is :status and cannot be deleted.', ['code' => $item->item_code, 'status' => $item->status->label()]),
                 ]);
             }
 
@@ -485,7 +485,7 @@ class JewelleryItemService
             $sub = SubCategory::query()->find($data['sub_category_id']);
             if (! $sub || (int) $sub->category_id !== (int) $data['category_id']) {
                 throw ValidationException::withMessages([
-                    'sub_category_id' => 'That sub-category does not belong to the selected category.',
+                    'sub_category_id' => __('That sub-category does not belong to the selected category.'),
                 ]);
             }
         }
@@ -493,7 +493,7 @@ class JewelleryItemService
         $purity = Purity::query()->find($data['purity_id']);
         if (! $purity || (int) $purity->metal_type_id !== (int) $data['metal_type_id']) {
             throw ValidationException::withMessages([
-                'purity_id' => 'That purity does not belong to the selected metal.',
+                'purity_id' => __('That purity does not belong to the selected metal.'),
             ]);
         }
     }

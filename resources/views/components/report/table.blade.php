@@ -13,9 +13,9 @@
     'rows',
     // Optional footer row keyed by the same column keys.
     'totals' => [],
-    'totalsLabel' => 'Total',
-    'emptyTitle' => 'No data for this period',
-    'emptyMessage' => 'Nothing matched the selected date range and filters.',
+    'totalsLabel' => null,
+    'emptyTitle' => null,
+    'emptyMessage' => null,
     'emptyIcon' => 'table_rows',
 ])
 
@@ -71,7 +71,7 @@
 
     @if($isEmpty)
         <div class="p-4">
-            <x-empty-state :title="$emptyTitle" :message="$emptyMessage" :icon="$emptyIcon" />
+            <x-empty-state :title="$emptyTitle ?? __('No data for this period')" :message="$emptyMessage ?? __('Nothing matched the selected date range and filters.')" :icon="$emptyIcon" />
         </div>
     @else
         <div class="table-scroll">
@@ -111,7 +111,7 @@
                             @foreach($columns as $index => $column)
                                 <td class="{{ $cellClass($column, $index) }}">
                                     @if($index === 0)
-                                        {{ $totals[$column['key']] ?? $totalsLabel }}
+                                        {{ $totals[$column['key']] ?? ($totalsLabel ?? __('Total')) }}
                                     @else
                                         {{ array_key_exists($column['key'], $totals)
                                             ? ReportFormatter::cell($totals[$column['key']], $column['format'] ?? null)

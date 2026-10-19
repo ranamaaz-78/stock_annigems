@@ -112,7 +112,7 @@ class BranchStaffService
     {
         if ($target->id === $actor->id) {
             throw ValidationException::withMessages([
-                'role' => 'You cannot change your own role or permissions here. Use My Profile.',
+                'role' => __('You cannot change your own role or permissions here. Use My Profile.'),
             ]);
         }
 
@@ -122,7 +122,7 @@ class BranchStaffService
 
         if ($target->role === UserRole::ADMIN) {
             throw ValidationException::withMessages([
-                'role' => 'Branch Admins cannot modify other Admin accounts.',
+                'role' => __('Branch Admins cannot modify other Admin accounts.'),
             ]);
         }
 
@@ -178,7 +178,7 @@ class BranchStaffService
     {
         if ($target->id === $actor->id) {
             throw ValidationException::withMessages([
-                'status' => 'You cannot change your own status.',
+                'status' => __('You cannot change your own status.'),
             ]);
         }
 
@@ -204,7 +204,7 @@ class BranchStaffService
     {
         if ($target->id === $actor->id) {
             throw ValidationException::withMessages([
-                'password' => 'Use My Profile to change your own password.',
+                'password' => __('Use My Profile to change your own password.'),
             ]);
         }
 

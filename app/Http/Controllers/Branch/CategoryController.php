@@ -59,7 +59,7 @@ class CategoryController extends Controller
             'items_count' => $sub->jewellery_items_count ?? 0,
         ]);
 
-        return $this->jsonSuccess('OK.', [
+        return $this->jsonSuccess(__('OK.'), [
             'category' => [
                 'uuid' => $category->uuid,
                 'name' => $category->name,
@@ -77,10 +77,10 @@ class CategoryController extends Controller
         $row = $this->categoryService->createCategory($request->validated(), $request->user());
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Category saved.', ['uuid' => $row->uuid], 201);
+            return $this->jsonSuccess(__('Category saved.'), ['uuid' => $row->uuid], 201);
         }
 
-        return redirect()->route('branch.categories.index')->with('success', 'Category saved.');
+        return redirect()->route('branch.categories.index')->with('success', __('Category saved.'));
     }
 
     /**
@@ -91,10 +91,10 @@ class CategoryController extends Controller
         $this->categoryService->updateCategory($category, $request->validated(), $request->user());
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Category updated.');
+            return $this->jsonSuccess(__('Category updated.'));
         }
 
-        return redirect()->route('branch.categories.index')->with('success', 'Category updated.');
+        return redirect()->route('branch.categories.index')->with('success', __('Category updated.'));
     }
 
     /**
@@ -114,10 +114,10 @@ class CategoryController extends Controller
         }
 
         if (request()->expectsJson()) {
-            return $this->jsonSuccess('Category deleted.');
+            return $this->jsonSuccess(__('Category deleted.'));
         }
 
-        return redirect()->route('branch.categories.index')->with('success', 'Category deleted.');
+        return redirect()->route('branch.categories.index')->with('success', __('Category deleted.'));
     }
 
     /**
@@ -128,10 +128,10 @@ class CategoryController extends Controller
         $row = $this->categoryService->createSubCategory($category, $request->validated(), $request->user());
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Sub-category saved.', ['uuid' => $row->uuid], 201);
+            return $this->jsonSuccess(__('Sub-category saved.'), ['uuid' => $row->uuid], 201);
         }
 
-        return redirect()->route('branch.categories.index')->with('success', 'Sub-category saved.');
+        return redirect()->route('branch.categories.index')->with('success', __('Sub-category saved.'));
     }
 
     /**
@@ -143,10 +143,10 @@ class CategoryController extends Controller
         $this->categoryService->updateSubCategory($subCategory, $request->validated(), $request->user());
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Sub-category updated.');
+            return $this->jsonSuccess(__('Sub-category updated.'));
         }
 
-        return redirect()->route('branch.categories.index')->with('success', 'Sub-category updated.');
+        return redirect()->route('branch.categories.index')->with('success', __('Sub-category updated.'));
     }
 
     /**
@@ -167,9 +167,9 @@ class CategoryController extends Controller
         }
 
         if (request()->expectsJson()) {
-            return $this->jsonSuccess('Sub-category deleted.');
+            return $this->jsonSuccess(__('Sub-category deleted.'));
         }
 
-        return redirect()->route('branch.categories.index')->with('success', 'Sub-category deleted.');
+        return redirect()->route('branch.categories.index')->with('success', __('Sub-category deleted.'));
     }
 }

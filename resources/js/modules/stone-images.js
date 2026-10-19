@@ -10,6 +10,8 @@
  *   DELETE stone-images.destroy
  */
 
+import { t } from './i18n';
+
 /**
  * CSRF token from the layout meta tag.
  *
@@ -94,7 +96,7 @@ export function bindStoneImages() {
                 <button type="button" class="stone-folder__thumb" data-open title="${escapeHtml(image.name)}">
                     <img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.name)}" width="100" height="100">
                 </button>
-                <button type="button" class="stone-folder__name" data-rename title="Click to rename">${escapeHtml(image.name)}</button>
+                <button type="button" class="stone-folder__name" data-rename title="${t('Click to rename')}">${escapeHtml(image.name)}</button>
                 <button type="button" class="stone-folder__delete" data-delete aria-label="Delete ${escapeHtml(image.name)}">
                     <span class="material-symbols-outlined icon icon--xs">close</span>
                 </button>
@@ -178,13 +180,13 @@ export function bindStoneImages() {
             if (failed) {
                 window.AnnigemsAlert?.notifyError(Object.values(json.data.errors).flat().join(' ') || json.message);
             } else {
-                window.AnnigemsAlert?.notifySuccess(json.message || 'Images uploaded.');
+                window.AnnigemsAlert?.notifySuccess(json.message || t('Images uploaded.'));
             }
             return;
         }
 
         const fieldErrors = json.errors ? Object.values(json.errors).flat() : [];
-        window.AnnigemsAlert?.notifyError(fieldErrors.join(' ') || json.message || 'The images could not be uploaded.');
+        window.AnnigemsAlert?.notifyError(fieldErrors.join(' ') || json.message || t('The images could not be uploaded.'));
     }
 
     /**
@@ -203,7 +205,7 @@ export function bindStoneImages() {
         input.className = 'stone-folder__rename';
         input.value = image.name;
         input.maxLength = 180;
-        input.setAttribute('aria-label', 'File name');
+        input.setAttribute('aria-label', t('File name'));
         nameButton.replaceWith(input);
         input.focus();
         input.select();
@@ -229,10 +231,10 @@ export function bindStoneImages() {
 
             if (ok && json.data?.image) {
                 image.name = json.data.image.name;
-                window.AnnigemsAlert?.notifySuccess(json.message || 'Name updated.');
+                window.AnnigemsAlert?.notifySuccess(json.message || t('Name updated.'));
             } else {
                 const fieldErrors = json.errors ? Object.values(json.errors).flat() : [];
-                window.AnnigemsAlert?.notifyError(fieldErrors.join(' ') || json.message || 'That name could not be saved.');
+                window.AnnigemsAlert?.notifyError(fieldErrors.join(' ') || json.message || t('That name could not be saved.'));
             }
             render();
         }
@@ -260,21 +262,21 @@ export function bindStoneImages() {
         if (!image) return;
 
         const confirmed = await window.AnnigemsAlert?.confirmAction({
-            title: 'Delete this image?',
-            text: `${image.name} will be removed from the folder.`,
+            title: t('Delete this image?'),
+            text: t(':name will be removed from the folder.', { name: image.name }),
             confirmButtonText: 'Delete',
         });
         if (!confirmed) return;
 
         const { ok, json } = await fetchJson(`${uploadUrl}/${uuid}`, { method: 'DELETE' });
         if (!ok) {
-            window.AnnigemsAlert?.notifyError(json.message || 'The image could not be deleted.');
+            window.AnnigemsAlert?.notifyError(json.message || t('The image could not be deleted.'));
             return;
         }
 
         images = images.filter((row) => row.uuid !== uuid);
         render();
-        window.AnnigemsAlert?.notifySuccess(json.message || 'Image deleted.');
+        window.AnnigemsAlert?.notifySuccess(json.message || t('Image deleted.'));
     }
 
     grid?.addEventListener('click', (event) => {

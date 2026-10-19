@@ -26,7 +26,7 @@ enum ReportDatePreset: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::TODAY => 'Today',
             self::YESTERDAY => 'Yesterday',
             self::THIS_WEEK => 'This week',
@@ -34,7 +34,7 @@ enum ReportDatePreset: string
             self::LAST_MONTH => 'Last month',
             self::THIS_YEAR => 'This year',
             self::CUSTOM => 'Custom range',
-        };
+        });
     }
 
     /**

@@ -8,10 +8,10 @@
 <div class="panel" data-stone-folders>
     @if($categories->isEmpty())
         <div class="panel__body">
-            <x-empty-state title="No stones yet" message="Register a lot by hand, or upload the inventory sheet with Upload Excel." icon="folder">
+            <x-empty-state :title="__('No stones yet')" :message="__('Register a lot by hand, or upload the inventory sheet with Upload Excel.')" icon="folder">
                 <x-slot:actions>
                     @can('create', \App\Models\Stone::class)
-                        <x-btn href="{{ route('branch.stones.create') }}">Register Stone</x-btn>
+                        <x-btn href="{{ route('branch.stones.create') }}">{{ __('Register Stone') }}</x-btn>
                     @endcan
                 </x-slot:actions>
             </x-empty-state>
@@ -26,14 +26,14 @@
                          the link. --}}
                     <div class="folder-tile" data-folder-tile @if($manageable) data-manageable @endif>
                         <a href="{{ route('branch.stones.index', ['category' => $category->uuid]) }}"
-                           class="folder-tile__link" aria-label="Open {{ $category->name }}"></a>
+                           class="folder-tile__link" aria-label="{{ __('Open :name', ['name' => $category->name]) }}"></a>
                         <span class="material-symbols-outlined icon icon--lg folder-tile__icon">folder</span>
                         @if($manageable)
                             {{-- Admin: hover shows a pencil, click turns the name into a
                                  field (Enter saves, Escape cancels). Saving submits the
                                  form below, which returns to this list. --}}
                             <button type="button" class="folder-tile__name folder-tile__name--editable" data-folder-rename
-                                    title="Click to rename" aria-label="Rename {{ $category->name }}">
+                                    title="{{ __('Click to rename') }}" aria-label="{{ __('Rename :name', ['name' => $category->name]) }}">
                                 <span data-folder-name-text>{{ $category->name }}</span>
                                 <span class="material-symbols-outlined icon icon--sm folder-tile__pencil" aria-hidden="true">edit</span>
                             </button>
@@ -43,7 +43,7 @@
                         {{-- Lot count is what the operator scans for; the line
                              under it is the stock, in each lot's own unit. --}}
                         <span class="folder-tile__meta">
-                            {{ $category->lot_count }} {{ Str::plural('lot', $category->lot_count) }}
+                            {{ trans_choice(':count lot|:count lots', $category->lot_count) }}
                         </span>
                         <span class="folder-tile__meta folder-tile__stock">{{ $category->stockSummary() }}</span>
 
@@ -60,7 +60,7 @@
                                 @csrf
                                 @method('DELETE')
                                 <input type="hidden" name="return" value="folders">
-                                <button type="submit" class="folder-tile__action" data-icon-only title="Delete folder" aria-label="Delete folder {{ $category->name }}">
+                                <button type="submit" class="folder-tile__action" data-icon-only title="{{ __('Delete folder') }}" aria-label="{{ __('Delete folder :name', ['name' => $category->name]) }}">
                                     <span class="material-symbols-outlined icon icon--sm" aria-hidden="true">delete</span>
                                 </button>
                             </form>
@@ -74,11 +74,11 @@
             @if($categories->total() > 0)
                 <div class="folder-toolbar__pages">{{ $categories->withQueryString()->links() }}</div>
             @endif
-            <div class="view-switch" role="group" aria-label="Folder view">
-                <button type="button" class="view-switch__btn" data-folder-view="box" aria-label="Box view" title="Box view">
+            <div class="view-switch" role="group" aria-label="{{ __('Folder view') }}">
+                <button type="button" class="view-switch__btn" data-folder-view="box" aria-label="{{ __('Box view') }}" title="{{ __('Box view') }}">
                     <span class="material-symbols-outlined icon icon--sm">grid_view</span>
                 </button>
-                <button type="button" class="view-switch__btn" data-folder-view="list" aria-label="List view" title="List view">
+                <button type="button" class="view-switch__btn" data-folder-view="list" aria-label="{{ __('List view') }}" title="{{ __('List view') }}">
                     <span class="material-symbols-outlined icon icon--sm">view_list</span>
                 </button>
             </div>

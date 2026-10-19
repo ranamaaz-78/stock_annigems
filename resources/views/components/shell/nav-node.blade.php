@@ -9,9 +9,10 @@
     $hasChildren = $children !== [];
     $enabled = $item['enabled'] ?? false;
     $active = $item['active'] ?? false;
-    $label = $item['label'] ?? '';
+    $rawLabel = $item['label'] ?? '';
+    $label = $rawLabel !== '' ? __($rawLabel) : '';
     $icon = $item['icon'] ?? 'chevron_right';
-    $groupId = $item['id'] ?? \Illuminate\Support\Str::slug($label);
+    $groupId = $item['id'] ?? \Illuminate\Support\Str::slug($rawLabel);
     $linkClass = $depth > 0 ? 'sa-sidebar__sublink' : 'sa-sidebar__link';
 @endphp
 
@@ -50,7 +51,7 @@
         <span class="sa-sidebar__label">{{ $label }}</span>
     </a>
 @else
-    <span class="{{ $linkClass }} sa-sidebar__link-disabled" title="{{ $item['stub'] ?? 'Coming in a later module' }}">
+    <span class="{{ $linkClass }} sa-sidebar__link-disabled" title="{{ __($item['stub'] ?? 'Coming in a later module') }}">
         <span class="material-symbols-outlined icon icon--md">{{ $icon }}</span>
         <span class="sa-sidebar__label">{{ $label }}</span>
     </span>

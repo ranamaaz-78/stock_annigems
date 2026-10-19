@@ -24,7 +24,7 @@ enum SettingGroup: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::COMPANY => 'Company / Brand',
             self::FEATURES => 'Feature Toggles',
             self::TAX => 'Tax',
@@ -34,7 +34,7 @@ enum SettingGroup: string
             self::CONTACT => 'Branch Contact',
             self::PRINT => 'Print Preferences',
             self::INVOICE => 'Document Footers',
-        };
+        });
     }
 
     /**

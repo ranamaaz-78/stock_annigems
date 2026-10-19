@@ -42,8 +42,8 @@ class CancelDeliveryNoteRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'cancel_reason.required' => 'Please give a reason for cancelling this delivery note.',
-            'cancel_reason.min' => 'The reason must be at least 10 characters.',
+            'cancel_reason.required' => __('Please give a reason for cancelling this delivery note.'),
+            'cancel_reason.min' => __('The reason must be at least 10 characters.'),
         ];
     }
 }

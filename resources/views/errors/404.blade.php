@@ -1,6 +1,6 @@
 {{-- 404 Not Found — design/404_page_not_found_standardized --}}
 @extends('layouts.guest')
-@section('title', '404 Not Found')
+@section('title', __('404 Not Found'))
 @section('content')
 <div class="min-h-screen flex items-center justify-center p-6 bg-background">
     <div class="max-w-md w-full text-center">
@@ -10,10 +10,10 @@
             <path d="M92 92 L110 110" stroke="#785600" stroke-width="4" stroke-linecap="round"/>
             <text x="80" y="86" text-anchor="middle" fill="#785600" font-size="14" font-family="Inter,sans-serif" font-weight="700">?</text>
         </svg>
-        <p class="font-label-caps text-primary mb-2">Error 404</p>
-        <h1 class="font-headline-sm text-headline-sm">Page not found</h1>
-        <p class="text-body-sm text-on-surface-variant mt-2 mb-6">The page you are looking for does not exist or was moved.</p>
-        <a href="{{ route('login') }}" class="btn-primary inline-flex">Back to login</a>
+        <p class="font-label-caps text-primary mb-2">{{ __('Error 404') }}</p>
+        <h1 class="font-headline-sm text-headline-sm">{{ __('Page not found') }}</h1>
+        <p class="text-body-sm text-on-surface-variant mt-2 mb-6">{{ __('The page you are looking for does not exist or was moved.') }}</p>
+        <a href="{{ route('login') }}" class="btn-primary inline-flex">{{ __('Back to login') }}</a>
     </div>
 </div>
 @endsection

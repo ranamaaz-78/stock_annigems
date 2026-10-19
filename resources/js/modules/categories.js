@@ -2,6 +2,8 @@
  * Category / sub-category split page: select parent, modal CRUD, in-use delete.
  */
 
+import { t } from './i18n';
+
 /**
  * CSRF token from the layout meta tag.
  *
@@ -77,7 +79,7 @@ export function bindCategories() {
         const url = root.dataset.subsUrl.replace('__UUID__', uuid);
         const { ok, json } = await send(url, 'GET');
         if (!ok) {
-            window.AnnigemsAlert?.notifyError(json.message || 'Could not load sub-categories.');
+            window.AnnigemsAlert?.notifyError(json.message || t('Could not load sub-categories.'));
             return;
         }
         const category = json.data?.category || {};
@@ -87,7 +89,7 @@ export function bindCategories() {
             nameEl.textContent = category.name || '';
         }
         if (usageEl) {
-            usageEl.textContent = `Used by ${category.usage ?? 0} item(s)`;
+            usageEl.textContent = t('Used by :usage item(s)', { usage: category.usage ?? 0 });
         }
         renderSubs(json.data?.sub_categories || []);
     }
@@ -102,19 +104,19 @@ export function bindCategories() {
             return;
         }
         if (rows.length === 0) {
-            subRows.innerHTML = '<tr><td colspan="5" class="text-body-sm text-on-surface-variant">No sub-categories yet.</td></tr>';
+            subRows.innerHTML = '<tr><td colspan="5" class="text-body-sm text-on-surface-variant">' + t('No sub-categories yet.') + '</td></tr>';
             return;
         }
         subRows.innerHTML = rows.map((row) => `
             <tr data-sub-uuid="${row.uuid}" data-name="${escapeAttr(row.name)}" data-description="${escapeAttr(row.description || '')}" data-active="${row.is_active ? '1' : '0'}" data-sort="${row.sort_order}" data-items="${row.items_count}">
                 <td>${escapeHtml(row.name)}</td>
-                <td>${row.is_active ? 'Active' : 'Inactive'}</td>
+                <td>${row.is_active ? t('Active') : t('Inactive')}</td>
                 <td class="font-data-mono">${row.items_count}</td>
                 <td class="font-data-mono">${row.sort_order}</td>
                 ${canManage ? `<td>
-                    <button type="button" class="form-link text-body-sm" data-edit-sub>Edit</button>
+                    <button type="button" class="form-link text-body-sm" data-edit-sub>${t('Edit')}</button>
                     ·
-                    <button type="button" class="form-link text-body-sm" data-delete-sub>Delete</button>
+                    <button type="button" class="form-link text-body-sm" data-delete-sub>${t('Delete')}</button>
                 </td>` : ''}
             </tr>
         `).join('');
@@ -133,7 +135,7 @@ export function bindCategories() {
         categoryForm.dataset.uuid = '';
         categoryForm.querySelector('input[name="_method"]').value = 'POST';
         if (categoryModal.querySelector('h2')) {
-            categoryModal.querySelector('h2').textContent = 'Add category';
+            categoryModal.querySelector('h2').textContent = t('Add category');
         }
         setModalOpen(categoryModal, true);
     });
@@ -153,7 +155,7 @@ export function bindCategories() {
         categoryForm.dataset.uuid = selected.dataset.uuid;
         categoryForm.querySelector('input[name="_method"]').value = 'PUT';
         if (categoryModal.querySelector('h2')) {
-            categoryModal.querySelector('h2').textContent = 'Edit category';
+            categoryModal.querySelector('h2').textContent = t('Edit category');
         }
         setModalOpen(categoryModal, true);
     });
@@ -165,10 +167,10 @@ export function bindCategories() {
             return;
         }
         const ok = await window.AnnigemsAlert?.confirmAction({
-            title: `Delete ${selected.dataset.name}?`,
+            title: t('Delete :name?', { name: selected.dataset.name }),
             text: selected.dataset.items === '0'
-                ? 'This category will be removed if it has no sub-categories.'
-                : `${selected.dataset.items} jewellery item(s) use this category. Delete will be blocked — deactivate instead.`,
+                ? t('This category will be removed if it has no sub-categories.')
+                : t(':items jewellery item(s) use this category. Delete will be blocked — deactivate instead.', { items: selected.dataset.items }),
             confirmButtonText: 'Delete',
         });
         if (!ok) {
@@ -176,7 +178,7 @@ export function bindCategories() {
         }
         const { ok: saved, json } = await send(`/branch/categories/${selected.dataset.uuid}`, 'POST', deleteBody());
         if (!saved) {
-            window.AnnigemsAlert?.notifyError(json.message || 'Could not delete this category.');
+            window.AnnigemsAlert?.notifyError(json.message || t('Could not delete this category.'));
             return;
         }
         window.location.reload();
@@ -190,7 +192,7 @@ export function bindCategories() {
         subForm.dataset.uuid = '';
         subForm.querySelector('input[name="_method"]').value = 'POST';
         if (subModal.querySelector('h2')) {
-            subModal.querySelector('h2').textContent = 'Add sub-category';
+            subModal.querySelector('h2').textContent = t('Add sub-category');
         }
         setModalOpen(subModal, true);
     });
@@ -212,16 +214,16 @@ export function bindCategories() {
             subForm.dataset.uuid = row.dataset.subUuid;
             subForm.querySelector('input[name="_method"]').value = 'PUT';
             if (subModal.querySelector('h2')) {
-                subModal.querySelector('h2').textContent = 'Edit sub-category';
+                subModal.querySelector('h2').textContent = t('Edit sub-category');
             }
             setModalOpen(subModal, true);
         }
         if (del) {
             const ok = await window.AnnigemsAlert?.confirmAction({
-                title: `Delete ${row.dataset.name}?`,
+                title: t('Delete :name?', { name: row.dataset.name }),
                 text: row.dataset.items === '0'
-                    ? 'This sub-category will be removed.'
-                    : `${row.dataset.items} jewellery item(s) use this sub-category. Delete will be blocked — deactivate instead.`,
+                    ? t('This sub-category will be removed.')
+                    : t(':items jewellery item(s) use this sub-category. Delete will be blocked — deactivate instead.', { items: row.dataset.items }),
                 confirmButtonText: 'Delete',
             });
             if (!ok) {
@@ -233,7 +235,7 @@ export function bindCategories() {
                 deleteBody()
             );
             if (!saved) {
-                window.AnnigemsAlert?.notifyError(json.message || 'Could not delete this sub-category.');
+                window.AnnigemsAlert?.notifyError(json.message || t('Could not delete this sub-category.'));
                 return;
             }
             loadSubs(selectedUuid);
@@ -259,7 +261,7 @@ export function bindCategories() {
         const { ok, json } = await send(url, 'POST', body);
         if (!ok) {
             window.AnnigemsForm?.applyServerErrors(categoryForm, json.errors || {});
-            window.AnnigemsAlert?.notifyError(json.message || 'Could not save the category.');
+            window.AnnigemsAlert?.notifyError(json.message || t('Could not save the category.'));
             loader?.restore();
             return;
         }
@@ -281,7 +283,7 @@ export function bindCategories() {
         const { ok, json } = await send(url, 'POST', body);
         if (!ok) {
             window.AnnigemsForm?.applyServerErrors(subForm, json.errors || {});
-            window.AnnigemsAlert?.notifyError(json.message || 'Could not save the sub-category.');
+            window.AnnigemsAlert?.notifyError(json.message || t('Could not save the sub-category.'));
             loader?.restore();
             return;
         }

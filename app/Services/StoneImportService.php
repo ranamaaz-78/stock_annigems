@@ -197,16 +197,16 @@ class StoneImportService
     {
         $book = new Spreadsheet;
         $sheet = $book->getActiveSheet();
-        $sheet->setTitle('Rows to fix');
+        $sheet->setTitle(mb_substr(__('Rows to fix'), 0, 31));
 
         $fields = array_keys(self::FIELDS);
         $titles = array_map(
             fn (string $field): string => trim((string) ($headers[$field] ?? '')) !== ''
                 ? trim((string) $headers[$field])
-                : self::FIELDS[$field]['label'],
+                : __(self::FIELDS[$field]['label']),
             $fields
         );
-        $titles[] = 'Problem';
+        $titles[] = __('Problem');
 
         // Every value goes in as plain text: a cell starting with = + - or @
         // must never be turned into a formula when the file is opened.
@@ -284,7 +284,7 @@ class StoneImportService
 
         $book = new Spreadsheet;
         $sheet = $book->getActiveSheet();
-        $sheet->setTitle('Rows to fix');
+        $sheet->setTitle(mb_substr(__('Rows to fix'), 0, 31));
 
         // Header row: the sheet's own, then Problem.
         for ($column = 0; $column < $width; $column++) {
@@ -393,7 +393,7 @@ class StoneImportService
     {
         $fields = [];
         foreach (self::FIELDS as $key => $meta) {
-            $fields[$key] = ['label' => $meta['label'], 'required' => $meta['required']];
+            $fields[$key] = ['label' => __($meta['label']), 'required' => $meta['required']];
         }
 
         return $fields;
@@ -428,7 +428,7 @@ class StoneImportService
 
         if ($rowCount > self::MAX_ROWS) {
             throw ValidationException::withMessages([
-                'file' => 'That sheet has more than '.number_format(self::MAX_ROWS).' rows. Split it and import in parts.',
+                'file' => __('That sheet has more than :self rows. Split it and import in parts.', ['self' => number_format(self::MAX_ROWS)]),
             ]);
         }
 
@@ -463,7 +463,7 @@ class StoneImportService
 
         if (! is_file($absolute)) {
             throw ValidationException::withMessages([
-                'file' => 'That upload has expired. Choose the file again.',
+                'file' => __('That upload has expired. Choose the file again.'),
             ]);
         }
 
@@ -495,7 +495,7 @@ class StoneImportService
             // Code 1 is the row limit, which is a real answer, not a failure.
             if ($e->getCode() === 1) {
                 throw ValidationException::withMessages([
-                    'file' => 'That sheet has more than '.number_format(self::MAX_ROWS).' rows. Split it and import in parts.',
+                    'file' => __('That sheet has more than :self rows. Split it and import in parts.', ['self' => number_format(self::MAX_ROWS)]),
                 ]);
             }
 
@@ -541,7 +541,7 @@ class StoneImportService
 
             if (count($rows) > self::MAX_ROWS + 1) {
                 throw ValidationException::withMessages([
-                    'file' => 'That sheet has more than '.number_format(self::MAX_ROWS).' rows. Split it and import in parts.',
+                    'file' => __('That sheet has more than :self rows. Split it and import in parts.', ['self' => number_format(self::MAX_ROWS)]),
                 ]);
             }
         }
@@ -559,7 +559,7 @@ class StoneImportService
     private function assertNotEmpty(array $header): void
     {
         if ($header === [] || implode('', $header) === '') {
-            throw ValidationException::withMessages(['file' => 'That sheet is empty.']);
+            throw ValidationException::withMessages(['file' => __('That sheet is empty.')]);
         }
     }
 
@@ -593,7 +593,7 @@ class StoneImportService
             $info = IOFactory::createReaderForFile($absolute)->listWorksheetInfo($absolute);
         } catch (ReaderException $e) {
             throw ValidationException::withMessages([
-                'file' => 'That file could not be read as a spreadsheet.',
+                'file' => __('That file could not be read as a spreadsheet.'),
             ]);
         }
 
@@ -611,7 +611,7 @@ class StoneImportService
 
         if (! is_file($absolute)) {
             throw ValidationException::withMessages([
-                'file' => 'That upload has expired. Choose the file again.',
+                'file' => __('That upload has expired. Choose the file again.'),
             ]);
         }
 
@@ -626,7 +626,7 @@ class StoneImportService
             return $reader->load($absolute)->getSheet(0);
         } catch (ReaderException $e) {
             throw ValidationException::withMessages([
-                'file' => 'That file could not be read as a spreadsheet.',
+                'file' => __('That file could not be read as a spreadsheet.'),
             ]);
         }
     }
@@ -684,7 +684,7 @@ class StoneImportService
 
         if ($clean['name'] === null) {
             throw ValidationException::withMessages([
-                'mapping.name' => 'Choose the column that holds the stone name.',
+                'mapping.name' => __('Choose the column that holds the stone name.'),
             ]);
         }
 
@@ -739,7 +739,7 @@ class StoneImportService
 
         $name = $row['name'];
         if ($name === '') {
-            $issues[] = 'Name is missing.';
+            $issues[] = __('Name is missing.');
         }
 
         // The sheet writes the mode as free text ("PER GMS PRICE"), but an
@@ -755,7 +755,7 @@ class StoneImportService
 
         foreach (self::MAX_LENGTH as $field => $limit) {
             if (mb_strlen($row[$field]) > $limit) {
-                $issues[] = self::FIELDS[$field]['label'].' is longer than '.$limit.' characters.';
+                $issues[] = __(':field is longer than :limit characters.', ['field' => __(self::FIELDS[$field]['label']), 'limit' => $limit]);
             }
         }
 
@@ -829,7 +829,7 @@ class StoneImportService
         }
 
         throw ValidationException::withMessages([
-            'file' => 'That upload has expired. Choose the file again.',
+            'file' => __('That upload has expired. Choose the file again.'),
         ]);
     }
 }

@@ -1,11 +1,11 @@
 {{-- Branch read-only gold rates view. --}}
 @extends('layouts.branch')
 
-@section('title', 'Gold Rates')
-@section('page-title', 'Gold Rates')
+@section('title', __('Gold Rates'))
+@section('page-title', __('Gold Rates'))
 
 @section('content')
-<x-page-header title="Gold Rates" subtitle="Current global gold rates per purity." />
+<x-page-header :title="__('Gold Rates')" :subtitle="__('Current global gold rates per purity.')" />
 
 @include('shared.gold-rates._content')
 @endsection

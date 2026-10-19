@@ -89,12 +89,12 @@ class JewelleryItemController extends Controller
         }
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Item saved.', ['uuid' => $item->uuid, 'show_url' => route('branch.jewellery-items.show', $item)], 201);
+            return $this->jsonSuccess(__('Item saved.'), ['uuid' => $item->uuid, 'show_url' => route('branch.jewellery-items.show', $item)], 201);
         }
 
         return redirect()
             ->route('branch.jewellery-items.show', $item)
-            ->with('success', 'Item '.$item->item_code.' saved.');
+            ->with('success', __('Item :code saved.', ['code' => $item->item_code]));
     }
 
     /**
@@ -156,12 +156,12 @@ class JewelleryItemController extends Controller
         }
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Item updated.', ['uuid' => $item->uuid]);
+            return $this->jsonSuccess(__('Item updated.'), ['uuid' => $item->uuid]);
         }
 
         return redirect()
             ->route('branch.jewellery-items.show', $item)
-            ->with('success', 'Item updated.');
+            ->with('success', __('Item updated.'));
     }
 
     /**
@@ -175,13 +175,13 @@ class JewelleryItemController extends Controller
 
         if (request()->expectsJson()) {
             return $this->jsonSuccess(
-                'Item deleted. '.$result['stones_returned'].' stone(s) returned to stock.'
+                trans_choice('Item deleted. :count stone returned to stock.|Item deleted. :count stones returned to stock.', (int) $result['stones_returned'])
             );
         }
 
         return redirect()
             ->route('branch.jewellery-items.index')
-            ->with('success', 'Item deleted. '.$result['stones_returned'].' stone(s) returned to stock.');
+            ->with('success', trans_choice('Item deleted. :count stone returned to stock.|Item deleted. :count stones returned to stock.', (int) $result['stones_returned']));
     }
 
     /**
@@ -197,10 +197,10 @@ class JewelleryItemController extends Controller
         );
 
         if ($request->expectsJson()) {
-            return $this->jsonSuccess('Status updated.');
+            return $this->jsonSuccess(__('Status updated.'));
         }
 
-        return redirect()->route('branch.jewellery-items.show', $item)->with('success', 'Status updated.');
+        return redirect()->route('branch.jewellery-items.show', $item)->with('success', __('Status updated.'));
     }
 
     /**
@@ -214,11 +214,11 @@ class JewelleryItemController extends Controller
         );
 
         return match ($result['status']) {
-            'found' => $this->jsonSuccess('Found.', [
+            'found' => $this->jsonSuccess(__('Found.'), [
                 'stone' => $this->stonePayload($result['stone']),
             ]),
-            'inactive' => $this->jsonFailure('This stone is deactivated.', ['code' => ['This stone is deactivated.']], 422),
-            default => $this->jsonFailure('Barcode not found.', ['code' => ['Barcode not found.']], 404),
+            'inactive' => $this->jsonFailure(__('This stone is deactivated.'), ['code' => ['This stone is deactivated.']], 422),
+            default => $this->jsonFailure(__('Barcode not found.'), ['code' => ['Barcode not found.']], 404),
         };
     }
 
@@ -231,7 +231,7 @@ class JewelleryItemController extends Controller
 
         $stones = $this->stoneService->searchActive((string) $request->query('q', ''));
 
-        return $this->jsonSuccess('OK.', [
+        return $this->jsonSuccess(__('OK.'), [
             'stones' => $stones->map(fn ($stone) => $this->stonePayload($stone))->values(),
         ]);
     }
@@ -280,7 +280,7 @@ class JewelleryItemController extends Controller
                 'name' => $sub->name,
             ]);
 
-        return $this->jsonSuccess('OK.', ['sub_categories' => $rows]);
+        return $this->jsonSuccess(__('OK.'), ['sub_categories' => $rows]);
     }
 
     /**

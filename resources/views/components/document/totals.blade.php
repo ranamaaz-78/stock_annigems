@@ -6,7 +6,7 @@
 --}}
 @props([
     'document',                        // Quotation or Invoice
-    'grandLabel' => 'Grand Total',     // Quotations call this an estimate
+    'grandLabel' => null,     // Quotations call this an estimate
 ])
 
 @php
@@ -15,7 +15,8 @@
      */
     $trim = static fn ($value): string => rtrim(rtrim(number_format((float) $value, 2), '0'), '.');
 
-    $discountLabel = 'Discount';
+    $grandLabel ??= __('Grand Total');
+    $discountLabel = __('Discount');
     if ($document->discount_type === \App\Enums\DiscountType::PERCENTAGE && (float) $document->discount_value > 0) {
         $discountLabel .= ' ('.$trim($document->discount_value).'%)';
     }
@@ -24,14 +25,14 @@
     // "Exempt"), or for a document from before names were kept, a plain label.
     $taxLabel = filled($document->tax_name ?? null)
         ? $document->tax_name
-        : ((float) $document->tax_rate > 0 ? 'Tax ('.$trim($document->tax_rate).'%)' : 'Tax');
+        : ((float) $document->tax_rate > 0 ? __('Tax').' ('.$trim($document->tax_rate).'%)' : __('Tax'));
     $taxExempt = filled($document->tax_name ?? null) && (float) $document->tax_rate <= 0;
     $hasRecargo = (float) ($document->recargo_amount ?? 0) > 0;
 @endphp
 
 <div class="sheet-totals">
     <div class="sheet-totals__row">
-        <span class="sheet-totals__label">Subtotal</span>
+        <span class="sheet-totals__label">{{ __('Subtotal') }}</span>
         <span class="sheet-totals__value">{{ setting_amount($document->subtotal) }}</span>
     </div>
 
@@ -50,14 +51,14 @@
     @elseif($taxExempt)
         {{-- An exempt rate has no amount, but the document says it was exempt. --}}
         <div class="sheet-totals__row">
-            <span class="sheet-totals__label">IVA</span>
-            <span class="sheet-totals__value">Exempt</span>
+            <span class="sheet-totals__label">{{ __('IVA') }}</span>
+            <span class="sheet-totals__value">{{ __('Exempt') }}</span>
         </div>
     @endif
 
     @if($hasRecargo)
         <div class="sheet-totals__row">
-            <span class="sheet-totals__label">Recargo de equivalencia ({{ $trim($document->recargo_rate) }}%)</span>
+            <span class="sheet-totals__label">{{ __('Recargo de equivalencia') }} ({{ $trim($document->recargo_rate) }}%)</span>
             <span class="sheet-totals__value">{{ setting_amount($document->recargo_amount) }}</span>
         </div>
     @endif

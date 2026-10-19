@@ -6,6 +6,7 @@
  */
 
 import { confirmAction } from './alerts';
+import { t } from './i18n';
 
 /**
  * Serialize a form so we can tell whether the operator changed anything.
@@ -75,10 +76,10 @@ function bindForm(form) {
      * so the loading helper does not disable it before the dialog resolves.
      */
     save.addEventListener('click', async () => {
-        const label = form.dataset.groupLabel || 'these settings';
+        const label = form.dataset.groupLabel || t('these settings');
         const ok = await confirmAction({
-            title: `Save ${label}?`,
-            text: `This updates ${label}. Existing invoices keep the tax and discount they already stored.`,
+            title: t('Save :label?', { label: label }),
+            text: t('This updates :label. Existing invoices keep the tax and discount they already stored.', { label: label }),
             confirmButtonText: `Save ${label}`,
             icon: 'question',
         });

@@ -73,7 +73,7 @@ class BranchController extends Controller
 
         return redirect()
             ->route('superadmin.branches.show', $branch)
-            ->with('success', 'Branch created successfully.');
+            ->with('success', __('Branch created successfully.'));
     }
 
     /**
@@ -97,7 +97,7 @@ class BranchController extends Controller
 
         return redirect()
             ->route('superadmin.branches.show', $branch)
-            ->with('success', 'Branch updated successfully.');
+            ->with('success', __('Branch updated successfully.'));
     }
 
     /**
@@ -109,7 +109,7 @@ class BranchController extends Controller
 
         $this->branchService->setStatus($branch, BranchStatus::INACTIVE, $request->user());
 
-        return back()->with('success', 'Branch deactivated. Its users can no longer log in.');
+        return back()->with('success', __('Branch deactivated. Its users can no longer log in.'));
     }
 
     /**
@@ -121,6 +121,6 @@ class BranchController extends Controller
 
         $this->branchService->setStatus($branch, BranchStatus::ACTIVE, $request->user());
 
-        return back()->with('success', 'Branch activated successfully.');
+        return back()->with('success', __('Branch activated successfully.'));
     }
 }

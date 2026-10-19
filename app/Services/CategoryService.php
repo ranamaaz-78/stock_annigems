@@ -78,13 +78,13 @@ class CategoryService
         $count = JewelleryItem::query()->withoutGlobalScopes()->where('category_id', $category->id)->count();
         if ($count > 0) {
             throw ValidationException::withMessages([
-                'name' => "{$category->name} is used by {$count} jewellery item(s) and cannot be deleted. Deactivate it instead.",
+                'name' => __(':category is used by :count jewellery item(s) and cannot be deleted. Deactivate it instead.', ['category' => $category->name, 'count' => $count]),
             ]);
         }
 
         if ($category->subCategories()->exists()) {
             throw ValidationException::withMessages([
-                'name' => "{$category->name} still has sub-categories. Remove those first, or deactivate the category.",
+                'name' => __(':category still has sub-categories. Remove those first, or deactivate the category.', ['category' => $category->name]),
             ]);
         }
 
@@ -100,7 +100,7 @@ class CategoryService
     {
         if (! $category->is_active) {
             throw ValidationException::withMessages([
-                'category_id' => 'Sub-categories can only be added to an active category.',
+                'category_id' => __('Sub-categories can only be added to an active category.'),
             ]);
         }
 
@@ -133,7 +133,7 @@ class CategoryService
         $count = JewelleryItem::query()->withoutGlobalScopes()->where('sub_category_id', $sub->id)->count();
         if ($count > 0) {
             throw ValidationException::withMessages([
-                'name' => "{$sub->name} is used by {$count} jewellery item(s) and cannot be deleted. Deactivate it instead.",
+                'name' => __(':sub is used by :count jewellery item(s) and cannot be deleted. Deactivate it instead.', ['sub' => $sub->name, 'count' => $count]),
             ]);
         }
 

@@ -16,7 +16,7 @@
 <div class="panel-stack">
     @if($readonly)
         <x-alert type="info">
-            Gold rates are set by the SuperAdmin. Contact your system administrator to request a rate change.
+            {{ __('Gold rates are set by the SuperAdmin. Contact your system administrator to request a rate change.') }}
         </x-alert>
     @endif
 
@@ -24,14 +24,14 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-gutter items-start">
         <div class="panel">
             <div class="panel__header">
-                <h2 class="panel__title">Current rates</h2>
-                <p class="panel__subtitle">Per gram</p>
+                <h2 class="panel__title">{{ __('Current rates') }}</h2>
+                <p class="panel__subtitle">{{ __('Per gram') }}</p>
             </div>
             @if($currentRates->isEmpty())
                 <div class="panel__body">
                     <x-empty-state
-                        title="No active purities"
-                        message="Add a metal purity before setting gold rates."
+                        :title="__('No active purities')"
+                        :message="__('Add a metal purity before setting gold rates.')"
                         icon="brightness_high"
                     />
                 </div>
@@ -40,10 +40,10 @@
                 <table class="table-admin">
                     <thead>
                         <tr>
-                            <th>Purity</th>
-                            <th>Rate</th>
-                            <th>Effective</th>
-                            <th>Set by</th>
+                            <th>{{ __('Purity') }}</th>
+                            <th>{{ __('Rate') }}</th>
+                            <th>{{ __('Effective') }}</th>
+                            <th>{{ __('Set by') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -54,7 +54,7 @@
                                     @if($row['rate'])
                                         {{ setting_money($row['rate']->rate_per_gram) }}
                                     @else
-                                        Not set
+                                        {{ __('Not set') }}
                                     @endif
                                 </td>
                                 <td>{{ $row['rate']?->effective_date ? setting_date($row['rate']->effective_date) : '—' }}</td>
@@ -80,7 +80,7 @@
         @unless($readonly)
             <div class="panel">
                 <div class="panel__header">
-                    <h2 class="panel__title">Update rates</h2>
+                    <h2 class="panel__title">{{ __('Update rates') }}</h2>
                 </div>
                 <div class="panel__body">
                     <form
@@ -96,7 +96,7 @@
 
                         <x-form.input
                             name="effective_date"
-                            label="Effective date"
+                            :label="__('Effective date')"
                             type="date"
                             :max="now()->toDateString()"
                             :value="old('effective_date', now()->toDateString())"
@@ -116,9 +116,9 @@
                                         </label>
                                         <span class="rate-grid__current">
                                             @if($row['rate'])
-                                                Now {{ setting_money($row['rate']->rate_per_gram) }}
+                                                {{ __('Now :rate', ['rate' => setting_money($row['rate']->rate_per_gram)]) }}
                                             @else
-                                                Not set yet
+                                                {{ __('Not set yet') }}
                                             @endif
                                         </span>
                                     </div>
@@ -135,12 +135,11 @@
                         </div>
 
                         <p class="form-help mt-3">
-                            Leave a purity blank to keep its current rate. Each save inserts new history
-                            rows — previous rates are never overwritten.
+                            {{ __('Leave a purity blank to keep its current rate. Each save inserts new history rows — previous rates are never overwritten.') }}
                         </p>
 
                         <div class="form-actions">
-                            <x-btn type="submit" loading-text="Saving rates...">Save rates</x-btn>
+                            <x-btn type="submit" :loading-text="__('Saving rates...')">{{ __('Save rates') }}</x-btn>
                         </div>
                     </form>
                 </div>
@@ -151,23 +150,23 @@
     {{-- Full insert-only history with date / purity filters. --}}
     <div class="panel">
         <div class="panel__header">
-            <h2 class="panel__title">Rate history</h2>
+            <h2 class="panel__title">{{ __('Rate history') }}</h2>
         </div>
 
         <div class="panel__body">
             <form method="GET" class="filter-bar filter-bar--flush">
-                <x-form.input name="from" label="From" type="date" :value="$filters['from'] ?? ''" />
-                <x-form.input name="to" label="To" type="date" :value="$filters['to'] ?? ''" />
+                <x-form.input name="from" :label="__('From')" type="date" :value="$filters['from'] ?? ''" />
+                <x-form.input name="to" :label="__('To')" type="date" :value="$filters['to'] ?? ''" />
                 <x-form.select
                     name="purity_id"
-                    label="Purity"
-                    placeholder="All purities"
+                    :label="__('Purity')"
+                    :placeholder="__('All purities')"
                     :options="$purities->mapWithKeys(fn ($p) => [$p->id => trim(($p->metalType?->name ?? '').' '.$p->name)])->all()"
                     :value="$filters['purity_id'] ?? ''"
                 />
                 <div class="filter-bar__actions">
-                    <x-btn type="submit" variant="secondary">Filter</x-btn>
-                    <a href="{{ url()->current() }}" class="btn btn--secondary">Reset</a>
+                    <x-btn type="submit" variant="secondary">{{ __('Filter') }}</x-btn>
+                    <a href="{{ url()->current() }}" class="btn btn--secondary">{{ __('Reset') }}</a>
                 </div>
             </form>
         </div>
@@ -175,8 +174,8 @@
         @if($history->isEmpty())
             <div class="panel__footer">
                 <x-empty-state
-                    title="No rate history yet"
-                    message="Rates you save will be listed here with who changed them and when."
+                    :title="__('No rate history yet')"
+                    :message="__('Rates you save will be listed here with who changed them and when.')"
                     icon="history"
                 />
             </div>
@@ -185,10 +184,10 @@
                 <table class="table-admin">
                     <thead>
                         <tr>
-                            <th>Purity</th>
-                            <th>Rate / g</th>
-                            <th>Effective date</th>
-                            <th>Set by</th>
+                            <th>{{ __('Purity') }}</th>
+                            <th>{{ __('Rate / g') }}</th>
+                            <th>{{ __('Effective date') }}</th>
+                            <th>{{ __('Set by') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -260,9 +259,9 @@
                 form._loadingController?.restore();
 
                 window.AnnigemsAlert.confirmAction({
-                    title: 'Large rate change',
-                    text: 'One or more rates differ by more than ' + threshold + '% from the current rate. Save anyway?',
-                    confirmButtonText: 'Yes, save rates',
+                    title: @js(__('Large rate change')),
+                    text: {{ \Illuminate\Support\Js::from(__('One or more rates differ by more than :threshold% from the current rate. Save anyway?')) }}.replace(':threshold', threshold),
+                    confirmButtonText: @js(__('Yes, save rates')),
                 }).then((ok) => {
                     if (!ok) return;
                     confirmField.value = '1';

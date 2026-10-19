@@ -21,12 +21,12 @@ enum SettingType: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::BOOLEAN => 'Yes / no',
             self::STRING => 'Text',
             self::INTEGER => 'Whole number',
             self::DECIMAL => 'Decimal',
             self::JSON => 'List',
-        };
+        });
     }
 }

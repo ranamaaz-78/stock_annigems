@@ -19,11 +19,11 @@ enum QuotationStatus: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::DRAFT => 'Draft',
             self::CONVERTED => 'Converted',
             self::CANCELLED => 'Cancelled',
-        };
+        });
     }
 
     /**

@@ -114,7 +114,7 @@ class SettingService
 
         if ($definitions === []) {
             throw ValidationException::withMessages([
-                'group' => 'That settings group does not exist.',
+                'group' => __('That settings group does not exist.'),
             ]);
         }
 
@@ -123,7 +123,7 @@ class SettingService
 
         if ($unknown !== []) {
             throw ValidationException::withMessages([
-                'settings' => 'Unknown setting: '.implode(', ', $unknown).'. Keys cannot be created from a form.',
+                'settings' => __('Unknown setting: :unknown. Keys cannot be created from a form.', ['unknown' => implode(', ', $unknown)]),
             ]);
         }
 

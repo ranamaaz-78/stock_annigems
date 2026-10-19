@@ -25,7 +25,7 @@
         \App\Enums\PerformaStatus::CANCELLED => 'pd__badge--void',
         default => '',
     };
-    $terms = 'Goods listed here have left stock on credit. Payment is recorded on a separate invoice; unpaid goods are returned against this number. Not a tax invoice.';
+    $terms = __('Goods listed here have left stock on credit. Payment is recorded on a separate invoice; unpaid goods are returned against this number. Not a tax invoice.');
 @endphp
 
 <article @class(['pd', 'pd--performa', 'pd--a4' => $a4, 'pd--dense' => $performa->items->count() > 12])>
@@ -38,15 +38,15 @@
                 <x-pd.company :branch="$branch" />
             </div>
             <div class="pd__title-block">
-                <h1 class="pd__title">Performa</h1>
+                <h1 class="pd__title">{{ __('Performa') }}</h1>
                 <span @class(['pd__badge', $badge])>{{ $performa->status->label() }}</span>
-                <p class="pd__tagline">Not a tax invoice</p>
+                <p class="pd__tagline">{{ __('Not a tax invoice') }}</p>
             </div>
         </header>
 
         <section class="pd__row">
             <div class="pd__party">
-                <p class="pd__label">Prepared for</p>
+                <p class="pd__label">{{ __('Prepared for') }}</p>
                 <p class="pd__party-name">{{ $performa->displayCreditorName() }}</p>
                 <p class="pd__party-lines">
                     @if($creditor?->nie)<span>N.I.F / N.I.E {{ $creditor->nie }}</span>@endif
@@ -56,11 +56,11 @@
                 </p>
             </div>
             <dl class="pd__facts">
-                <dt>Performa no.</dt><dd class="is-strong">{{ $performa->performa_number }}</dd>
-                <dt>Issue date</dt><dd>{{ setting_date($performa->performa_date) }}</dd>
-                <dt>Issued by</dt><dd>{{ $performa->creator?->name ?? '—' }}</dd>
+                <dt>{{ __('Performa no.') }}</dt><dd class="is-strong">{{ $performa->performa_number }}</dd>
+                <dt>{{ __('Issue date') }}</dt><dd>{{ setting_date($performa->performa_date) }}</dd>
+                <dt>{{ __('Issued by') }}</dt><dd>{{ $performa->creator?->name ?? '—' }}</dd>
                 @if($showPrices)
-                    <dt>Balance due</dt><dd class="is-strong">{{ setting_money($valueOutstanding) }}</dd>
+                    <dt>{{ __('Balance due') }}</dt><dd class="is-strong">{{ setting_money($valueOutstanding) }}</dd>
                 @endif
             </dl>
         </section>
@@ -82,14 +82,14 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Description</th>
-                        <th>Issued</th>
-                        <th>Paid</th>
-                        <th>Returned</th>
-                        <th>Out</th>
+                        <th>{{ __('Description') }}</th>
+                        <th>{{ __('Issued') }}</th>
+                        <th>{{ __('Paid') }}</th>
+                        <th>{{ __('Returned') }}</th>
+                        <th>{{ __('Out') }}</th>
                         @if($showPrices)
-                            <th>Price</th>
-                            <th>Amount</th>
+                            <th>{{ __('Price') }}</th>
+                            <th>{{ __('Amount') }}</th>
                         @endif
                     </tr>
                 </thead>
@@ -98,7 +98,7 @@
                         @php
                             $isStone = $item->line_type === \App\Enums\LineType::LOOSE_STONE;
                             $detail = $isStone
-                                ? ($item->isWeighed() ? 'Loose stone · per gram' : 'Loose stone')
+                                ? ($item->isWeighed() ? __('Loose stone · per gram') : __('Loose stone'))
                                 : trim(($item->purity_snapshot ?? '').' '.($item->metal_snapshot ?? '')
                                     .($item->net_weight_snapshot ? ' · '.number_format($item->net_weight_snapshot, 3).' g' : ''));
                             $sub = collect([$item->item_code_snapshot, $detail])->filter()->implode(' · ');
@@ -131,13 +131,13 @@
 
         @if($showPrices)
             <section class="pd__sums">
-                <p class="pd__note-small">Prices are the amounts agreed with the customer for this shipment. Taxes are not calculated on this document.</p>
+                <p class="pd__note-small">{{ __('Prices are the amounts agreed with the customer for this shipment. Taxes are not calculated on this document.') }}</p>
                 <div class="pd__totals">
-                    <div class="pd__total-row"><span>Value issued</span><span>{{ setting_money($valueIssued) }}</span></div>
-                    <div class="pd__total-row"><span>Paid for</span><span>−{{ setting_money($valueSettled) }}</span></div>
-                    <div class="pd__total-row"><span>Returned</span><span>−{{ setting_money($valueReturned) }}</span></div>
+                    <div class="pd__total-row"><span>{{ __('Value issued') }}</span><span>{{ setting_money($valueIssued) }}</span></div>
+                    <div class="pd__total-row"><span>{{ __('Paid for') }}</span><span>−{{ setting_money($valueSettled) }}</span></div>
+                    <div class="pd__total-row"><span>{{ __('Returned') }}</span><span>−{{ setting_money($valueReturned) }}</span></div>
                     <div class="pd__grand">
-                        <span class="pd__grand-label">Outstanding</span>
+                        <span class="pd__grand-label">{{ __('Outstanding') }}</span>
                         <span class="pd__grand-value">{{ setting_money($valueOutstanding) }}</span>
                     </div>
                 </div>

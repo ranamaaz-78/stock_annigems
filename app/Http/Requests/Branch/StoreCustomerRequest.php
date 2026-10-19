@@ -47,10 +47,10 @@ class StoreCustomerRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Please enter the customer name.',
-            'phone.required' => 'Phone number is required.',
-            'phone.unique' => 'This phone number is already registered to another customer.',
-            'phone.regex' => 'Enter a valid phone number.',
+            'name.required' => __('Please enter the customer name.'),
+            'phone.required' => __('Phone number is required.'),
+            'phone.unique' => __('This phone number is already registered to another customer.'),
+            'phone.regex' => __('Enter a valid phone number.'),
         ];
     }
 }

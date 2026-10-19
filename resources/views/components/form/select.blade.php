@@ -7,7 +7,7 @@
     'options' => [],
     'value' => null,
     'required' => false,
-    'placeholder' => 'Select…',
+    'placeholder' => null,
 ])
 
 @php
@@ -27,7 +27,7 @@
             'class' => 'input-field' . ($hasError ? ' is-invalid' : ''),
         ]) }}
     >
-        <option value="">{{ $placeholder }}</option>
+        <option value="">{{ $placeholder ?? __('Select…') }}</option>
         @foreach($options as $optionValue => $optionLabel)
             <option value="{{ $optionValue }}" @selected((string) $fieldValue === (string) $optionValue)>{{ $optionLabel }}</option>
         @endforeach

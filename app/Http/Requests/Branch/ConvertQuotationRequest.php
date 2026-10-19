@@ -47,7 +47,7 @@ class ConvertQuotationRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'payment_method.required' => 'Select a payment method.',
+            'payment_method.required' => __('Select a payment method.'),
         ];
     }
 }

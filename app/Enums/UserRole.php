@@ -22,13 +22,13 @@ enum UserRole: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::SUPERADMIN => 'SuperAdmin',
             self::ADMIN => 'Admin',
             self::MANAGER => 'Manager',
             self::CASHIER => 'Cashier',
             self::INVENTORY_STAFF => 'Inventory Staff',
-        };
+        });
     }
 
     /**

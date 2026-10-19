@@ -83,7 +83,7 @@ class StoneImportLogService
 
             if ($chunkIndex !== (int) $import->chunks_done) {
                 throw ValidationException::withMessages([
-                    'chunk_index' => 'That batch was already received or arrived out of order. Check Import History before trying again.',
+                    'chunk_index' => __('That batch was already received or arrived out of order. Check Import History before trying again.'),
                 ]);
             }
 
@@ -201,7 +201,7 @@ class StoneImportLogService
 
         if ($import === null || $import->finished_at !== null) {
             throw ValidationException::withMessages([
-                'import_uuid' => 'This import is not open any more. Start the import again.',
+                'import_uuid' => __('This import is not open any more. Start the import again.'),
             ]);
         }
 

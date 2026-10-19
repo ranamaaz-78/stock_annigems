@@ -33,7 +33,7 @@ enum JewelleryItemMovementType: string
      */
     public function label(): string
     {
-        return match ($this) {
+        return __(match ($this) {
             self::CREATED => 'Created',
             self::STONES_CHANGED => 'Stones changed',
             self::STATUS_CHANGED => 'Status changed',
@@ -51,6 +51,6 @@ enum JewelleryItemMovementType: string
             self::RETURNED_FROM_DELIVERY => 'Returned from delivery note',
             self::TRANSFERRED_IN => 'Transferred in',
             self::TRANSFERRED_OUT => 'Transferred out',
-        };
+        });
     }
 }

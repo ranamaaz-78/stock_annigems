@@ -178,13 +178,13 @@ class StonePricingService
         $pieces = $this->positiveInt($data['pieces'] ?? null);
 
         if ($carat === null) {
-            $issues[] = 'Per carat needs a carat weight above zero.';
+            $issues[] = __('Per carat needs a carat weight above zero.');
         }
         if ($rate === null) {
-            $issues[] = 'Per carat needs a price per carat above zero.';
+            $issues[] = __('Per carat needs a price per carat above zero.');
         }
         if ($pieces === null) {
-            $issues[] = 'Per carat needs at least one piece.';
+            $issues[] = __('Per carat needs at least one piece.');
         }
 
         if ($issues !== []) {
@@ -222,10 +222,10 @@ class StonePricingService
         $rate = $this->positiveNumber($data['price_per_piece'] ?? null);
 
         if ($pieces === null) {
-            $issues[] = 'Per piece needs at least one piece.';
+            $issues[] = __('Per piece needs at least one piece.');
         }
         if ($rate === null) {
-            $issues[] = 'Per piece needs a price per piece above zero.';
+            $issues[] = __('Per piece needs a price per piece above zero.');
         }
 
         if ($issues !== []) {
@@ -260,10 +260,10 @@ class StonePricingService
         $rate = $this->positiveNumber($data['price_per_gram'] ?? null);
 
         if ($grams === null) {
-            $issues[] = 'Per gram needs a weight in grams above zero.';
+            $issues[] = __('Per gram needs a weight in grams above zero.');
         }
         if ($rate === null) {
-            $issues[] = 'Per gram needs a price per gram above zero.';
+            $issues[] = __('Per gram needs a price per gram above zero.');
         }
 
         if ($issues !== []) {

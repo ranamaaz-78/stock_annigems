@@ -11,8 +11,8 @@
 --}}
 @extends('layouts.branch')
 
-@section('title', 'Dashboard')
-@section('page-title', 'Dashboard')
+@section('title', __('Dashboard'))
+@section('page-title', __('Dashboard'))
 
 @php
     use App\Support\Reports\ReportFormatter;
@@ -20,14 +20,14 @@
 
 @section('content')
 <x-page-header
-    title="Dashboard"
+    :title="__('Dashboard')"
     :subtitle="$dashboard['branch_name'].' · '.$dashboard['role_label']"
 >
     <x-slot:actions>
         @can('create', \App\Models\Quotation::class)
             <x-btn href="{{ route('branch.pos.show') }}">
                 <span class="material-symbols-outlined icon icon--sm">point_of_sale</span>
-                Official Invoicing / POS
+                {{ __('Official Invoicing / POS') }}
             </x-btn>
         @endcan
     </x-slot:actions>
@@ -35,7 +35,7 @@
 
 @if(empty($dashboard['cards']) && empty($dashboard['secondary_cards']))
     <x-alert type="info" class="mb-4">
-        Your role does not have dashboard summary permissions yet. Contact your branch Admin if you need access.
+        {{ __('Your role does not have dashboard summary permissions yet. Contact your branch Admin if you need access.') }}
     </x-alert>
 @endif
 
@@ -80,27 +80,27 @@
 @if($dashboard['quotation_funnel'])
     <div class="panel mb-6">
         <div class="panel-header">
-            <h2 class="panel-header__title text-headline-sm">Quotation Conversion — This Month</h2>
+            <h2 class="panel-header__title text-headline-sm">{{ __('Quotation Conversion — This Month') }}</h2>
             @if($dashboard['can_view_reports'])
-                <a href="{{ route('branch.reports.show', 'quotation-funnel') }}" class="form-link">Open report</a>
+                <a href="{{ route('branch.reports.show', 'quotation-funnel') }}" class="form-link">{{ __('Open report') }}</a>
             @endif
         </div>
         <div class="p-4">
             <dl class="detail-list">
                 <div class="detail-list__item">
-                    <dt class="detail-list__term">Quotations Raised</dt>
+                    <dt class="detail-list__term">{{ __('Quotations Raised') }}</dt>
                     <dd class="detail-list__value">{{ ReportFormatter::count($dashboard['quotation_funnel']['total']) }}</dd>
                 </div>
                 <div class="detail-list__item">
-                    <dt class="detail-list__term">Converted</dt>
+                    <dt class="detail-list__term">{{ __('Converted') }}</dt>
                     <dd class="detail-list__value">{{ ReportFormatter::count($dashboard['quotation_funnel']['converted']) }}</dd>
                 </div>
                 <div class="detail-list__item">
-                    <dt class="detail-list__term">Conversion Rate</dt>
+                    <dt class="detail-list__term">{{ __('Conversion Rate') }}</dt>
                     <dd class="detail-list__value">{{ ReportFormatter::percent($dashboard['quotation_funnel']['conversion_rate']) }}</dd>
                 </div>
                 <div class="detail-list__item">
-                    <dt class="detail-list__term">Converted Value</dt>
+                    <dt class="detail-list__term">{{ __('Converted Value') }}</dt>
                     <dd class="detail-list__value">{{ ReportFormatter::money($dashboard['quotation_funnel']['converted_value']) }}</dd>
                 </div>
             </dl>
@@ -114,17 +114,17 @@
     @if($dashboard['recent_invoices']->isNotEmpty())
         <div class="panel">
             <div class="panel-header">
-                <h2 class="panel-header__title text-headline-sm">Recent Invoices</h2>
-                <a href="{{ route('branch.invoices.index') }}" class="form-link">View all</a>
+                <h2 class="panel-header__title text-headline-sm">{{ __('Recent Invoices') }}</h2>
+                <a href="{{ route('branch.invoices.index') }}" class="form-link">{{ __('View all') }}</a>
             </div>
             <div class="table-scroll">
                 <table class="table-admin table-admin--dense">
                     <thead>
                         <tr>
-                            <th>Invoice</th>
-                            <th>Customer</th>
-                            <th>Date</th>
-                            <th class="table-admin__num">Total</th>
+                            <th>{{ __('Invoice') }}</th>
+                            <th>{{ __('Customer') }}</th>
+                            <th>{{ __('Date') }}</th>
+                            <th class="table-admin__num">{{ __('Total') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -148,17 +148,17 @@
     @if($dashboard['pending_quotations']->isNotEmpty())
         <div class="panel">
             <div class="panel-header">
-                <h2 class="panel-header__title text-headline-sm">Oldest Pending Quotations</h2>
-                <a href="{{ route('branch.quotations.index') }}" class="form-link">View all</a>
+                <h2 class="panel-header__title text-headline-sm">{{ __('Oldest Pending Quotations') }}</h2>
+                <a href="{{ route('branch.quotations.index') }}" class="form-link">{{ __('View all') }}</a>
             </div>
             <div class="table-scroll">
                 <table class="table-admin table-admin--dense">
                     <thead>
                         <tr>
-                            <th>Quotation</th>
-                            <th>Customer</th>
-                            <th class="table-admin__num">Age</th>
-                            <th class="table-admin__num">Quoted</th>
+                            <th>{{ __('Quotation') }}</th>
+                            <th>{{ __('Customer') }}</th>
+                            <th class="table-admin__num">{{ __('Age') }}</th>
+                            <th class="table-admin__num">{{ __('Quoted') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -182,17 +182,17 @@
     @if($dashboard['low_stones']->isNotEmpty())
         <div class="panel">
             <div class="panel-header">
-                <h2 class="panel-header__title text-headline-sm">Zero &amp; Low Stone Stock</h2>
-                <a href="{{ route('branch.stones.index') }}" class="form-link">View all</a>
+                <h2 class="panel-header__title text-headline-sm">{{ __('Zero & Low Stone Stock') }}</h2>
+                <a href="{{ route('branch.stones.index') }}" class="form-link">{{ __('View all') }}</a>
             </div>
             <div class="table-scroll">
                 <table class="table-admin table-admin--dense">
                     <thead>
                         <tr>
-                            <th>Stone</th>
-                            <th>Shape</th>
-                            <th class="table-admin__num">On hand</th>
-                            <th>Status</th>
+                            <th>{{ __('Stone') }}</th>
+                            <th>{{ __('Shape') }}</th>
+                            <th class="table-admin__num">{{ __('On hand') }}</th>
+                            <th>{{ __('Status') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -216,17 +216,17 @@
     @if($dashboard['aging_items']->isNotEmpty())
         <div class="panel">
             <div class="panel-header">
-                <h2 class="panel-header__title text-headline-sm">Longest-Held Stock</h2>
-                <a href="{{ route('branch.jewellery-items.index') }}" class="form-link">View all</a>
+                <h2 class="panel-header__title text-headline-sm">{{ __('Longest-Held Stock') }}</h2>
+                <a href="{{ route('branch.jewellery-items.index') }}" class="form-link">{{ __('View all') }}</a>
             </div>
             <div class="table-scroll">
                 <table class="table-admin table-admin--dense">
                     <thead>
                         <tr>
-                            <th>Code</th>
-                            <th>Item</th>
-                            <th class="table-admin__num">Held</th>
-                            <th class="table-admin__num">Net Wt</th>
+                            <th>{{ __('Code') }}</th>
+                            <th>{{ __('Item') }}</th>
+                            <th class="table-admin__num">{{ __('Held') }}</th>
+                            <th class="table-admin__num">{{ __('Net Wt') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -250,18 +250,18 @@
     @if($dashboard['recent_intakes']->isNotEmpty())
         <div class="panel">
             <div class="panel-header">
-                <h2 class="panel-header__title text-headline-sm">Recent Stone Intakes</h2>
-                <a href="{{ route('branch.stone-intakes.index') }}" class="form-link">View all</a>
+                <h2 class="panel-header__title text-headline-sm">{{ __('Recent Stone Intakes') }}</h2>
+                <a href="{{ route('branch.stone-intakes.index') }}" class="form-link">{{ __('View all') }}</a>
             </div>
             <div class="table-scroll">
                 <table class="table-admin table-admin--dense">
                     <thead>
                         <tr>
-                            <th>Batch</th>
-                            <th>Date</th>
-                            <th class="table-admin__num">Pieces</th>
-                            <th class="table-admin__num">Grams</th>
-                            <th class="table-admin__num">Carat</th>
+                            <th>{{ __('Batch') }}</th>
+                            <th>{{ __('Date') }}</th>
+                            <th class="table-admin__num">{{ __('Pieces') }}</th>
+                            <th class="table-admin__num">{{ __('Grams') }}</th>
+                            <th class="table-admin__num">{{ __('Carat') }}</th>
                         </tr>
                     </thead>
                     <tbody>
