@@ -5,14 +5,14 @@
     which fetches each chosen stone's label data from the data URL and draws the
     labels itself. Nothing here posts a form.
 --}}
-@can('printLabel', \App\Models\Stone::class)
+@if($labelAllowed ?? auth()->user()->can('printLabel', \App\Models\Stone::class))
 <x-dialog
     id="label-modal"
     :title="__('Print barcode labels')"
     :subtitle="__('Choose the label stock and what to show, check the preview, then print.')"
     icon="print"
     size="xl"
-    data-data-url="{{ route('branch.stones.labels.data') }}"
+    data-data-url="{{ $labelDataUrl ?? route('branch.stones.labels.data') }}"
     data-company="{{ setting('company_name') }}"
 >
     <div class="dialog__body">
@@ -85,4 +85,4 @@
         </x-btn>
     </div>
 </x-dialog>
-@endcan
+@endif

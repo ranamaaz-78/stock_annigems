@@ -15,6 +15,9 @@ import { t } from './i18n';
 /** Company name printed on each label; read from the dialog when it is bound. */
 let companyName = '';
 
+/** What the open dialog prints: 'barcode', 'qr', or 'both' (a barcode label and a QR label each). */
+let labelKind = 'barcode';
+
 /** Mobile-safe localStorage key for the last choices. */
 const STORAGE_KEY = 'annigems.stones.labelOptions';
 
@@ -155,6 +158,10 @@ function stockFor(options) {
  * @returns {string}
  */
 function labelHtml(stone, stock, options) {
+    if ((stone._kind || 'barcode') === 'qr') {
+        return qrLabelHtml(stone, stock, options);
+    }
+
     const { w, h } = stock;
     const pad = clamp(Math.min(w, h) * 0.06, 0.6, 2);
     const scale = TEXT_SCALE[options.text] || 1;
@@ -193,6 +200,37 @@ function labelHtml(stone, stock, options) {
 }
 
 /**
+ * A QR label: company, item code, the QR filling the room left, then the name.
+ *
+ * @param {object} stone
+ * @param {object} stock
+ * @param {object} options
+ * @returns {string}
+ */
+function qrLabelHtml(stone, stock, options) {
+    const { w, h } = stock;
+    const pad = clamp(Math.min(w, h) * 0.06, 0.6, 2);
+    const scale = TEXT_SCALE[options.text] || 1;
+    const font = clamp(h * 0.085, 1.5, 3.2) * scale;
+    const companyFont = font * 1.1;
+    const quiet = clamp(w * 0.06, 1.5, 5);
+    const name = options.showName ? String(stone.name ?? '') : '';
+    const perLine = Math.max(6, Math.floor((w - quiet) / (font * 0.58)));
+    const nameLines = name ? Math.min(2, Math.ceil(name.length / perLine)) : 0;
+
+    const textHeight = [companyName ? companyFont : 0, font, ...Array.from({ length: nameLines }, () => font)]
+        .filter(Boolean).reduce((sum, size) => sum + size * 1.2, 0);
+    const side = Math.max(4, Math.min(w - quiet, h - 2 * pad - textHeight - 0.8));
+
+    return `<div class="lbl" style="width:${w}mm;height:${h}mm;padding:${pad}mm ${quiet / 2}mm;${options.border ? 'border:0.2mm solid #000;' : ''}">
+        ${companyName ? `<div class="lbl__company" style="font-size:${companyFont}mm">${esc(companyName)}</div>` : ''}
+        <div class="lbl__sr" style="font-size:${font}mm">${esc(stone.stone_code)}</div>
+        ${stone.qr_uri ? `<img class="lbl__qr" src="${esc(stone.qr_uri)}" alt="" style="width:${side}mm;height:${side}mm">` : ''}
+        ${name ? `<div class="lbl__name" style="font-size:${font}mm">${esc(name)}</div>` : ''}
+    </div>`;
+}
+
+/**
  * One printed label carrying several barcodes side by side.
  *
  * Each barcode gets an equal slice of the width; a missing last one stays empty.
@@ -217,7 +255,9 @@ function pairHtml(group, stock, options, per) {
  * @returns {object[]}
  */
 function expandCopies(stones, copies) {
-    return stones.flatMap((stone) => Array.from({ length: copies }, () => stone));
+    const kinds = labelKind === 'both' ? ['barcode', 'qr'] : [labelKind];
+
+    return stones.flatMap((stone) => kinds.flatMap((kind) => Array.from({ length: copies }, () => ({ ...stone, _kind: kind }))));
 }
 
 /**
@@ -271,6 +311,7 @@ function labelCss() {
     return `
         .pg { box-sizing: border-box; background: #fff; overflow: hidden; }
         .pg--sheet { display: grid; align-content: start; justify-content: start; }
+        .lbl__qr { display: block; flex: none; margin: 0.4mm 0; image-rendering: pixelated; }
         .lbl-pair { display: flex; align-items: stretch; overflow: hidden; }
         .pg--roll { display: flex; align-items: center; justify-content: center; }
         .lbl { box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; background: #fff; color: #000; font-family: Arial, Helvetica, sans-serif; text-align: center; line-height: 1.25; }
@@ -452,9 +493,10 @@ export function bindStoneLabels() {
      *
      * @param {string[]} uuids
      */
-    async function open(uuids) {
+    async function open(uuids, kind = 'barcode') {
+        labelKind = ['qr', 'both'].includes(kind) ? kind : 'barcode';
         if (!uuids.length) {
-            window.AnnigemsAlert?.notifyError(t('Select at least one stone to print.'));
+            window.AnnigemsAlert?.notifyError(t('Select at least one item to print.'));
 
             return;
         }
@@ -470,7 +512,7 @@ export function bindStoneLabels() {
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': csrfToken(),
                 },
-                body: JSON.stringify({ uuids }),
+                body: JSON.stringify({ uuids, kind: labelKind }),
             });
             ok = response.ok;
             json = await response.json().catch(() => ({}));
@@ -488,16 +530,16 @@ export function bindStoneLabels() {
         const skipped = Number(json.data?.skipped || 0);
 
         if (!stones.length) {
-            window.AnnigemsAlert?.notifyError(t('None of the selected stones has a packet barcode, so there is nothing to print.'));
+            window.AnnigemsAlert?.notifyError(t('None of the selected items has a barcode, so there is nothing to print.'));
 
             return;
         }
 
-        modal.querySelector('[data-label-count]').textContent = `${stones.length} ${stones.length === 1 ? 'stone' : 'stones'} selected`;
+        modal.querySelector('[data-label-count]').textContent = t(':count selected', { count: stones.length });
         notice.textContent = skipped > 0
             ? (skipped === 1
-                ? t(':count selected stone has no packet barcode and is left out.', { count: skipped })
-                : t(':count selected stones have no packet barcode and are left out.', { count: skipped }))
+                ? t(':count selected item has no barcode and is left out.', { count: skipped })
+                : t(':count selected items have no barcode and are left out.', { count: skipped }))
             : '';
         notice.classList.toggle('is-hidden', skipped === 0);
 
@@ -525,7 +567,7 @@ export function bindStoneLabels() {
         const single = target?.closest('[data-label-open]');
         if (single) {
             event.preventDefault();
-            open([single.dataset.labelOpen]);
+            open([single.dataset.labelOpen], single.dataset.labelKind);
 
             return;
         }
@@ -534,7 +576,7 @@ export function bindStoneLabels() {
         if (selected) {
             event.preventDefault();
             const form = selected.closest('form') || document;
-            open([...form.querySelectorAll('input[name="uuids[]"]:checked')].map((box) => box.value));
+            open([...form.querySelectorAll('input[name="uuids[]"]:checked')].map((box) => box.value), selected.dataset.labelKind);
         }
     });
 }

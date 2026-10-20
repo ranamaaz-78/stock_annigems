@@ -99,10 +99,10 @@
                                         <x-table.action :href="route('branch.jewellery-items.show', $item)" />
                                         @can('printLabel', $item)
                                             @if($item->barcode)
-                                                <x-table.action :href="route('branch.jewellery-items.label', [$item, 'barcode'])" icon="barcode" :label="__('Barcode')" target="_blank" />
+                                                <x-table.action :href="route('branch.jewellery-items.label', [$item, 'barcode'])" icon="barcode" :label="__('Barcode')" data-label-open="{{ $item->uuid }}" />
                                             @endif
                                             @if($item->qr_token)
-                                                <x-table.action :href="route('branch.jewellery-items.label', [$item, 'qr'])" icon="qr_code_2" :label="__('QR')" target="_blank" />
+                                                <x-table.action :href="route('branch.jewellery-items.label', [$item, 'qr'])" icon="qr_code_2" :label="__('QR')" data-label-open="{{ $item->uuid }}" data-label-kind="qr" />
                                             @endif
                                         @endcan
                                         @can('delete', $item)
@@ -126,9 +126,9 @@
             </div>
             @if(auth()->user()->hasPermission('jewellery.barcode'))
                 <div class="panel__toolbar">
-                    <x-btn type="submit" variant="secondary">{{ __('Print selected barcodes') }}</x-btn>
-                    <x-btn type="submit" variant="secondary" formaction="{{ route('branch.jewellery-items.labels.bulk', 'qr') }}">{{ __('Print selected QR') }}</x-btn>
-                    <x-btn type="submit" variant="secondary" formaction="{{ route('branch.jewellery-items.labels.bulk', 'both') }}">{{ __('Print selected both') }}</x-btn>
+                    <x-btn type="button" variant="secondary" data-label-selected>{{ __('Print selected barcodes') }}</x-btn>
+                    <x-btn type="button" variant="secondary" data-label-selected data-label-kind="qr">{{ __('Print selected QR') }}</x-btn>
+                    <x-btn type="button" variant="secondary" data-label-selected data-label-kind="both">{{ __('Print selected both') }}</x-btn>
                 </div>
             @endif
         </form>
@@ -147,4 +147,5 @@
         @endif
     @endif
 </div>
+@include('branch.stones._label-modal', ['labelAllowed' => auth()->user()->can('printLabel', \App\Models\JewelleryItem::class), 'labelDataUrl' => route('branch.jewellery-items.labels.data')])
 @endsection

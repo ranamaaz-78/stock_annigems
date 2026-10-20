@@ -125,6 +125,7 @@ Route::middleware(['auth', 'password.changed', 'branch.context', 'branch.member'
         Route::get('/jewellery-items', [JewelleryItemController::class, 'index'])->name('jewellery-items.index');
         Route::get('/jewellery-items/create', [JewelleryItemController::class, 'create'])->name('jewellery-items.create');
         Route::post('/jewellery-items', [JewelleryItemController::class, 'store'])->name('jewellery-items.store');
+        Route::post('/jewellery-items/labels/data', [JewelleryLabelController::class, 'data'])->name('jewellery-items.labels.data');
         Route::get('/jewellery-items/labels/bulk/{kind}', [JewelleryLabelController::class, 'bulk'])
             ->whereIn('kind', ['barcode', 'qr', 'both'])
             ->name('jewellery-items.labels.bulk');

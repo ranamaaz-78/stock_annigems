@@ -84,7 +84,7 @@ class JewelleryItemService
             $item = JewelleryItem::query()->create([
                 'branch_id' => $actor->branch_id,
                 'item_code' => $code,
-                'barcode' => setting('jewellery_barcode_enabled') ? $code : null,
+                'barcode' => setting('jewellery_barcode_enabled') ? app(JewelleryBarcodeGenerator::class)->generate() : null,
                 'qr_token' => (setting('jewellery_qr_enabled') && setting('public_product_page_enabled'))
                     ? Str::random(48)
                     : null,

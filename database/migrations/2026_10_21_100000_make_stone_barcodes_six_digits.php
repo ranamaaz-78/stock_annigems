@@ -25,7 +25,7 @@ return new class extends Migration
 
         $rows = DB::table('stones')
             ->whereNotNull('barcode')
-            ->whereRaw('CHAR_LENGTH(barcode) <> 6')
+            ->whereRaw('LENGTH(barcode) <> 6')
             ->orderBy('id')
             ->pluck('id');
 

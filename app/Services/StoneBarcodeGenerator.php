@@ -82,6 +82,7 @@ class StoneBarcodeGenerator
             ->withoutGlobalScopes()
             ->withTrashed()
             ->where('barcode', $barcode)
-            ->exists();
+            ->exists()
+            || \App\Models\JewelleryItem::query()->withoutGlobalScopes()->withTrashed()->where('barcode', $barcode)->exists();
     }
 }

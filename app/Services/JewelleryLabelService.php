@@ -64,6 +64,34 @@ class JewelleryLabelService
     }
 
     /**
+     * What the print dialog needs to draw each piece's label: name, item
+     * code, six digit barcode number and a vector barcode. Pieces without a
+     * barcode (or QR, for QR labels) are counted, not listed. Jewellery carries no price.
+     *
+     * @param  Collection<int, JewelleryItem>  $items
+     * @return array{stones: list<array<string, string>>, skipped: int}
+     */
+    public function dialogData(Collection $items, LabelKind $kind = LabelKind::BARCODE): array
+    {
+        $labelled = $items->filter(fn (JewelleryItem $item): bool => $this->itemPrintable($item, $kind))->values();
+
+        return [
+            // Same keys as stones, so one dialog prints both.
+            'stones' => $labelled->map(fn (JewelleryItem $item): array => [
+                'uuid' => (string) $item->uuid,
+                'name' => (string) $item->name,
+                'stone_code' => (string) $item->item_code,
+                'barcode' => (string) $item->barcode,
+                'price' => '',
+                'barcode_svg' => filled($item->barcode) ? $this->barcodeService->svg((string) $item->barcode) : '',
+                // Public product page QR, large enough to stay sharp on any label.
+                'qr_uri' => filled($item->qr_token) ? $this->qrService->dataUri($item->qr_token, 400) : '',
+            ])->all(),
+            'skipped' => $items->count() - $labelled->count(),
+        ];
+    }
+
+    /**
      * One cell per piece on a shared sheet.
      *
      * @param  Collection<int, JewelleryItem>  $items

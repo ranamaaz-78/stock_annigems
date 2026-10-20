@@ -778,7 +778,7 @@ class StoneManagementTest extends TestCase
 
         $index = $this->actingAs($admin)->get(route('branch.stones.index', ['pricing_mode' => 'per_piece']))->assertOk();
         $index->assertSee('id="label-modal"', false)->assertSee('data-label-selected', false);
-        $index->assertSee('Copies per product', false)->assertSee('Show sr number', false);
+        $index->assertSee('Copies per product', false)->assertDontSee('Show sr number', false);
 
         // Cashiers do not get the dialog.
         $cashier = User::factory()->cashier($branch->id)->create();

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Branch;
 
 use App\Enums\LabelKind;
+use App\Http\Controllers\Concerns\RespondsWithJson;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
 use App\Models\JewelleryItem;
 use App\Services\JewelleryLabelService;
 use Illuminate\Http\RedirectResponse;
@@ -18,7 +20,34 @@ use Illuminate\View\View;
  */
 class JewelleryLabelController extends Controller
 {
+    use RespondsWithJson;
+
     public function __construct(private JewelleryLabelService $labelService) {}
+
+    /**
+     * Label data for the shared print dialog (barcode labels only).
+     */
+    public function data(Request $request): JsonResponse
+    {
+        abort_unless($request->user()?->hasPermission('jewellery.barcode'), 403);
+
+        $uuids = $request->validate([
+            'uuids' => ['required', 'array', 'min:1', 'max:300'],
+            'uuids.*' => ['required', 'uuid'],
+            'kind' => ['nullable', 'in:barcode,qr,both'],
+        ]);
+
+        $kind = LabelKind::tryFrom((string) ($request->input('kind') ?? 'barcode')) ?? LabelKind::BARCODE;
+        $uuids = $request->input('uuids');
+
+        $items = $this->labelService->itemsForUuids($uuids);
+
+        foreach ($items as $item) {
+            $this->authorize('printLabel', $item);
+        }
+
+        return $this->jsonSuccess(__('Labels ready.'), $this->labelService->dialogData($items, $kind));
+    }
 
     /**
      * Bookmarks of the old combined label URL open the barcode sheet.

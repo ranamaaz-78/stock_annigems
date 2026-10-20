@@ -14,13 +14,13 @@
         @endcan
         @can('printLabel', $item)
             @if($item->barcode)
-                <x-btn href="{{ route('branch.jewellery-items.label', [$item, 'barcode']) }}" variant="secondary">{{ __('Print barcode') }}</x-btn>
+                <x-btn href="{{ route('branch.jewellery-items.label', [$item, 'barcode']) }}" variant="secondary" data-label-open="{{ $item->uuid }}">{{ __('Print barcode') }}</x-btn>
             @endif
             @if($item->qr_token)
-                <x-btn href="{{ route('branch.jewellery-items.label', [$item, 'qr']) }}" variant="secondary">{{ __('Print QR') }}</x-btn>
+                <x-btn href="{{ route('branch.jewellery-items.label', [$item, 'qr']) }}" variant="secondary" data-label-open="{{ $item->uuid }}" data-label-kind="qr">{{ __('Print QR') }}</x-btn>
             @endif
             @if($item->barcode || $item->qr_token)
-                <x-btn href="{{ route('branch.jewellery-items.label', [$item, 'both']) }}" variant="secondary">{{ __('Print both') }}</x-btn>
+                <x-btn href="{{ route('branch.jewellery-items.label', [$item, 'both']) }}" variant="secondary" data-label-open="{{ $item->uuid }}" data-label-kind="both">{{ __('Print both') }}</x-btn>
             @endif
         @endcan
         @can('delete', $item)
@@ -192,4 +192,5 @@
         </table>
     @endif
 </div>
+@include('branch.stones._label-modal', ['labelAllowed' => auth()->user()->can('printLabel', \App\Models\JewelleryItem::class), 'labelDataUrl' => route('branch.jewellery-items.labels.data')])
 @endsection

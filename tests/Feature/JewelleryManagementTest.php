@@ -119,7 +119,10 @@ class JewelleryManagementTest extends TestCase
 
         $items = JewelleryItem::query()->orderBy('id')->get();
         $this->assertSame(['JWL-000001', 'JWL-000002'], $items->pluck('item_code')->all());
-        $this->assertSame($items->pluck('item_code')->all(), $items->pluck('barcode')->all());
+        // The barcode is its own six digit number, not the JWL- item code.
+        foreach ($items as $item) {
+            $this->assertMatchesRegularExpression('/^[1-9][0-9]{5}$/', (string) $item->barcode);
+        }
         $this->assertNotSame($items[0]->uuid, $items[0]->qr_token);
         $this->assertSame(48, strlen($items[0]->qr_token));
     }
