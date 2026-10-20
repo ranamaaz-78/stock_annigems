@@ -12,6 +12,9 @@
 
 import { t } from './i18n';
 
+/** Company name printed on each label; read from the dialog when it is bound. */
+let companyName = '';
+
 /** Mobile-safe localStorage key for the last choices. */
 const STORAGE_KEY = 'annigems.stones.labelOptions';
 
@@ -22,27 +25,28 @@ const STORAGE_KEY = 'annigems.stones.labelOptions';
  * @type {Array<{group: string, items: Array<object>}>}
  */
 const PRESETS = (() => {
-    const roll = (w, h) => ({ id: `roll-${w}x${h}`, name: t('Roll label :w × :h mm', { w: w, h: h }), kind: 'roll', w, h });
-    const rollSizes = [
-        [20, 10], [20, 40], [22.5, 22.5], [25, 15], [25, 25], [30, 15], [30, 20], [30, 30], [30, 50],
-        [35, 35], [38, 25], [40, 20], [40, 25], [40, 30], [40, 40], [45, 30], [50, 25], [50, 30],
-        [50, 50], [60, 30], [60, 40], [70, 40], [75, 50], [100, 50], [100, 70], [100, 100],
-    ];
+    const sizes = [[50, 30], [25, 25], [35, 35]];
+    // The 50 x 30 label holds two 25 x 30 barcodes side by side.
+    const split = ([w, h]) => (w === 50 && h === 30 ? 2 : 1);
+    const roll = ([w, h]) => ({ id: `roll-${w}x${h}`, name: t('Roll :w × :h mm', { w: w, h: h }), kind: 'roll', w, h, split: split([w, h]) });
+
+    // A4 sheets: as many labels as fit with a 5 mm margin, packed edge to edge.
+    const sheet = ([w, h]) => ({
+        id: `a4-${w}x${h}`,
+        name: t('A4 :w × :h mm', { w: w, h: h }),
+        kind: 'sheet',
+        w,
+        h,
+        split: split([w, h]),
+        cols: Math.floor(200 / w),
+        rows: Math.floor(287 / h),
+        gapX: 0,
+        gapY: 0,
+    });
 
     return [
-        {
-            group: 'A4 sheets',
-            items: [
-                { id: 'a4-24', name: 'A4 sheet, 24 labels (64 × 33.9 mm)', kind: 'sheet', w: 64, h: 33.9, cols: 3, rows: 8, gapX: 2.5, gapY: 0 },
-                { id: 'a4-40', name: 'A4 sheet, 40 labels (48.5 × 25.4 mm)', kind: 'sheet', w: 48.5, h: 25.4, cols: 4, rows: 10, gapX: 0, gapY: 0 },
-            ],
-        },
-        {
-            group: t('Thermal roll'),
-            items: [{ id: 'thermal-58', name: t('Thermal roll 58 mm'), kind: 'roll', w: 58, h: 30 }],
-        },
-        { group: t('Roll labels'), items: rollSizes.map(([w, h]) => roll(w, h)) },
-        { group: t('Other'), items: [{ id: 'custom', name: t('Custom size…'), kind: 'roll', w: 50, h: 30, custom: true }] },
+        { group: t('Roll labels'), items: sizes.map(roll) },
+        { group: t('A4 sheets'), items: sizes.map(sheet) },
     ];
 })();
 
@@ -52,13 +56,12 @@ const BAR_SHARE = { short: 0.5, normal: 0.75, tall: 1 };
 
 /** Defaults for a first visit. */
 const DEFAULTS = {
-    preset: 'a4-24',
+    preset: 'roll-50x30',
     text: 'normal',
     bars: 'normal',
     copies: 1,
     showPrice: true,
     showName: true,
-    showSr: true,
     border: false,
     customW: 50,
     customH: 30,
@@ -153,37 +156,57 @@ function stockFor(options) {
  */
 function labelHtml(stone, stock, options) {
     const { w, h } = stock;
-    const pad = clamp(Math.min(w, h) * 0.07, 0.8, 2.5);
+    const pad = clamp(Math.min(w, h) * 0.06, 0.6, 2);
     const scale = TEXT_SCALE[options.text] || 1;
-    const nameFont = clamp(h * 0.1, 1.7, 3.6) * scale;
-    const codeFont = clamp(h * 0.085, 1.5, 3.2) * scale;
-    const metaFont = clamp(h * 0.08, 1.4, 3) * scale;
+    const font = clamp(h * 0.085, 1.5, 3.2) * scale;
+    const companyFont = font * 1.1;
+    const numberFont = font * 1.4;
 
-    const meta = [
-        options.showSr ? stone.stone_code : '',
-        options.showPrice ? stone.price : '',
-    ].filter(Boolean);
+    // A long name wraps onto a second line instead of being cut off; the
+    // price sits on its own line underneath.
+    const quiet = clamp(w * 0.06, 1.5, 5);
+    const name = options.showName ? String(stone.name ?? '') : '';
+    const perLine = Math.max(6, Math.floor((w - quiet) / (font * 0.58)));
+    const nameLines = name ? Math.min(2, Math.ceil(name.length / perLine)) : 0;
+    const price = options.showPrice ? String(stone.price ?? '') : '';
 
-    // Lines of text decide how much height is left for the bars.
-    const lines = [
-        options.showName ? nameFont : 0,
-        codeFont,
-        meta.length ? metaFont : 0,
+    // Text lines decide how much height is left for the bars.
+    const lineHeights = [
+        companyName ? companyFont : 0,
+        font,
+        numberFont,
+        ...Array.from({ length: nameLines }, () => font),
+        price ? font : 0,
     ].filter(Boolean);
-    const textHeight = lines.reduce((sum, size) => sum + size * 1.3, 0);
-    const gaps = lines.length * 0.4;
-    const available = Math.max(3, h - 2 * pad - textHeight - gaps);
+    const textHeight = lineHeights.reduce((sum, size) => sum + size * 1.2, 0);
+    const available = Math.max(3, h - 2 * pad - textHeight - 0.8);
     const barHeight = Math.max(3, available * (BAR_SHARE[options.bars] || BAR_SHARE.normal));
 
-    // Bars keep a quiet zone either side, which a scanner needs.
-    const quiet = clamp(w * 0.06, 1.5, 5);
-
     return `<div class="lbl" style="width:${w}mm;height:${h}mm;padding:${pad}mm ${quiet / 2}mm;${options.border ? 'border:0.2mm solid #000;' : ''}">
-        ${options.showName ? `<div class="lbl__name" style="font-size:${nameFont}mm">${esc(stone.name)}</div>` : ''}
+        ${companyName ? `<div class="lbl__company" style="font-size:${companyFont}mm">${esc(companyName)}</div>` : ''}
+        <div class="lbl__sr" style="font-size:${font}mm">${esc(stone.stone_code)}</div>
         <div class="lbl__bars" style="height:${barHeight}mm;width:calc(100% - ${quiet}mm)">${stone.barcode_svg}</div>
-        <div class="lbl__code" style="font-size:${codeFont}mm">${esc(stone.barcode)}</div>
-        ${meta.length ? `<div class="lbl__meta" style="font-size:${metaFont}mm">${meta.map(esc).join(' &nbsp;·&nbsp; ')}</div>` : ''}
+        <div class="lbl__code" style="font-size:${numberFont}mm;font-weight:700">${esc(stone.barcode)}</div>
+        ${name ? `<div class="lbl__name" style="font-size:${font}mm">${esc(name)}</div>` : ''}
+        ${price ? `<div class="lbl__meta" style="font-size:${font}mm">${esc(price)}</div>` : ''}
     </div>`;
+}
+
+/**
+ * One printed label carrying several barcodes side by side.
+ *
+ * Each barcode gets an equal slice of the width; a missing last one stays empty.
+ *
+ * @param {object[]} group
+ * @param {object} stock
+ * @param {object} options
+ * @param {number} per
+ * @returns {string}
+ */
+function pairHtml(group, stock, options, per) {
+    const part = { ...stock, w: stock.w / per };
+
+    return `<div class="lbl-pair" style="width:${stock.w}mm;height:${stock.h}mm">${Array.from({ length: per }, (_, i) => (group[i] ? labelHtml(group[i], part, options) : `<div style="width:${part.w}mm;height:${stock.h}mm"></div>`)).join('')}</div>`;
 }
 
 /**
@@ -211,11 +234,16 @@ function expandCopies(stones, copies) {
  */
 function buildPages(labels, stock, options, maxPages = Infinity) {
     const total = labels.length;
+    const per = stock.split || 1;
+
+    // One printed label holds `per` stones side by side (50 x 30 -> two 25 x 30).
+    const cells = per === 1 ? labels : Array.from({ length: Math.ceil(total / per) }, (_, i) => labels.slice(i * per, i * per + per));
+    const cellHtml = (cell) => (per === 1 ? labelHtml(cell, stock, options) : pairHtml(cell, stock, options, per));
 
     if (stock.kind === 'roll') {
-        const pages = labels.slice(0, maxPages).map((stone) => `<section class="pg pg--roll" style="width:${stock.w}mm;height:${stock.h}mm">${labelHtml(stone, stock, options)}</section>`);
+        const pages = cells.slice(0, maxPages).map((cell) => `<section class="pg pg--roll" style="width:${stock.w}mm;height:${stock.h}mm">${cellHtml(cell)}</section>`);
 
-        return { pages, perPage: 1, total, pageCount: total, sheet: false };
+        return { pages, perPage: per, total, pageCount: cells.length, sheet: false };
     }
 
     const perPage = stock.cols * stock.rows;
@@ -223,15 +251,15 @@ function buildPages(labels, stock, options, maxPages = Infinity) {
     const gridH = stock.rows * stock.h + (stock.rows - 1) * stock.gapY;
     const left = Math.max(0, (210 - gridW) / 2);
     const top = Math.max(0, (297 - gridH) / 2);
-    const pageCount = Math.ceil(total / perPage);
+    const pageCount = Math.ceil(cells.length / perPage);
     const pages = [];
 
     for (let page = 0; page < Math.min(pageCount, maxPages); page += 1) {
-        const cells = labels.slice(page * perPage, (page + 1) * perPage).map((stone) => labelHtml(stone, stock, options)).join('');
-        pages.push(`<section class="pg pg--sheet" style="width:210mm;height:297mm;padding:${top}mm ${left}mm;grid-template-columns:repeat(${stock.cols},${stock.w}mm);grid-auto-rows:${stock.h}mm;column-gap:${stock.gapX}mm;row-gap:${stock.gapY}mm">${cells}</section>`);
+        const html = cells.slice(page * perPage, (page + 1) * perPage).map(cellHtml).join('');
+        pages.push(`<section class="pg pg--sheet" style="width:210mm;height:297mm;padding:${top}mm ${left}mm;grid-template-columns:repeat(${stock.cols},${stock.w}mm);grid-auto-rows:${stock.h}mm;column-gap:${stock.gapX}mm;row-gap:${stock.gapY}mm">${html}</section>`);
     }
 
-    return { pages, perPage, total, pageCount, sheet: true };
+    return { pages, perPage: perPage * per, total, pageCount, sheet: true };
 }
 
 /**
@@ -243,9 +271,12 @@ function labelCss() {
     return `
         .pg { box-sizing: border-box; background: #fff; overflow: hidden; }
         .pg--sheet { display: grid; align-content: start; justify-content: start; }
+        .lbl-pair { display: flex; align-items: stretch; overflow: hidden; }
         .pg--roll { display: flex; align-items: center; justify-content: center; }
         .lbl { box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; background: #fff; color: #000; font-family: Arial, Helvetica, sans-serif; text-align: center; line-height: 1.25; }
-        .lbl__name { max-width: 100%; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .lbl__company { max-width: 100%; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .lbl__sr { max-width: 100%; font-weight: 700; white-space: nowrap; }
+        .lbl__name { max-width: 100%; font-weight: 700; line-height: 1.15; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
         .lbl__bars { flex: none; margin: 0.4mm 0; }
         .lbl__bars svg { display: block; width: 100%; height: 100%; }
         .lbl__code { letter-spacing: 0.08em; font-family: 'Courier New', monospace; white-space: nowrap; }
@@ -326,6 +357,7 @@ export function bindStoneLabels() {
     const printBtn = modal.querySelector('[data-label-print]');
     const customRow = modal.querySelector('[data-label-custom]');
     const dataUrl = modal.dataset.dataUrl;
+    companyName = modal.dataset.company || '';
 
     let options = loadOptions();
     /** @type {object[]} */
@@ -345,7 +377,6 @@ export function bindStoneLabels() {
         field('copies').value = options.copies;
         field('showPrice').checked = Boolean(options.showPrice);
         field('showName').checked = Boolean(options.showName);
-        field('showSr').checked = Boolean(options.showSr);
         field('border').checked = Boolean(options.border);
         field('customW').value = options.customW;
         field('customH').value = options.customH;
@@ -362,7 +393,6 @@ export function bindStoneLabels() {
             copies: clamp(parseInt(field('copies').value, 10) || 1, 1, 500),
             showPrice: field('showPrice').checked,
             showName: field('showName').checked,
-            showSr: field('showSr').checked,
             border: field('border').checked,
             customW: Number(field('customW').value) || DEFAULTS.customW,
             customH: Number(field('customH').value) || DEFAULTS.customH,
@@ -396,7 +426,7 @@ export function bindStoneLabels() {
         const labelPxH = stock.h * mmToPx;
         const zoom = Math.min((stageWidth * 0.92) / labelPxW, 230 / labelPxH, 6);
         const zoomed = `<div class="label-preview__label" style="width:${labelPxW * zoom}px;height:${labelPxH * zoom}px">
-            <div style="width:${stock.w}mm;height:${stock.h}mm;transform:scale(${zoom});transform-origin:top left">${labelHtml(stones[0], stock, options)}</div>
+            <div style="width:${stock.w}mm;height:${stock.h}mm;transform:scale(${zoom});transform-origin:top left">${(stock.split || 1) > 1 ? pairHtml(labels.slice(0, stock.split), stock, options, stock.split) : labelHtml(labels[0], stock, options)}</div>
         </div>`;
 
         // A sheet also shows its first page, small, to see how the labels fall on it.
@@ -410,7 +440,7 @@ export function bindStoneLabels() {
 
         preview.innerHTML = `<style>${labelCss()}</style>${zoomed}${thumbnail}`;
 
-        const perPage = built.sheet ? t(':perPage per page', { perPage: built.perPage }) : t('1 per label');
+        const perPage = built.sheet ? t(':perPage per page', { perPage: built.perPage }) : (built.perPage > 1 ? t(':count per label', { count: built.perPage }) : t('1 per label'));
         const labelCount = built.total === 1 ? t(':count label', { count: built.total }) : t(':count labels', { count: built.total });
         const pageCount = built.sheet ? ' · ' + (built.pageCount === 1 ? t(':count page', { count: built.pageCount }) : t(':count pages', { count: built.pageCount })) : '';
         summary.textContent = `${labelCount} · ${stock.name} · ${perPage}${pageCount} · ${t('barcodes print as sharp vectors')}`;

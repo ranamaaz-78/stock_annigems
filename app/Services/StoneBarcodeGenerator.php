@@ -8,7 +8,7 @@ use RuntimeException;
 /**
  * StoneBarcodeGenerator
  *
- * Issues the scannable packet number. It is a random 10 or 11 digit value,
+ * Issues the scannable packet number. It is a random six digit value,
  * deliberately unrelated to STN-000001: the business code is sequential and
  * guessable, a barcode is not, and the two must stay independent so a code
  * change never invalidates printed labels.
@@ -19,10 +19,11 @@ use RuntimeException;
 class StoneBarcodeGenerator
 {
     /**
-     * Attempts before giving up. A collision needs a repeated random draw
-     * out of ten billion, so exhausting this means something else is wrong.
+     * Attempts before giving up. Six digits leave 900,000 numbers, so a draw
+     * only collides once the table is crowded; run out of attempts and the
+     * numbers need widening.
      */
-    private const MAX_ATTEMPTS = 20;
+    private const MAX_ATTEMPTS = 60;
 
     /**
      * Generate an unused barcode number.
@@ -64,19 +65,12 @@ class StoneBarcodeGenerator
     }
 
     /**
-     * One random 10 or 11 digit number that never starts with zero, so the
-     * digit count survives any place the value is read as a number.
+     * One random six digit number (100000-999999). It never starts with
+     * zero, so the digit count survives any place it is read as a number.
      */
     private function candidate(): string
     {
-        $length = random_int(10, 11);
-        $digits = (string) random_int(1, 9);
-
-        for ($i = 1; $i < $length; $i++) {
-            $digits .= (string) random_int(0, 9);
-        }
-
-        return $digits;
+        return (string) random_int(100000, 999999);
     }
 
     /**

@@ -225,7 +225,7 @@ class StoneExcelImportTest extends TestCase
         $this->assertSame(3, $stones->pluck('barcode')->unique()->count());
 
         foreach ($stones as $stone) {
-            $this->assertMatchesRegularExpression('/^[1-9][0-9]{9,10}$/', $stone->barcode);
+            $this->assertMatchesRegularExpression('/^[1-9][0-9]{5}$/', $stone->barcode);
         }
 
         $citirino = $stones->firstWhere('name', 'CITIRINO');

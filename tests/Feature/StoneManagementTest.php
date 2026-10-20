@@ -75,7 +75,7 @@ class StoneManagementTest extends TestCase
         foreach ($stones as $stone) {
             // The barcode is its own number, never a copy of the STN code.
             $this->assertNotSame($stone->stone_code, $stone->barcode);
-            $this->assertMatchesRegularExpression('/^[1-9][0-9]{9,10}$/', $stone->barcode);
+            $this->assertMatchesRegularExpression('/^[1-9][0-9]{5}$/', $stone->barcode);
         }
 
         $this->assertSame(2, $stones->pluck('barcode')->unique()->count());

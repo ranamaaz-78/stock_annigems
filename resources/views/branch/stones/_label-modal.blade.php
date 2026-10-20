@@ -13,6 +13,7 @@
     icon="print"
     size="xl"
     data-data-url="{{ route('branch.stones.labels.data') }}"
+    data-company="{{ setting('company_name') }}"
 >
     <div class="dialog__body">
         <p class="label-dialog__count" data-label-count></p>
@@ -64,7 +65,6 @@
                 <div class="label-dialog__checks">
                     <label class="form-check"><input type="checkbox" data-label-field="showPrice"> {{ __('Show price') }}</label>
                     <label class="form-check"><input type="checkbox" data-label-field="showName"> {{ __('Show product name') }}</label>
-                    <label class="form-check"><input type="checkbox" data-label-field="showSr"> {{ __('Show sr number') }}</label>
                     <label class="form-check"><input type="checkbox" data-label-field="border"> {{ __('Draw a border around each label') }}</label>
                 </div>
             </div>
