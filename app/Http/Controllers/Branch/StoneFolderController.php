@@ -65,6 +65,29 @@ class StoneFolderController extends Controller
     }
 
     /**
+     * Delete the ticked lots of the list, or none of them.
+     */
+    public function destroyLots(Request $request): RedirectResponse
+    {
+        abort_unless($request->user()->hasPermission('stones.delete'), 403);
+
+        $uuids = $request->validate([
+            'uuids' => ['required', 'array', 'min:1', 'max:500'],
+            'uuids.*' => ['string'],
+        ], [
+            'uuids.required' => __('Select at least one lot to delete.'),
+        ])['uuids'];
+
+        try {
+            $result = $this->folderService->deleteLots($uuids, $request->user());
+        } catch (ValidationException $e) {
+            return back()->with('error', collect($e->errors())->flatten()->first());
+        }
+
+        return back()->with('success', trans_choice(':count lot deleted.|:count lots deleted.', $result['lots']));
+    }
+
+    /**
      * Whether the request came from a tile on the folder list.
      */
     private function fromFolderList(Request $request): bool

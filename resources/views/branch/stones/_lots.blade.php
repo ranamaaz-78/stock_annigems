@@ -48,7 +48,7 @@
                             @endphp
                             <tr class="{{ $stone->isOutOfStock() ? 'table-admin__row--warn' : '' }}">
                                 <td class="lots-sticky lots-sticky--check">
-                                    @if($stone->hasPacketBarcode())
+                                    @if($stone->hasPacketBarcode() || auth()->user()->can('delete', $stone))
                                         <input type="checkbox" name="uuids[]" value="{{ $stone->uuid }}" class="form-check">
                                     @endif
                                 </td>
@@ -123,15 +123,29 @@
                     </tbody>
                 </table>
             </div>
-            @if(auth()->user()->hasPermission('stones.barcode'))
+            @if(auth()->user()->hasPermission('stones.barcode') || auth()->user()->hasPermission('stones.delete'))
                 <div class="panel__toolbar">
-                    <x-btn type="button" variant="secondary" data-label-selected>
-                        <span class="material-symbols-outlined icon icon--sm">print</span>
-                        {{ __('Print selected labels') }}
-                    </x-btn>
+                    @if(auth()->user()->hasPermission('stones.barcode'))
+                        <x-btn type="button" variant="secondary" data-label-selected>
+                            <span class="material-symbols-outlined icon icon--sm">print</span>
+                            {{ __('Print selected labels') }}
+                        </x-btn>
+                    @endif
+                    @if(auth()->user()->hasPermission('stones.delete'))
+                        <x-btn type="button" variant="danger" data-delete-selected :disabled="true">
+                            <span class="material-symbols-outlined icon icon--sm">delete</span>
+                            {{ __('Delete selected') }}
+                        </x-btn>
+                    @endif
                 </div>
             @endif
         </form>
+        @if(auth()->user()->hasPermission('stones.delete'))
+            <form id="bulk-delete-form" method="POST" action="{{ route('branch.stones.bulk-destroy') }}" class="hidden" data-loading-form>
+                @csrf
+                @method('DELETE')
+            </form>
+        @endif
         @foreach($stones as $stone)
             @can('delete', $stone)
                 <form id="delete-stone-{{ $stone->uuid }}" method="POST" action="{{ route('branch.stones.destroy', $stone) }}" data-loading-form data-confirm-delete-stone

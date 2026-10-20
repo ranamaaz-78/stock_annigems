@@ -124,6 +124,46 @@ class StoneFolderService
     }
 
     /**
+     * Delete the chosen lots, or none of them.
+     *
+     * Same rules as deleting one lot (stock written off, history kept), and
+     * the same all-or-nothing refusal as deleting a folder: if any chosen lot
+     * is held by an open document, nothing is deleted.
+     *
+     * @param  list<string>  $uuids
+     * @return array{lots: int}
+     *
+     * @throws ValidationException When any lot is held by an open document
+     */
+    public function deleteLots(array $uuids, User $actor): array
+    {
+        $stones = Stone::query()->whereIn('uuid', $uuids)->orderBy('id')->get();
+
+        $reasons = $stones
+            ->map(fn (Stone $stone): ?string => $this->stoneService->openDocumentReason($stone))
+            ->filter()
+            ->values();
+
+        if ($reasons->isNotEmpty()) {
+            $more = $reasons->count() - self::BLOCKER_LIST_LIMIT;
+
+            throw ValidationException::withMessages([
+                'lots' => trans_choice('Nothing deleted: :count lot is still held by an open document.|Nothing deleted: :count lots are still held by open documents.', $reasons->count())
+                    .' '.$reasons->take(self::BLOCKER_LIST_LIMIT)->implode(' ')
+                    .($more > 0 ? ' '.__('…and :count more.', ['count' => $more]) : ''),
+            ]);
+        }
+
+        return DB::transaction(function () use ($stones, $actor): array {
+            foreach ($stones as $stone) {
+                $this->stoneService->delete($stone, $actor);
+            }
+
+            return ['lots' => $stones->count()];
+        });
+    }
+
+    /**
      * Refuse when any lot of the folder is held by an open document.
      *
      * Checks every lot and reports the first few, so the operator can clear

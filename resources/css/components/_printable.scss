@@ -334,6 +334,16 @@
   td.pd-table__desc {
     padding-right: 20px;
   }
+
+  /* Sr No: the item code in one line, in the ordinary text colour. */
+  td.pd-table__code {
+    padding-right: 12px;
+    white-space: nowrap;
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--pd-ink);
+  }
 }
 
 .pd-line__name {

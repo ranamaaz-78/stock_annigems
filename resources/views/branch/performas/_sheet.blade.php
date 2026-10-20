@@ -68,7 +68,7 @@
         <div class="pd__table-wrap">
             <table class="pd-table">
                 <colgroup>
-                    <col style="width: 28px">
+                    <col style="width: 108px">
                     <col>
                     <col style="width: 58px">
                     <col style="width: 50px">
@@ -81,7 +81,7 @@
                 </colgroup>
                 <thead>
                     <tr>
-                        <th>#</th>
+                        <th>{{ __('Code') }}</th>
                         <th>{{ __('Description') }}</th>
                         <th>{{ __('Issued') }}</th>
                         <th>{{ __('Paid') }}</th>
@@ -98,20 +98,20 @@
                         @php
                             $isStone = $item->line_type === \App\Enums\LineType::LOOSE_STONE;
                             $detail = $isStone
-                                ? ($item->isWeighed() ? __('Loose stone · per gram') : __('Loose stone'))
+                                ? null
                                 : trim(($item->purity_snapshot ?? '').' '.($item->metal_snapshot ?? '')
                                     .($item->net_weight_snapshot ? ' · '.number_format($item->net_weight_snapshot, 3).' g' : ''));
-                            $sub = collect([$item->item_code_snapshot, $detail])->filter()->implode(' · ');
+                            $sub = (string) $detail;
                             $priced = (float) $item->unit_price > 0;
                         @endphp
                         <tr>
-                            <td>{{ $i + 1 }}</td>
+                            <td class="pd-table__code">{{ $item->item_code_snapshot }}</td>
                             <td class="pd-table__desc">
                                 <span class="pd-line__name">{{ $item->name_snapshot }}</span>
                                 @if($sub !== '')<span class="pd-line__sub">{{ $sub }}</span>@endif
-                                @if($isStone && $item->stone && $item->stone->detailBadges() !== [])
+                                @if($isStone && $item->stone && $item->stone->detailBadges(withPricing: false) !== [])
                                     <span class="pd-line__chips">
-                                        @foreach($item->stone->detailBadges() as $badge)<span class="pd-line__chip">{{ $badge }}</span>@endforeach
+                                        @foreach($item->stone->detailBadges(withPricing: false) as $badge)<span class="pd-line__chip">{{ $badge }}</span>@endforeach
                                     </span>
                                 @endif
                             </td>

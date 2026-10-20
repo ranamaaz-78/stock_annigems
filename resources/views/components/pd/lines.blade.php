@@ -17,7 +17,7 @@
     $withIva = $mode === 'quotation' && $hasTax && (float) $document->discount_amount <= 0;
     $pct = rtrim(rtrim(number_format($rate, 2), '0'), '.').'%';
 
-    // Loose stones: shape, size, carat and pricing as chips, from the live lot (one query).
+    // Loose stones: shape, size and carat as chips, from the live lot (one query).
     $lots = \App\Models\Stone::withTrashed()->withoutGlobalScopes()
         ->whereIn('id', collect($items)->pluck('stone_id')->filter()->unique())
         ->get()->keyBy('id');
@@ -33,11 +33,11 @@
         if ($grams > 0) {
             $qty = $gramText;
             $price = (float) $item->stone_value / $grams;
-            $detail = __('Loose stone · per gram');
+            $detail = null;
         } elseif ($loose) {
             $qty = (string) $item->quantity;
             $price = $item->quantity > 0 ? (float) $item->line_total / $item->quantity : (float) $item->line_total;
-            $detail = __('Loose stone');
+            $detail = null;
         } else {
             $qty = '1';
             $price = (float) $item->line_total;
@@ -46,17 +46,17 @@
 
         return [
             'item' => $item,
-            'badges' => $loose ? ($lots[$item->stone_id] ?? null)?->detailBadges() ?? [] : [],
+            'badges' => $loose ? ($lots[$item->stone_id] ?? null)?->detailBadges(withPricing: false) ?? [] : [],
             'qty' => $qty,
             'price' => $price,
-            'sub' => collect([$item->item_code_snapshot, $detail])->filter()->implode(' · '),
+            'sub' => (string) $detail,
         ];
     });
 @endphp
 
 <table @class(['pd-table', 'pd-table--accent' => $mode === 'quotation', 'pd-table--dashed' => $mode === 'delivery'])>
     <colgroup>
-        <col style="width: {{ $mode === 'quotation' ? 40 : 28 }}px">
+        <col style="width: 108px">
         <col>
         <col style="width: {{ $mode === 'delivery' ? 64 : 56 }}px">
         <col style="width: {{ $mode === 'delivery' ? 92 : 88 }}px">
@@ -66,7 +66,7 @@
     </colgroup>
     <thead>
         <tr>
-            <th>#</th>
+            <th>{{ __('Code') }}</th>
             <th>{{ __('Description') }}</th>
             <th>{{ __('Qty') }}</th>
             <th>{{ __('Price') }}</th>
@@ -79,7 +79,7 @@
         @foreach($rows as $i => $row)
             @php $item = $row['item']; @endphp
             <tr>
-                <td>{{ $i + 1 }}</td>
+                <td class="pd-table__code">{{ $item->item_code_snapshot }}</td>
                 <td class="pd-table__desc">
                     <span class="pd-line__name">{{ $item->name_snapshot }}</span>
                     @if($row['sub'] !== '')

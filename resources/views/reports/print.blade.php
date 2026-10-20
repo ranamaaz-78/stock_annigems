@@ -11,9 +11,10 @@
     branch report print through this same file.
 --}}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" translate="no">
 <head>
     <meta charset="utf-8">
+    <meta name="google" content="notranslate">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $result->title }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">

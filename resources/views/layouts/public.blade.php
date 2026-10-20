@@ -1,8 +1,9 @@
 {{-- Public product page chrome: logo header only, no admin sidebar. --}}
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" translate="no">
 <head>
     <meta charset="utf-8">
+    <meta name="google" content="notranslate">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', setting('company_name', config('app.name', 'Aanigemas')))</title>
     <x-brand.favicon />

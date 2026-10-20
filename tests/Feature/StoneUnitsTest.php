@@ -650,8 +650,12 @@ class StoneUnitsTest extends TestCase
 
         $html = $this->actingAs($this->admin)->get(route('branch.invoices.print', $invoice))->assertOk()->getContent();
         $this->assertStringContainsString('5.5 g', $html);
-        $this->assertStringContainsString('per g', $html);
         $this->assertStringContainsString('27.50', $html);
+
+        // Printed documents carry the stone's facts, not how the shop prices it.
+        $this->assertStringNotContainsString('Loose stone', $html);
+        $this->assertStringNotContainsString('Per gram', $html);
+        $this->assertStringNotContainsString('per gram', $html);
     }
 
     public function test_the_pos_catalog_offers_a_gram_lot_while_it_has_grams(): void

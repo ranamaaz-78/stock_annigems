@@ -12,9 +12,10 @@
     $isUnique = $layout === 'unique';
 @endphp
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" translate="no">
 <head>
     <meta charset="utf-8">
+    <meta name="google" content="notranslate">
     <title>{{ $documentTitle }} — {{ setting('company_name', 'Aanigemas') }}</title>
     <x-brand.favicon />
     @vite(['resources/css/tailwind.css', 'resources/css/app.scss'])

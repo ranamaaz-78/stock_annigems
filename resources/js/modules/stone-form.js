@@ -231,6 +231,53 @@ function bindFolderDeleteConfirms() {
 }
 
 /**
+ * Delete every ticked lot of the list, after one confirmation.
+ */
+function bindBulkDelete() {
+    const button = document.querySelector('[data-delete-selected]');
+    const form = document.getElementById('bulk-delete-form');
+    if (!button || !form) {
+        return;
+    }
+
+    const scope = document.getElementById('bulk-label-form') || document;
+    const ticked = () => [...scope.querySelectorAll('input[name="uuids[]"]:checked')].map((box) => box.value);
+
+    // Off until at least one lot is ticked.
+    const sync = () => {
+        button.disabled = ticked().length === 0;
+    };
+    scope.addEventListener('change', sync);
+    sync();
+
+    button.addEventListener('click', async () => {
+        const ids = ticked();
+        if (ids.length === 0) {
+            return;
+        }
+
+        const ok = await window.AnnigemsAlert?.confirmAction({
+            title: ids.length === 1 ? t('Delete 1 selected lot?') : t('Delete :count selected lots?', { count: ids.length }),
+            text: t('Their remaining stock will be written off. Invoices and history keep their record. If any lot is still held by an open document, none are deleted.'),
+            confirmButtonText: t('Delete selected'),
+        });
+        if (!ok) {
+            return;
+        }
+
+        form.querySelectorAll('input[name="uuids[]"]').forEach((input) => input.remove());
+        ids.forEach((id) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'uuids[]';
+            input.value = id;
+            form.appendChild(input);
+        });
+        form.submit();
+    });
+}
+
+/**
  * Confirm before deactivating a stone.
  */
 function bindDeactivateConfirms() {
@@ -257,4 +304,5 @@ export function bindStoneForms() {
     bindDeactivateConfirms();
     bindDeleteConfirms();
     bindFolderDeleteConfirms();
+    bindBulkDelete();
 }

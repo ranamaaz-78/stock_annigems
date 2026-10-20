@@ -71,6 +71,7 @@ Route::middleware(['auth', 'password.changed', 'branch.context', 'branch.member'
         Route::post('/stones/import/begin', [StoneImportController::class, 'begin'])->name('stones.import.begin');
         Route::post('/stones/import/chunk', [StoneImportController::class, 'chunk'])->name('stones.import.chunk');
         Route::post('/stones/import/finish', [StoneImportController::class, 'finish'])->name('stones.import.finish');
+        Route::delete('/stones/bulk-delete', [StoneFolderController::class, 'destroyLots'])->name('stones.bulk-destroy');
         Route::put('/stone-folders/{stoneCategory}', [StoneFolderController::class, 'update'])->name('stone-folders.update');
         Route::delete('/stone-folders/{stoneCategory}', [StoneFolderController::class, 'destroy'])->name('stone-folders.destroy');
         Route::get('/stones/{stone}', [StoneController::class, 'show'])->name('stones.show');

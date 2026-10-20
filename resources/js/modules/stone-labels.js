@@ -263,7 +263,7 @@ function labelCss() {
 function printDocument(built, stock) {
     const pageSize = stock.kind === 'roll' ? `${stock.w}mm ${stock.h}mm` : 'A4 portrait';
 
-    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${t('Stone labels')}</title><style>
+    return `<!DOCTYPE html><html lang="${document.documentElement.lang || 'es'}" translate="no"><head><meta charset="utf-8"><meta name="google" content="notranslate"><title>${t('Stone labels')}</title><style>
         @page { size: ${pageSize}; margin: 0; }
         html, body { margin: 0; padding: 0; background: #fff; }
         .pg { break-after: page; page-break-after: always; }
