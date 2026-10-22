@@ -67,6 +67,8 @@ class RolePermissionSeeder extends Seeder
             'creditors.view', 'creditors.create', 'creditors.edit', 'creditors.deactivate',
             'invoices.view', 'invoices.void', 'invoices.discount',
             'delivery_notes.view', 'delivery_notes.create', 'delivery_notes.cancel', 'delivery_notes.convert',
+            'invoices.delete', 'quotations.delete', 'performas.delete', 'delivery_notes.delete',
+            'customers.delete', 'creditors.delete', 'trash.view',
             'repairs.view', 'repairs.create', 'repairs.edit',
             'transfers.view', 'transfers.create',
             'reports.view', 'reports.export',
@@ -83,6 +85,9 @@ class RolePermissionSeeder extends Seeder
         ];
 
         $manager = array_values(array_diff($branchBase, [
+            // Deleting records and the Trash are Admin-only.
+            'invoices.delete', 'quotations.delete', 'performas.delete', 'delivery_notes.delete',
+            'customers.delete', 'creditors.delete', 'trash.view',
             'invoices.void',
             'customers.deactivate',
             'creditors.deactivate',

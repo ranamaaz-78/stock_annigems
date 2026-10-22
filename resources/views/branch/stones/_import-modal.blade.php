@@ -80,6 +80,7 @@
                                 <th>{{ __('Status') }}</th>
                                 <th>{{ __('Tray') }}</th>
                                 <th>{{ __('Image code') }}</th>
+                                <th>{{ __('Barcode') }}</th>
                                 <th>{{ __('Calculation') }}</th>
                                 <th>{{ __('Problem') }}</th>
                             </tr>

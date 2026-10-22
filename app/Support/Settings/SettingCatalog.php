@@ -65,7 +65,7 @@ class SettingCatalog
     public static function definitions(): array
     {
         return [
-            self::string('company_name', SettingGroup::COMPANY, 'Aanigemas', 'Appears on invoices, labels and public pages.', ['required', 'string', 'max:80']),
+            self::string('company_name', SettingGroup::COMPANY, 'Aani Gemas', 'Appears on invoices, labels and public pages.', ['required', 'string', 'max:80']),
             self::string('company_tax_id', SettingGroup::COMPANY, '', 'NIF / CIF printed under the company name on documents.', ['nullable', 'string', 'max:30']),
 
             self::toggle('stone_barcode_enabled', SettingGroup::FEATURES, true, 'Generate a barcode when a stone is registered.'),

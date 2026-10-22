@@ -77,6 +77,9 @@
                             <td class="table-admin__actions-col">
                                 <x-table.actions>
                                     <x-table.action :href="route('branch.quotations.show', $quotation)" />
+                                    @if(auth()->user()->hasPermission('quotations.delete'))
+                                        <x-delete-record type="quotations" :record="$quotation" :icon="true" />
+                                    @endif
                                 </x-table.actions>
                             </td>
                         </tr>

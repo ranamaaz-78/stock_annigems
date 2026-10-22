@@ -315,13 +315,13 @@ function labelCss() {
         .lbl-pair { display: flex; align-items: stretch; overflow: hidden; }
         .pg--roll { display: flex; align-items: center; justify-content: center; }
         .lbl { box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; background: #fff; color: #000; font-family: Arial, Helvetica, sans-serif; text-align: center; line-height: 1.25; }
-        .lbl__company { max-width: 100%; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .lbl__sr { max-width: 100%; font-weight: 700; white-space: nowrap; }
-        .lbl__name { max-width: 100%; font-weight: 700; line-height: 1.15; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+        .lbl__company { max-width: 100%; font-weight: 700; letter-spacing: 0.04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .lbl__sr { max-width: 100%; font-weight: 400; white-space: nowrap; }
+        .lbl__name { max-width: 100%; font-weight: 400; line-height: 1.15; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
         .lbl__bars { flex: none; margin: 0.4mm 0; }
         .lbl__bars svg { display: block; width: 100%; height: 100%; }
         .lbl__code { letter-spacing: 0.08em; font-family: 'Courier New', monospace; white-space: nowrap; }
-        .lbl__meta { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+        .lbl__meta { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 400; }
     `;
 }
 

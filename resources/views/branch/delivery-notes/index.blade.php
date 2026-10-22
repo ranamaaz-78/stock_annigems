@@ -77,6 +77,9 @@
                             <td class="table-admin__actions-col">
                                 <x-table.actions>
                                     <x-table.action :href="route('branch.delivery-notes.show', $note)" />
+                                    @if(auth()->user()->hasPermission('delivery_notes.delete'))
+                                        <x-delete-record type="delivery-notes" :record="$note" :icon="true" text="{{ __('If the note is still open, its goods return to stock and it moves to Trash.') }}" />
+                                    @endif
                                 </x-table.actions>
                             </td>
                         </tr>

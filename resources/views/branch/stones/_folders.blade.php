@@ -27,6 +27,9 @@
                     <div class="folder-tile" data-folder-tile @if($manageable) data-manageable @endif>
                         <a href="{{ route('branch.stones.index', ['category' => $category->uuid]) }}"
                            class="folder-tile__link" aria-label="{{ __('Open :name', ['name' => $category->name]) }}"></a>
+                        <label class="folder-tile__select" title="{{ __('Select for export') }}">
+                            <input type="checkbox" class="form-check" value="{{ $category->uuid }}" data-export-folder aria-label="{{ __('Select :name for export', ['name' => $category->name]) }}">
+                        </label>
                         <span class="material-symbols-outlined icon icon--lg folder-tile__icon">folder</span>
                         @if($manageable)
                             {{-- Admin: hover shows a pencil, click turns the name into a
@@ -71,6 +74,14 @@
         </div>
 
         <div class="panel__toolbar folder-toolbar">
+            <label class="folder-toolbar__select">
+                <input type="checkbox" class="form-check" data-export-folder-all aria-label="{{ __('Select all folders') }}">
+                {{ __('Select all') }}
+            </label>
+            <x-btn type="button" variant="secondary" data-export-selected="categories" :disabled="true">
+                <span class="material-symbols-outlined icon icon--sm">download</span>
+                {{ __('Export selected folders') }}
+            </x-btn>
             @if($categories->total() > 0)
                 <div class="folder-toolbar__pages">{{ $categories->withQueryString()->links() }}</div>
             @endif

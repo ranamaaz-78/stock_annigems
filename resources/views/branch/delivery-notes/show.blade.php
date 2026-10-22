@@ -23,6 +23,9 @@
             <x-btn type="button" data-modal-open="record-payment-modal">{{ __('Record payment') }}</x-btn>
         @endcan
         <x-btn type="button" variant="secondary" onclick="window.print()">{{ __('Print') }}</x-btn>
+        @if(auth()->user()->hasPermission('delivery_notes.delete'))
+            <x-delete-record type="delivery-notes" :record="$note" text="{{ __('If the note is still open, its goods return to stock and it moves to Trash.') }}" />
+        @endif
         <x-btn href="{{ route('branch.delivery-notes.index') }}" variant="secondary">{{ __('Back') }}</x-btn>
     </x-slot:actions>
 </x-page-header>

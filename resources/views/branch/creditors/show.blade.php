@@ -15,6 +15,9 @@
                 <x-btn href="{{ route('branch.performas.create', ['creditor' => $creditor->uuid]) }}">{{ __('New Performa') }}</x-btn>
             @endif
         @endcan
+        @if(auth()->user()->hasPermission('creditors.delete'))
+            <x-delete-record type="creditors" :record="$creditor" />
+        @endif
         <x-btn href="{{ route('branch.creditors.index') }}" variant="secondary">{{ __('Back') }}</x-btn>
     </x-slot:actions>
 </x-page-header>

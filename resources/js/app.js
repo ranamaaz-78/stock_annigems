@@ -29,6 +29,7 @@ import { bindModals } from './modules/modal';
 import { bindSettingsForms } from './modules/settings';
 import { bindSelectSearch } from './modules/select-search';
 import { bindShell } from './modules/shell';
+import { bindStoneExport } from './modules/stone-export';
 import { bindPasswordToggles } from './modules/password-toggle';
 
 /**
@@ -38,6 +39,7 @@ import { bindPasswordToggles } from './modules/password-toggle';
 export function bootPage() {
     bindShell();
     bindPasswordToggles();
+    bindStoneExport();
     window.AnnigemsButton?.bindLoadingForms();
     window.AnnigemsButton?.bindLoadingButtons();
     window.AnnigemsForm?.bindFormValidation();

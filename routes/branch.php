@@ -20,6 +20,7 @@ use App\Http\Controllers\Branch\SettingController;
 use App\Http\Controllers\Branch\RoleReferenceController;
 use App\Http\Controllers\Branch\DeliveryNoteController;
 use App\Http\Controllers\Branch\StoneController;
+use App\Http\Controllers\Branch\TrashController;
 use App\Http\Controllers\Branch\StoneFolderController;
 use App\Http\Controllers\Branch\StoneImportController;
 use App\Http\Controllers\Branch\StoneImportHistoryController;
@@ -62,6 +63,7 @@ Route::middleware(['auth', 'password.changed', 'branch.context', 'branch.member'
         Route::get('/stones/create', [StoneController::class, 'create'])->name('stones.create');
         Route::post('/stones', [StoneController::class, 'store'])->name('stones.store');
         Route::get('/stones/search', [StoneController::class, 'search'])->name('stones.search');
+        Route::post('/stones/export', [\App\Http\Controllers\Branch\StoneExportController::class, 'download'])->name('stones.export');
         Route::get('/stones/labels/bulk', [StoneLabelController::class, 'bulk'])->name('stones.labels.bulk');
         Route::post('/stones/labels/data', [StoneLabelController::class, 'data'])->name('stones.labels.data');
         // Excel import wizard: read the sheet, confirm columns, then insert.
@@ -260,4 +262,9 @@ Route::middleware(['auth', 'password.changed', 'branch.context', 'branch.member'
         Route::put('/settings/contact', [SettingController::class, 'updateContact'])->name('settings.contact');
         Route::put('/settings/{group}', [SettingController::class, 'update'])->name('settings.update');
         Route::get('/company-settings', [SettingController::class, 'global'])->name('company-settings.show');
+
+        // Soft delete + Trash. No route can delete a record permanently.
+        Route::delete('/records/{type}/{uuid}', [TrashController::class, 'destroy'])->name('records.destroy');
+        Route::get('/trash', [TrashController::class, 'index'])->name('trash.index');
+        Route::post('/trash/{type}/{uuid}/restore', [TrashController::class, 'restore'])->name('trash.restore');
     });

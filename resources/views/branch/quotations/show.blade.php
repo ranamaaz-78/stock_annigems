@@ -19,6 +19,9 @@
             @endcan
         @endif
         <x-btn type="button" variant="secondary" onclick="window.print()">{{ __('Print') }}</x-btn>
+        @if(auth()->user()->hasPermission('quotations.delete'))
+            <x-delete-record type="quotations" :record="$quotation" />
+        @endif
         <x-btn href="{{ route('branch.quotations.index') }}" variant="secondary">{{ __('Back') }}</x-btn>
     </x-slot:actions>
 </x-page-header>

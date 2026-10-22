@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="panel verify-card">
-    <p class="verify-card__brand">{{ setting('company_name', 'Aanigemas') }}</p>
+    <p class="verify-card__brand">{{ setting('company_name', 'Aani Gemas') }}</p>
 
     @if($payload['voided'] ?? false)
         <x-status-badge status="voided" :label="__('Invoice voided')" />

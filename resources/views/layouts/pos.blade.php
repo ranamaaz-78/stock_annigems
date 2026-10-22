@@ -13,7 +13,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-shell.boot />
     <x-shell.i18n />
-    <title>@yield('title', 'POS') — {{ setting('company_name', config('app.name', 'Aanigemas')) }}</title>
+    <title>@yield('title', 'POS') — {{ setting('company_name', config('app.name', 'Aani Gemas')) }}</title>
     <x-brand.favicon />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

@@ -10,13 +10,14 @@
     $applyUrl = $applyUrl ?? url()->current();
     $documentTitle = $documentTitle ?? __('Labels');
     $isUnique = $layout === 'unique';
+    $brand = (string) setting('company_name', 'Aani Gemas');
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" translate="no">
 <head>
     <meta charset="utf-8">
     <meta name="google" content="notranslate">
-    <title>{{ $documentTitle }} — {{ setting('company_name', 'Aanigemas') }}</title>
+    <title>{{ $documentTitle }} — {{ setting('company_name', 'Aani Gemas') }}</title>
     <x-brand.favicon />
     @vite(['resources/css/tailwind.css', 'resources/css/app.scss'])
 </head>
@@ -49,6 +50,7 @@
             <div class="stone-label-grid">
                 @foreach($sheets as $sheet)
                     <div class="stone-label-cell stone-label-cell--{{ $labelSize }} @if($kind === 'qr') stone-label-cell--qr @endif @if($kind === 'both') stone-label-cell--both @endif">
+                        <p class="stone-label-cell__brand">{{ $brand }}</p>
                         <p class="stone-label-cell__name">{{ $sheet['name'] }}</p>
                         <div class="stone-label-cell__codes">
                             @if(($sheet['barcodeUri'] ?? '') !== '')
@@ -70,6 +72,7 @@
                 <div class="stone-label-grid">
                     @for($i = 0; $i < $copies; $i++)
                         <div class="stone-label-cell stone-label-cell--{{ $labelSize }}">
+                            <p class="stone-label-cell__brand">{{ $brand }}</p>
                             @if(($sheet['barcodeUri'] ?? $sheet['imageUri'] ?? '') !== '')
                                 <img src="{{ $sheet['barcodeUri'] ?? $sheet['imageUri'] }}" alt="">
                             @endif

@@ -117,8 +117,14 @@ class CustomerService
         $email = $email !== null ? trim($email) : null;
         $email = $email === '' ? null : $email;
 
-        $existing = Customer::query()->where('phone', $phone)->first();
+        // The phone index also covers customers in the Trash; reuse one of
+        // those by restoring it instead of failing on the unique key.
+        $existing = Customer::withTrashed()->where('phone', $phone)->first();
         if ($existing) {
+            if ($existing->trashed()) {
+                $existing->restore();
+            }
+
             return $existing;
         }
 

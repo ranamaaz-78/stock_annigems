@@ -24,7 +24,7 @@
                                 <input type="checkbox" class="form-check" data-select-all="uuids[]" aria-label="{{ __('Select all lots on this page') }}" title="{{ __('Select all') }}">
                             </th>
                             <th class="lots-sticky lots-sticky--stone">{{ __('Stone') }}</th>
-                            <th>{{ __('Shape · size') }}</th>
+                            <th>{{ __('Shape · Size · Tray') }}</th>
                             <th class="table-admin__num">{{ __('On hand') }}</th>
                             <th class="table-admin__num">{{ __('Rate') }}</th>
                             <th class="table-admin__num">{{ __('Total cost') }}</th>
@@ -123,8 +123,11 @@
                     </tbody>
                 </table>
             </div>
-            @if(auth()->user()->hasPermission('stones.barcode') || auth()->user()->hasPermission('stones.delete'))
-                <div class="panel__toolbar">
+            <div class="panel__toolbar">
+                <x-btn type="button" variant="secondary" data-export-selected="uuids" :disabled="true">
+                    <span class="material-symbols-outlined icon icon--sm">download</span>
+                    {{ __('Export selected') }}
+                </x-btn>
                     @if(auth()->user()->hasPermission('stones.barcode'))
                         <x-btn type="button" variant="secondary" data-label-selected>
                             <span class="material-symbols-outlined icon icon--sm">print</span>
@@ -137,8 +140,7 @@
                             {{ __('Delete selected') }}
                         </x-btn>
                     @endif
-                </div>
-            @endif
+            </div>
         </form>
         @if(auth()->user()->hasPermission('stones.delete'))
             <form id="bulk-delete-form" method="POST" action="{{ route('branch.stones.bulk-destroy') }}" class="hidden" data-loading-form>

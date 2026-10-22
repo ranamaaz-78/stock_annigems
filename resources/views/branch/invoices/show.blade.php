@@ -20,6 +20,9 @@
         @can('void', $invoice)
             <x-btn type="button" variant="danger" id="void-invoice-btn">{{ __('Void') }}</x-btn>
         @endcan
+        @if(auth()->user()->hasPermission('invoices.delete'))
+            <x-delete-record type="invoices" :record="$invoice" text="{{ __('Items return to stock and the invoice moves to Trash.') }}" />
+        @endif
         <x-btn href="{{ route('branch.invoices.index') }}" variant="secondary">{{ __('Back') }}</x-btn>
     </x-slot:actions>
 </x-page-header>

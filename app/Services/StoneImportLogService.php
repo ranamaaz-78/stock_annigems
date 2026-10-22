@@ -91,14 +91,29 @@ class StoneImportLogService
             $valid = array_values(array_filter($checked['rows'], fn (array $row): bool => $row['issues'] === []));
             $rejected = array_values(array_filter($checked['rows'], fn (array $row): bool => $row['issues'] !== []));
 
-            $created = $valid === [] ? [] : $this->stoneService->registerMany($valid, $actor);
+            // A row whose barcode is already on one of this branch's lots
+            // updates that lot instead of creating a second one.
+            $fresh = [];
+            $updated = 0;
+            foreach ($valid as $row) {
+                $existing = ($row['barcode'] ?? '') !== '' ? $this->importService->existingStone((string) $row['barcode']) : null;
+                if ($existing !== null) {
+                    $this->stoneService->update($existing, $row, $actor);
+                    $updated++;
+                } else {
+                    $fresh[] = $row;
+                }
+            }
 
-            $import->inserted_rows += count($created);
+            $created = $fresh === [] ? [] : $this->stoneService->registerMany($fresh, $actor);
+
+            $import->inserted_rows += count($created) + $updated;
             $import->chunks_done += 1;
             $import->save();
 
             return [
                 'created' => count($created),
+                'updated' => $updated,
                 'inserted_total' => (int) $import->inserted_rows,
                 'rejected' => $rejected,
             ];

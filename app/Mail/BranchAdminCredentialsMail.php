@@ -35,7 +35,7 @@ class BranchAdminCredentialsMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: __('Your :company Branch Admin account', ['company' => setting('company_name', 'Aanigemas')]),
+            subject: __('Your :company Branch Admin account', ['company' => setting('company_name', 'Aani Gemas')]),
         );
     }
 

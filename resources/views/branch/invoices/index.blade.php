@@ -75,6 +75,9 @@
                             <td class="table-admin__actions-col">
                                 <x-table.actions>
                                     <x-table.action :href="route('branch.invoices.show', $invoice)" />
+                                    @if(auth()->user()->hasPermission('invoices.delete'))
+                                        <x-delete-record type="invoices" :record="$invoice" :icon="true" text="{{ __('Items return to stock and the invoice moves to Trash.') }}" />
+                                    @endif
                                 </x-table.actions>
                             </td>
                         </tr>

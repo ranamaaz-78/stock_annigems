@@ -5,7 +5,7 @@
 --}}
 @extends('layouts.guest')
 
-@section('title', __('Login').' — '.setting('company_name', 'Aanigemas'))
+@section('title', __('Login').' — '.setting('company_name', 'Aani Gemas'))
 
 @section('content')
 <div class="login-page">
@@ -21,7 +21,7 @@
             <div class="login-brand__content">
                 {{-- Dark panel: the gold monogram and a gold name read here; the full logo's navy lettering would not. --}}
                 <img class="login-brand__logo" src="{{ brand_logo_url() }}" alt="">
-                <h1 class="login-brand__title text-display">{{ setting('company_name', 'Aanigemas') }}</h1>
+                <h1 class="login-brand__title text-display">{{ setting('company_name', 'Aani Gemas') }}</h1>
                 <p class="login-brand__tagline text-body-md">{{ __('Luxury Inventory Management') }}</p>
             </div>
         </div>
@@ -31,7 +31,7 @@
 
             <div class="login-form__mobile-brand">
                 {{-- Light background here, so the full logo (with its navy name) fits. --}}
-                <img class="login-form__mobile-logo" src="{{ brand_logo_url('full') }}" alt="{{ setting('company_name', 'Aanigemas') }}">
+                <img class="login-form__mobile-logo" src="{{ brand_logo_url('full') }}" alt="{{ setting('company_name', 'Aani Gemas') }}">
             </div>
 
             <div class="login-form__header">

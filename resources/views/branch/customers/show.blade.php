@@ -11,6 +11,9 @@
         @can('update', $customer)
             <x-btn href="{{ route('branch.customers.edit', $customer) }}" variant="secondary">{{ __('Edit') }}</x-btn>
         @endcan
+        @if(auth()->user()->hasPermission('customers.delete'))
+            <x-delete-record type="customers" :record="$customer" />
+        @endif
         <x-btn href="{{ route('branch.customers.index') }}" variant="secondary">{{ __('Back') }}</x-btn>
     </x-slot:actions>
 </x-page-header>

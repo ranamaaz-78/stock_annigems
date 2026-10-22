@@ -50,6 +50,33 @@ class StoneService
     }
 
     /**
+     * Lots to export: the page's filters, narrowed to ticked folders and/or ticked lots.
+     *
+     * Ticked lots win over folders, and both win over "everything that matches".
+     *
+     * @param  array<string, mixed>  $filters
+     * @param  list<string>  $categoryUuids
+     * @param  list<string>  $stoneUuids
+     * @return Builder<Stone>
+     */
+    public function exportQuery(array $filters, array $categoryUuids = [], array $stoneUuids = []): Builder
+    {
+        $query = Stone::query()->with('category')->orderBy('name')->orderBy('stone_code');
+
+        if ($stoneUuids !== []) {
+            return $query->whereIn('uuid', $stoneUuids);
+        }
+
+        $this->applyFilters($query, $filters);
+
+        if ($categoryUuids !== []) {
+            $query->whereHas('category', fn (Builder $inner) => $inner->whereIn('uuid', $categoryUuids));
+        }
+
+        return $query;
+    }
+
+    /**
      * Register one lot.
      *
      * Also opens the stock ledger: the piece count from the sheet is applied
@@ -368,7 +395,10 @@ class StoneService
             'stone_code' => $this->codeSequenceService->nextStoneCode(),
             // A packet barcode is its own random number, unrelated to the STN
             // code. Branches that do not label packets can switch it off.
-            'barcode' => setting('stone_barcode_enabled') ? $this->barcodeGenerator->generate() : null,
+            // A barcode supplied by an import sheet is kept; otherwise one is made.
+            'barcode' => ($supplied = trim((string) ($data['barcode'] ?? ''))) !== ''
+                ? $supplied
+                : (setting('stone_barcode_enabled') ? $this->barcodeGenerator->generate() : null),
             'piece_price' => $pricing['piece_price'],
             'total_cost' => $pricing['total_cost'],
             'cost_formula' => $pricing['cost_formula'],

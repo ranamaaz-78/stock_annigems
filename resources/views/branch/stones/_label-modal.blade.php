@@ -13,7 +13,7 @@
     icon="print"
     size="xl"
     data-data-url="{{ $labelDataUrl ?? route('branch.stones.labels.data') }}"
-    data-company="{{ setting('company_name') }}"
+    data-company="{{ setting('company_name', 'Aani Gemas') }}"
 >
     <div class="dialog__body">
         <p class="label-dialog__count" data-label-count></p>

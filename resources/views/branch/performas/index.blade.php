@@ -81,6 +81,9 @@
                             <td class="table-admin__actions-col">
                                 <x-table.actions>
                                     <x-table.action :href="route('branch.performas.show', $performa)" />
+                                    @if(auth()->user()->hasPermission('performas.delete'))
+                                        <x-delete-record type="performas" :record="$performa" :icon="true" text="{{ __('Unpaid goods return to stock and the performa moves to Trash.') }}" />
+                                    @endif
                                 </x-table.actions>
                             </td>
                         </tr>

@@ -8,7 +8,7 @@
     <div class="sa-sidebar__brand">
         <img class="sa-sidebar__logo" src="{{ brand_logo_url() }}" alt="{{ setting('company_name') }}">
         <div class="sa-sidebar__brand-text">
-            <p class="sa-sidebar__brand-title">{{ setting('company_name', 'Aanigemas') }}</p>
+            <p class="sa-sidebar__brand-title">{{ setting('company_name', 'Aani Gemas') }}</p>
             <p class="sa-sidebar__brand-sub text-label-caps">{{ __('SuperAdmin Suite') }}</p>
         </div>
         <x-shell.collapse />

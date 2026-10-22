@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="google" content="notranslate">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', setting('company_name', config('app.name', 'Aanigemas')))</title>
+    <title>@yield('title', setting('company_name', config('app.name', 'Aani Gemas')))</title>
     <x-brand.favicon />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +16,7 @@
 <body class="min-h-screen bg-background text-on-surface antialiased flex flex-col">
     <header class="bg-surface-container-lowest border-b border-outline-variant flex items-center justify-center px-6 py-4">
         <img src="{{ brand_logo_url() }}" alt="{{ setting('company_name') }}" class="h-8 w-auto mr-3">
-        <p class="text-headline-sm text-primary">{{ setting('company_name', config('app.name', 'Aanigemas')) }}</p>
+        <p class="text-headline-sm text-primary">{{ setting('company_name', config('app.name', 'Aani Gemas')) }}</p>
     </header>
     <main class="flex-1 w-full max-w-md mx-auto bg-surface-container-lowest">
         @yield('content')

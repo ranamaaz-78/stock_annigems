@@ -19,6 +19,9 @@
             @endcan
         @endif
         <x-btn type="button" variant="secondary" onclick="window.print()">{{ __('Print') }}</x-btn>
+        @if(auth()->user()->hasPermission('performas.delete'))
+            <x-delete-record type="performas" :record="$performa" text="{{ __('Unpaid goods return to stock and the performa moves to Trash.') }}" />
+        @endif
         <x-btn href="{{ route('branch.performas.index') }}" variant="secondary">{{ __('Back') }}</x-btn>
     </x-slot:actions>
 </x-page-header>

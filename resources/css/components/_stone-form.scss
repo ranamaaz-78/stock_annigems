@@ -238,18 +238,33 @@
 
 .folder-toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--gutter);
+  gap: 0.75rem 1rem;
+
+  /* Same 2rem height as the pager and view switch, so the row lines up. */
+  > .btn {
+    height: 2rem;
+    padding-top: 0;
+    padding-bottom: 0;
+    white-space: nowrap;
+  }
 }
 
+/* The pager takes the free middle space; summary left, size + pages right. */
 .folder-toolbar__pages {
+  flex: 1 1 24rem;
   min-width: 0;
+
+  .pager {
+    justify-content: space-between;
+  }
 }
 
 /* Box / list switch, pushed to the bottom right of the folder panel. */
 .view-switch {
   display: flex;
+  flex: none;
   margin-left: auto;
   border: 1px solid var(--color-outline-variant);
   border-radius: var(--radius);
@@ -837,4 +852,24 @@
   color: var(--color-on-surface);
   font-size: var(--text-body-sm);
   font-weight: 600;
+}
+
+/* Export checkbox: top left of a folder tile, above the stretched link. */
+.folder-tile__select {
+  position: absolute;
+  top: 0.35rem;
+  left: 0.35rem;
+  z-index: 1;
+  display: flex;
+  margin: 0;
+  cursor: pointer;
+}
+
+.folder-toolbar__select {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+  font-size: var(--text-body-sm);
+  cursor: pointer;
 }

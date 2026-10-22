@@ -101,6 +101,15 @@ class PermissionSeeder extends Seeder
             ['module' => 'customers', 'name' => 'customers.edit', 'display_name' => 'Edit Customers'],
             ['module' => 'customers', 'name' => 'customers.deactivate', 'display_name' => 'Deactivate Customers'],
 
+            // Soft delete + Trash (records can be restored, never purged)
+            ['module' => 'invoices', 'name' => 'invoices.delete', 'display_name' => 'Delete Invoices', 'description' => 'Moves the invoice to Trash; stock is returned'],
+            ['module' => 'quotations', 'name' => 'quotations.delete', 'display_name' => 'Delete Quotations'],
+            ['module' => 'performas', 'name' => 'performas.delete', 'display_name' => 'Delete Performas', 'description' => 'Unpaid goods return to stock'],
+            ['module' => 'delivery_notes', 'name' => 'delivery_notes.delete', 'display_name' => 'Delete Delivery Notes', 'description' => 'Open notes return their goods to stock'],
+            ['module' => 'customers', 'name' => 'customers.delete', 'display_name' => 'Delete Customers'],
+            ['module' => 'creditors', 'name' => 'creditors.delete', 'display_name' => 'Delete Creditors'],
+            ['module' => 'trash', 'name' => 'trash.view', 'display_name' => 'View and Restore Trash'],
+
             // Repairs
             ['module' => 'repairs', 'name' => 'repairs.view', 'display_name' => 'View Repairs'],
             ['module' => 'repairs', 'name' => 'repairs.create', 'display_name' => 'Create Repairs'],

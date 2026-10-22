@@ -1,7 +1,7 @@
 {{-- Forgot password request form (SCSS guest card). --}}
 @extends('layouts.guest')
 
-@section('title', __('Forgot password').' — '.setting('company_name', 'Aanigemas'))
+@section('title', __('Forgot password').' — '.setting('company_name', 'Aani Gemas'))
 
 @section('content')
 <div class="guest-page">

@@ -37,6 +37,12 @@
 @section('content')
 <x-page-header :title="$title" :subtitle="$subtitle">
     <x-slot:actions>
+        @if($inLots)
+            <x-btn href="{{ route('branch.stones.index') }}" variant="secondary">
+                <span class="material-symbols-outlined icon icon--sm">arrow_back</span>
+                {{ __('Back to folders') }}
+            </x-btn>
+        @endif
         @if($mode === 'folder')
             @can('manage', $category)
                 <x-btn variant="secondary" data-modal-open="rename-folder-modal">
@@ -51,6 +57,10 @@
                 </form>
             @endcan
         @endif
+        <x-btn type="button" variant="secondary" data-export-all>
+            <span class="material-symbols-outlined icon icon--sm">download</span>
+            {{ __('Export Excel') }}
+        </x-btn>
         @if(auth()->user()->hasPermission('stones.intake'))
             <x-btn href="{{ route('branch.stone-intakes.scan') }}" variant="secondary">{{ __('Stone Intake') }}</x-btn>
         @endif
@@ -64,6 +74,19 @@
         @endcan
     </x-slot:actions>
 </x-page-header>
+
+{{-- Posted by the Export buttons (all, ticked folders, ticked lots); keeps the filters the page is showing. --}}
+<form id="stone-export-form" method="POST" action="{{ route('branch.stones.export') }}" class="hidden">
+    @csrf
+    @foreach($filters as $filterName => $filterValue)
+        @if(is_scalar($filterValue) && (string) $filterValue !== '')
+            <input type="hidden" name="{{ $filterName }}" value="{{ $filterValue }}">
+        @endif
+    @endforeach
+    @if($mode === 'folder' && empty($filters['category']))
+        <input type="hidden" name="category" value="{{ $category->uuid }}">
+    @endif
+</form>
 
 {{-- Where you are: Folders, All lots, or one folder (with a way back). --}}
 <nav class="stone-scope" aria-label="{{ __('Stone view') }}">

@@ -59,6 +59,8 @@ class StoneImportService
         'tray_no' => ['label' => 'Tray no.', 'required' => false, 'aliases' => ['tray no', 'tray', 'tray number']],
         'image_code' => ['label' => 'Image code', 'required' => false, 'aliases' => ['image code', 'image', 'image name', 'photo', 'picture']],
         'remarks' => ['label' => 'Remarks', 'required' => false, 'aliases' => ['remarks', 'remark', 'notes', 'note']],
+        // Optional, last column: a value is kept as the lot's barcode, an empty cell gets a generated one.
+        'barcode' => ['label' => 'Barcode', 'required' => false, 'aliases' => ['barcode', 'bar code', 'barcode no', 'barcode number']],
     ];
 
     /** Rows above this are rejected so one file cannot exhaust memory. */
@@ -79,6 +81,7 @@ class StoneImportService
         'tray_no' => 30,
         'image_code' => 180,
         'remarks' => 255,
+        'barcode' => 64,
     ];
 
     public function __construct(
@@ -151,6 +154,8 @@ class StoneImportService
             $prepared[] = $this->evaluate($this->cleanNumbers($row), $index + 2);
         }
 
+        $prepared = $this->flagRepeatedBarcodes($prepared);
+
         return [
             'rows' => $prepared,
             'ok' => count(array_filter($prepared, fn (array $row): bool => $row['issues'] === [])),
@@ -174,6 +179,8 @@ class StoneImportService
         foreach ($rows as $row) {
             $prepared[] = $this->evaluate($this->normalizeRow($row), (int) ($row['sheet_row'] ?? 0));
         }
+
+        $prepared = $this->flagRepeatedBarcodes($prepared);
 
         return [
             'rows' => $prepared,
@@ -780,6 +787,14 @@ class StoneImportService
             }
         }
 
+        // A barcode in the sheet is kept as it is; an empty cell gets a new one
+        // when the lot is created. A number already on one of this branch's lots
+        // updates that lot with the row; one held anywhere else is refused.
+        $updates = $row['barcode'] !== '' && $this->existingStone($row['barcode']) !== null;
+        if ($row['barcode'] !== '' && ! $updates && $this->barcodeTaken($row['barcode'])) {
+            $issues[] = __('Barcode :code is already used by another lot or jewellery item.', ['code' => $row['barcode']]);
+        }
+
         $status = StoneStatus::tryFrom($row['status']) ?? StoneStatus::fromSheet($row['status']);
 
         $pricing = $this->pricingService->calculate([
@@ -806,6 +821,7 @@ class StoneImportService
 
         return array_merge($row, [
             'sheet_row' => $sheetRow,
+            'will_update' => $updates,
             'pricing_mode' => $mode?->value ?? $row['pricing_mode'],
             'status' => $status->value,
             'piece_price' => $pricing['piece_price'],
@@ -815,6 +831,49 @@ class StoneImportService
             'mismatch' => $mismatch,
             'issues' => array_values($issues),
         ]);
+    }
+
+    /**
+     * The active lot in this branch that already carries the barcode, if any.
+     */
+    public function existingStone(string $barcode): ?\App\Models\Stone
+    {
+        return \App\Models\Stone::query()->where('barcode', $barcode)->first();
+    }
+
+    /**
+     * Whether a barcode is already on a stone or a jewellery piece (trashed ones too).
+     */
+    private function barcodeTaken(string $barcode): bool
+    {
+        return \App\Models\Stone::query()->withoutGlobalScopes()->withTrashed()->where('barcode', $barcode)->exists()
+            || \App\Models\JewelleryItem::query()->withoutGlobalScopes()->withTrashed()->where('barcode', $barcode)->exists();
+    }
+
+    /**
+     * Mark every row after the first that repeats a barcode seen earlier.
+     *
+     * @param  list<array<string, mixed>>  $rows
+     * @return list<array<string, mixed>>
+     */
+    private function flagRepeatedBarcodes(array $rows): array
+    {
+        $seen = [];
+
+        foreach ($rows as $i => $row) {
+            $code = (string) ($row['barcode'] ?? '');
+            if ($code === '') {
+                continue;
+            }
+
+            if (isset($seen[$code])) {
+                $rows[$i]['issues'][] = __('Barcode :code appears more than once in this sheet.', ['code' => $code]);
+                $rows[$i]['issues'] = array_values($rows[$i]['issues']);
+            }
+            $seen[$code] = true;
+        }
+
+        return $rows;
     }
 
     /**

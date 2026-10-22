@@ -508,4 +508,99 @@ class StoneExcelImportTest extends TestCase
             ])
             ->assertStatus(422);
     }
+
+    /**
+     * An optional last BARCODE column: a value is kept, an empty cell gets a
+     * generated number, and a repeated value is refused.
+     */
+    public function test_barcode_column_is_kept_or_generated_and_duplicates_are_refused(): void
+    {
+        $branch = Branch::factory()->create();
+        $admin = User::factory()->admin($branch->id)->create();
+
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->fromArray([
+            'MATERIAL', 'PRICING MODE', 'CARAT', 'TOTAL PIECES', 'PRICE PER CARAT', 'BARCODE',
+        ], null, 'A1');
+        $sheet->fromArray([
+            ['AMATISTA', 'PER CARAT', 2, 1, 10, '123456'],
+            ['CITRINO', 'PER CARAT', 2, 1, 10, ''],
+            ['TOPACIO', 'PER CARAT', 2, 1, 10, '123456'],
+        ], null, 'A2');
+        $path = tempnam(sys_get_temp_dir(), 'stones').'.xlsx';
+        (new Xlsx($spreadsheet))->save($path);
+
+        $staged = $this->stage($admin, new UploadedFile($path, 'barcodes.xlsx', null, null, true));
+        $this->assertSame(5, $staged['mapping']['barcode']);
+
+        $preview = $this->actingAs($admin)
+            ->postJson(route('branch.stones.import.preview'), ['token' => $staged['token'], 'mapping' => $staged['mapping']])
+            ->assertOk()
+            ->json('data');
+
+        $this->assertSame(2, $preview['ok'], json_encode(array_column($preview['rows'], 'issues')));
+        $this->assertSame(1, $preview['errors']);
+
+        $begin = $this->actingAs($admin)
+            ->postJson(route('branch.stones.import.begin'), ['filename' => 'barcodes.xlsx', 'total_rows' => 2])
+            ->assertStatus(201)
+            ->json('data');
+
+        $this->actingAs($admin)
+            ->postJson(route('branch.stones.import.chunk'), [
+                'import_uuid' => $begin['import_uuid'],
+                'chunk_index' => 0,
+                'rows' => [$preview['rows'][0], $preview['rows'][1]],
+            ])
+            ->assertOk();
+
+        $this->assertSame('123456', \App\Models\Stone::query()->where('name', 'AMATISTA')->value('barcode'));
+        $generated = \App\Models\Stone::query()->where('name', 'CITRINO')->value('barcode');
+        $this->assertMatchesRegularExpression('/^\d{6}$/', (string) $generated);
+        $this->assertNotSame('123456', $generated);
+    }
+
+    /**
+     * A barcode already on one of this branch's lots updates that lot with the
+     * row's data instead of being refused or creating a second lot.
+     */
+    public function test_existing_barcode_updates_that_lot(): void
+    {
+        $branch = Branch::factory()->create();
+        $admin = User::factory()->admin($branch->id)->create();
+
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->fromArray(['MATERIAL', 'PRICING MODE', 'CARAT', 'TOTAL PIECES', 'PRICE PER CARAT', 'BARCODE'], null, 'A1');
+        $sheet->fromArray([['AMATISTA', 'PER CARAT', 2, 1, 10, '123456']], null, 'A2');
+        $path = tempnam(sys_get_temp_dir(), 'stones').'.xlsx';
+        (new Xlsx($spreadsheet))->save($path);
+
+        $run = function () use ($admin, $path): void {
+            $staged = $this->stage($admin, new UploadedFile($path, 'barcodes.xlsx', null, null, true));
+            $preview = $this->actingAs($admin)
+                ->postJson(route('branch.stones.import.preview'), ['token' => $staged['token'], 'mapping' => $staged['mapping']])
+                ->assertOk()->json('data');
+            $this->assertSame(1, $preview['ok'], json_encode(array_column($preview['rows'], 'issues')));
+            $begin = $this->actingAs($admin)
+                ->postJson(route('branch.stones.import.begin'), ['filename' => 'barcodes.xlsx', 'total_rows' => 1])
+                ->assertStatus(201)->json('data');
+            $this->actingAs($admin)
+                ->postJson(route('branch.stones.import.chunk'), [
+                    'import_uuid' => $begin['import_uuid'], 'chunk_index' => 0, 'rows' => $preview['rows'],
+                ])->assertOk();
+        };
+
+        $run();
+        $this->assertSame(1, \App\Models\Stone::query()->count());
+
+        // Same barcode, new price: the lot is updated, not duplicated.
+        $sheet->setCellValue('E2', 25);
+        (new Xlsx($spreadsheet))->save($path);
+        $run();
+
+        $this->assertSame(1, \App\Models\Stone::query()->count());
+        $this->assertEquals(25, \App\Models\Stone::query()->where('barcode', '123456')->value('price_per_carat'));
+    }
 }

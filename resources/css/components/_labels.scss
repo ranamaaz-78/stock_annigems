@@ -149,6 +149,17 @@
   max-height: none;
 }
 
+.stone-label-cell__brand {
+  margin: 0 0 1mm;
+  font-family: var(--font-body-sm);
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.12em;
+  text-align: center;
+  color: var(--color-on-surface);
+}
+
 .stone-label-cell__name {
   margin: 0 0 1.5mm;
   font-family: var(--font-body-sm);

@@ -41,6 +41,7 @@ const PREVIEW_COLUMNS = [
     },
     { key: 'tray_no' },
     { key: 'image_code' },
+    { key: 'barcode' },
 ];
 
 /**
@@ -610,10 +611,18 @@ class StoneImport {
         const ok = document.createElement('span');
         ok.className = 'stone-import__chip stone-import__chip--ok';
         ok.textContent = `${okCount} ready`;
+        const updateCount = this.rows.filter((row) => (row.issues || []).length === 0 && row.will_update).length;
+        const newCount = okCount - updateCount;
+        const fresh = document.createElement('span');
+        fresh.className = 'stone-import__chip stone-import__chip--ok';
+        fresh.textContent = t(':count new', { count: newCount });
+        const upd = document.createElement('span');
+        upd.className = 'stone-import__chip stone-import__chip--ok';
+        upd.textContent = t(':count will update', { count: updateCount });
         const bad = document.createElement('span');
         bad.className = 'stone-import__chip stone-import__chip--error';
         bad.textContent = `${errorCount} need a fix`;
-        this.summary.append(ok, bad);
+        this.summary.append(ok, fresh, upd, bad);
 
         // A supplier sheet runs to thousands of rows, so the grid is built
         // off-document and attached once instead of reflowing per row.
@@ -625,10 +634,11 @@ class StoneImport {
 
         this.insertBtn.disabled = okCount === 0;
         this.insertBtn.textContent = errorCount > 0 ? t('Insert :okCount ready rows', { okCount: okCount }) : t('Insert');
+        const split = t(':new new stones will be inserted and :updated existing stones (same barcode) will be updated.', { new: newCount, updated: updateCount });
         this.setStatus(
             errorCount > 0
-                ? t(':okCount rows will be inserted. :errorCount red rows will be kept in Stones > Import History to download and fix.', { okCount: okCount, errorCount: errorCount })
-                : t('Every row calculated. Review and insert.')
+                ? `${split} ${t(':errorCount red rows will be kept in Stones > Import History to download and fix.', { errorCount: errorCount })}`
+                : `${split} ${t('Every row calculated. Review and insert.')}`
         );
     }
 
@@ -646,6 +656,10 @@ class StoneImport {
 
         const rowNumber = document.createElement('td');
         rowNumber.textContent = row.sheet_row ?? index + 1;
+        if (!broken && row.will_update) {
+            rowNumber.title = t('Barcode already exists: this stone will be updated.');
+            rowNumber.textContent += ' ↻';
+        }
         tr.appendChild(rowNumber);
 
         PREVIEW_COLUMNS.forEach((column) => {
@@ -754,12 +768,15 @@ class StoneImport {
     async insert() {
         const ready = this.rows.filter((row) => (row.issues || []).length === 0);
         const bad = this.rows.filter((row) => (row.issues || []).length > 0);
+        const updating = ready.filter((row) => row.will_update).length;
+        const creating = ready.length - updating;
 
         const confirmed = await window.AnnigemsAlert?.confirmAction({
             title: t('Import :ready stones?', { ready: ready.length }),
-            text: bad.length > 0
-                ? t('Each ready row becomes a stone lot. :bad rows with problems will not be inserted; download them later from Stones > Import History.', { bad: bad.length })
-                : t('Each row becomes a stone lot with its own code and barcode.'),
+            text: t(':new new stones will be inserted and :updated existing stones (same barcode) will be updated.', { new: creating, updated: updating })
+                + (bad.length > 0
+                    ? ' ' + t(':bad rows with problems will not be imported; download them later from Stones > Import History.', { bad: bad.length })
+                    : ''),
             confirmButtonText: t('Insert'),
         });
         if (!confirmed) {

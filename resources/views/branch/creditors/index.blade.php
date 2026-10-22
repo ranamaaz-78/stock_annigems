@@ -68,6 +68,9 @@
                             <td class="table-admin__actions-col">
                                 <x-table.actions>
                                     <x-table.action :href="route('branch.creditors.show', $creditor)" />
+                                    @if(auth()->user()->hasPermission('creditors.delete'))
+                                        <x-delete-record type="creditors" :record="$creditor" :icon="true" />
+                                    @endif
                                 </x-table.actions>
                             </td>
                         </tr>
