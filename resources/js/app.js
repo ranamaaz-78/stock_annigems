@@ -29,6 +29,7 @@ import { bindModals } from './modules/modal';
 import { bindSettingsForms } from './modules/settings';
 import { bindSelectSearch } from './modules/select-search';
 import { bindShell } from './modules/shell';
+import { bindPasswordToggles } from './modules/password-toggle';
 
 /**
  * Bind page widgets. Called on first load and after a kiosk body swap
@@ -36,6 +37,7 @@ import { bindShell } from './modules/shell';
  */
 export function bootPage() {
     bindShell();
+    bindPasswordToggles();
     window.AnnigemsButton?.bindLoadingForms();
     window.AnnigemsButton?.bindLoadingButtons();
     window.AnnigemsForm?.bindFormValidation();

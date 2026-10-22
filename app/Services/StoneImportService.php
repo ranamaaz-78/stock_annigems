@@ -41,19 +41,19 @@ class StoneImportService
      * @var array<string, array{label: string, required: bool, aliases: list<string>}>
      */
     public const FIELDS = [
-        'name' => ['label' => 'Material / name', 'required' => true, 'aliases' => ['material', 'name', 'stone']],
+        'name' => ['label' => 'Material / name', 'required' => true, 'aliases' => ['material / name', 'material', 'name', 'stone']],
         'shape' => ['label' => 'Shape / cut', 'required' => false, 'aliases' => ['shape/cut', 'shape', 'cut']],
         'dimension' => ['label' => 'Dimension', 'required' => false, 'aliases' => ['dimension', 'size', 'mm']],
         'carat' => ['label' => 'Carat', 'required' => false, 'aliases' => ['carat', 'ct', 'cts']],
-        'pieces' => ['label' => 'Total pieces', 'required' => false, 'aliases' => ['total pcs', 'pcs', 'pieces', 'qty', 'quantity']],
+        'pieces' => ['label' => 'Total pieces', 'required' => false, 'aliases' => ['total pieces', 'total pcs', 'pcs', 'pieces', 'qty', 'quantity']],
         'pairs' => ['label' => 'Pairs', 'required' => false, 'aliases' => ['pairs', 'pair']],
-        'weight_grams' => ['label' => 'Weight (grams)', 'required' => false, 'aliases' => ['weight in gms / kgs', 'weight in gms', 'weight', 'gms', 'grams']],
-        'pricing_mode' => ['label' => 'Pricing mode', 'required' => true, 'aliases' => ['measurement', 'pricing', 'price type']],
-        'price_per_carat' => ['label' => 'Price per carat', 'required' => false, 'aliases' => ['price (per ct)', 'price per ct', 'per carat price', 'rate']],
+        'weight_grams' => ['label' => 'Weight (grams)', 'required' => false, 'aliases' => ['weight (grams)', 'weight in gms / kgs', 'weight in gms', 'weight', 'gms', 'grams']],
+        'pricing_mode' => ['label' => 'Pricing mode', 'required' => true, 'aliases' => ['pricing mode', 'measurement', 'pricing', 'price type']],
+        'price_per_carat' => ['label' => 'Price per carat', 'required' => false, 'aliases' => ['price per carat', 'price (per ct)', 'price per ct', 'per carat price', 'rate']],
         'price_per_piece' => ['label' => 'Price per piece', 'required' => false, 'aliases' => ['price (per piece)', 'price per piece', 'per piece price']],
         // The sheet keeps the gram rate in the same column as the carat rate,
         // so both default to it and the operator can repoint either one.
-        'price_per_gram' => ['label' => 'Price per gram', 'required' => false, 'aliases' => ['price (per gms)', 'price per gms', 'per gms price', 'price (per ct)']],
+        'price_per_gram' => ['label' => 'Price per gram', 'required' => false, 'aliases' => ['price per gram', 'price (per gms)', 'price per gms', 'per gms price', 'price (per ct)']],
         'sheet_total' => ['label' => 'Total Cost', 'required' => false, 'aliases' => ['total cost', 'total', 'amount']],
         'status' => ['label' => 'Status', 'required' => false, 'aliases' => ['status']],
         'tray_no' => ['label' => 'Tray no.', 'required' => false, 'aliases' => ['tray no', 'tray', 'tray number']],
@@ -148,7 +148,7 @@ class StoneImportService
                 continue;
             }
 
-            $prepared[] = $this->evaluate($row, $index + 2);
+            $prepared[] = $this->evaluate($this->cleanNumbers($row), $index + 2);
         }
 
         return [
@@ -337,6 +337,7 @@ class StoneImportService
         $normalisedOriginal = match ($field) {
             'pricing_mode' => (StonePricingMode::tryFrom(trim($original)) ?? StonePricingMode::fromSheet($original))?->value ?? trim($original),
             'status' => (StoneStatus::tryFrom(trim($original)) ?? StoneStatus::fromSheet($original))->value,
+            'carat', 'pieces', 'pairs', 'weight_grams', 'price_per_carat', 'price_per_piece', 'price_per_gram' => $this->cleanNumber($original),
             default => trim($original),
         };
 
@@ -706,6 +707,26 @@ class StoneImportService
         }
 
         return $row;
+    }
+
+    /**
+     * Turn sheet text such as "28.00 €", "1,271.94" or "N/A" into a plain
+     * number string; anything that is not a number becomes empty.
+     */
+    private function cleanNumbers(array $row): array
+    {
+        foreach (['carat', 'pieces', 'pairs', 'weight_grams', 'price_per_carat', 'price_per_piece', 'price_per_gram', 'sheet_total'] as $field) {
+            $row[$field] = $this->cleanNumber((string) ($row[$field] ?? ''));
+        }
+
+        return $row;
+    }
+
+    private function cleanNumber(string $value): string
+    {
+        $clean = str_replace(',', '', preg_replace('/[^\d.,\-]/u', '', $value) ?? '');
+
+        return is_numeric($clean) ? $clean : '';
     }
 
     /**
