@@ -75,7 +75,8 @@ export function bindJewelleryItemForm() {
      * @returns {boolean}
      */
     function isGramLot(stone) {
-        return stone.pricing_mode === 'per_gram';
+        // Measured, not counted: grams (per gram) or carats (per carat).
+        return stone.pricing_mode === 'per_gram' || stone.pricing_mode === 'per_carat';
     }
 
     /** @type {Map<string, {stone: object, quantity: number, grams: number, committed: number}>} */
@@ -94,7 +95,7 @@ export function bindJewelleryItemForm() {
             if (!row.uuid) {
                 return;
             }
-            const gram = row.mode === 'per_gram';
+            const gram = row.mode === 'per_gram' || row.mode === 'per_carat';
             const grams = Number(row.grams || 0);
             rows.set(row.uuid, {
                 stone: {
@@ -156,6 +157,11 @@ export function bindJewelleryItemForm() {
         let carat = 0;
         let weighed = 0;
         rows.forEach((row) => {
+            if (row.stone.pricing_mode === 'per_carat') {
+                // A per-carat lot is used by the carat: the carats used count as carat.
+                carat += Number(row.grams || 0);
+                return;
+            }
             if (isGramLot(row.stone)) {
                 // A lot priced per gram has no carat; its grams count as they are.
                 weighed += Number(row.grams || 0);
@@ -227,9 +233,6 @@ export function bindJewelleryItemForm() {
         if (!showCost || row.stone.rate === undefined || row.stone.rate === null || Number.isNaN(rate)) {
             return null;
         }
-        if (row.stone.pricing_mode === 'per_carat') {
-            return round3(round3(Number(row.stone.carat || 0) * rate) * Number(row.quantity || 0));
-        }
         if (isGramLot(row.stone)) {
             return round3(rate * Number(row.grams || 0));
         }
@@ -258,7 +261,7 @@ export function bindJewelleryItemForm() {
             const cost = rowCost(row);
             costTotal += cost || 0;
             const amountInput = gram
-                ? `<span class="stone-alloc__amount"><input type="number" min="0.001" step="0.001" class="input-field" data-grams="${row.stone.uuid}" value="${row.grams || ''}" placeholder="0.000" aria-label="${t('Grams used')}"><span class="stone-alloc__unit">g</span></span>`
+                ? `<span class="stone-alloc__amount"><input type="number" min="0.001" step="0.001" class="input-field" data-grams="${row.stone.uuid}" value="${row.grams || ''}" placeholder="0.000" aria-label="${row.stone.pricing_mode === 'per_carat' ? t('Carats used') : t('Grams used')}"><span class="stone-alloc__unit">${row.stone.pricing_mode === 'per_carat' ? 'ct' : 'g'}</span></span>`
                 : `<span class="stone-alloc__amount"><input type="number" min="1" class="input-field" data-qty="${row.stone.uuid}" value="${row.quantity}" aria-label="${t('Pieces used')}"><span class="stone-alloc__unit">${t('pcs')}</span></span>`;
             const missing = gram && !(Number(row.grams) > 0)
                 ? '<p class="form-error">' + t('Enter the grams used.') + '</p>'

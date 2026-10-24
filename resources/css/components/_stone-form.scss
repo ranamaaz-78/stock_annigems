@@ -457,6 +457,93 @@
   color: var(--color-on-surface-variant);
 }
 
+/* The chosen file, shown in place of the drop zone. */
+.stone-import__picked {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--color-excel);
+  border-radius: var(--radius-xl);
+  background-color: var(--color-row-ok-bg);
+
+  &.is-hidden {
+    display: none;
+  }
+
+  @media (max-width: 40rem) {
+    flex-wrap: wrap;
+  }
+}
+
+.stone-import__picked-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: var(--radius-lg, 0.75rem);
+  background-color: var(--color-excel);
+  color: #fff;
+}
+
+.stone-import__picked-body {
+  display: flex;
+  flex: 1 1 12rem;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.stone-import__picked-name {
+  overflow: hidden;
+  font-family: var(--font-body-md);
+  font-size: var(--text-body-md);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stone-import__picked-meta {
+  font-size: var(--text-body-sm);
+  color: var(--color-on-surface-variant);
+}
+
+.stone-import__picked-ready {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: var(--text-body-sm);
+  font-weight: 500;
+  color: var(--color-excel);
+}
+
+.stone-import__picked-actions {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 0.5rem;
+}
+
+.stone-import__picked-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius);
+  background-color: var(--color-surface-container-lowest);
+  color: var(--color-on-surface-variant);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--color-error, #b3261e);
+    color: var(--color-error, #b3261e);
+  }
+}
+
 .stone-import__file {
   display: flex;
   align-items: center;
@@ -523,6 +610,13 @@
 .stone-import__chip--error {
   background-color: var(--color-row-error-bg);
   color: var(--color-error);
+}
+
+/* The preview scrolls inside its own box, so the horizontal bar stays in view
+   at the bottom of the dialog instead of sitting under the last row. */
+.stone-import__step[data-step='preview'] .panel__scroll {
+  max-height: calc(90vh - 14rem);
+  overflow: auto;
 }
 
 .stone-import__grid {

@@ -72,9 +72,12 @@ class StoneIntakeService
 
             foreach ($resolved as $line) {
                 $totalQty += $line['quantity'];
-                $totalGrams += $line['grams'];
-                // Only per-carat lots carry a weight per piece; the rest add nothing.
-                $totalCarat += (float) ($line['stone']->carat ?? 0) * $line['quantity'];
+                // Carats received are counted as carats, not added to the grams.
+                $totalGrams += $line['stone']->pricing_mode === StonePricingMode::PER_CARAT ? 0.0 : $line['grams'];
+                // A per-carat lot is received by the carat; the rest add nothing.
+                $totalCarat += $line['stone']->pricing_mode === StonePricingMode::PER_CARAT
+                    ? $line['grams']
+                    : 0.0;
             }
 
             $intake = StoneIntake::query()->create([
@@ -181,13 +184,15 @@ class StoneIntakeService
                 ]);
             }
 
-            $isGram = $stone->pricing_mode === StonePricingMode::PER_GRAM;
+            $isGram = $stone->isWeighed();
             $qty = (int) ($row['quantity'] ?? 0);
             $grams = round((float) ($row['weight_grams'] ?? 0), 3);
 
             if ($isGram && $grams <= 0) {
                 throw ValidationException::withMessages([
-                    "rows.{$index}.weight_grams" => __('Enter the grams received for :name.', ['name' => $stone->name]),
+                    "rows.{$index}.weight_grams" => $stone->weightUnit() === 'ct'
+                        ? __('Enter the carats received for :name.', ['name' => $stone->name])
+                        : __('Enter the grams received for :name.', ['name' => $stone->name]),
                 ]);
             }
 

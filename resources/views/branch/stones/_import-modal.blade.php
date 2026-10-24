@@ -44,9 +44,28 @@
                     <span class="stone-import__drop-hint">{{ __('or click to choose a file — .xlsx, .xls, or .csv') }}</span>
                 </div>
                 <input type="file" class="is-hidden" data-import-file accept=".xlsx,.xls,.csv" hidden>
-                <div class="stone-import__file is-hidden" data-import-filename>
-                    <span class="material-symbols-outlined icon icon--sm">description</span>
-                    <span data-import-filename-text></span>
+                {{-- Replaces the drop zone once a file is chosen. --}}
+                <div class="stone-import__picked is-hidden" data-import-filename>
+                    <span class="stone-import__picked-icon">
+                        <span class="material-symbols-outlined icon icon--lg">table_view</span>
+                    </span>
+                    <span class="stone-import__picked-body">
+                        <span class="stone-import__picked-name" data-import-filename-text></span>
+                        <span class="stone-import__picked-meta" data-import-filesize></span>
+                        <span class="stone-import__picked-ready">
+                            <span class="material-symbols-outlined icon icon--sm">check_circle</span>
+                            {{ __('Ready. Click Next to read the columns.') }}
+                        </span>
+                    </span>
+                    <span class="stone-import__picked-actions">
+                        <button type="button" class="btn btn--secondary" data-import-change>
+                            <span class="material-symbols-outlined icon icon--sm">swap_horiz</span>
+                            {{ __('Change file') }}
+                        </button>
+                        <button type="button" class="stone-import__picked-remove" data-import-remove aria-label="{{ __('Remove file') }}" title="{{ __('Remove file') }}">
+                            <span class="material-symbols-outlined icon icon--sm">delete</span>
+                        </button>
+                    </span>
                 </div>
             </section>
 

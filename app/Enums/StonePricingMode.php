@@ -28,6 +28,33 @@ enum StonePricingMode: string
     }
 
     /**
+     * Whether a lot in this mode is bought and sold by measure (grams or
+     * carats) rather than counted in pieces. Its stock is the measure itself.
+     */
+    public function isWeighed(): bool
+    {
+        return $this === self::PER_GRAM || $this === self::PER_CARAT;
+    }
+
+    /**
+     * The stored values of every mode sold by measure, for SQL filters.
+     *
+     * @return list<string>
+     */
+    public static function weighedValues(): array
+    {
+        return [self::PER_GRAM->value, self::PER_CARAT->value];
+    }
+
+    /**
+     * The unit a weighed lot's stock is kept in: ct or g.
+     */
+    public function weightUnit(): string
+    {
+        return $this === self::PER_CARAT ? 'ct' : 'g';
+    }
+
+    /**
      * Sheet MEASUREMENT text mapped to a mode, or null when the cell holds
      * something else (PENDING, NO COUNT, a note). Unknown text must not
      * silently become a price.

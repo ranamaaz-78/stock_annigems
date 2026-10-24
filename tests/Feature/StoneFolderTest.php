@@ -154,6 +154,52 @@ class StoneFolderTest extends TestCase
         $this->assertNotSoftDeleted('stone_categories', ['id' => $folder->id]);
     }
 
+    public function test_delete_selected_folders_removes_them_all_or_none(): void
+    {
+        $a = $this->lot('AMATISTA');
+        $b = $this->lot('CITRINE');
+        $keep = $this->lot('GARNET');
+        $folderA = $this->folder('AMATISTA');
+        $folderB = $this->folder('CITRINE');
+
+        $this->actingAs($this->admin)
+            ->delete(route('branch.stone-folders.bulk-destroy'), ['categories' => [$folderA->uuid, $folderB->uuid]])
+            ->assertRedirect(route('branch.stones.index'))
+            ->assertSessionHas('success');
+
+        $this->assertSoftDeleted('stones', ['id' => $a->id]);
+        $this->assertSoftDeleted('stones', ['id' => $b->id]);
+        $this->assertNotSoftDeleted('stones', ['id' => $keep->id]);
+        $this->assertSoftDeleted('stone_categories', ['id' => $folderA->id]);
+        $this->assertSoftDeleted('stone_categories', ['id' => $folderB->id]);
+    }
+
+    public function test_delete_selected_folders_is_refused_whole_when_a_lot_is_held(): void
+    {
+        $held = $this->lot('AMATISTA');
+        $free = $this->lot('CITRINE');
+        $this->actingAs($this->admin)->postJson(route('branch.quotations.store'), $this->ticket($held))->assertOk();
+
+        $this->actingAs($this->admin)
+            ->delete(route('branch.stone-folders.bulk-destroy'), ['categories' => [$this->folder('AMATISTA')->uuid, $this->folder('CITRINE')->uuid]])
+            ->assertSessionHas('error');
+
+        $this->assertNotSoftDeleted('stones', ['id' => $held->id]);
+        $this->assertNotSoftDeleted('stones', ['id' => $free->id]);
+    }
+
+    public function test_only_a_branch_admin_may_delete_selected_folders(): void
+    {
+        $this->lot('AMATISTA');
+        $folder = $this->folder('AMATISTA');
+        $manager = User::factory()->manager($this->branch->id)->create();
+
+        $this->actingAs($manager)
+            ->delete(route('branch.stone-folders.bulk-destroy'), ['categories' => [$folder->uuid]])
+            ->assertForbidden();
+        $this->assertNotSoftDeleted('stone_categories', ['id' => $folder->id]);
+    }
+
     public function test_only_a_branch_admin_may_rename_or_delete(): void
     {
         $this->lot('AMATISTA');

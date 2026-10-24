@@ -28,7 +28,7 @@ const STORAGE_KEY = 'annigems.stones.labelOptions';
  * @type {Array<{group: string, items: Array<object>}>}
  */
 const PRESETS = (() => {
-    const sizes = [[50, 30], [25, 25], [35, 35]];
+    const sizes = [[50, 30], [22.5, 22.5], [18, 18], [35, 35]];
     // The 50 x 30 label holds two 25 x 30 barcodes side by side.
     const split = ([w, h]) => (w === 50 && h === 30 ? 2 : 1);
     const roll = ([w, h]) => ({ id: `roll-${w}x${h}`, name: t('Roll :w × :h mm', { w: w, h: h }), kind: 'roll', w, h, split: split([w, h]) });
@@ -66,6 +66,8 @@ const DEFAULTS = {
     showPrice: true,
     showName: true,
     border: false,
+    showTrayQty: false,
+    trayQty: '',
     customW: 50,
     customH: 30,
 };
@@ -119,7 +121,9 @@ function loadOptions() {
  */
 function saveOptions(options) {
     try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(options));
+        // The tray quantity is a one-off per print, so it is never remembered.
+        const { showTrayQty, trayQty, ...remembered } = options;
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(remembered));
     } catch (error) {
         // Remembering the choice is a convenience only.
     }
@@ -176,6 +180,12 @@ function labelHtml(stone, stock, options) {
     const perLine = Math.max(6, Math.floor((w - quiet) / (font * 0.58)));
     const nameLines = name ? Math.min(2, Math.ceil(name.length / perLine)) : 0;
     const price = options.showPrice ? String(stone.price ?? '') : '';
+    // Tray number, then the typed tray quantity after it when that box is ticked.
+    // Only a stone that has a tray number gets either; the rest print neither.
+    const trayQty = options.showTrayQty ? String(options.trayQty ?? '').trim() : '';
+    const tray = stone.tray_no
+        ? [`${t('Tray')} ${stone.tray_no}`, trayQty !== '' ? `${t('Qty')} ${trayQty}` : ''].filter(Boolean).join(' · ')
+        : '';
 
     // Text lines decide how much height is left for the bars.
     const lineHeights = [
@@ -184,6 +194,7 @@ function labelHtml(stone, stock, options) {
         numberFont,
         ...Array.from({ length: nameLines }, () => font),
         price ? font : 0,
+        tray ? font : 0,
     ].filter(Boolean);
     const textHeight = lineHeights.reduce((sum, size) => sum + size * 1.2, 0);
     const available = Math.max(3, h - 2 * pad - textHeight - 0.8);
@@ -196,6 +207,7 @@ function labelHtml(stone, stock, options) {
         <div class="lbl__code" style="font-size:${numberFont}mm;font-weight:700">${esc(stone.barcode)}</div>
         ${name ? `<div class="lbl__name" style="font-size:${font}mm">${esc(name)}</div>` : ''}
         ${price ? `<div class="lbl__meta" style="font-size:${font}mm">${esc(price)}</div>` : ''}
+        ${tray ? `<div class="lbl__meta" style="font-size:${font}mm">${esc(tray)}</div>` : ''}
     </div>`;
 }
 
@@ -397,6 +409,8 @@ export function bindStoneLabels() {
     const notice = modal.querySelector('[data-label-notice]');
     const printBtn = modal.querySelector('[data-label-print]');
     const customRow = modal.querySelector('[data-label-custom]');
+    const trayQtyRow = modal.querySelector('[data-label-tray-qty]');
+    const trayCheck = modal.querySelector('[data-label-tray-check]');
     const dataUrl = modal.dataset.dataUrl;
     companyName = modal.dataset.company || '';
 
@@ -419,6 +433,8 @@ export function bindStoneLabels() {
         field('showPrice').checked = Boolean(options.showPrice);
         field('showName').checked = Boolean(options.showName);
         field('border').checked = Boolean(options.border);
+        field('showTrayQty').checked = Boolean(options.showTrayQty);
+        field('trayQty').value = options.trayQty ?? '';
         field('customW').value = options.customW;
         field('customH').value = options.customH;
     }
@@ -435,6 +451,8 @@ export function bindStoneLabels() {
             showPrice: field('showPrice').checked,
             showName: field('showName').checked,
             border: field('border').checked,
+            showTrayQty: field('showTrayQty').checked,
+            trayQty: field('trayQty').value,
             customW: Number(field('customW').value) || DEFAULTS.customW,
             customH: Number(field('customH').value) || DEFAULTS.customH,
         };
@@ -445,9 +463,17 @@ export function bindStoneLabels() {
      * Redraw the preview and the summary line from the current choices.
      */
     function render() {
+        // The tray quantity choice only exists when a selected stone has a tray number.
+        const hasTray = stones.some((stone) => Boolean(stone.tray_no));
+        trayCheck.classList.toggle('is-hidden', !hasTray);
+        if (!hasTray) {
+            field('showTrayQty').checked = false;
+        }
+
         readControls();
         const stock = stockFor(options);
         customRow.classList.toggle('is-hidden', !stock.custom);
+        trayQtyRow.classList.toggle('is-hidden', !options.showTrayQty);
 
         if (!stones.length) {
             preview.innerHTML = '';
@@ -495,6 +521,9 @@ export function bindStoneLabels() {
      */
     async function open(uuids, kind = 'barcode') {
         labelKind = ['qr', 'both'].includes(kind) ? kind : 'barcode';
+        // Every time the dialog opens, the tray quantity starts unticked and empty.
+        field('showTrayQty').checked = false;
+        field('trayQty').value = '';
         if (!uuids.length) {
             window.AnnigemsAlert?.notifyError(t('Select at least one item to print.'));
 

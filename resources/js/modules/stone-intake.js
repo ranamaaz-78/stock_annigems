@@ -100,7 +100,18 @@ function setModalOpen(modal, open) {
  * @returns {boolean}
  */
 function isGramLot(stone) {
-    return stone?.pricing_mode === 'per_gram';
+    // Measured, not counted: grams for a per-gram lot, carats for a per-carat one.
+    return stone?.pricing_mode === 'per_gram' || stone?.pricing_mode === 'per_carat';
+}
+
+/**
+ * The unit a measured lot is received in.
+ *
+ * @param {object} stone
+ * @returns {string}
+ */
+function measureUnit(stone) {
+    return stone?.pricing_mode === 'per_carat' ? 'ct' : 'g';
 }
 
 /**
@@ -256,11 +267,13 @@ export function bindStoneIntake() {
 
             const amountCell = gram
                 ? `<div class="intake-weight">
-                        <input type="number" min="0.001" step="0.001" inputmode="decimal" class="input-field intake-qty" value="${escapeHtml(row.entered)}" placeholder="${t('grams')}" data-row-weight aria-label="${t('Grams for :name', { name: escapeHtml(row.stone.name) })}">
-                        <select class="input-field intake-unit" data-row-unit data-no-select2="true" aria-label="${t('Unit')}">
+                        <input type="number" min="0.001" step="0.001" inputmode="decimal" class="input-field intake-qty" value="${escapeHtml(row.entered)}" placeholder="${measureUnit(row.stone) === 'ct' ? t('carats') : t('grams')}" data-row-weight aria-label="${measureUnit(row.stone) === 'ct' ? t('Carats for :name', { name: escapeHtml(row.stone.name) }) : t('Grams for :name', { name: escapeHtml(row.stone.name) })}">
+                        ${measureUnit(row.stone) === 'ct'
+                            ? '<span class="intake-amount__unit">ct</span>'
+                            : `<select class="input-field intake-unit" data-row-unit data-no-select2="true" aria-label="${t('Unit')}">
                             <option value="g"${row.unit === 'g' ? ' selected' : ''}>g</option>
                             <option value="kg"${row.unit === 'kg' ? ' selected' : ''}>${t('kg')}</option>
-                        </select>
+                        </select>`}
                    </div>`
                 : `<div class="intake-amount">
                         <input type="number" min="1" max="${qtyMax}" step="1" inputmode="numeric" class="input-field intake-qty" value="${row.quantity}" data-row-qty aria-label="Quantity for ${escapeHtml(row.stone.name)}">
@@ -270,7 +283,7 @@ export function bindStoneIntake() {
             const lead = row.stone.image_url
                 ? `<span class="intake-thumb"><img src="${escapeHtml(row.stone.image_url)}" alt="" width="40" height="40" loading="lazy"></span>`
                 : '<span class="intake-thumb"><span class="material-symbols-outlined icon icon--sm">diamond</span></span>';
-            const kind = gram ? '<span class="badge badge--inactive">' + t('Per gram') + '</span>' : '';
+            const kind = gram ? '<span class="badge badge--inactive">' + (measureUnit(row.stone) === 'ct' ? t('Per carat') : t('Per gram')) + '</span>' : '';
             const codes = [row.stone.stone_code, row.stone.barcode].filter(Boolean).map(escapeHtml).join(' &middot; ');
             const shapeSize = [row.stone.shape, row.stone.dimension]
                 .filter((part) => part && part !== 'N/A')
@@ -750,7 +763,7 @@ export function bindStoneIntake() {
                         <span class="pos-suggest__title">${escapeHtml(stone.name)}</span>
                         <span class="pos-suggest__meta">${escapeHtml(suggestMeta(stone))}</span>
                     </span>
-                    <span class="pos-chip pos-chip--existing">${isGramLot(stone) ? `${gramsText(Number(stone.weight_grams || 0))} g` : `${Number(stone.quantity || 0)} in stock`}</span>
+                    <span class="pos-chip pos-chip--existing">${isGramLot(stone) ? `${gramsText(Number(stone.weight_grams || 0))} ${measureUnit(stone)}` : `${Number(stone.quantity || 0)} in stock`}</span>
                 </li>`;
             }).join('');
         }
@@ -903,7 +916,7 @@ export function bindStoneIntake() {
         const stone = json.data?.stone;
         if (stone) {
             const opening = isGramLot(stone)
-                ? `${gramsText(Number(stone.weight_grams || 0))} g`
+                ? `${gramsText(Number(stone.weight_grams || 0))} ${measureUnit(stone)}`
                 : `${Number(stone.quantity || 0)} piece(s)`;
             window.AnnigemsAlert?.notifySuccess(t(':code registered with :opening in stock. It is already counted, so do not add it to this intake again.', { code: stone.stone_code, opening: opening }));
         }

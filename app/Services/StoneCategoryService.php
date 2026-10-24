@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\StonePricingMode;
 use App\Models\Stone;
 use App\Models\StoneCategory;
 use App\Models\User;
@@ -89,9 +90,9 @@ class StoneCategoryService
                 'stones as active_lot_count' => fn ($query) => $query->where('is_active', true),
             ])
             ->withSum('stones as piece_total', 'quantity')
-            // Gram lots hold weight, not pieces; carat is weight per piece x pieces.
-            ->withSum('stones as gram_total', 'weight_grams')
-            ->withSum('stones as carat_total', DB::raw('carat * quantity'))
+            // Gram and carat lots hold a measure, not pieces: grams for one, carats for the other.
+            ->withSum(['stones as gram_total' => fn ($query) => $query->where('pricing_mode', StonePricingMode::PER_GRAM->value)], 'weight_grams')
+            ->withSum(['stones as carat_total' => fn ($query) => $query->where('pricing_mode', StonePricingMode::PER_CARAT->value)], 'weight_grams')
             ->when($term !== '', fn ($query) => $query->where('name', 'like', '%'.$term.'%'))
             ->ordered()
             ->paginate(per_page($perPage))

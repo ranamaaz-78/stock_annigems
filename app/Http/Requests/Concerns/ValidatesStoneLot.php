@@ -23,7 +23,8 @@ trait ValidatesStoneLot
      */
     protected function lotRules(): array
     {
-        $caratMax = (float) config('annigems.stones.carat_max', 50);
+        // The carats of a per-carat lot are its stock, so the ceiling is a lot's worth.
+        $caratMax = (float) config('annigems.stones.carat_max', 9999999);
         $perCarat = StonePricingMode::PER_CARAT->value;
         $perPiece = StonePricingMode::PER_PIECE->value;
         $perGram = StonePricingMode::PER_GRAM->value;
@@ -59,9 +60,10 @@ trait ValidatesStoneLot
                 'required', 'numeric', 'gt:0', 'decimal:0,3', 'max:99999999',
             ],
 
-            // Gram lots are bulk weight and hold no countable pieces.
+            // Gram and carat lots are measured, not counted: no pieces.
             'pieces' => [
                 'exclude_if:pricing_mode,'.$perGram,
+                'exclude_if:pricing_mode,'.$perCarat,
                 'required', 'integer', 'min:1', 'max:'.(int) config('annigems.stones.intake_quantity_max', 10000),
             ],
             'pairs' => ['nullable', 'integer', 'min:0', 'max:'.(int) config('annigems.stones.intake_quantity_max', 10000)],
@@ -85,9 +87,9 @@ trait ValidatesStoneLot
             'pricing_mode.required' => __('Choose per carat, per piece, or per gram.'),
             'status.required' => __('Choose a status.'),
 
-            'carat.required' => __('Per carat pricing needs a carat weight.'),
+            'carat.required' => __('Per carat pricing needs the carats in stock.'),
             'carat.gt' => __('Carat must be greater than zero.'),
-            'carat.max' => __('Carat is unusually high. Check for a typing error (e.g. 2.00 not 200).'),
+            'carat.max' => __('Carat is unusually high. Check for a typing error.'),
             'carat.decimal' => __('Carat allows at most three decimal places.'),
             'price_per_carat.required' => __('Enter the price per carat.'),
             'price_per_carat.gt' => __('Price per carat must be greater than zero.'),

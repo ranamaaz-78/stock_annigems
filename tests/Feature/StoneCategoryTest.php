@@ -89,15 +89,15 @@ class StoneCategoryTest extends TestCase
 
         // Gram-only material.
         $register(['name' => 'CORAL', 'pricing_mode' => StonePricingMode::PER_GRAM->value, 'weight_grams' => '150.5', 'price_per_gram' => '2']);
-        // Per-carat material: 4 pieces of 2.5 ct = 10 ct.
-        $register(['name' => 'AMATISTA', 'pricing_mode' => StonePricingMode::PER_CARAT->value, 'carat' => '2.5', 'price_per_carat' => '3', 'pieces' => 4]);
+        // Per-carat material: 10 ct in stock (no pieces).
+        $register(['name' => 'AMATISTA', 'pricing_mode' => StonePricingMode::PER_CARAT->value, 'carat' => '10', 'price_per_carat' => '3']);
         // Piece-only material.
         $register(['name' => 'HEART', 'pricing_mode' => StonePricingMode::PER_PIECE->value, 'price_per_piece' => '9', 'pieces' => 71]);
 
         $html = $this->actingAs($admin)->get(route('branch.stones.index'))->assertOk()->getContent();
 
         $this->assertStringContainsString('150.5 g', $html);
-        $this->assertStringContainsString('4 pcs · 10 ct', $html);
+        $this->assertStringContainsString('10 ct', $html);
         $this->assertStringContainsString('71 pcs', $html);
         // The gram-only folder no longer claims zero pieces.
         $this->assertStringNotContainsString('0 pcs', $html);

@@ -69,17 +69,17 @@ class JewelleryManagementTest extends TestCase
     }
 
     /**
-     * Register a stone in the branch and credit on-hand quantity.
+     * Register a per-piece stone in the branch and credit on-hand quantity
+     * (20 a piece).
      */
-    private function stockedStone(User $admin, Branch $branch, int $quantity = 5, string $carat = '0.200'): Stone
+    private function stockedStone(User $admin, Branch $branch, int $quantity = 5): Stone
     {
         $this->actingAs($admin)->post(route('branch.stones.store'), [
-            'name' => 'Round brilliant '.$carat.'ct',
+            'name' => 'Round brilliant',
             'shape' => 'ROUND',
-            'pricing_mode' => 'per_carat',
+            'pricing_mode' => 'per_piece',
             'status' => 'in_stock',
-            'carat' => $carat,
-            'price_per_carat' => '100',
+            'price_per_piece' => '20',
             'pieces' => 1,
         ])->assertRedirect();
 
@@ -236,8 +236,9 @@ class JewelleryManagementTest extends TestCase
 
         $this->assertSame(3, (int) $stone->fresh()->quantity);
         $item = JewelleryItem::query()->first();
-        $this->assertSame('0.400', (string) $item->stone_weight_carat);
-        $this->assertSame('0.080', (string) $item->stone_weight_grams);
+        // A per-piece lot carries no carat, so it adds none to the piece's stone weight.
+        $this->assertSame('0.000', (string) $item->stone_weight_carat);
+        $this->assertSame('0.000', (string) $item->stone_weight_grams);
         $this->assertSame('9.500', (string) $item->net_weight);
 
         $used = StoneStockMovement::query()->where('type', StoneMovementType::USED_IN_ITEM)->first();
@@ -318,18 +319,19 @@ class JewelleryManagementTest extends TestCase
     public function test_gross_weight_must_cover_stone_grams(): void
     {
         [$branch, $admin, $category, $metalId, $purityId] = $this->branchContext();
-        $stone = $this->stockedStone($admin, $branch, 5, '1.000');
+        // 5 ct in stock; using 1 ct is 0.2 g of stone.
+        $stone = $this->lot($admin, ['pricing_mode' => 'per_carat', 'carat' => '5', 'price_per_carat' => '100']);
 
         $this->actingAs($admin)
             ->from(route('branch.jewellery-items.create'))
             ->post(route('branch.jewellery-items.store'), $this->itemPayload($category, $metalId, $purityId, [
                 'gross_weight' => '0.100',
                 'metal_weight' => '0.050',
-                'stones' => [['uuid' => $stone->uuid, 'quantity' => 1]],
+                'stones' => [['uuid' => $stone->uuid, 'quantity' => 1, 'weight_grams' => '1']],
             ]))
             ->assertSessionHasErrors('gross_weight');
 
-        $this->assertSame(5, (int) $stone->fresh()->quantity);
+        $this->assertSame('5.000', (string) $stone->fresh()->weight_grams);
         $this->assertSame(0, JewelleryItem::query()->count());
     }
 
@@ -407,8 +409,7 @@ class JewelleryManagementTest extends TestCase
             'shape' => $stone->shape,
             'pricing_mode' => $stone->pricing_mode->value,
             'status' => $stone->status->value,
-            'carat' => $stone->carat,
-            'price_per_carat' => $stone->price_per_carat,
+            'price_per_piece' => $stone->price_per_piece,
             'pieces' => $stone->quantity,
             'is_active' => '1',
         ])->assertRedirect();
@@ -636,13 +637,13 @@ class JewelleryManagementTest extends TestCase
     public function test_create_prices_each_stone_in_its_own_unit(): void
     {
         [$branch, $admin, $category, $metalId, $purityId] = $this->branchContext();
-        $carat = $this->lot($admin, ['pricing_mode' => 'per_carat', 'carat' => '0.200', 'price_per_carat' => '100', 'pieces' => 5]);
+        $carat = $this->lot($admin, ['pricing_mode' => 'per_carat', 'carat' => '5', 'price_per_carat' => '100']);
         $piece = $this->lot($admin, ['pricing_mode' => 'per_piece', 'price_per_piece' => '7', 'pieces' => 10]);
         $gram = $this->lot($admin, ['pricing_mode' => 'per_gram', 'weight_grams' => '10', 'price_per_gram' => '5']);
 
         $this->actingAs($admin)->post(route('branch.jewellery-items.store'), $this->itemPayload($category, $metalId, $purityId, [
             'stones' => [
-                ['uuid' => $carat->uuid, 'quantity' => 2],
+                ['uuid' => $carat->uuid, 'quantity' => 1, 'weight_grams' => '2'],
                 ['uuid' => $piece->uuid, 'quantity' => 3],
                 ['uuid' => $gram->uuid, 'quantity' => 1, 'weight_grams' => '4.5'],
             ],
@@ -651,10 +652,12 @@ class JewelleryManagementTest extends TestCase
         $item = JewelleryItem::query()->firstOrFail();
         $rows = JewelleryItemStone::query()->where('jewellery_item_id', $item->id)->get()->keyBy('stone_id');
 
-        // 0.2 ct x 100 = 20 per piece, x 2 pieces.
+        // A carat lot is one row, used by the carat: 2 ct x 100.
         $this->assertSame('per_carat', $rows[$carat->id]->pricing_mode->value);
         $this->assertSame('100.000', (string) $rows[$carat->id]->unit_rate);
-        $this->assertSame('40.000', (string) $rows[$carat->id]->line_cost);
+        $this->assertSame(1, (int) $rows[$carat->id]->quantity);
+        $this->assertSame('2.000', (string) $rows[$carat->id]->weight_grams);
+        $this->assertSame('200.000', (string) $rows[$carat->id]->line_cost);
 
         $this->assertSame('per_piece', $rows[$piece->id]->pricing_mode->value);
         $this->assertSame('21.000', (string) $rows[$piece->id]->line_cost);
@@ -665,7 +668,7 @@ class JewelleryManagementTest extends TestCase
         $this->assertSame('4.500', (string) $rows[$gram->id]->weight_grams);
         $this->assertSame('22.500', (string) $rows[$gram->id]->line_cost);
 
-        $this->assertSame(3, (int) $carat->fresh()->quantity);
+        $this->assertSame('3.000', (string) $carat->fresh()->weight_grams);
         $this->assertSame(7, (int) $piece->fresh()->quantity);
         $this->assertSame('5.500', (string) $gram->fresh()->weight_grams);
 
@@ -675,9 +678,9 @@ class JewelleryManagementTest extends TestCase
             ->firstOrFail();
         $this->assertSame('-4.500', (string) $used->weight_change);
 
-        // 0.4 ct = 0.080 g of carat stones, plus the 4.5 g weighed lot.
-        $this->assertSame('4.580', (string) $item->fresh()->stone_weight_grams);
-        $this->assertSame('0.400', (string) $item->fresh()->stone_weight_carat);
+        // 2 ct = 0.400 g of carat stones, plus the 4.5 g weighed lot.
+        $this->assertSame('4.900', (string) $item->fresh()->stone_weight_grams);
+        $this->assertSame('2.000', (string) $item->fresh()->stone_weight_carat);
     }
 
     /**
@@ -713,14 +716,14 @@ class JewelleryManagementTest extends TestCase
         ]))->assertRedirect();
         $item = JewelleryItem::query()->firstOrFail();
 
-        $stone->forceFill(['price_per_carat' => '200'])->save();
+        $stone->forceFill(['price_per_piece' => '40'])->save();
 
         $this->actingAs($admin)->put(route('branch.jewellery-items.update', $item), $this->itemPayload($category, $metalId, $purityId, [
             'stones' => [['uuid' => $stone->uuid, 'quantity' => 2]],
         ]))->assertRedirect();
 
         $row = JewelleryItemStone::query()->firstOrFail();
-        $this->assertSame('100.000', (string) $row->unit_rate);
+        $this->assertSame('20.000', (string) $row->unit_rate);
         $this->assertSame('40.000', (string) $row->line_cost);
 
         $this->actingAs($admin)->put(route('branch.jewellery-items.update', $item), $this->itemPayload($category, $metalId, $purityId, [
@@ -728,7 +731,7 @@ class JewelleryManagementTest extends TestCase
         ]))->assertRedirect();
 
         $row = JewelleryItemStone::query()->firstOrFail();
-        $this->assertSame('200.000', (string) $row->unit_rate);
+        $this->assertSame('40.000', (string) $row->unit_rate);
         $this->assertSame('160.000', (string) $row->line_cost);
     }
 
@@ -785,8 +788,8 @@ class JewelleryManagementTest extends TestCase
         $this->actingAs($admin)
             ->postJson(route('branch.jewellery-items.stones.lookup'), ['code' => $stone->stone_code])
             ->assertOk()
-            ->assertJsonPath('data.stone.rate', '100.000')
-            ->assertJsonPath('data.stone.rate_unit', 'ct');
+            ->assertJsonPath('data.stone.rate', '20.000')
+            ->assertJsonPath('data.stone.rate_unit', 'pc');
     }
 
     /**
@@ -802,7 +805,7 @@ class JewelleryManagementTest extends TestCase
         $service = app(\App\Services\SalesLookupService::class);
 
         $this->actingAs($admin);
-        // 0.2 ct x 100 per carat is 20 a piece.
+        // The stocked piece lot is 20 a piece.
         $this->assertSame('20.00', $service->stonePayload($carat)['price_per_piece']);
         $this->assertSame('7.50', $service->stonePayload($piece)['price_per_piece']);
         // A weighed lot is sold by the gram: the price field carries the price of one gram.

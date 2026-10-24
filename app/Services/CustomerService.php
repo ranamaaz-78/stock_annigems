@@ -149,8 +149,8 @@ class CustomerService
     /**
      * Save what the cashier changed in a loaded customer's fields on the POS.
      *
-     * Only name, email, NIE and address can change here (the phone number is
-     * how the customer was found, so it stays). Users who may not edit
+     * Name, email, NIE, address and phone can change here (a phone another
+     * customer already uses is refused). Users who may not edit
      * customers have the ticket go through unchanged. Nothing is written when
      * nothing differs, so ordinary sales leave no audit noise.
      *
@@ -176,6 +176,19 @@ class CustomerService
         if (array_key_exists('walkin_nie', $data)) {
             $nie = $clean($data['walkin_nie']);
             $changes['nie'] = $nie === null ? null : strtoupper($nie);
+        }
+
+        // The phone can be corrected too, as long as no other customer (trashed
+        // ones included — the unique index covers them) already holds it.
+        $phone = $clean($data['walkin_phone'] ?? null);
+        if ($phone !== null && $phone !== $customer->phone) {
+            $taken = Customer::withTrashed()->where('phone', $phone)->where('id', '!=', $customer->id)->exists();
+            if ($taken) {
+                throw ValidationException::withMessages([
+                    'walkin_phone' => __('Another customer already uses the phone :phone.', ['phone' => $phone]),
+                ]);
+            }
+            $changes['phone'] = $phone;
         }
 
         $changes = array_filter(

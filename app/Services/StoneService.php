@@ -131,6 +131,7 @@ class StoneService
     {
         return DB::transaction(function () use ($stone, $data, $actor): Stone {
             $old = $this->auditPayload($stone);
+            $data = $this->withCaratStock($data);
             $pricing = $this->assertCalculable($data);
             $previousRate = $stone->rate();
             $previousMode = $stone->pricing_mode;
@@ -199,7 +200,7 @@ class StoneService
                 $grams = round((float) $stone->weight_grams, 3);
                 if ($grams > 0) {
                     $this->stoneStockService->applyWeight($stone, StoneMovementType::ADJUSTED, -$grams, $actor, $stone, 'Lot deleted: remaining weight written off.');
-                    $writtenOff = rtrim(rtrim(number_format($grams, 3, '.', ''), '0'), '.').' g';
+                    $writtenOff = rtrim(rtrim(number_format($grams, 3, '.', ''), '0'), '.').' '.$stone->weightUnit();
                 }
             } elseif ((int) $stone->quantity > 0) {
                 $pieces = (int) $stone->quantity;
@@ -385,6 +386,7 @@ class StoneService
      */
     private function createLot(array $data, User $actor, ?int $rowIndex = null): Stone
     {
+        $data = $this->withCaratStock($data);
         $pricing = $this->assertCalculable($data, $rowIndex);
 
         $stone = Stone::query()->create(array_merge($this->lotAttributes($data), [
@@ -433,7 +435,7 @@ class StoneService
             'dimension' => $this->nullableString($data['dimension'] ?? null),
             // Each mode keeps only the figures its formula uses, so a stale
             // rate from another mode can never resurface in a later edit.
-            'carat' => $mode === StonePricingMode::PER_CARAT ? $this->threeDecimals($data['carat']) : null,
+            'carat' => $mode === StonePricingMode::PER_CARAT ? $this->threeDecimals($data['carat'] ?? $data['weight_grams'] ?? 0) : null,
             'pairs' => (int) ($data['pairs'] ?? 0),
             'pricing_mode' => $mode,
             'price_per_carat' => $mode === StonePricingMode::PER_CARAT ? $this->threeDecimals($data['price_per_carat']) : null,
@@ -476,7 +478,8 @@ class StoneService
      */
     private function syncPieceCount(Stone $stone, array $data, User $actor, string $note): void
     {
-        $target = max(0, (int) ($data['pieces'] ?? 0));
+        // A lot sold by carat or gram is measured, not counted: no pieces.
+        $target = $this->mode($data)->isWeighed() ? 0 : max(0, (int) ($data['pieces'] ?? 0));
         $change = $target - (int) $stone->quantity;
 
         if ($change === 0) {
@@ -523,9 +526,10 @@ class StoneService
     }
 
     /**
-     * Move a gram lot's weight to the figure on the form through the ledger.
+     * Move a weighed lot's stock (grams, or carats for a per-carat lot) to the
+     * figure on the form through the ledger.
      *
-     * Only a per-gram lot has a weight; any other mode ends at none. The
+     * Only a per-gram or per-carat lot has a weight; any other mode ends at none. The
      * change is recorded as intake when stock opens and as an adjustment on
      * an edit, so the movement history still explains the grams on hand.
      *
@@ -533,7 +537,7 @@ class StoneService
      */
     private function syncWeight(Stone $stone, array $data, User $actor, string $note): void
     {
-        $isGram = $this->mode($data) === StonePricingMode::PER_GRAM;
+        $isGram = $this->mode($data)->isWeighed();
         $target = $isGram ? $this->threeDecimals($data['weight_grams'] ?? 0) : 0.0;
         $change = round($target - (float) ($stone->weight_grams ?? 0), 3);
 
@@ -553,6 +557,24 @@ class StoneService
             $stone->weight_grams = null;
             $stone->saveQuietly();
         }
+    }
+
+    /**
+     * A per-carat lot's carats are its stock, kept in `weight_grams` (the
+     * lot's own measure) so grams and carats share every stock path. The form,
+     * sheet and API send the figure as `carat`.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function withCaratStock(array $data): array
+    {
+        if ($this->mode($data) === StonePricingMode::PER_CARAT) {
+            $data['weight_grams'] = $this->threeDecimals($data['carat'] ?? $data['weight_grams'] ?? 0);
+            $data['carat'] = $data['weight_grams'];
+        }
+
+        return $data;
     }
 
     /**
@@ -648,16 +670,16 @@ class StoneService
 
         // A lot sold by weight holds grams and always has 0 pieces, so each kind is
         // judged on its own unit.
-        $weighed = StonePricingMode::PER_GRAM->value;
+        $weighed = StonePricingMode::weighedValues();
         if (($filters['stock'] ?? '') === 'in') {
             $query->where(fn (Builder $q) => $q
-                ->where(fn (Builder $p) => $p->where('pricing_mode', '!=', $weighed)->where('quantity', '>', 0))
-                ->orWhere(fn (Builder $g) => $g->where('pricing_mode', $weighed)->where('weight_grams', '>', 0)));
+                ->where(fn (Builder $p) => $p->whereNotIn('pricing_mode', $weighed)->where('quantity', '>', 0))
+                ->orWhere(fn (Builder $g) => $g->whereIn('pricing_mode', $weighed)->where('weight_grams', '>', 0)));
         }
         if (($filters['stock'] ?? '') === 'out') {
             $query->where(fn (Builder $q) => $q
-                ->where(fn (Builder $p) => $p->where('pricing_mode', '!=', $weighed)->where('quantity', '=', 0))
-                ->orWhere(fn (Builder $g) => $g->where('pricing_mode', $weighed)->where(fn (Builder $w) => $w->whereNull('weight_grams')->orWhere('weight_grams', '<=', 0))));
+                ->where(fn (Builder $p) => $p->whereNotIn('pricing_mode', $weighed)->where('quantity', '=', 0))
+                ->orWhere(fn (Builder $g) => $g->whereIn('pricing_mode', $weighed)->where(fn (Builder $w) => $w->whereNull('weight_grams')->orWhere('weight_grams', '<=', 0))));
         }
 
         // One carat figure, e.g. 1.1 ct. Carat is stored to three decimals, so

@@ -137,8 +137,9 @@ class StoneExcelImportTest extends TestCase
         $this->assertEqualsWithDelta(612, $piece['total_cost'], 0.0001);
 
         $this->assertSame('per_carat', $carat['pricing_mode']);
-        $this->assertEqualsWithDelta(4.2, $carat['piece_price'], 0.0001);
-        $this->assertEqualsWithDelta(8.4, $carat['total_cost'], 0.0001);
+        // 2.1 ct x 2 = 4.2: the carats are the stock, so pieces play no part.
+        $this->assertNull($carat['piece_price']);
+        $this->assertEqualsWithDelta(4.2, $carat['total_cost'], 0.0001);
     }
 
     /**
@@ -194,8 +195,9 @@ class StoneExcelImportTest extends TestCase
 
         $this->assertSame(1, $recheck['ok']);
         $this->assertSame(0, $recheck['errors']);
-        $this->assertEqualsWithDelta(269.25, $recheck['rows'][0]['piece_price'], 0.0001);
-        $this->assertEqualsWithDelta(6731.25, $recheck['rows'][0]['total_cost'], 0.0001);
+        // 3.59 ct x 75 = 269.25; the 25 pieces are ignored.
+        $this->assertNull($recheck['rows'][0]['piece_price']);
+        $this->assertEqualsWithDelta(269.25, $recheck['rows'][0]['total_cost'], 0.0001);
     }
 
     /**
@@ -234,8 +236,11 @@ class StoneExcelImportTest extends TestCase
         $this->assertSame('K1', $citirino->tray_no);
 
         $amatista = $stones->firstWhere('name', 'AMATISTA');
-        $this->assertSame('4.200', (string) $amatista->piece_price);
-        $this->assertSame('8.400', (string) $amatista->total_cost);
+        // 2.1 ct x 2: carats are the stock, held as a measure with no pieces.
+        $this->assertNull($amatista->piece_price);
+        $this->assertSame('4.200', (string) $amatista->total_cost);
+        $this->assertSame('2.100', (string) $amatista->weight_grams);
+        $this->assertSame(0, (int) $amatista->quantity);
 
         // Gram lots are bulk weight and open no piece ledger.
         $labradorita = $stones->firstWhere('name', 'LABRADORITA');

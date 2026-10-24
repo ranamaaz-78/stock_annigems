@@ -147,6 +147,23 @@ function postWithProgress(url, body, onProgress) {
 }
 
 /**
+ * File size for people: "48 KB", "2.3 MB".
+ *
+ * @param {number} bytes
+ * @returns {string}
+ */
+function formatFileSize(bytes) {
+    if (!Number.isFinite(bytes) || bytes <= 0) {
+        return '';
+    }
+    if (bytes < 1024 * 1024) {
+        return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+    }
+
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/**
  * Seconds as m:ss (or h:mm:ss).
  *
  * @param {number} totalSeconds
@@ -341,6 +358,7 @@ class StoneImport {
         this.summary.innerHTML = '';
         this.setStatus('');
         this.modal.querySelector('[data-import-filename]')?.classList.add('is-hidden');
+        this.dropZone?.classList.remove('is-hidden');
         this.render();
     }
 
@@ -366,6 +384,8 @@ class StoneImport {
         });
 
         this.dropZone?.addEventListener('click', () => this.fileInput?.click());
+        this.modal.querySelector('[data-import-change]')?.addEventListener('click', () => this.fileInput?.click());
+        this.modal.querySelector('[data-import-remove]')?.addEventListener('click', () => this.reset());
         this.dropZone?.addEventListener('keydown', (event) => {
             if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
@@ -427,9 +447,15 @@ class StoneImport {
         }
 
         this.file = file;
+        // The chosen file takes the drop zone's place as a card with its name and size.
         const label = this.modal.querySelector('[data-import-filename]');
         label?.classList.remove('is-hidden');
+        this.dropZone?.classList.add('is-hidden');
         this.modal.querySelector('[data-import-filename-text]').textContent = file.name;
+        const size = this.modal.querySelector('[data-import-filesize]');
+        if (size) {
+            size.textContent = formatFileSize(file.size);
+        }
         this.nextBtn.disabled = false;
     }
 

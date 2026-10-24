@@ -277,7 +277,7 @@ class PerformaSettlementService
             }
 
             if ($qty <= 0 || $qty > $outstanding + 0.0005) {
-                $unit = $item->isWeighed() ? ' g' : '';
+                $unit = $item->isWeighed() ? ' '.$item->weightUnit() : '';
                 throw ValidationException::withMessages([
                     "lines.{$index}" => __(':code has only :outstanding:unit unpaid.', ['code' => $item->item_code_snapshot, 'outstanding' => $outstanding, 'unit' => $unit]),
                 ]);
@@ -502,7 +502,7 @@ class PerformaSettlementService
             StoneMovementType::SETTLED_FROM_CREDIT,
             $actor,
             $invoice,
-            "Settled {$selection['quantity']}".($item->isWeighed() ? ' g' : '')." from performa {$performa->performa_number} on {$invoice->invoice_number}"
+            "Settled {$selection['quantity']}".($item->isWeighed() ? ' '.$item->weightUnit() : '')." from performa {$performa->performa_number} on {$invoice->invoice_number}"
         );
     }
 }

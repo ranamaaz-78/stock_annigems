@@ -65,6 +65,35 @@ class StoneFolderController extends Controller
     }
 
     /**
+     * Delete the ticked folders with their lots, or none of them.
+     */
+    public function destroyMany(Request $request): RedirectResponse
+    {
+        $uuids = $request->validate([
+            'categories' => ['required', 'array', 'min:1', 'max:200'],
+            'categories.*' => ['string'],
+        ], [
+            'categories.required' => __('Select at least one folder to delete.'),
+        ])['categories'];
+
+        // Every chosen folder must be one this user may manage, or nothing happens.
+        $folders = StoneCategory::query()->whereIn('uuid', $uuids)->get();
+        foreach ($folders as $folder) {
+            $this->authorize('manage', $folder);
+        }
+
+        try {
+            $result = $this->folderService->deleteFolders($uuids, $request->user());
+        } catch (ValidationException $e) {
+            return back()->with('error', collect($e->errors())->flatten()->first());
+        }
+
+        return redirect()
+            ->route('branch.stones.index')
+            ->with('success', trans_choice(':count folder deleted with :lots lots.|:count folders deleted with :lots lots.', $result['folders'], ['lots' => $result['lots']]));
+    }
+
+    /**
      * Delete the ticked lots of the list, or none of them.
      */
     public function destroyLots(Request $request): RedirectResponse

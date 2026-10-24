@@ -124,6 +124,35 @@ class StoneFolderService
     }
 
     /**
+     * Delete the chosen folders with all their lots, or none of them.
+     *
+     * Same rules as deleting one folder: if any lot of any chosen folder is
+     * held by an open document, nothing is deleted.
+     *
+     * @param  list<string>  $uuids
+     * @return array{folders: int, lots: int}
+     *
+     * @throws ValidationException When a lot is held by an open document
+     */
+    public function deleteFolders(array $uuids, User $actor): array
+    {
+        $categories = StoneCategory::query()->whereIn('uuid', $uuids)->orderBy('id')->get();
+
+        foreach ($categories as $category) {
+            $this->assertNoLotIsHeld($category);
+        }
+
+        return DB::transaction(function () use ($categories, $actor): array {
+            $lots = 0;
+            foreach ($categories as $category) {
+                $lots += $this->delete($category, $actor)['lots'];
+            }
+
+            return ['folders' => $categories->count(), 'lots' => $lots];
+        });
+    }
+
+    /**
      * Delete the chosen lots, or none of them.
      *
      * Same rules as deleting one lot (stock written off, history kept), and

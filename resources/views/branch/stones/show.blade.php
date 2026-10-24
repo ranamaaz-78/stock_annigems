@@ -16,7 +16,7 @@
         @endcan
         @can('delete', $stone)
             <form method="POST" action="{{ route('branch.stones.destroy', $stone) }}" data-loading-form data-confirm-delete-stone
-                  data-remaining="{{ $stone->isWeighed() ? rtrim(rtrim(number_format((float) $stone->weight_grams, 3, '.', ''), '0'), '.').' g' : ((int) $stone->quantity).' pcs' }}" class="inline">
+                  data-remaining="{{ $stone->isWeighed() ? rtrim(rtrim(number_format((float) $stone->weight_grams, 3, '.', ''), '0'), '.').' '.$stone->weightUnit() : ((int) $stone->quantity).' pcs' }}" class="inline">
                 @csrf
                 @method('DELETE')
                 <x-btn type="submit" variant="danger" :loading-text="__('Deleting...')">{{ __('Delete') }}</x-btn>
@@ -59,12 +59,12 @@
                             <dd class="detail-list__value font-data-mono">{{ $stone->dimension ?? '—' }}</dd>
                         </div>
                         <div class="detail-list__item">
-                            <dt class="detail-list__term">{{ __('Carat') }}</dt>
+                            <dt class="detail-list__term">{{ $stone->pricing_mode === \App\Enums\StonePricingMode::PER_CARAT ? __('Carat (in stock)') : __('Carat') }}</dt>
                             <dd class="detail-list__value font-data-mono">{{ $stone->caratLabel() }}</dd>
                         </div>
                         <div class="detail-list__item">
                             <dt class="detail-list__term">{{ __('Weight (g)') }}</dt>
-                            <dd class="detail-list__value font-data-mono">{{ $stone->gramsLabel() }}</dd>
+                            <dd class="detail-list__value font-data-mono">{{ $stone->pricing_mode === \App\Enums\StonePricingMode::PER_CARAT ? '—' : $stone->gramsLabel() }}</dd>
                         </div>
                         <div class="detail-list__item">
                             <dt class="detail-list__term">{{ __('Pairs') }}</dt>
@@ -221,8 +221,8 @@
                         <td class="font-data-mono">{{ setting_datetime($movement->created_at) }}</td>
                         <td>{{ $movement->type->label() }}</td>
                         @if($movement->isWeightMovement())
-                            {{-- A gram lot moves in grams; the piece columns did not change. --}}
-                            @php($grams = fn ($value) => rtrim(rtrim((string) $value, '0'), '.').' g')
+                            {{-- A gram or carat lot moves by weight; the piece columns did not change. --}}
+                            @php($grams = fn ($value) => rtrim(rtrim((string) $value, '0'), '.').' '.$stone->weightUnit())
                             <td class="font-data-mono">{{ $movement->weight_change > 0 ? '+' : '' }}{{ $grams($movement->weight_change) }}</td>
                             <td class="font-data-mono">{{ $grams($movement->weight_before) }}</td>
                             <td class="font-data-mono">{{ $grams($movement->weight_after) }}</td>

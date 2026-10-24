@@ -72,6 +72,7 @@ class StoneLabelService
                 'name' => (string) $stone->name,
                 'stone_code' => (string) $stone->stone_code,
                 'barcode' => (string) $stone->barcode,
+                'tray_no' => (string) $stone->tray_no,
                 // The lot's rate with its unit, e.g. "Rs 2.50 / g".
                 'price' => $stone->rateLabel(),
                 'barcode_svg' => $this->barcodeService->svg((string) $stone->barcode),

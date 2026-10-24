@@ -59,7 +59,8 @@ class DeleteTest extends TestCase
 
     private function caratLot(): Stone
     {
-        return $this->lot(['pricing_mode' => 'per_carat', 'carat' => '0.500', 'price_per_carat' => '40', 'pieces' => 10]);
+        // 10 ct in stock: a carat lot is measured, not counted.
+        return $this->lot(['pricing_mode' => 'per_carat', 'carat' => '10', 'price_per_carat' => '40']);
     }
 
     private function gramLot(): Stone

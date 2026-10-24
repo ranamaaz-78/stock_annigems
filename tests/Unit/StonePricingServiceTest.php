@@ -21,38 +21,39 @@ class StonePricingServiceTest extends TestCase
     }
 
     /**
-     * Per carat prices one piece, then multiplies by the piece count.
+     * Per carat multiplies the lot's carats by the carat rate; pieces play no part.
      */
-    public function test_per_carat_prices_each_piece_then_multiplies_by_pieces(): void
+    public function test_per_carat_multiplies_carats_by_rate_and_ignores_pieces(): void
     {
         $result = $this->pricing->calculate([
             'pricing_mode' => StonePricingMode::PER_CARAT,
             'carat' => '2.100',
             'price_per_carat' => '2.0000',
-            'pieces' => 2,
+            'pieces' => 7,
         ]);
 
         $this->assertSame([], $result['issues']);
-        $this->assertSame(4.2, $result['piece_price']);
-        $this->assertSame(8.4, $result['total_cost']);
-        $this->assertStringContainsString('2.1 ct x 2 = 4.2 per piece', $result['cost_formula']);
-        $this->assertStringContainsString('x 2 pcs = 8.4', $result['cost_formula']);
+        $this->assertNull($result['piece_price']);
+        $this->assertSame(4.2, $result['total_cost']);
+        $this->assertSame('2.1 ct x 2 = 4.2', $result['cost_formula']);
     }
 
     /**
-     * A single piece still reports its own piece price.
+     * A per-carat lot needs only carats and a rate.
      */
-    public function test_per_carat_single_piece_totals_the_piece_price(): void
+    public function test_per_carat_needs_carats_and_a_rate_but_no_pieces(): void
     {
         $result = $this->pricing->calculate([
             'pricing_mode' => StonePricingMode::PER_CARAT,
             'carat' => '5.400',
             'price_per_carat' => '1.0000',
-            'pieces' => 1,
         ]);
 
-        $this->assertSame(5.4, $result['piece_price']);
+        $this->assertSame([], $result['issues']);
         $this->assertSame(5.4, $result['total_cost']);
+
+        $missing = $this->pricing->calculate(['pricing_mode' => StonePricingMode::PER_CARAT, 'price_per_carat' => '1']);
+        $this->assertNotSame([], $missing['issues']);
     }
 
     /**
@@ -119,7 +120,7 @@ class StonePricingServiceTest extends TestCase
 
         $this->assertSame(0.0, $result['total_cost']);
         $this->assertNull($result['cost_formula']);
-        $this->assertCount(3, $result['issues']);
+        $this->assertCount(2, $result['issues']);
     }
 
     /**

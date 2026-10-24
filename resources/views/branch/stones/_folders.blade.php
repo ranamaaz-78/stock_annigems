@@ -82,6 +82,16 @@
                 <span class="material-symbols-outlined icon icon--sm">download</span>
                 {{ __('Export selected folders') }}
             </x-btn>
+            @if($categories->contains(fn ($category) => auth()->user()->can('manage', $category)))
+                <x-btn type="button" variant="danger" data-delete-selected-folders :disabled="true">
+                    <span class="material-symbols-outlined icon icon--sm">delete</span>
+                    {{ __('Delete selected folders') }}
+                </x-btn>
+                <form id="bulk-delete-folders-form" method="POST" action="{{ route('branch.stone-folders.bulk-destroy') }}" class="hidden" data-loading-form>
+                    @csrf
+                    @method('DELETE')
+                </form>
+            @endif
             @if($categories->total() > 0)
                 <div class="folder-toolbar__pages">{{ $categories->withQueryString()->links() }}</div>
             @endif

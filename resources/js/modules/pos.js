@@ -472,7 +472,7 @@ export function bindPos() {
         if (line.weighed) {
             const leftGrams = remainingForLine(line);
 
-            return `<span class="pos-line__stock${leftGrams <= 0 ? ' pos-line__stock--low' : ''}" data-stock-line="${index}">${formatGrams(leftGrams)} g</span>`;
+            return `<span class="pos-line__stock${leftGrams <= 0 ? ' pos-line__stock--low' : ''}" data-stock-line="${index}">${formatGrams(leftGrams)} ${line.unit || 'g'}</span>`;
         }
 
         const onHand = stoneOnHand(line.stone_id, line.available_quantity);
@@ -502,11 +502,11 @@ export function bindPos() {
                     step: '0.001',
                     min: '0.001',
                     value: line.weight_grams || '',
-                    placeholder: 'grams',
+                    placeholder: line.unit === 'ct' ? 'carats' : 'grams',
                     extra: `data-field="weight_grams" data-grams-input data-line="${index}" max="${lineOnHand(line) || ''}"`,
-                    aria: 'Grams',
+                    aria: line.unit === 'ct' ? 'Carats' : 'Grams',
                 })}
-                <span class="pos-grams__unit">g</span>
+                <span class="pos-grams__unit">${line.unit || 'g'}</span>
             </span>`;
         }
 
@@ -562,7 +562,7 @@ export function bindPos() {
             const weight = Number(line.net_weight_snapshot);
             const soldGrams = parseFloat(line.weight_grams) || 0;
             const weightLabel = !isJewellery && line.weighed && soldGrams > 0
-                ? `${formatGrams(soldGrams)}g`
+                ? `${formatGrams(soldGrams)}${line.unit || 'g'}`
                 : isJewellery && Number.isFinite(weight) && weight > 0
                 ? `${weight.toFixed(3)}g`
                 : '—';
@@ -645,8 +645,8 @@ export function bindPos() {
                 ${cellInput({
                     value: amountOrEmpty(rateValue),
                     extra: `data-material data-line="${index}"`,
-                    placeholder: line.weighed ? 'per g' : '0.00',
-                    aria: line.weighed ? t('Rate per gram') : 'Rate',
+                    placeholder: line.weighed ? `per ${line.unit || 'g'}` : '0.00',
+                    aria: line.weighed ? (line.unit === 'ct' ? t('Rate per carat') : t('Rate per gram')) : 'Rate',
                 })}
                 ${makingCell}
                 <span class="pos-line__amount">${escapeHtml(formatAmount(line.line_total))}</span>
@@ -760,11 +760,16 @@ export function bindPos() {
         let pieces = 0;
         let stones = 0;
         let grams = 0;
+        let carats = 0;
         state.lines.forEach((line) => {
             if (line.line_type === 'jewellery_item') {
                 pieces += 1;
             } else if (line.weighed) {
-                grams += parseFloat(line.weight_grams) || 0;
+                if (line.unit === 'ct') {
+                    carats += parseFloat(line.weight_grams) || 0;
+                } else {
+                    grams += parseFloat(line.weight_grams) || 0;
+                }
             } else {
                 stones += parseInt(line.quantity, 10) || 0;
             }
@@ -777,6 +782,7 @@ export function bindPos() {
             pieces ? `${pieces} ${pieces === 1 ? 'piece' : 'pieces'}` : null,
             stones ? `${stones} ${stones === 1 ? 'stone' : 'stones'}` : null,
             grams > 0 ? t(':grams g of stone', { grams: formatGrams(grams) }) : null,
+            carats > 0 ? t(':carats ct of stone', { carats: formatGrams(carats) }) : null,
         ].filter(Boolean).join(' · ') || `${state.lines.length} ${state.lines.length === 1 ? 'line' : 'lines'}`;
     }
 
@@ -969,10 +975,10 @@ export function bindPos() {
 
         if (els.phone) {
             els.phone.value = state.walkin_phone;
-            els.phone.readOnly = true;
+            els.phone.readOnly = false;
         }
-        // The number is how the person was found, so it stays; every other field
-        // can be corrected here and is saved to their record when the ticket is.
+        // Every field, the phone included, can be corrected here and is saved to
+        // their record when the ticket is.
         if (els.name) {
             els.name.value = state.walkin_name;
             els.name.readOnly = false;
@@ -1058,7 +1064,8 @@ export function bindPos() {
             customer_id: null,
             // For a loaded person these carry any corrections to save on their record.
             walkin_name: (els.name?.value || '').trim(),
-            walkin_phone: existing ? '' : (els.phone?.value || '').trim(),
+            // For a loaded person the phone is sent too, so a corrected number is saved on their record.
+            walkin_phone: (els.phone?.value || '').trim(),
             walkin_email: (els.email?.value || '').trim(),
             walkin_nie: (els.nie?.value || '').trim(),
             walkin_address: (els.address?.value || '').trim(),
@@ -1547,8 +1554,24 @@ export function bindPos() {
         filterCustomers(els.phone.value);
     });
 
+    /**
+     * Forget the loaded person (their fields stay as typed) so a new search can start.
+     */
+    function dropLoadedCustomer() {
+        if (!state.customer_uuid && !state.customerLocked) return;
+        state.customer_uuid = null;
+        state.customerLocked = false;
+        state.customer_code = '';
+        els.customerLocked?.classList.add('is-hidden');
+        setCustomerChip('idle');
+    }
+
     els.name?.addEventListener('input', () => {
         state.walkin_name = els.name.value;
+        // Searching by name works like the phone: pick a match to fill the card.
+        // Typing again after a person was loaded drops that match and searches afresh.
+        dropLoadedCustomer();
+        filterCustomers(els.name.value, els.name);
     });
     els.nie?.addEventListener('input', () => {
         state.walkin_nie = els.nie.value;
@@ -1892,7 +1915,7 @@ export function bindPos() {
         const room = Math.round((lineOnHand(line) - ticketStoneGrams(line.stone_id, line)) * 1000) / 1000;
         if (room >= 0 && grams > room) {
             grams = Math.max(0, room);
-            showScanError(t(':code has only :room g in stock.', { code: line.item_code_snapshot, room: formatGrams(room) }));
+            showScanError(t(':code has only :room :unit in stock.', { code: line.item_code_snapshot, room: formatGrams(room), unit: line.unit || 'g' }));
         }
 
         return grams > 0 ? String(grams) : '';
@@ -2100,7 +2123,7 @@ export function bindPos() {
             code,
             title: name,
             meta: row.meta || String(row.label || ''),
-            badge: isJewellery ? t('In stock') : (line.weighed ? t(':remaining g in stock', { remaining: formatGrams(remaining) }) : t(':remaining in stock', { remaining: remaining })),
+            badge: isJewellery ? t('In stock') : (line.weighed ? t(':remaining :unit in stock', { remaining: formatGrams(remaining), unit: line.unit || 'g' }) : t(':remaining in stock', { remaining: remaining })),
             badgeStrong: true,
         };
     }
@@ -2276,6 +2299,8 @@ export function bindPos() {
     let customerHits = [];
     let activeCustomer = 0;
     let customerSeq = 0;
+    /** The field the list hangs under: the phone, or the name when searching by name. */
+    let customerAnchor = null;
 
     /**
      * Close the list under the phone field.
@@ -2319,7 +2344,7 @@ export function bindPos() {
             .map((row, index) => suggestRow(row, index, activeCustomer))
             .join('');
         togglePanel(els.customerSuggest, els.phone, true);
-        positionPanel(els.phone, els.customerSuggest);
+        positionPanel(customerAnchor || els.phone, els.customerSuggest);
     }
 
     /**
@@ -2327,13 +2352,16 @@ export function bindPos() {
      * stored number contains spaces.
      *
      * @param {string} term
+     * @param {HTMLInputElement|null} [anchor] Field being typed in (phone by default)
      */
-    function filterCustomers(term) {
+    function filterCustomers(term, anchor = els.phone) {
+        const byName = anchor !== els.phone;
+        customerAnchor = anchor;
         const needle = term.trim().toLowerCase();
         const digits = needle.replace(/\D/g, '');
         if (needle.length < 2) {
             hideCustomerSuggestions();
-            setCustomerChip(needle.length ? 'new' : 'idle');
+            if (!byName) setCustomerChip(needle.length ? 'new' : 'idle');
             return;
         }
 
@@ -2342,7 +2370,7 @@ export function bindPos() {
         )).slice(0, 8).map((row) => customerRow(row));
         activeCustomer = 0;
         renderCustomerSuggestions();
-        setCustomerChip(customerHits.length ? 'idle' : 'new');
+        if (!byName) setCustomerChip(customerHits.length ? 'idle' : 'new');
     }
 
     /**
@@ -2403,36 +2431,38 @@ export function bindPos() {
         render();
     }
 
-    if (els.phone) {
-        els.phone.addEventListener('keydown', (event) => {
-            if (event.key === 'ArrowDown' && customerHits.length) {
-                event.preventDefault();
-                activeCustomer = (activeCustomer + 1) % customerHits.length;
-                renderCustomerSuggestions();
-                return;
-            }
-            if (event.key === 'ArrowUp' && customerHits.length) {
-                event.preventDefault();
-                activeCustomer = (activeCustomer - 1 + customerHits.length) % customerHits.length;
-                renderCustomerSuggestions();
-                return;
-            }
-            if (event.key === 'Escape') {
-                hideCustomerSuggestions();
-                return;
-            }
-            if (event.key !== 'Enter' || !customerHits.length) return;
+    // The list answers the arrow keys, Enter and Escape from the phone and from the name field.
+    const customerKeydown = (event) => {
+        if (event.key === 'ArrowDown' && customerHits.length) {
             event.preventDefault();
-            pickCustomer(activeCustomer);
-        });
+            activeCustomer = (activeCustomer + 1) % customerHits.length;
+            renderCustomerSuggestions();
+            return;
+        }
+        if (event.key === 'ArrowUp' && customerHits.length) {
+            event.preventDefault();
+            activeCustomer = (activeCustomer - 1 + customerHits.length) % customerHits.length;
+            renderCustomerSuggestions();
+            return;
+        }
+        if (event.key === 'Escape') {
+            hideCustomerSuggestions();
+            return;
+        }
+        if (event.key !== 'Enter' || !customerHits.length) return;
+        event.preventDefault();
+        pickCustomer(activeCustomer);
+    };
 
-        els.customerSuggest?.addEventListener('mousedown', (event) => {
-            const item = event.target.closest('[data-suggest-index]');
-            if (!item) return;
-            event.preventDefault();
-            pickCustomer(parseInt(item.dataset.suggestIndex, 10));
-        });
-    }
+    els.phone?.addEventListener('keydown', customerKeydown);
+    els.name?.addEventListener('keydown', customerKeydown);
+
+    els.customerSuggest?.addEventListener('mousedown', (event) => {
+        const item = event.target.closest('[data-suggest-index]');
+        if (!item) return;
+        event.preventDefault();
+        pickCustomer(parseInt(item.dataset.suggestIndex, 10));
+    });
 
     /* --------------------------------------------- shared dropdown plumbing ---- */
 
@@ -2440,7 +2470,7 @@ export function bindPos() {
     ['resize', 'scroll'].forEach((event) => {
         window.addEventListener(event, () => {
             if (suggestions.length) positionPanel(els.scanWrap, els.scanSuggest);
-            if (customerHits.length) positionPanel(els.phone, els.customerSuggest);
+            if (customerHits.length) positionPanel(customerAnchor || els.phone, els.customerSuggest);
         }, true);
     });
 
@@ -2452,6 +2482,7 @@ export function bindPos() {
             hideSuggestions();
         }
         if (customerHits.length
+            && event.target !== els.name
             && !els.customerWrap?.contains(event.target)
             && !els.customerSuggest?.contains(event.target)) {
             hideCustomerSuggestions();

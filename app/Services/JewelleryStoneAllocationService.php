@@ -174,7 +174,8 @@ class JewelleryStoneAllocationService
                 ]);
             }
 
-            $isGram = $stone->pricing_mode === StonePricingMode::PER_GRAM;
+            $isGram = $stone->isWeighed();
+            $unit = $stone->weightUnit();
             $present = isset($newByUuid[$uuid]);
 
             // A gram lot is counted in grams only, a piece lot in pieces only.
@@ -191,7 +192,9 @@ class JewelleryStoneAllocationService
 
             if ($isGram && $present && $newGrams <= 0) {
                 throw ValidationException::withMessages([
-                    'stones' => __('Enter the grams of :code used in this piece.', ['code' => $stone->stone_code]),
+                    'stones' => $unit === 'ct'
+                        ? __('Enter the carats of :code used in this piece.', ['code' => $stone->stone_code])
+                        : __('Enter the grams of :code used in this piece.', ['code' => $stone->stone_code]),
                 ]);
             }
 
@@ -221,7 +224,7 @@ class JewelleryStoneAllocationService
                     $availableGrams = round((float) ($stone->weight_grams ?? 0), 3);
                     if ($availableGrams < $deltaGrams) {
                         throw ValidationException::withMessages([
-                            'stones' => __(':code has only :availableGrams g available; :deltaGrams g more requested.', ['code' => $stone->stone_code, 'availableGrams' => $availableGrams, 'deltaGrams' => $deltaGrams]),
+                            'stones' => __(':code has only :availableGrams :unit available; :deltaGrams :unit more requested.', ['code' => $stone->stone_code, 'availableGrams' => $availableGrams, 'deltaGrams' => $deltaGrams, 'unit' => $unit]),
                         ]);
                     }
 
@@ -299,13 +302,16 @@ class JewelleryStoneAllocationService
         }
 
         $item->load('itemStones');
-        // Stone totals only — never overwrite typed metal/net weight.
+        // Stone totals only — never overwrite typed metal/net weight. A
+        // per-carat row holds the carats used: they count as carat, not grams.
         $weights = $this->weightService->derive($item->itemStones->map(
-            fn (JewelleryItemStone $row): array => [
-                'carat' => (float) $row->carat_snapshot,
-                'quantity' => (int) $row->quantity,
-                'grams' => (float) $row->weight_grams,
-            ]
+            fn (JewelleryItemStone $row): array => $row->pricing_mode === StonePricingMode::PER_CARAT
+                ? ['carat' => (float) $row->weight_grams, 'quantity' => 1, 'grams' => 0.0]
+                : [
+                    'carat' => (float) $row->carat_snapshot,
+                    'quantity' => (int) $row->quantity,
+                    'grams' => (float) $row->weight_grams,
+                ]
         )->all());
 
         if ((float) $weights['stone_weight_grams'] > (float) $item->gross_weight + 0.0005) {
@@ -335,6 +341,11 @@ class JewelleryStoneAllocationService
         $carat = $refresh || ! $existing
             ? (float) $stone->carat
             : (float) $existing->carat_snapshot;
+
+        // A per-carat lot is used by the carat: the carats used are the row's carat.
+        if ($stone->pricing_mode === StonePricingMode::PER_CARAT) {
+            $carat = $grams;
+        }
 
         if ($refresh || ! $existing || $existing->pricing_mode === null) {
             $cost = $this->pricingService->allocationCost($stone, $quantity, $grams);
@@ -370,7 +381,7 @@ class JewelleryStoneAllocationService
             'clarity_snapshot' => $existing?->clarity_snapshot,
             'cut_snapshot' => $refresh || ! $existing ? $stone->dimension : $existing->cut_snapshot,
             'origin_snapshot' => $existing?->origin_snapshot,
-            'total_carat' => number_format($carat * $quantity, 3, '.', ''),
+            'total_carat' => number_format($stone->pricing_mode === StonePricingMode::PER_CARAT ? $carat : $carat * $quantity, 3, '.', ''),
         ];
     }
 }

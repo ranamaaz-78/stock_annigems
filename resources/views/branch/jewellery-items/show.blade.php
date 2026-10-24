@@ -134,7 +134,7 @@
                         <td>{{ $row->color_snapshot ?? '—' }}</td>
                         <td>{{ $row->clarity_snapshot ?? '—' }}</td>
                         <td class="font-data-mono">{{ $row->carat_snapshot }}</td>
-                        <td class="font-data-mono">{{ $row->weight_grams !== null ? rtrim(rtrim((string) $row->weight_grams, '0'), '.').' g' : $row->quantity }}</td>
+                        <td class="font-data-mono">{{ $row->weight_grams !== null ? rtrim(rtrim((string) $row->weight_grams, '0'), '.').($row->pricing_mode === \App\Enums\StonePricingMode::PER_CARAT ? ' ct' : ' g') : $row->quantity }}</td>
                         <td class="font-data-mono">{{ $row->total_carat }}</td>
                         @if($showStoneCost)
                             <td class="font-data-mono">{{ $row->pricing_mode ? setting_money($row->unit_rate).' / '.match ($row->pricing_mode) { \App\Enums\StonePricingMode::PER_CARAT => 'ct', \App\Enums\StonePricingMode::PER_GRAM => 'g', default => 'pc' } : '—' }}</td>

@@ -56,9 +56,9 @@
                 />
             </div>
 
-            {{-- Per carat: carat and a carat rate. --}}
+            {{-- Per carat: the carats in stock and a carat rate. The carats are the stock; no pieces. --}}
             <div class="stone-fields" data-mode-fields="per_carat">
-                <x-form.input name="carat" :label="__('Carat (weight)')" type="number" :value="$stone->carat ?? null" step="0.001" min="0.001" :max="config('annigems.stones.carat_max')" data-calc-input help="Carat is the weight. Do not enter grams." />
+                <x-form.input name="carat" :label="__('Carat (in stock)')" type="number" :value="$stone->carat ?? null" step="0.001" min="0.001" :max="config('annigems.stones.carat_max')" data-calc-input :help="__('Total carats of this lot. Sales take carats from it, like grams.')" />
                 <x-form.input name="price_per_carat" :label="__('Price per carat')" type="number" :value="$stone->price_per_carat ?? null" step="0.001" min="0" data-calc-input />
             </div>
 

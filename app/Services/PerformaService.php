@@ -346,7 +346,7 @@ class PerformaService
 
                 $outstanding = $item->outstandingAmount();
                 if ($qty > $outstanding + 0.0005) {
-                    $unit = $item->isWeighed() ? ' g' : '';
+                    $unit = $item->isWeighed() ? ' '.$item->weightUnit() : '';
                     throw ValidationException::withMessages([
                         "lines.{$item->id}" => __(':code has only :outstanding:unit unpaid.', ['code' => $item->item_code_snapshot, 'outstanding' => $outstanding, 'unit' => $unit]),
                     ]);
@@ -461,7 +461,7 @@ class PerformaService
             'quantity_returned' => $item->quantity_returned,
             // A weighed line is settled and returned in grams.
             'weighed' => $item->isWeighed(),
-            'unit' => $item->isWeighed() ? 'g' : 'pcs',
+            'unit' => $item->isWeighed() ? $item->weightUnit() : 'pcs',
             'outstanding' => $item->outstandingAmount(),
             'stones' => [],
         ];

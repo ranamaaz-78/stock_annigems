@@ -105,9 +105,9 @@ class StoneManagementTest extends TestCase
     }
 
     /**
-     * Per carat prices one piece first, then multiplies by the piece count.
+     * Per carat is carats x rate; the carats are the stock and pieces play no part.
      */
-    public function test_per_carat_lot_prices_each_piece_then_the_total(): void
+    public function test_per_carat_lot_costs_carats_and_holds_no_pieces(): void
     {
         $branch = Branch::factory()->create();
         $admin = User::factory()->admin($branch->id)->create();
@@ -123,10 +123,13 @@ class StoneManagementTest extends TestCase
 
         $stone = Stone::query()->first();
 
-        $this->assertSame('4.200', (string) $stone->piece_price);
-        $this->assertSame('8.400', (string) $stone->total_cost);
-        $this->assertStringContainsString('2.1 ct x 2 = 4.2 per piece', $stone->cost_formula);
-        $this->assertStringContainsString('x 2 pcs = 8.4', $stone->cost_formula);
+        $this->assertNull($stone->piece_price);
+        $this->assertSame('4.200', (string) $stone->total_cost);
+        $this->assertSame('2.1 ct x 2 = 4.2', $stone->cost_formula);
+        // The carats are the stock, kept as a measure; no pieces are counted.
+        $this->assertTrue($stone->isWeighed());
+        $this->assertSame('2.100', (string) $stone->weight_grams);
+        $this->assertSame(0, (int) $stone->quantity);
         // A carat lot holds no piece rate of its own.
         $this->assertNull($stone->price_per_piece);
     }

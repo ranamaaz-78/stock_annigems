@@ -85,6 +85,14 @@ class PerformaItem extends Model
     }
 
     /**
+     * The unit of a weighed line: carats for a per-carat lot, grams otherwise.
+     */
+    public function weightUnit(): string
+    {
+        return $this->stone?->weightUnit() ?? 'g';
+    }
+
+    /**
      * Whether this line is a per-gram stone, counted in grams not pieces.
      * Its unit_price is then the price of one gram.
      */
@@ -134,7 +142,7 @@ class PerformaItem extends Model
     public function amountLabel(int|float $amount): string
     {
         if ($this->isWeighed()) {
-            return rtrim(rtrim(number_format((float) $amount, 3, '.', ''), '0'), '.').' g';
+            return rtrim(rtrim(number_format((float) $amount, 3, '.', ''), '0'), '.').' '.$this->weightUnit();
         }
 
         return (string) (int) $amount;

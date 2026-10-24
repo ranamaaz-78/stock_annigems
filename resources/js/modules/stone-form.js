@@ -53,8 +53,7 @@ function tidy(value) {
 /**
  * Build the formula sentence and total for the selected pricing mode.
  *
- * Per carat prices one piece first (carat x rate), then multiplies that
- * piece price by the piece count — the two figures are reported separately.
+ * Per carat multiplies the lot's carats by the carat rate; pieces play no part.
  *
  * @param {HTMLElement} root
  * @returns {{formula: string|null, total: number|null}}
@@ -66,16 +65,12 @@ function calculate(root) {
     if (mode === 'per_carat') {
         const carat = numberOf(root, 'carat');
         const rate = numberOf(root, 'price_per_carat');
-        if (carat === null || rate === null || pieces === null) {
+        if (carat === null || rate === null) {
             return { formula: null, total: null };
         }
-        const piecePrice = round3(carat * rate);
-        const total = round3(piecePrice * pieces);
+        const total = round3(carat * rate);
 
-        return {
-            formula: t(':carat ct x :rate = :piecePrice per piece, x :pieces pcs = :total', { carat: tidy(carat), rate: tidy(rate), piecePrice: tidy(piecePrice), pieces: pieces, total: tidy(total) }),
-            total,
-        };
+        return { formula: `${tidy(carat)} ct x ${tidy(rate)} = ${tidy(total)}`, total };
     }
 
     if (mode === 'per_piece') {
@@ -136,10 +131,10 @@ function applyMode(root) {
         });
     });
 
-    // A gram lot is bulk weight; it holds no countable pieces.
+    // A gram or carat lot is measured, not counted; it holds no pieces.
     const piecesGroup = root.querySelector('[data-pieces-field]');
     if (piecesGroup) {
-        const needsPieces = mode !== 'per_gram';
+        const needsPieces = mode !== 'per_gram' && mode !== 'per_carat';
         piecesGroup.classList.toggle('is-hidden', !needsPieces);
         piecesGroup.querySelectorAll('input').forEach((field) => {
             field.disabled = !needsPieces;
@@ -278,6 +273,58 @@ function bindBulkDelete() {
 }
 
 /**
+ * Delete every ticked folder with its lots, after one confirmation.
+ */
+function bindFolderBulkDelete() {
+    const button = document.querySelector('[data-delete-selected-folders]');
+    const form = document.getElementById('bulk-delete-folders-form');
+    if (!button || !form) {
+        return;
+    }
+
+    const boxes = () => [...document.querySelectorAll('[data-export-folder]')];
+    const ticked = () => boxes().filter((box) => box.checked);
+
+    // Off until at least one folder is ticked.
+    const sync = () => {
+        button.disabled = ticked().length === 0;
+    };
+    document.addEventListener('change', (event) => {
+        if (event.target.matches('[data-export-folder], [data-export-folder-all]')) {
+            sync();
+        }
+    });
+    sync();
+
+    button.addEventListener('click', async () => {
+        const chosen = ticked();
+        if (chosen.length === 0) {
+            return;
+        }
+
+        const lots = chosen.reduce((sum, box) => sum + Number(box.closest('[data-folder-tile]')?.querySelector('[data-lot-count]')?.dataset.lotCount || 0), 0);
+        const ok = await window.AnnigemsAlert?.confirmAction({
+            title: chosen.length === 1 ? t('Delete 1 selected folder?') : t('Delete :count selected folders?', { count: chosen.length }),
+            text: t('All :count lots inside will be deleted and their remaining stock written off. Invoices and history keep their record. If any lot is still held by an open document, nothing is deleted.', { count: lots }),
+            confirmButtonText: t('Delete selected'),
+        });
+        if (!ok) {
+            return;
+        }
+
+        form.querySelectorAll('input[name="categories[]"]').forEach((input) => input.remove());
+        chosen.forEach((box) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'categories[]';
+            input.value = box.value;
+            form.appendChild(input);
+        });
+        form.submit();
+    });
+}
+
+/**
  * Confirm before deactivating a stone.
  */
 function bindDeactivateConfirms() {
@@ -305,4 +352,5 @@ export function bindStoneForms() {
     bindDeleteConfirms();
     bindFolderDeleteConfirms();
     bindBulkDelete();
+    bindFolderBulkDelete();
 }

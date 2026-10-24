@@ -117,10 +117,10 @@ class StoneReportRepository extends ReportRepository
             ->where('stones.is_active', true)
             ->where(function (Builder $query): void {
                 $query->where(function (Builder $pieces): void {
-                    $pieces->where('stones.pricing_mode', '!=', StonePricingMode::PER_GRAM->value)
+                    $pieces->whereNotIn('stones.pricing_mode', StonePricingMode::weighedValues())
                         ->where('stones.quantity', 0);
                 })->orWhere(function (Builder $grams): void {
-                    $grams->where('stones.pricing_mode', StonePricingMode::PER_GRAM->value)
+                    $grams->whereIn('stones.pricing_mode', StonePricingMode::weighedValues())
                         ->where(fn (Builder $w) => $w->whereNull('stones.weight_grams')->orWhere('stones.weight_grams', '<=', 0));
                 });
             })
@@ -134,7 +134,7 @@ class StoneReportRepository extends ReportRepository
     public function totalStonesInStock(?int $branchId): int
     {
         return $this->toInt($this->lotQuery($branchId)
-            ->where('stones.pricing_mode', '!=', StonePricingMode::PER_GRAM->value)
+            ->whereNotIn('stones.pricing_mode', StonePricingMode::weighedValues())
             ->sum('stones.quantity'));
     }
 
@@ -149,14 +149,14 @@ class StoneReportRepository extends ReportRepository
     }
 
     /**
-     * Total carat held across all piece and carat lots.
+     * Total carat held across the per-carat lots (their carats are their stock).
      */
     public function totalCaratInStock(?int $branchId): float
     {
         return $this->toFloat(
             $this->lotQuery($branchId)
-                ->where('stones.pricing_mode', '!=', StonePricingMode::PER_GRAM->value)
-                ->sum(\Illuminate\Support\Facades\DB::raw('stones.quantity * stones.carat'))
+                ->where('stones.pricing_mode', StonePricingMode::PER_CARAT->value)
+                ->sum('stones.weight_grams')
         );
     }
 
@@ -436,14 +436,15 @@ class StoneReportRepository extends ReportRepository
     private function lot(object $row): array
     {
         $mode = $row->pricing_mode instanceof StonePricingMode ? $row->pricing_mode : StonePricingMode::tryFrom((string) $row->pricing_mode);
-        $weighed = $mode === StonePricingMode::PER_GRAM;
+        $weighed = $mode?->isWeighed() ?? false;
+        $isCarat = $mode === StonePricingMode::PER_CARAT;
         $pieces = (int) $row->quantity;
         $grams = round((float) $row->weight_grams, 3);
         $carat = (float) $row->carat;
 
         [$rate, $unit, $value] = match ($mode) {
             StonePricingMode::PER_GRAM => [(float) $row->price_per_gram, 'g', $grams * (float) $row->price_per_gram],
-            StonePricingMode::PER_CARAT => [(float) $row->price_per_carat, 'ct', $pieces * ((float) $row->piece_price ?: $carat * (float) $row->price_per_carat)],
+            StonePricingMode::PER_CARAT => [(float) $row->price_per_carat, 'ct', $grams * (float) $row->price_per_carat],
             default => [(float) $row->price_per_piece, 'pc', $pieces * (float) $row->price_per_piece],
         };
 
@@ -454,17 +455,17 @@ class StoneReportRepository extends ReportRepository
             'shape' => (string) ($row->shape ?? 'â€”'),
             'carat' => $carat,
             'quantity' => $weighed ? 0 : $pieces,
-            'grams' => $weighed ? $grams : 0.0,
+            'grams' => $weighed && ! $isCarat ? $grams : 0.0,
             'weighed' => $weighed,
             'pricing' => $mode?->label() ?? 'â€”',
-            'unit' => $weighed ? 'g' : 'pcs',
+            'unit' => $mode?->isWeighed() ? $mode->weightUnit() : 'pcs',
             'on_hand' => $weighed ? $grams : (float) $pieces,
-            'on_hand_label' => $weighed ? rtrim(rtrim(number_format($grams, 3, '.', ''), '0'), '.').' g' : $pieces.' pcs',
+            'on_hand_label' => $weighed ? rtrim(rtrim(number_format($grams, 3, '.', ''), '0'), '.').' '.$mode->weightUnit() : $pieces.' pcs',
             'rate' => $rate,
             'rate_unit' => $unit,
             'value' => round($value, 2),
             'lot_cost' => (float) $row->total_cost,
-            'total_carat' => $weighed ? 0.0 : $carat * $pieces,
+            'total_carat' => $isCarat ? $grams : ($weighed ? 0.0 : $carat * $pieces),
             'is_active' => (bool) $row->is_active,
         ];
     }

@@ -59,8 +59,8 @@ class StoneUnitsTest extends TestCase
 
     private function caratLot(): Stone
     {
-        // 0.5 ct x 40 per carat = 20 per piece.
-        return $this->lot(['pricing_mode' => 'per_carat', 'carat' => '0.500', 'price_per_carat' => '40', 'pieces' => 10]);
+        // 10 ct in stock at 40 per carat: sold by the carat, like grams.
+        return $this->lot(['pricing_mode' => 'per_carat', 'carat' => '10.000', 'price_per_carat' => '40']);
     }
 
     private function gramLot(string $grams = '10'): Stone
@@ -145,8 +145,10 @@ class StoneUnitsTest extends TestCase
         $this->assertSame('7.00', $pieceLine['price_per_piece']);
 
         $caratLine = $this->actingAs($this->admin)->postJson(route('branch.quotations.lookup'), ['code' => $carat->stone_code])->json('data.line');
-        $this->assertFalse($caratLine['weighed']);
-        $this->assertSame('20.00', $caratLine['price_per_piece']);
+        $this->assertTrue($caratLine['weighed']);
+        $this->assertSame('ct', $caratLine['unit']);
+        $this->assertSame('10.000', $caratLine['available_grams']);
+        $this->assertSame('40.00', $caratLine['price_per_piece']);
 
         $gramLine = $this->actingAs($this->admin)->postJson(route('branch.quotations.lookup'), ['code' => $gram->stone_code])->json('data.line');
         $this->assertTrue($gramLine['weighed']);
@@ -210,6 +212,46 @@ class StoneUnitsTest extends TestCase
         $this->assertSame('35.00', (string) $quotation->fresh()->grand_total);
     }
 
+    // ------------------------------------------------------- per carat, like grams
+
+    public function test_a_carat_lot_sells_by_the_carat_and_keeps_the_rest_in_stock(): void
+    {
+        $lot = $this->lot(['pricing_mode' => 'per_carat', 'carat' => '3.200', 'price_per_carat' => '10']);
+
+        $this->assertTrue($lot->isWeighed());
+        $this->assertSame(0, (int) $lot->quantity);
+        $this->assertSame('3.200', $this->onHand($lot));
+
+        // 2.1 ct at 10 per carat = 21.00; 1.1 ct is left. Pieces play no part.
+        $this->actingAs($this->admin)->postJson(route('branch.quotations.invoice'), $this->ticket([
+            $this->line($lot, 2.1, 10),
+        ], ['payment_method' => 'cash']))->assertOk();
+
+        $invoice = Invoice::query()->latest('id')->firstOrFail();
+        $this->assertSame('21.00', (string) $invoice->grand_total);
+        $this->assertSame('1.100', $this->onHand($lot));
+        $this->assertSame('1.100', (string) $lot->fresh()->carat, 'the carat column follows the stock');
+        $this->assertSame(0, (int) $lot->fresh()->quantity);
+        $this->assertSame('-2.100', (string) $this->ledger($lot, StoneMovementType::SOLD)->weight_change);
+
+        // The printed invoice words the line in carats, not grams.
+        $print = $this->actingAs($this->admin)->get(route('branch.invoices.print', $invoice))->assertOk()->getContent();
+        $this->assertStringContainsString('2.1 ct', $print);
+        $this->assertStringNotContainsString('2.1 g', $print);
+
+        // More than what is left is refused.
+        $this->actingAs($this->admin)->postJson(route('branch.quotations.invoice'), $this->ticket([
+            $this->line($lot, 1.2, 10),
+        ], ['payment_method' => 'cash']))->assertStatus(422);
+        $this->assertSame('1.100', $this->onHand($lot));
+
+        // Voiding the invoice puts the carats back.
+        $this->actingAs($this->admin)
+            ->post(route('branch.invoices.void', $invoice), ['void_reason' => 'Entered by mistake today'])
+            ->assertRedirect();
+        $this->assertSame('3.200', $this->onHand($lot));
+    }
+
     // ------------------------------------------------------ direct invoice
 
     public function test_direct_invoice_for_each_kind_cuts_the_right_unit_and_void_returns_it(): void
@@ -228,7 +270,8 @@ class StoneUnitsTest extends TestCase
         // 3 x 7 + 2 x 20 + 5.5 x 5
         $this->assertSame('88.50', (string) $invoice->grand_total);
         $this->assertSame('7', $this->onHand($piece));
-        $this->assertSame('8', $this->onHand($carat));
+        // 2 ct taken from 10 ct leaves 8 ct; pieces play no part.
+        $this->assertSame('8.000', $this->onHand($carat));
         $this->assertSame('4.500', $this->onHand($gram));
         $this->assertSame('-5.500', (string) $this->ledger($gram, StoneMovementType::SOLD)->weight_change);
 
@@ -237,7 +280,7 @@ class StoneUnitsTest extends TestCase
             ->assertRedirect();
 
         $this->assertSame('10', $this->onHand($piece));
-        $this->assertSame('10', $this->onHand($carat));
+        $this->assertSame('10.000', $this->onHand($carat));
         $this->assertSame('10.000', $this->onHand($gram));
         $this->assertSame('5.500', (string) $this->ledger($gram, StoneMovementType::RETURNED_FROM_SALE)->weight_change);
     }
@@ -520,7 +563,7 @@ class StoneUnitsTest extends TestCase
         ])->assertOk()->assertJsonPath('success', true);
 
         $this->assertSame('4', $this->onHand($piece));
-        $this->assertSame('10', $this->onHand($carat), 'a dropped line goes back on the shelf');
+        $this->assertSame('10.000', $this->onHand($carat), 'a dropped line goes back on the shelf');
         $this->assertSame('2.000', $this->onHand($gram));
         $performa->refresh();
         $this->assertSame('Edited', $performa->notes);

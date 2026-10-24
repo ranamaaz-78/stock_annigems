@@ -53,7 +53,7 @@
                     <td class="font-data-mono">{{ $item->carat_snapshot }}</td>
                     <td class="font-data-mono">
                         @if($item->weight_grams !== null)
-                            {{ rtrim(rtrim((string) $item->weight_grams, '0'), '.') }} g
+                            {{ rtrim(rtrim((string) $item->weight_grams, '0'), '.') }} {{ $item->stone?->weightUnit() ?? 'g' }}
                         @else
                             {{ $item->quantity }}
                         @endif

@@ -396,7 +396,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'stones' => [
-        'carat_max' => (float) env('ANNIGEMS_STONE_CARAT_MAX', 50),
+        'carat_max' => (float) env('ANNIGEMS_STONE_CARAT_MAX', 9999999),
         'intake_quantity_max' => (int) env('ANNIGEMS_STONE_INTAKE_QTY_MAX', 10000),
         'draft_debounce_ms' => (int) env('ANNIGEMS_STONE_DRAFT_DEBOUNCE_MS', 800),
         'lookup_throttle_per_minute' => (int) env('ANNIGEMS_STONE_LOOKUP_THROTTLE', 180),

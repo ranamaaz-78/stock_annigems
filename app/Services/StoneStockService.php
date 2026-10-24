@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\StonePricingMode;
 use App\Enums\StoneMovementType;
 use App\Models\Stone;
 use App\Models\StoneStockMovement;
@@ -95,11 +96,15 @@ class StoneStockService
 
         if ($after < 0) {
             throw new RuntimeException(
-                "Insufficient weight for {$stone->stone_code}: on hand {$before} g, change {$change} g."
+                "Insufficient weight for {$stone->stone_code}: on hand {$before} {$stone->weightUnit()}, change {$change} {$stone->weightUnit()}."
             );
         }
 
         $stone->weight_grams = number_format($after, 3, '.', '');
+        // A per-carat lot's carats are its stock, so the carat column follows it.
+        if ($stone->pricing_mode === StonePricingMode::PER_CARAT) {
+            $stone->carat = number_format($after, 3, '.', '');
+        }
         $stone->syncStockStatus();
         $stone->save();
 

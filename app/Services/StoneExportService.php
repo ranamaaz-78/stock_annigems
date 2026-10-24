@@ -84,17 +84,18 @@ class StoneExportService
     private function cells(Stone $stone): array
     {
         $mode = $stone->pricing_mode;
-        $weighed = $mode === StonePricingMode::PER_GRAM;
+        $weighed = $stone->isWeighed();
 
         return [
             $stone->name,
             $stone->shape ?: self::NONE,
             $stone->dimension ?: self::NONE,
             $stone->carat !== null ? (float) $stone->carat : self::NONE,
-            // On hand now; a lot sold by weight keeps grams, not pieces.
+            // On hand now; a lot sold by weight keeps grams or carats, not pieces.
+            // For a per-carat lot the carat column is the carats on hand.
             $weighed ? self::NONE : (int) $stone->quantity,
             $weighed || ! $stone->pairs ? self::NONE : (int) $stone->pairs,
-            $weighed && $stone->weight_grams !== null ? (float) $stone->weight_grams : self::NONE,
+            $mode === StonePricingMode::PER_GRAM && $stone->weight_grams !== null ? (float) $stone->weight_grams : self::NONE,
             match ($mode) {
                 StonePricingMode::PER_CARAT => 'PER CARAT',
                 StonePricingMode::PER_PIECE => 'PER PIECE',

@@ -70,7 +70,7 @@ class PosCustomerEditTest extends TestCase
             'walkin_email' => 'new@example.com',
             'walkin_nie' => 'x1234567l',
             'walkin_address' => 'Calle Mayor 12, Madrid',
-            // The number cannot be changed this way, whatever is sent.
+            // The number is corrected with the rest, as long as nobody else holds it.
             'walkin_phone' => '03009998888',
         ]))->assertOk();
 
@@ -79,7 +79,7 @@ class PosCustomerEditTest extends TestCase
         $this->assertSame('new@example.com', $fresh->email);
         $this->assertSame('X1234567L', $fresh->nie);
         $this->assertSame('Calle Mayor 12, Madrid', $fresh->address);
-        $this->assertSame('03001112222', $fresh->phone);
+        $this->assertSame('03009998888', $fresh->phone);
 
         $quotation = Quotation::query()->latest('id')->firstOrFail();
         $this->assertSame($customer->id, $quotation->customer_id);

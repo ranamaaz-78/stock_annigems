@@ -57,10 +57,10 @@ class ReportsStoneUnitsTest extends TestCase
         return $this->lot(['pricing_mode' => 'per_piece', 'price_per_piece' => '7', 'pieces' => 10]);
     }
 
-    /** 10 pcs x (0.5 ct x 40) = 200.00 */
+    /** 5 ct x 40 = 200.00 (the carats are the stock) */
     private function caratLot(): Stone
     {
-        return $this->lot(['pricing_mode' => 'per_carat', 'carat' => '0.500', 'price_per_carat' => '40', 'pieces' => 10]);
+        return $this->lot(['pricing_mode' => 'per_carat', 'carat' => '5.000', 'price_per_carat' => '40']);
     }
 
     /** 10 g x 5 = 50.00 */
@@ -112,7 +112,7 @@ class ReportsStoneUnitsTest extends TestCase
 
         $labels = $stock->rows->pluck('on_hand_label', 'stone_code');
         $this->assertSame('10 pcs', $labels[$piece->stone_code]);
-        $this->assertSame('10 pcs', $labels[$carat->stone_code]);
+        $this->assertSame('5 ct', $labels[$carat->stone_code]);
         $this->assertSame('10 g', $labels[$gram->stone_code]);
 
         $valuation = $this->report('stone-valuation');
@@ -310,9 +310,10 @@ class ReportsStoneUnitsTest extends TestCase
 
         $admin = $this->actingAs($this->admin)->get(route('branch.dashboard'))->assertOk();
         $cards = collect($admin->viewData('dashboard')['secondary_cards'])->keyBy('key');
-        $this->assertSame('20', $cards['total_stones']['value']);
+        // Only the piece lot is counted in pieces; carat and gram lots are measured.
+        $this->assertSame('10', $cards['total_stones']['value']);
         $this->assertStringContainsString('6 g', str_replace('.000', '', $cards['total_stones']['hint']));
-        // 10 x 7 + 10 x 20 + 6 g x 5 = 300.00 of stone in hand.
+        // 10 x 7 + 5 ct x 40 + 6 g x 5 = 300.00 of stone in hand.
         $this->assertStringContainsString('300.00', $cards['stone_value']['value']);
         // 4 g issued at 6.00 is out with a creditor.
         $this->assertStringContainsString('24.00', $cards['out_with_clients']['value']);

@@ -125,7 +125,7 @@ class SalesLookupService
             ->where(function ($stock): void {
                 $stock->where('quantity', '>=', 1)
                     ->orWhere(function ($weighed): void {
-                        $weighed->where('pricing_mode', StonePricingMode::PER_GRAM->value)
+                        $weighed->whereIn('pricing_mode', StonePricingMode::weighedValues())
                             ->where('weight_grams', '>', 0);
                     });
             })
@@ -147,7 +147,7 @@ class SalesLookupService
                 'label' => implode(' · ', array_filter([
                     $stone->stone_code,
                     $stone->name,
-                    $stone->isWeighed() ? '('.$stone->gramsLabel().' g)' : '('.$stone->quantity.')',
+                    $stone->isWeighed() ? '('.$stone->gramsLabel().' '.$stone->weightUnit().')' : '('.$stone->quantity.')',
                 ])),
                 'haystack' => mb_strtolower(implode(' ', array_filter([
                     $stone->stone_code,
@@ -404,7 +404,9 @@ class SalesLookupService
 
                     if ($grams <= 0) {
                         throw ValidationException::withMessages([
-                            "lines.{$index}" => __('Line :line: enter how many grams of :code.', ['line' => $lineNum, 'code' => $stone->stone_code]),
+                            "lines.{$index}" => $stone->weightUnit() === 'ct'
+                                ? __('Line :line: enter how many carats of :code.', ['line' => $lineNum, 'code' => $stone->stone_code])
+                                : __('Line :line: enter how many grams of :code.', ['line' => $lineNum, 'code' => $stone->stone_code]),
                         ]);
                     }
 
@@ -483,9 +485,8 @@ class SalesLookupService
     /**
      * What one piece of a lot is bought for, to start a loose-stone line from.
      *
-     * Per carat is the lot's piece price (carat x rate) and per piece is its
-     * rate. A per-gram lot is weighed, not counted, so it has no price per
-     * piece. Like the jewellery stone prices, this is purchase cost and is
+     * A per-piece lot's price is its rate. A per-carat or per-gram lot is
+     * weighed, not counted, so the figure is the price of one carat or gram. Like the jewellery stone prices, this is purchase cost and is
      * loaded only for users who may see cost (items.view_cost); everyone else
      * starts at zero and types the price.
      */
@@ -496,9 +497,9 @@ class SalesLookupService
         }
 
         $price = match ($stone->pricing_mode) {
-            \App\Enums\StonePricingMode::PER_CARAT => $stone->piece_price,
             \App\Enums\StonePricingMode::PER_PIECE => $stone->price_per_piece,
-            // For a weighed lot the "piece" price field carries the price of one gram.
+            // For a weighed lot the "piece" price field carries the price of one gram or carat.
+            \App\Enums\StonePricingMode::PER_CARAT => $stone->price_per_carat,
             \App\Enums\StonePricingMode::PER_GRAM => $stone->price_per_gram,
             default => null,
         };
@@ -529,6 +530,8 @@ class SalesLookupService
             // A per-gram lot is sold by weight: the cashier types the grams, and the
             // price field is the rate per gram.
             'weighed' => $stone->isWeighed(),
+            // ct for a per-carat lot, g for a per-gram one.
+            'unit' => $stone->weightUnit(),
             'available_grams' => $stone->isWeighed() ? (string) ($stone->weight_grams ?? '0') : null,
             'weight_grams' => $stone->isWeighed() ? '' : null,
             'price_per_piece' => $this->stonePiecePrice($stone),

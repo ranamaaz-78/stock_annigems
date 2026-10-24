@@ -131,12 +131,22 @@ class Stone extends Model
     }
 
     /**
-     * Whether this lot is bought and sold by weight. Its stock is the grams in
-     * `weight_grams`; `quantity` stays zero, so a sale must ask for grams.
+     * Whether this lot is bought and sold by measure: grams (per gram) or
+     * carats (per carat). Its stock is the figure in `weight_grams` (in the
+     * lot's own unit, see weightUnit()); `quantity` stays zero, so a sale must
+     * ask for grams or carats, never pieces.
      */
     public function isWeighed(): bool
     {
-        return $this->pricing_mode === StonePricingMode::PER_GRAM;
+        return $this->pricing_mode?->isWeighed() ?? false;
+    }
+
+    /**
+     * The unit a weighed lot's stock is kept in: "ct" or "g".
+     */
+    public function weightUnit(): string
+    {
+        return $this->pricing_mode?->weightUnit() ?? 'g';
     }
 
     /**
@@ -197,11 +207,15 @@ class Stone extends Model
     }
 
     /**
-     * Total carat currently in stock (carat x quantity). Gram lots carry no
-     * carat and report zero.
+     * Total carat currently in stock. A per-carat lot keeps its carats as its
+     * stock; other lots report zero.
      */
     public function stockCarat(): float
     {
+        if ($this->pricing_mode === StonePricingMode::PER_CARAT) {
+            return round((float) $this->weight_grams, 3);
+        }
+
         return round((float) $this->carat * (int) $this->quantity, 3);
     }
 
@@ -230,7 +244,7 @@ class Stone extends Model
         return array_values(array_filter([
             filled($this->shape) && strtoupper((string) $this->shape) !== 'N/A' ? (string) $this->shape : null,
             $size !== '' && ! in_array(strtoupper($size), ['N/A', '0X0', '0X0X0'], true) ? $size : null,
-            $this->carat !== null && (float) $this->carat > 0 ? $this->caratLabel().' ct' : null,
+            $this->carat !== null && (float) $this->carat > 0 && $this->pricing_mode !== StonePricingMode::PER_CARAT ? $this->caratLabel().' ct' : null,
             ! $withPricing ? null : match ($this->pricing_mode) {
                 StonePricingMode::PER_CARAT => __('Per carat'),
                 StonePricingMode::PER_PIECE => __('Per piece'),
@@ -256,8 +270,8 @@ class Stone extends Model
      */
     public function onHandLabel(): string
     {
-        if ($this->pricing_mode === StonePricingMode::PER_GRAM) {
-            return $this->weight_grams === null ? '—' : $this->gramsLabel().' g';
+        if ($this->isWeighed()) {
+            return $this->weight_grams === null ? '—' : $this->gramsLabel().' '.$this->weightUnit();
         }
 
         return $this->quantity.' pcs';
@@ -268,7 +282,7 @@ class Stone extends Model
      */
     public function hasStock(): bool
     {
-        return $this->pricing_mode === StonePricingMode::PER_GRAM
+        return $this->isWeighed()
             ? (float) $this->weight_grams > 0
             : (int) $this->quantity > 0;
     }
@@ -304,7 +318,7 @@ class Stone extends Model
      */
     public function isOutOfStock(): bool
     {
-        return $this->pricing_mode !== StonePricingMode::PER_GRAM && (int) $this->quantity === 0;
+        return ! $this->isWeighed() && (int) $this->quantity === 0;
     }
 
     /**

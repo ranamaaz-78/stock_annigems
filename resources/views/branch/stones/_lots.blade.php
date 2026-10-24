@@ -151,7 +151,7 @@
         @foreach($stones as $stone)
             @can('delete', $stone)
                 <form id="delete-stone-{{ $stone->uuid }}" method="POST" action="{{ route('branch.stones.destroy', $stone) }}" data-loading-form data-confirm-delete-stone
-                      data-remaining="{{ $stone->isWeighed() ? rtrim(rtrim(number_format((float) $stone->weight_grams, 3, '.', ''), '0'), '.').' g' : ((int) $stone->quantity).' pcs' }}" class="hidden">
+                      data-remaining="{{ $stone->isWeighed() ? rtrim(rtrim(number_format((float) $stone->weight_grams, 3, '.', ''), '0'), '.').' '.$stone->weightUnit() : ((int) $stone->quantity).' pcs' }}" class="hidden">
                     @csrf
                     @method('DELETE')
                 </form>

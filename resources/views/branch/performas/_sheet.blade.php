@@ -120,7 +120,7 @@
                             <td>{{ $item->isWeighed() ? $item->amountLabel($item->weight_returned) : $item->quantity_returned }}</td>
                             <td class="is-bold">{{ $item->amountLabel($item->outstandingAmount()) }}</td>
                             @if($showPrices)
-                                <td>{{ $priced ? setting_money($item->unit_price).($item->isWeighed() ? ' / g' : '') : '—' }}</td>
+                                <td>{{ $priced ? setting_money($item->unit_price).($item->isWeighed() ? ' / '.$item->weightUnit() : '') : '—' }}</td>
                                 <td class="is-strong">{{ $priced ? setting_money($item->valueOf($item->isWeighed() ? $item->weight_issued : $item->quantity_issued)) : '—' }}</td>
                             @endif
                         </tr>

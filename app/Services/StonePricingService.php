@@ -11,12 +11,12 @@ use App\Models\Stone;
  * The only place stone money is calculated. Three locked formulas, one per
  * pricing mode:
  *
- *   per carat  piece price = carat x price_per_carat
- *              total       = piece price x pieces
- *   per piece  total       = pieces x price_per_piece
- *   per gram   total       = weight_grams x price_per_gram
+ *   per carat  total = carat x price_per_carat   (carats are the stock; no pieces)
+ *   per piece  total = pieces x price_per_piece
+ *   per gram   total = weight_grams x price_per_gram
  *
- * Pairs are a physical count and never take part in a price. The browser
+ * Pairs and pieces are a physical count and never take part in a per-carat
+ * or per-gram price. The browser
  * preview mirrors these formulas, but the value stored is always the one
  * this service returns — a client total is never trusted.
  */
@@ -79,10 +79,10 @@ class StonePricingService
      */
     public function costAfterReceiving(Stone $stone, int $pieces, float $grams): array
     {
-        $isGram = $stone->pricing_mode === StonePricingMode::PER_GRAM;
+        $isGram = $stone->isWeighed();
 
         $unit = match ($stone->pricing_mode) {
-            StonePricingMode::PER_CARAT => (float) $stone->piece_price,
+            StonePricingMode::PER_CARAT => (float) $stone->price_per_carat,
             StonePricingMode::PER_PIECE => (float) $stone->price_per_piece,
             StonePricingMode::PER_GRAM => (float) $stone->price_per_gram,
         };
@@ -95,7 +95,7 @@ class StonePricingService
             '%s + %s %s x %s = %s',
             $this->trim($previous),
             $this->trim($count),
-            $isGram ? 'g' : 'pcs',
+            $isGram ? $stone->weightUnit() : 'pcs',
             $this->trim($unit),
             $this->trim($total)
         );
@@ -137,7 +137,7 @@ class StonePricingService
     /**
      * Cost of an allocation at a rate that is already known.
      *
-     *   per carat  round(carat x rate) x pieces   (the lot's piece price)
+     *   per carat  rate x carats used   (the carats are passed as $grams)
      *   per piece  rate x pieces
      *   per gram   rate x grams
      *
@@ -147,7 +147,7 @@ class StonePricingService
     public function costAtRate(StonePricingMode $mode, float $rate, float $carat, int $pieces, float $grams): float
     {
         return match ($mode) {
-            StonePricingMode::PER_CARAT => $this->round($this->round($carat * $rate) * $pieces),
+            StonePricingMode::PER_CARAT => $this->round($rate * $grams),
             StonePricingMode::PER_PIECE => $this->round($rate * $pieces),
             StonePricingMode::PER_GRAM => $this->round($rate * $grams),
         };
@@ -165,7 +165,8 @@ class StonePricingService
     }
 
     /**
-     * Per carat: price one piece, then multiply by how many pieces.
+     * Per carat: the lot's carats multiplied by the carat rate. The carats are
+     * the stock, so pieces play no part.
      *
      * @param  array<string, mixed>  $data
      * @return array{piece_price: float|null, total_cost: float, cost_formula: string|null, issues: list<string>}
@@ -173,9 +174,8 @@ class StonePricingService
     private function perCarat(array $data): array
     {
         $issues = [];
-        $carat = $this->positiveNumber($data['carat'] ?? null);
+        $carat = $this->positiveNumber($data['carat'] ?? null) ?? $this->positiveNumber($data['weight_grams'] ?? null);
         $rate = $this->positiveNumber($data['price_per_carat'] ?? null);
-        $pieces = $this->positiveInt($data['pieces'] ?? null);
 
         if ($carat === null) {
             $issues[] = __('Per carat needs a carat weight above zero.');
@@ -183,26 +183,20 @@ class StonePricingService
         if ($rate === null) {
             $issues[] = __('Per carat needs a price per carat above zero.');
         }
-        if ($pieces === null) {
-            $issues[] = __('Per carat needs at least one piece.');
-        }
 
         if ($issues !== []) {
             return $this->failure(...$issues);
         }
 
-        $piecePrice = $this->round($carat * $rate);
-        $total = $this->round($piecePrice * $pieces);
+        $total = $this->round($carat * $rate);
 
         return [
-            'piece_price' => $piecePrice,
+            'piece_price' => null,
             'total_cost' => $total,
             'cost_formula' => sprintf(
-                '%s ct x %s = %s per piece, x %d pcs = %s',
+                '%s ct x %s = %s',
                 $this->trim($carat),
                 $this->trim($rate),
-                $this->trim($piecePrice),
-                $pieces,
                 $this->trim($total)
             ),
             'issues' => [],

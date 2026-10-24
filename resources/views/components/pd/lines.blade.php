@@ -25,7 +25,9 @@
     $rows = collect($items)->map(function ($item) use ($lots) {
         $loose = $item->line_type === \App\Enums\LineType::LOOSE_STONE;
         $grams = $loose ? (float) ($item->weight_grams ?? 0) : 0.0;
-        $gramText = rtrim(rtrim(number_format($grams, 3, '.', ''), '0'), '.').' g';
+        // A weighed lot is sold by the carat or the gram: say which.
+        $measureUnit = $loose ? (($lots[$item->stone_id] ?? null)?->weightUnit() ?? 'g') : 'g';
+        $gramText = rtrim(rtrim(number_format($grams, 3, '.', ''), '0'), '.').' '.$measureUnit;
         $weight = $item->net_weight_snapshot ? number_format($item->net_weight_snapshot, 3).' g' : null;
         $goldRate = (float) $item->gold_rate_applied;
         $metal = trim(($item->purity_snapshot ?? '').' '.($item->metal_snapshot ?? ''));

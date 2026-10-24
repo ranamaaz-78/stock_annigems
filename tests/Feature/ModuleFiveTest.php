@@ -156,10 +156,9 @@ class ModuleFiveTest extends TestCase
         $this->actingAs($admin)->post(route('branch.stones.store'), [
             'name' => 'Test diamond',
             'shape' => 'ROUND',
-            'pricing_mode' => 'per_carat',
+            'pricing_mode' => 'per_piece',
             'status' => 'in_stock',
-            'carat' => '0.200',
-            'price_per_carat' => '100',
+            'price_per_piece' => '100',
             // Registering the lot books its pieces straight into stock.
             'pieces' => 10,
         ]);

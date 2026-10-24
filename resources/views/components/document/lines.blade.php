@@ -32,7 +32,9 @@
                 // A per-gram stone line is sold by weight: grams and a rate per gram.
                 $stoneGrams = $isLooseStone ? (float) ($item->weight_grams ?? 0) : 0.0;
                 $isGramLine = $stoneGrams > 0;
-                $gramsText = rtrim(rtrim(number_format($stoneGrams, 3, '.', ''), '0'), '.').' g';
+                // A weighed lot is sold by the carat or the gram: say which.
+                $measureUnit = $isLooseStone ? ($item->stone?->weightUnit() ?? 'g') : 'g';
+                $gramsText = rtrim(rtrim(number_format($stoneGrams, 3, '.', ''), '0'), '.').' '.$measureUnit;
                 $gramRate = $isGramLine ? (float) $item->stone_value / $stoneGrams : 0.0;
                 $weight = $isGramLine ? $gramsText : ($item->net_weight_snapshot ? number_format($item->net_weight_snapshot, 3).' g' : null);
                 $rate = (float) $item->gold_rate_applied;
@@ -43,7 +45,7 @@
                     <span class="sheet-table__code">{{ $item->item_code_snapshot }}</span>
                     <span class="sheet-table__name">{{ $item->name_snapshot }}</span>
                     @if($isGramLine)
-                        <span class="sheet-table__sub">{{ __('Loose stone') }} · {{ $gramsText }} × {{ setting_amount($gramRate) }} {{ __('per g') }}</span>
+                        <span class="sheet-table__sub">{{ __('Loose stone') }} · {{ $gramsText }} × {{ setting_amount($gramRate) }} {{ $measureUnit === 'ct' ? __('per ct') : __('per g') }}</span>
                     @elseif($isLooseStone)
                         <span class="sheet-table__sub">{{ __('Loose stone') }} · {{ $item->quantity }} {{ $item->quantity == 1 ? __('pc') : __('pcs') }}</span>
                     @elseif($metalName !== '')

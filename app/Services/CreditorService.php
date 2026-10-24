@@ -119,7 +119,7 @@ class CreditorService
      */
     /**
      * Save what the cashier changed in a loaded creditor's fields on the POS
-     * (name, email, NIE, address; the phone number stays). Same rules as
+     * (name, email, NIE, address and phone). Same rules as
      * CustomerService::syncFromTicket.
      *
      * @param  array<string, mixed>  $data
@@ -144,6 +144,18 @@ class CreditorService
         if (array_key_exists('walkin_nie', $data)) {
             $nie = $clean($data['walkin_nie']);
             $changes['nie'] = $nie === null ? null : strtoupper($nie);
+        }
+
+        // The phone can be corrected too, unless another creditor already holds it.
+        $phone = $clean($data['walkin_phone'] ?? null);
+        if ($phone !== null && $phone !== $creditor->phone) {
+            $taken = Creditor::withTrashed()->where('phone', $phone)->where('id', '!=', $creditor->id)->exists();
+            if ($taken) {
+                throw ValidationException::withMessages([
+                    'walkin_phone' => __('Another creditor already uses the phone :phone.', ['phone' => $phone]),
+                ]);
+            }
+            $changes['phone'] = $phone;
         }
 
         $changes = array_filter(
