@@ -7,6 +7,8 @@ use App\Models\Stone;
 use App\Services\StoneExportService;
 use App\Services\StoneService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -42,8 +44,32 @@ class StoneExportController extends Controller
 
         return response($this->exportService->build($query), 200, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'Content-Disposition' => 'attachment; filename="stone-inventory-'.now()->format('Y-m-d').'.xlsx"',
+            'Content-Disposition' => $this->disposition($query),
             'Cache-Control' => 'no-store',
         ]);
+    }
+
+    /**
+     * "<stone name> - <company> - <date>.xlsx" when the file holds one folder or
+     * stone name, "Inventory - <company> - <date>.xlsx" when it holds several.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<Stone>  $query
+     */
+    private function disposition($query): string
+    {
+        $names = (clone $query)->reorder()->distinct()->limit(2)->pluck('name');
+
+        $subject = $names->count() === 1 ? trim((string) $names->first()) : '';
+        $subject = $subject !== '' ? $subject : __('Inventory');
+
+        $filename = sprintf('%s - %s - %s.xlsx', $subject, setting('company_name', 'Aani Gemas'), now()->format('Y-m-d'));
+        // No path characters or control characters in a download name.
+        $filename = trim((string) preg_replace('/\s+/u', ' ', str_replace(['\\', '/', ':', '*', '?', '"', '<', '>', '|'], ' ', $filename)));
+
+        return HeaderUtils::makeDisposition(
+            HeaderUtils::DISPOSITION_ATTACHMENT,
+            $filename,
+            Str::ascii($filename)
+        );
     }
 }

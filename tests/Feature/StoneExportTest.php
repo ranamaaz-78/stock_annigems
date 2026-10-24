@@ -54,6 +54,28 @@ class StoneExportTest extends TestCase
         $this->assertSame($stone->name, $rows[1][0]);
     }
 
+    public function test_the_file_is_named_after_its_single_stone_name_or_inventory(): void
+    {
+        $branch = Branch::factory()->create();
+        $admin = User::factory()->admin($branch->id)->create();
+        $first = Stone::factory()->create(['branch_id' => $branch->id, 'name' => 'AMATISTA']);
+        Stone::factory()->create(['branch_id' => $branch->id, 'name' => 'AMATISTA']);
+        $other = Stone::factory()->create(['branch_id' => $branch->id, 'name' => 'CITRINE']);
+        $company = setting('company_name', 'Aani Gemas');
+        $date = now()->format('Y-m-d');
+
+        // One name (even across two lots): "<name> - <company> - <date>".
+        $single = $this->actingAs($admin)->post(route('branch.stones.export'), ['uuids' => [$first->uuid]]);
+        $this->assertStringContainsString("AMATISTA - {$company} - {$date}.xlsx", (string) $single->headers->get('Content-Disposition'));
+
+        // Several names, or everything: "Inventory - <company> - <date>".
+        $several = $this->actingAs($admin)->post(route('branch.stones.export'), ['uuids' => [$first->uuid, $other->uuid]]);
+        $this->assertStringContainsString("Inventory - {$company} - {$date}.xlsx", (string) $several->headers->get('Content-Disposition'));
+
+        $all = $this->actingAs($admin)->post(route('branch.stones.export'));
+        $this->assertStringContainsString("Inventory - {$company} - {$date}.xlsx", (string) $all->headers->get('Content-Disposition'));
+    }
+
     public function test_export_can_be_narrowed_to_ticked_lots_and_is_branch_scoped(): void
     {
         $branch = Branch::factory()->create();
