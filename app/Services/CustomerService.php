@@ -29,13 +29,50 @@ class CustomerService
     /**
      * Paginated list with search and counts.
      *
-     * @param  array{search?: string, status?: string}  $filters
+     * @param  array{search?: string, status?: string, city?: string}  $filters
      */
     public function paginate(array $filters): LengthAwarePaginator
     {
-        $query = Customer::query()
+        $query = $this->filteredQuery($filters)
             ->withCount(['quotations', 'invoices'])
             ->orderByDesc('created_at');
+
+        return $query->paginate(per_page())->withQueryString();
+    }
+
+    /**
+     * Every row matching the list filters, for the Excel download.
+     *
+     * @param  array{search?: string, status?: string, city?: string}  $filters
+     * @return Builder<Customer>
+     */
+    public function exportQuery(array $filters): Builder
+    {
+        return $this->filteredQuery($filters)->orderBy('name');
+    }
+
+    /**
+     * Distinct cities on file, for the city filter.
+     *
+     * @return Collection<int, string>
+     */
+    public function cities(): Collection
+    {
+        return Customer::query()
+            ->whereNotNull('city')
+            ->where('city', '!=', '')
+            ->distinct()
+            ->orderBy('city')
+            ->pluck('city');
+    }
+
+    /**
+     * @param  array{search?: string, status?: string, city?: string}  $filters
+     * @return Builder<Customer>
+     */
+    private function filteredQuery(array $filters): Builder
+    {
+        $query = Customer::query();
 
         $this->applySearch($query, $filters);
 
@@ -45,7 +82,12 @@ class CustomerService
             $query->where('status', false);
         }
 
-        return $query->paginate(per_page())->withQueryString();
+        $city = trim((string) ($filters['city'] ?? ''));
+        if ($city !== '') {
+            $query->where('city', $city);
+        }
+
+        return $query;
     }
 
     /**

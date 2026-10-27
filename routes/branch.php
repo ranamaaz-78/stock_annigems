@@ -154,6 +154,7 @@ Route::middleware(['auth', 'password.changed', 'branch.context', 'branch.member'
 
         // Customers (global — not branch-scoped)
         Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+        Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
         Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
         // Static path must register before {customer} or "lookup" is captured as a uuid.
         Route::get('/customers/lookup', [CustomerController::class, 'lookup'])->name('customers.lookup');
@@ -187,6 +188,7 @@ Route::middleware(['auth', 'password.changed', 'branch.context', 'branch.member'
 
         // Creditors (branch-scoped parties for performas — not sales customers)
         Route::get('/creditors', [CreditorController::class, 'index'])->name('creditors.index');
+        Route::get('/creditors/export', [CreditorController::class, 'export'])->name('creditors.export');
         Route::get('/creditors/search', [CreditorController::class, 'search'])->name('creditors.search');
         Route::get('/creditors/create', [CreditorController::class, 'create'])->name('creditors.create');
         Route::post('/creditors', [CreditorController::class, 'store'])->name('creditors.store');

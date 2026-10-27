@@ -9,10 +9,14 @@ use App\Http\Requests\Branch\UpdateCustomerRequest;
 use App\Models\Customer;
 use App\Models\Quotation;
 use App\Services\CustomerService;
+use App\Services\PartyExportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\HeaderUtils;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * CustomerController
@@ -36,8 +40,29 @@ class CustomerController extends Controller
         $this->authorize('viewAny', Customer::class);
 
         return view('branch.customers.index', [
-            'customers' => $this->customerService->paginate($request->only(['search', 'status'])),
-            'filters' => $request->only(['search', 'status']),
+            'customers' => $this->customerService->paginate($request->only(['search', 'status', 'city'])),
+            'filters' => $request->only(['search', 'status', 'city']),
+            'cities' => $this->customerService->cities(),
+        ]);
+    }
+
+    /**
+     * Excel download of the rows the list filters match.
+     */
+    public function export(Request $request, PartyExportService $exportService): Response
+    {
+        $this->authorize('viewAny', Customer::class);
+
+        $rows = $this->customerService->exportQuery($request->only(['search', 'status', 'city']));
+        $city = trim((string) $request->query('city', ''));
+        $title = 'Customers'.($city !== '' ? " - {$city}" : '');
+        $filename = sprintf('%s - %s.xlsx', $title, now()->format('Y-m-d'));
+        $filename = trim((string) preg_replace('/\s+/u', ' ', str_replace(['\\', '/', ':', '*', '?', '"', '<', '>', '|'], ' ', $filename)));
+
+        return response($exportService->build($rows, 'customer_code'), 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, $filename, Str::ascii($filename)),
+            'Cache-Control' => 'no-store',
         ]);
     }
 

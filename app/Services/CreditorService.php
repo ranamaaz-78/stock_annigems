@@ -27,13 +27,50 @@ class CreditorService
     /**
      * Paginated list with search and performa counts.
      *
-     * @param  array{search?: string, status?: string}  $filters
+     * @param  array{search?: string, status?: string, city?: string}  $filters
      */
     public function paginate(array $filters): LengthAwarePaginator
     {
-        $query = Creditor::query()
+        $query = $this->filteredQuery($filters)
             ->withCount('performas')
             ->orderByDesc('created_at');
+
+        return $query->paginate(per_page())->withQueryString();
+    }
+
+    /**
+     * Every row matching the list filters, for the Excel download.
+     *
+     * @param  array{search?: string, status?: string, city?: string}  $filters
+     * @return Builder<Creditor>
+     */
+    public function exportQuery(array $filters): Builder
+    {
+        return $this->filteredQuery($filters)->orderBy('name');
+    }
+
+    /**
+     * Distinct cities on file, for the city filter.
+     *
+     * @return Collection<int, string>
+     */
+    public function cities(): Collection
+    {
+        return Creditor::query()
+            ->whereNotNull('city')
+            ->where('city', '!=', '')
+            ->distinct()
+            ->orderBy('city')
+            ->pluck('city');
+    }
+
+    /**
+     * @param  array{search?: string, status?: string, city?: string}  $filters
+     * @return Builder<Creditor>
+     */
+    private function filteredQuery(array $filters): Builder
+    {
+        $query = Creditor::query();
 
         $this->applySearch($query, $filters);
 
@@ -43,7 +80,12 @@ class CreditorService
             $query->where('status', false);
         }
 
-        return $query->paginate(per_page())->withQueryString();
+        $city = trim((string) ($filters['city'] ?? ''));
+        if ($city !== '') {
+            $query->where('city', $city);
+        }
+
+        return $query;
     }
 
     /**

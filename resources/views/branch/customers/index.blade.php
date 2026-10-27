@@ -20,9 +20,16 @@
         <option value="active" @selected(($filters['status'] ?? '') === 'active')>{{ __('Active') }}</option>
         <option value="inactive" @selected(($filters['status'] ?? '') === 'inactive')>{{ __('Inactive') }}</option>
     </select>
+    <select name="city" class="input-field" aria-label="{{ __('Filter by city') }}">
+        <option value="">{{ __('All cities') }}</option>
+        @foreach($cities as $city)
+            <option value="{{ $city }}" @selected(($filters['city'] ?? '') === $city)>{{ $city }}</option>
+        @endforeach
+    </select>
     <div class="filter-bar__actions">
         <x-btn type="submit" variant="secondary">{{ __('Filter') }}</x-btn>
         <a href="{{ route('branch.customers.index') }}" class="btn btn--secondary">{{ __('Reset') }}</a>
+        <a href="{{ route('branch.customers.export', array_filter($filters ?? [])) }}" class="btn btn--secondary">{{ __('Download Excel') }}</a>
     </div>
 </form>
 
