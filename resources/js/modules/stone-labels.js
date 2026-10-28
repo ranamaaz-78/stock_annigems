@@ -65,6 +65,7 @@ const DEFAULTS = {
     copies: 1,
     showPrice: true,
     showName: true,
+    showTray: true,
     border: false,
     showTrayQty: false,
     trayQty: '',
@@ -181,11 +182,9 @@ function labelHtml(stone, stock, options) {
     const nameLines = name ? Math.min(2, Math.ceil(name.length / perLine)) : 0;
     const price = options.showPrice ? String(stone.price ?? '') : '';
     // Tray number, then the typed tray quantity after it when that box is ticked.
-    // Only a stone that has a tray number gets either; the rest print neither.
+    // A stone with no tray number prints a dash so the line is never missing.
     const trayQty = options.showTrayQty ? String(options.trayQty ?? '').trim() : '';
-    const tray = stone.tray_no
-        ? [`${t('Tray')} ${stone.tray_no}`, trayQty !== '' ? `${t('Qty')} ${trayQty}` : ''].filter(Boolean).join(' · ')
-        : '';
+    const tray = [options.showTray ? `${t('Tray')} ${stone.tray_no || '-'}` : '', trayQty !== '' ? `${t('Qty')} ${trayQty}` : ''].filter(Boolean).join(' · ');
 
     // Text lines decide how much height is left for the bars.
     const lineHeights = [
@@ -410,7 +409,6 @@ export function bindStoneLabels() {
     const printBtn = modal.querySelector('[data-label-print]');
     const customRow = modal.querySelector('[data-label-custom]');
     const trayQtyRow = modal.querySelector('[data-label-tray-qty]');
-    const trayCheck = modal.querySelector('[data-label-tray-check]');
     const dataUrl = modal.dataset.dataUrl;
     companyName = modal.dataset.company || '';
 
@@ -432,6 +430,7 @@ export function bindStoneLabels() {
         field('copies').value = options.copies;
         field('showPrice').checked = Boolean(options.showPrice);
         field('showName').checked = Boolean(options.showName);
+        field('showTray').checked = Boolean(options.showTray);
         field('border').checked = Boolean(options.border);
         field('showTrayQty').checked = Boolean(options.showTrayQty);
         field('trayQty').value = options.trayQty ?? '';
@@ -450,6 +449,7 @@ export function bindStoneLabels() {
             copies: clamp(parseInt(field('copies').value, 10) || 1, 1, 500),
             showPrice: field('showPrice').checked,
             showName: field('showName').checked,
+            showTray: field('showTray').checked,
             border: field('border').checked,
             showTrayQty: field('showTrayQty').checked,
             trayQty: field('trayQty').value,
@@ -463,13 +463,6 @@ export function bindStoneLabels() {
      * Redraw the preview and the summary line from the current choices.
      */
     function render() {
-        // The tray quantity choice only exists when a selected stone has a tray number.
-        const hasTray = stones.some((stone) => Boolean(stone.tray_no));
-        trayCheck.classList.toggle('is-hidden', !hasTray);
-        if (!hasTray) {
-            field('showTrayQty').checked = false;
-        }
-
         readControls();
         const stock = stockFor(options);
         customRow.classList.toggle('is-hidden', !stock.custom);

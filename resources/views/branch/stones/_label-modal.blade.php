@@ -66,12 +66,13 @@
                     <label class="form-check"><input type="checkbox" data-label-field="showPrice"> {{ __('Show price') }}</label>
                     <label class="form-check"><input type="checkbox" data-label-field="showName"> {{ __('Show product name') }}</label>
                     <label class="form-check"><input type="checkbox" data-label-field="border"> {{ __('Draw a border around each label') }}</label>
-                    <label class="form-check is-hidden" data-label-tray-check><input type="checkbox" data-label-field="showTrayQty"> {{ __('Tray quantity') }}</label>
+                    <label class="form-check"><input type="checkbox" data-label-field="showTray"> {{ __('Show tray name') }}</label>
+                    <label class="form-check" data-label-tray-check><input type="checkbox" data-label-field="showTrayQty"> {{ __('Tray quantity') }}</label>
                 </div>
 
                 <div class="form-field is-hidden" data-label-tray-qty>
                     <label class="form-label" for="label-tray-qty">{{ __('Tray quantity') }}</label>
-                    <input id="label-tray-qty" type="number" min="0" step="1" class="input-field" data-label-field="trayQty" placeholder="{{ __('Enter the quantity') }}">
+                    <input id="label-tray-qty" type="text" maxlength="30" class="input-field" data-label-field="trayQty" placeholder="{{ __('Enter the quantity or text') }}">
                 </div>
             </div>
 
