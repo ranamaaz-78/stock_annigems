@@ -27,7 +27,6 @@
                             <th>{{ __('Shape · Size · Tray') }}</th>
                             <th class="table-admin__num">{{ __('On hand') }}</th>
                             <th class="table-admin__num">{{ __('Rate') }}</th>
-                            <th class="table-admin__num">{{ __('Total cost') }}</th>
                             <th>{{ __('Status') }}</th>
                             <th class="table-admin__actions-col lots-sticky lots-sticky--actions">{{ __('Actions') }}</th>
                         </tr>
@@ -87,8 +86,6 @@
                                         <span class="table-meta" @if($stone->rate_changed_at) title="{{ __('Changed :date', ['date' => setting_datetime($stone->rate_changed_at)]) }}" @endif>{{ __('was :rate', ['rate' => $stone->lastRateLabel()]) }}</span>
                                     @endif
                                 </td>
-                                {{-- The stored formula explains the figure on hover. --}}
-                                <td class="table-admin__num" title="{{ $stone->cost_formula }}">{{ setting_money($stone->total_cost) }}</td>
                                 <td>
                                     @if(! $stone->is_active)
                                         <x-status-badge status="inactive" />

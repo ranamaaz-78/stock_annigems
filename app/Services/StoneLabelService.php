@@ -73,12 +73,37 @@ class StoneLabelService
                 'stone_code' => (string) $stone->stone_code,
                 'barcode' => (string) $stone->barcode,
                 'tray_no' => (string) $stone->tray_no,
+                'size' => $this->sizeLabel($stone),
+                'weight' => $this->weightLabel($stone),
                 // The lot's rate with its unit, e.g. "Rs 2.50 / g".
                 'price' => $stone->rateLabel(),
                 'barcode_svg' => $this->barcodeService->svg((string) $stone->barcode),
             ])->all(),
             'skipped' => $stones->count() - $labelled->count(),
         ];
+    }
+
+    /**
+     * The lot's size, or an empty string when the sheet only held a placeholder.
+     */
+    private function sizeLabel(Stone $stone): string
+    {
+        $size = trim((string) $stone->dimension);
+
+        return in_array(strtoupper($size), ['N/A', '0X0', '0X0X0'], true) ? '' : $size;
+    }
+
+    /**
+     * Weight or carat as the lot is held: grams or carats for a lot sold by
+     * weight, otherwise the carat of one piece.
+     */
+    private function weightLabel(Stone $stone): string
+    {
+        if ($stone->isWeighed()) {
+            return $stone->weight_grams === null ? '' : $stone->gramsLabel().' '.$stone->weightUnit();
+        }
+
+        return $stone->carat !== null && (float) $stone->carat > 0 ? $stone->caratLabel().' ct' : '';
     }
 
     /**

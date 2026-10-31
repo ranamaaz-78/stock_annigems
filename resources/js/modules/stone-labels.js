@@ -66,6 +66,8 @@ const DEFAULTS = {
     showPrice: true,
     showName: true,
     showTray: true,
+    showSize: true,
+    showWeight: true,
     border: false,
     showTrayQty: false,
     trayQty: '',
@@ -170,15 +172,13 @@ function labelHtml(stone, stock, options) {
     const { w, h } = stock;
     const pad = clamp(Math.min(w, h) * 0.06, 0.6, 2);
     const scale = TEXT_SCALE[options.text] || 1;
-    const font = clamp(h * 0.085, 1.5, 3.2) * scale;
-    const companyFont = font * 1.1;
-    const numberFont = font * 1.4;
+    let font = clamp(h * 0.085, 1.5, 3.2);
 
     // A long name wraps onto a second line instead of being cut off; the
     // price sits on its own line underneath.
     const quiet = clamp(w * 0.06, 1.5, 5);
     const name = options.showName ? String(stone.name ?? '') : '';
-    const perLine = Math.max(6, Math.floor((w - quiet) / (font * 0.58)));
+    const perLine = Math.max(6, Math.floor((w - quiet) / (font * scale * 0.58)));
     const nameLines = name ? Math.min(2, Math.ceil(name.length / perLine)) : 0;
     const price = options.showPrice ? String(stone.price ?? '') : '';
     // Tray number, then the typed tray quantity after it when that box is ticked.
@@ -186,16 +186,19 @@ function labelHtml(stone, stock, options) {
     const trayQty = options.showTrayQty ? String(options.trayQty ?? '').trim() : '';
     const tray = [options.showTray ? `${t('Tray')} ${stone.tray_no || '-'}` : '', trayQty !== '' ? `${t('Qty')} ${trayQty}` : ''].filter(Boolean).join(' · ');
 
-    // Text lines decide how much height is left for the bars.
-    const lineHeights = [
-        companyName ? companyFont : 0,
-        font,
-        numberFont,
-        ...Array.from({ length: nameLines }, () => font),
-        price ? font : 0,
-        tray ? font : 0,
-    ].filter(Boolean);
-    const textHeight = lineHeights.reduce((sum, size) => sum + size * 1.2, 0);
+    // Size and weight/carat share one line, each only when ticked and on file.
+    const spec = [options.showSize ? stone.size : '', options.showWeight ? stone.weight : ''].filter(Boolean).join(' · ');
+
+    // Every text line counts in units of the base font (company 1.1, barcode
+    // number 1.4, the rest 1). When the lines would take more than 55% of the
+    // label, the base font shrinks so the details and the bars both still fit.
+    // The Small / Normal / Large choice is applied after that, so it always shows.
+    const units = (companyName ? 1.1 : 0) + 1 + 1.4 + nameLines + (price ? 1 : 0) + (spec ? 1 : 0) + (tray ? 1 : 0);
+    const maxText = (h - 2 * pad) * 0.55;
+    font = Math.max(1, Math.min(font, maxText / (units * 1.2))) * scale;
+    const companyFont = font * 1.1;
+    const numberFont = font * 1.4;
+    const textHeight = units * 1.2 * font;
     const available = Math.max(3, h - 2 * pad - textHeight - 0.8);
     const barHeight = Math.max(3, available * (BAR_SHARE[options.bars] || BAR_SHARE.normal));
 
@@ -206,6 +209,7 @@ function labelHtml(stone, stock, options) {
         <div class="lbl__code" style="font-size:${numberFont}mm;font-weight:700">${esc(stone.barcode)}</div>
         ${name ? `<div class="lbl__name" style="font-size:${font}mm">${esc(name)}</div>` : ''}
         ${price ? `<div class="lbl__meta" style="font-size:${font}mm">${esc(price)}</div>` : ''}
+        ${spec ? `<div class="lbl__meta" style="font-size:${font}mm">${esc(spec)}</div>` : ''}
         ${tray ? `<div class="lbl__meta" style="font-size:${font}mm">${esc(tray)}</div>` : ''}
     </div>`;
 }
@@ -431,6 +435,8 @@ export function bindStoneLabels() {
         field('showPrice').checked = Boolean(options.showPrice);
         field('showName').checked = Boolean(options.showName);
         field('showTray').checked = Boolean(options.showTray);
+        field('showSize').checked = Boolean(options.showSize);
+        field('showWeight').checked = Boolean(options.showWeight);
         field('border').checked = Boolean(options.border);
         field('showTrayQty').checked = Boolean(options.showTrayQty);
         field('trayQty').value = options.trayQty ?? '';
@@ -450,6 +456,8 @@ export function bindStoneLabels() {
             showPrice: field('showPrice').checked,
             showName: field('showName').checked,
             showTray: field('showTray').checked,
+            showSize: field('showSize').checked,
+            showWeight: field('showWeight').checked,
             border: field('border').checked,
             showTrayQty: field('showTrayQty').checked,
             trayQty: field('trayQty').value,

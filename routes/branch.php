@@ -67,6 +67,7 @@ Route::middleware(['auth', 'password.changed', 'branch.context', 'branch.member'
         Route::get('/stones/labels/bulk', [StoneLabelController::class, 'bulk'])->name('stones.labels.bulk');
         Route::post('/stones/labels/data', [StoneLabelController::class, 'data'])->name('stones.labels.data');
         // Excel import wizard: read the sheet, confirm columns, then insert.
+        Route::get('/stones/import/template', [StoneImportController::class, 'template'])->name('stones.import.template');
         Route::post('/stones/import/stage', [StoneImportController::class, 'stage'])->name('stones.import.stage');
         Route::post('/stones/import/preview', [StoneImportController::class, 'preview'])->name('stones.import.preview');
         Route::post('/stones/import/recheck', [StoneImportController::class, 'recheck'])->name('stones.import.recheck');
@@ -89,6 +90,7 @@ Route::middleware(['auth', 'password.changed', 'branch.context', 'branch.member'
         Route::get('/stone-imports/{stoneImport}/rejects', [StoneImportHistoryController::class, 'rejects'])->name('stone-imports.rejects');
 
         Route::get('/stone-images', [StoneImageController::class, 'index'])->name('stone-images.index');
+        Route::post('/stone-images/bulk-delete', [StoneImageController::class, 'bulkDestroy'])->name('stone-images.bulk-destroy');
         Route::post('/stone-images/check', [StoneImageController::class, 'check'])->name('stone-images.check');
         Route::post('/stone-images', [StoneImageController::class, 'store'])->name('stone-images.store');
         Route::get('/stone-images/{stoneImage}', [StoneImageController::class, 'show'])->name('stone-images.show');

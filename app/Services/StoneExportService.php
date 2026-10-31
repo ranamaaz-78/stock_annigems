@@ -67,6 +67,47 @@ class StoneExportService
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
 
+        return $this->bytes($book);
+    }
+
+    /**
+     * An empty import sheet: the same headers the import recognises, with
+     * three example lots (one per pricing mode) so every column is shown
+     * with a value. Barcode is left empty, which makes the import generate one.
+     *
+     * @return string Raw .xlsx bytes
+     */
+    public function template(): string
+    {
+        $book = new Spreadsheet;
+        $sheet = $book->getActiveSheet();
+        $sheet->setTitle('Import');
+
+        $sheet->fromArray(self::HEADERS, null, 'A1');
+        $sheet->getStyle('A1:Q1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:Q1')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('9BE5F0');
+        $sheet->freezePane('A2');
+
+        $examples = [
+            ['Ruby', 'Oval', '8x6', 2.5, 10, 5, 12.5, 'PER CARAT', 150, 375, 12, 3750, 'IN STOCK', 'K1', 'ruby1', 'Sample row - delete before importing', ''],
+            ['Citrine', 'Round', '9x7', 1.8, 25, 0, 45, 'PER PIECE', 80, 13.5, 6, 337.5, 'IN STOCK', 'K2', 'citrine1', 'Sample row - delete before importing', ''],
+            ['Garnet', 'Cushion', '6x4', 0.9, 40, 10, 120, 'PER GRAM', 60, 9, 18, 2160, 'IN STOCK', 'K3', 'garnet1', 'Sample row - delete before importing', ''],
+        ];
+        foreach ($examples as $offset => $values) {
+            foreach ($values as $index => $value) {
+                $sheet->setCellValue([$index + 1, $offset + 2], $value);
+            }
+        }
+
+        foreach (range('A', 'Q') as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
+
+        return $this->bytes($book);
+    }
+
+    private function bytes(Spreadsheet $book): string
+    {
         $stream = fopen('php://temp', 'w+b');
         (new Xlsx($book))->save($stream);
         rewind($stream);

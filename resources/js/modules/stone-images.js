@@ -62,6 +62,12 @@ export function bindStoneImages() {
 
     /** @type {Array<{uuid: string, name: string, url: string}>} */
     let images = [];
+    /** @type {Set<string>} */
+    const selected = new Set();
+    const selectAll = root.querySelector('[data-select-all]');
+    const selectAllWrap = root.querySelector('[data-select-all-wrap]');
+    const bulkBtn = root.querySelector('[data-bulk-delete]');
+    const bulkLabel = root.querySelector('[data-bulk-delete-label]');
     try {
         images = JSON.parse(root.dataset.images || '[]');
     } catch (error) {
@@ -93,6 +99,7 @@ export function bindStoneImages() {
         if (!grid) return;
         grid.innerHTML = images.map((image) => `
             <article class="stone-folder__tile" data-uuid="${escapeHtml(image.uuid)}">
+                <input type="checkbox" class="stone-folder__check" data-select aria-label="Select ${escapeHtml(image.name)}" ${selected.has(image.uuid) ? 'checked' : ''}>
                 <button type="button" class="stone-folder__thumb" data-open title="${escapeHtml(image.name)}">
                     <img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.name)}" width="100" height="100">
                 </button>
@@ -103,6 +110,52 @@ export function bindStoneImages() {
             </article>
         `).join('');
         syncEmpty();
+        syncSelection();
+    }
+
+    /**
+     * Keep the select-all box and the Delete selected button in step with the ticks.
+     */
+    function syncSelection() {
+        for (const uuid of [...selected]) {
+            if (!findImage(uuid)) selected.delete(uuid);
+        }
+        selectAllWrap?.classList.toggle('is-hidden', images.length === 0);
+        bulkBtn?.classList.toggle('is-hidden', selected.size === 0);
+        if (bulkLabel) bulkLabel.textContent = `${t('Delete selected')} (${selected.size})`;
+        if (selectAll) {
+            selectAll.checked = images.length > 0 && selected.size === images.length;
+            selectAll.indeterminate = selected.size > 0 && selected.size < images.length;
+        }
+    }
+
+    /**
+     * POST stone-images.bulk-destroy for every ticked tile after one confirmation.
+     */
+    async function removeSelected() {
+        if (!selected.size) return;
+
+        const confirmed = await window.AnnigemsAlert?.confirmAction({
+            title: t('Delete the selected images?'),
+            text: t(':count images will be removed from the folder.', { count: selected.size }),
+            confirmButtonText: 'Delete',
+        });
+        if (!confirmed) return;
+
+        const { ok, json } = await fetchJson(`${uploadUrl}/bulk-delete`, {
+            method: 'POST',
+            body: JSON.stringify({ uuids: [...selected] }),
+        });
+        if (!ok) {
+            window.AnnigemsAlert?.notifyError(json.message || t('The images could not be deleted.'));
+            return;
+        }
+
+        const gone = new Set(json.data?.deleted || []);
+        images = images.filter((row) => !gone.has(row.uuid));
+        gone.forEach((uuid) => selected.delete(uuid));
+        render();
+        window.AnnigemsAlert?.notifySuccess(json.message || t('Images deleted.'));
     }
 
     /**
@@ -283,6 +336,13 @@ export function bindStoneImages() {
         const target = event.target instanceof Element ? event.target : null;
         if (!target) return;
 
+        if (target.matches('[data-select]')) {
+            const uuid = target.closest('[data-uuid]')?.dataset.uuid || '';
+            if (target.checked) selected.add(uuid); else selected.delete(uuid);
+            syncSelection();
+            return;
+        }
+
         const open = target.closest('[data-open]');
         if (open) {
             const image = findImage(open.closest('[data-uuid]')?.dataset.uuid || '');
@@ -301,6 +361,14 @@ export function bindStoneImages() {
             removeImage(remove.closest('[data-uuid]')?.dataset.uuid || '');
         }
     });
+
+    selectAll?.addEventListener('change', () => {
+        selected.clear();
+        if (selectAll.checked) images.forEach((image) => selected.add(image.uuid));
+        render();
+    });
+
+    bulkBtn?.addEventListener('click', removeSelected);
 
     uploadBtn?.addEventListener('click', () => fileInput?.click());
 

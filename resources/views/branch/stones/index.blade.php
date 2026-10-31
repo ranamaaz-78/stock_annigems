@@ -61,6 +61,12 @@
             <span class="material-symbols-outlined icon icon--sm">download</span>
             {{ __('Export Excel') }}
         </x-btn>
+        @can('create', \App\Models\Stone::class)
+            <x-btn href="{{ route('branch.stones.import.template') }}" variant="secondary" title="{{ __('Blank Excel sheet with three sample rows') }}">
+                <span class="material-symbols-outlined icon icon--sm">description</span>
+                {{ __('Download Template') }}
+            </x-btn>
+        @endcan
         @if(auth()->user()->hasPermission('stones.intake'))
             <x-btn href="{{ route('branch.stone-intakes.scan') }}" variant="secondary">{{ __('Stone Intake') }}</x-btn>
         @endif

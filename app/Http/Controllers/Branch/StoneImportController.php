@@ -9,10 +9,12 @@ use App\Http\Requests\Branch\StageStoneImportRequest;
 use App\Http\Requests\Branch\StoneImportRunRequest;
 use App\Http\Requests\Branch\StoreStoneImportRequest;
 use App\Models\Stone;
+use App\Services\StoneExportService;
 use App\Services\StoneImportLogService;
 use App\Services\StoneImportService;
 use App\Services\StoneService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -34,6 +36,20 @@ class StoneImportController extends Controller
         private StoneService $stoneService,
         private StoneImportLogService $logService,
     ) {}
+
+    /**
+     * Download the blank Excel sheet with three example rows.
+     */
+    public function template(StoneExportService $exportService): Response
+    {
+        $this->authorize('create', Stone::class);
+
+        return response($exportService->template(), 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="Stone import template.xlsx"',
+            'Cache-Control' => 'no-store',
+        ]);
+    }
 
     /**
      * Step 1 — accept the workbook and return its columns with a suggested

@@ -155,7 +155,7 @@
                 <div class="panel__body">
                     @if($stone->image && auth()->user()->can('view', $stone->image))
                         <img src="{{ $stone->image->url() }}" alt="{{ $stone->image->name }}" class="stone-detail__image">
-                        <p class="detail-list__term">{{ $stone->image->name }}</p>
+                        <p class="detail-list__term stone-detail__caption">{{ $stone->image->name }}</p>
                     @elseif($stone->image_code)
                         <p class="detail-list__value">{{ __('No picture named') }} <strong>{{ $stone->image_code }}</strong> {{ __('in Stones → Images yet. Upload one with that name and it attaches automatically.') }}</p>
                     @else

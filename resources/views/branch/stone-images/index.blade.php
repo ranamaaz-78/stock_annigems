@@ -24,10 +24,19 @@
             {{ __('Upload files') }}
         </button>
         <p class="stone-folder__hint">{{ __('Drop images on the folder, or click a name to rename it.') }}</p>
+        <button type="button" class="btn btn--danger stone-folder__bulk is-hidden" data-bulk-delete>
+            <span class="material-symbols-outlined icon icon--sm">delete</span>
+            <span data-bulk-delete-label>{{ __('Delete selected') }}</span>
+        </button>
         <input type="file" class="stone-folder__picker" data-file-input accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden>
     </div>
 
     <div class="stone-folder__drop" data-dropzone>
+        <div class="stone-folder__selectbar">
+            <label class="form-check stone-folder__select-all is-hidden" data-select-all-wrap>
+                <input type="checkbox" data-select-all> {{ __('Select all') }}
+            </label>
+        </div>
         <div class="stone-folder__grid" data-grid></div>
         <div class="stone-folder__empty" data-empty>
             <span class="material-symbols-outlined icon icon--lg">folder_open</span>

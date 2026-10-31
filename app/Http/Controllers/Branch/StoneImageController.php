@@ -10,6 +10,7 @@ use App\Http\Requests\Branch\StoreStoneImagesRequest;
 use App\Models\StoneImage;
 use App\Services\StoneImageService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -144,5 +145,29 @@ class StoneImageController extends Controller
         $this->imageService->delete($stoneImage, request()->user());
 
         return $this->jsonSuccess(__('Image deleted.'));
+    }
+
+    /**
+     * Delete every ticked picture in one go.
+     */
+    public function bulkDestroy(Request $request): JsonResponse
+    {
+        $this->authorize('viewAny', StoneImage::class);
+
+        $data = $request->validate([
+            'uuids' => ['required', 'array', 'min:1', 'max:500'],
+            'uuids.*' => ['string', 'max:64'],
+        ]);
+
+        $deleted = [];
+        foreach (StoneImage::query()->whereIn('uuid', $data['uuids'])->get() as $image) {
+            $this->authorize('delete', $image);
+            $this->imageService->delete($image, $request->user());
+            $deleted[] = $image->uuid;
+        }
+
+        return $this->jsonSuccess(__(':count images deleted.', ['count' => count($deleted)]), [
+            'deleted' => $deleted,
+        ]);
     }
 }
