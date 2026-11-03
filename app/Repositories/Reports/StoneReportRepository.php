@@ -461,10 +461,10 @@ class StoneReportRepository extends ReportRepository
             'unit' => $mode?->isWeighed() ? $mode->weightUnit() : 'pcs',
             'on_hand' => $weighed ? $grams : (float) $pieces,
             'on_hand_label' => $weighed ? rtrim(rtrim(number_format($grams, 3, '.', ''), '0'), '.').' '.$mode->weightUnit() : $pieces.' pcs',
-            'rate' => $rate,
+            'rate' => (float) stone_cost_amount($rate),
             'rate_unit' => $unit,
-            'value' => round($value, 2),
-            'lot_cost' => (float) $row->total_cost,
+            'value' => round((float) stone_cost_amount($value), 2),
+            'lot_cost' => (float) stone_cost_amount((float) $row->total_cost),
             'total_carat' => $isCarat ? $grams : ($weighed ? 0.0 : $carat * $pieces),
             'is_active' => (bool) $row->is_active,
         ];

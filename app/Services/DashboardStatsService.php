@@ -618,6 +618,7 @@ class DashboardStatsService
             $role,
             $user->id,
             $this->today(),
+            can_see_stone_cost() ? 'cost' : 'masked',
         ]);
 
         return Cache::remember($this->versioned($key, $user->branch_id), $this->ttl(), $callback);

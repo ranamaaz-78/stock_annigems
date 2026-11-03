@@ -337,7 +337,7 @@ class Stone extends Model
     /**
      * The rate with its unit, e.g. "Rs 2.00 / ct".
      */
-    public function rateLabel(): string
+    public function rateLabel(bool $reveal = false): string
     {
         $rate = $this->rate();
 
@@ -345,7 +345,11 @@ class Stone extends Model
             return '—';
         }
 
-        return setting_money($rate).' / '.$this->unitOf($this->pricing_mode);
+        if ($reveal) {
+            return setting_money($rate).' / '.$this->unitOf($this->pricing_mode);
+        }
+
+        return stone_cost_money($rate).' / '.$this->unitOf($this->pricing_mode);
     }
 
     /**
@@ -361,7 +365,7 @@ class Stone extends Model
             return '—';
         }
 
-        return setting_money($this->last_rate).' / '.$this->unitOf($this->last_rate_mode);
+        return stone_cost_money($this->last_rate).' / '.$this->unitOf($this->last_rate_mode);
     }
 
     /**

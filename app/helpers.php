@@ -101,6 +101,45 @@ function setting_money(mixed $amount): string
 }
 
 /**
+ * Whether the signed-in user may see stone rates, costs and stock value.
+ *
+ * Open to everyone unless the branch turned on "hide_stone_cost"; then every
+ * branch user is masked, whatever their role. Super Admin (no branch) is
+ * never restricted. Display-only: stored data is untouched.
+ */
+function can_see_stone_cost(): bool
+{
+    $user = auth()->user();
+
+    if ($user === null || $user->isSuperAdmin()) {
+        return true;
+    }
+
+    return ! branch_setting('hide_stone_cost', null, false);
+}
+
+/**
+ * A stone money amount as the viewer may see it: the real figure, or only
+ * 10% of it when the branch hides stone cost. Display-only.
+ */
+function stone_cost_amount(mixed $amount): float|string|null
+{
+    if ($amount === null || $amount === '' || can_see_stone_cost()) {
+        return $amount;
+    }
+
+    return round((float) $amount * 0.10, 2);
+}
+
+/**
+ * A stone money value formatted for display, reduced to 10% when cost is hidden.
+ */
+function stone_cost_money(mixed $amount): string
+{
+    return setting_money(stone_cost_amount($amount));
+}
+
+/**
  * Scanner helper payload for the existing barcode-scanner.js config object.
  *
  * idle_refocus_ms and the rest of the USB-wedge timings live in

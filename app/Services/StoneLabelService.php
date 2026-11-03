@@ -76,7 +76,7 @@ class StoneLabelService
                 'size' => $this->sizeLabel($stone),
                 'weight' => $this->weightLabel($stone),
                 // The lot's rate with its unit, e.g. "Rs 2.50 / g".
-                'price' => $stone->rateLabel(),
+                'price' => $stone->rateLabel(reveal: true),
                 'barcode_svg' => $this->barcodeService->svg((string) $stone->barcode),
             ])->all(),
             'skipped' => $stones->count() - $labelled->count(),

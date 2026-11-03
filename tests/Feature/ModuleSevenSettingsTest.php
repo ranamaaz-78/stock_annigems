@@ -598,6 +598,7 @@ class ModuleSevenSettingsTest extends TestCase
             'invoice_print_format' => 'a4',
             'quotation_print_format' => 'a4',
             'include_qr_on_label' => '1',
+            'hide_stone_cost' => '0',
         ];
     }
 

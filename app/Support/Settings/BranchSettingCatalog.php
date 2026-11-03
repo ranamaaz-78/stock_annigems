@@ -107,6 +107,16 @@ class BranchSettingCatalog
                 'options' => [],
             ],
             [
+                'key' => 'hide_stone_cost',
+                'type' => SettingType::BOOLEAN,
+                'group' => SettingGroup::PRINT,
+                'default' => false,
+                'description' => 'Show only 10% of stone rates, costs and stock value to branch users (Super Admin sees the full figures). Invoices and labels are unaffected.',
+                'rules' => ['required', 'boolean'],
+                'widget' => 'toggle',
+                'options' => [],
+            ],
+            [
                 'key' => 'invoice_footer_note',
                 'type' => SettingType::STRING,
                 'group' => SettingGroup::INVOICE,

@@ -131,15 +131,15 @@
                     @endif
                     <div class="detail-list__item">
                         <dt class="detail-list__term">{{ __('Total cost') }}</dt>
-                        <dd class="detail-list__value font-data-mono">{{ setting_money($stone->total_cost) }}</dd>
+                        <dd class="detail-list__value font-data-mono">{{ stone_cost_money($stone->total_cost) }}</dd>
                     </div>
                 </dl>
 
                 {{-- The stored calculation, so anyone can audit how the cost was reached. --}}
                 <div class="stone-calc mt-4">
                     <span class="stone-calc__label">{{ $stone->pricing_mode?->label() ?? __('Not priced') }}</span>
-                    <span class="stone-calc__formula">{{ $stone->cost_formula ?? __('Not calculated.') }}</span>
-                    <span class="stone-calc__total">{{ setting_money($stone->total_cost) }}</span>
+                    <span class="stone-calc__formula">{{ can_see_stone_cost() ? ($stone->cost_formula ?? __('Not calculated.')) : '' }}</span>
+                    <span class="stone-calc__total">{{ stone_cost_money($stone->total_cost) }}</span>
                 </div>
             </div>
         </div>
