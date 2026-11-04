@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Branch;
 
+use App\Enums\DiscountType;
 use App\Enums\LineType;
 use App\Http\Requests\Concerns\RejectsAttributionInput;
 use App\Http\Requests\Concerns\ValidatesQuotationWorkspace;
@@ -13,8 +14,8 @@ use Illuminate\Validation\Rule;
  * StorePerformaRequest
  *
  * Issue payload: an existing creditor (or a new one's details) + scanned
- * lines. Prices are worked out on the server for the printed memo; the
- * settlement invoice still owns the money. Walk-in / sales-customer
+ * lines. Prices are worked out on the server for the printed memo, with the
+ * discount and tax chosen here; the settlement invoice still owns the money. Walk-in / sales-customer
  * attach is not accepted.
  */
 class StorePerformaRequest extends FormRequest
@@ -74,6 +75,13 @@ class StorePerformaRequest extends FormRequest
                 ),
             ],
             'performa_date' => ['required', 'date'],
+            // Discount and tax, chosen as on an invoice. The IVA and recargo are named by
+            // uuid and their percentages are looked up on the server.
+            'discount_type' => ['nullable', Rule::enum(DiscountType::class)],
+            'discount_value' => ['nullable', 'numeric', 'min:0'],
+            'apply_tax' => ['sometimes', 'boolean'],
+            'tax_rate_uuid' => ['nullable', 'uuid', Rule::exists('tax_rates', 'uuid')->where('kind', 'iva')->whereNull('deleted_at')],
+            'recargo_rate_uuid' => ['nullable', 'uuid', Rule::exists('tax_rates', 'uuid')->where('kind', 'recargo')->whereNull('deleted_at')],
             'notes' => ['nullable', 'string', 'max:5000'],
             'lines' => ['required', 'array', 'min:1'],
             'lines.*.line_type' => ['required', Rule::enum(LineType::class)],

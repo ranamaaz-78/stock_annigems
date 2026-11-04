@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\DiscountType;
 use App\Enums\JewelleryItemStatus;
 use App\Enums\LineType;
 use App\Enums\MakingChargeType;
@@ -12,8 +13,10 @@ use App\Models\JewelleryItem;
 use App\Models\Performa;
 use App\Models\PerformaItem;
 use App\Models\Stone;
+use App\Models\TaxRate;
 use App\Models\User;
 use App\Repositories\GoldRateRepository;
+use App\Support\Settings\DocumentSettings;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -108,8 +111,9 @@ class PerformaService
         }
 
         $lines = $this->lookupService->hydrateLines($data['lines'] ?? [], $actor);
+        $terms = $this->terms($data, $actor);
 
-        return DB::transaction(function () use ($data, $lines, $actor): Performa {
+        return DB::transaction(function () use ($data, $lines, $terms, $actor): Performa {
             $this->assertLinesAvailable($lines, $actor);
 
             $creditorId = $this->resolveCreditorId($data, $actor);
@@ -126,7 +130,7 @@ class PerformaService
                 'performa_date' => $data['performa_date'] ?? now()->toDateString(),
                 'status' => PerformaStatus::OPEN,
                 'notes' => $data['notes'] ?? null,
-            ]);
+            ] + $terms);
 
             $rates = $this->goldRateRepository->currentRateMap();
 
@@ -143,6 +147,47 @@ class PerformaService
 
             return $this->loadDetail($performa->fresh());
         });
+    }
+
+    /**
+     * The discount and tax columns for a performa, from what the issuer chose.
+     *
+     * The IVA and recargo percentages come from SuperAdmin's lists (never from
+     * the browser), and a discount needs the permission and stays under the
+     * shop ceiling, exactly as on a quotation or invoice.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function terms(array $data, User $actor): array
+    {
+        $data = DocumentSettings::applyToPayload($data, $actor);
+        $type = DiscountType::tryFrom((string) ($data['discount_type'] ?? 'none')) ?? DiscountType::NONE;
+        $value = $type === DiscountType::NONE ? 0.0 : max(0.0, (float) ($data['discount_value'] ?? 0));
+
+        if ($type !== DiscountType::NONE) {
+            if (! $actor->hasPermission('invoices.discount')) {
+                throw ValidationException::withMessages([
+                    'discount_type' => __('You do not have permission to apply discounts.'),
+                ]);
+            }
+
+            if ($type === DiscountType::PERCENTAGE && $value > DocumentSettings::maxDiscountPercentage($actor)) {
+                throw ValidationException::withMessages([
+                    'discount_value' => __('Discount cannot exceed :max%.', ['max' => DocumentSettings::maxDiscountPercentage($actor)]),
+                ]);
+            }
+        }
+
+        return [
+            'discount_type' => $type,
+            'discount_value' => $value,
+            'tax_type' => (string) $data['tax_type'],
+            'tax_rate' => $data['tax_rate'],
+            'tax_name' => $data['tax_name'],
+            'recargo_rate' => $data['recargo_rate'],
+            'recargo_name' => $data['recargo_name'],
+        ];
     }
 
     /**
@@ -174,8 +219,9 @@ class PerformaService
         }
 
         $lines = $this->lookupService->hydrateLines($data['lines'] ?? [], $actor);
+        $terms = $this->terms($data, $actor);
 
-        return DB::transaction(function () use ($performa, $data, $lines, $actor): Performa {
+        return DB::transaction(function () use ($performa, $data, $lines, $terms, $actor): Performa {
             $performa = Performa::query()->whereKey($performa->id)->lockForUpdate()->with('items')->firstOrFail();
 
             if (! $performa->status->isOpen()) {
@@ -220,7 +266,7 @@ class PerformaService
                 'creditor_id' => $creditorId,
                 'performa_date' => $data['performa_date'] ?? $performa->performa_date,
                 'notes' => $data['notes'] ?? null,
-            ]);
+            ] + $terms);
 
             $this->refreshStatus($performa);
 
@@ -286,6 +332,16 @@ class PerformaService
             'number' => $performa->performa_number,
             'performa_date' => $performa->performa_date?->toDateString(),
             'notes' => (string) $performa->notes,
+            'discount' => [
+                'on' => $performa->discount_type !== null && $performa->discount_type !== DiscountType::NONE,
+                'type' => ($performa->discount_type ?? DiscountType::NONE)->value,
+                'value' => (string) ($performa->discount_value ?? '0'),
+            ],
+            'tax' => [
+                'apply' => $performa->tax_type !== null && $performa->tax_type !== 'none',
+                'iva_uuid' => $performa->tax_name ? TaxRate::query()->ofKind(TaxRate::KIND_IVA)->where('name', $performa->tax_name)->value('uuid') : null,
+                'recargo_uuid' => $performa->recargo_name ? TaxRate::query()->ofKind(TaxRate::KIND_RECARGO)->where('name', $performa->recargo_name)->value('uuid') : null,
+            ],
             'creditor_locked' => $locked !== [],
             'creditor' => $creditor ? [
                 'uuid' => $creditor->uuid,

@@ -308,7 +308,8 @@ class JewelleryStoneAllocationService
             fn (JewelleryItemStone $row): array => $row->pricing_mode === StonePricingMode::PER_CARAT
                 ? ['carat' => (float) $row->weight_grams, 'quantity' => 1, 'grams' => 0.0]
                 : [
-                    'carat' => (float) $row->carat_snapshot,
+                    // A piece or gram lot's carat is a description: it adds nothing to the weight.
+                    'carat' => 0.0,
                     'quantity' => (int) $row->quantity,
                     'grams' => (float) $row->weight_grams,
                 ]

@@ -20,6 +20,14 @@
     $valueReturned = (float) $performa->items->sum(fn ($item) => $item->valueOf($item->isWeighed() ? $item->weight_returned : $item->quantity_returned));
     $valueOutstanding = (float) $performa->items->sum(fn ($item) => $item->valueOf($item->outstandingAmount()));
 
+    // The discount and tax chosen at issue, spread evenly over every line, so a part
+    // payment, a return and the balance all carry their share of them.
+    $totals = $performa->documentTotals();
+    $factor = $performa->termsFactor();
+    $valueSettled *= $factor;
+    $valueReturned *= $factor;
+    $valueOutstanding *= $factor;
+
     $badge = match ($performa->status) {
         \App\Enums\PerformaStatus::SETTLED => 'pd__badge--paid',
         \App\Enums\PerformaStatus::CANCELLED => 'pd__badge--void',
@@ -131,9 +139,23 @@
 
         @if($showPrices)
             <section class="pd__sums">
-                <p class="pd__note-small">{{ __('Prices are the amounts agreed with the customer for this shipment. Taxes are not calculated on this document.') }}</p>
+                <p class="pd__note-small">{{ $performa->hasTerms()
+                    ? __('Prices are the amounts agreed with the customer for this shipment. Discount and tax are shared across every line.')
+                    : __('Prices are the amounts agreed with the customer for this shipment. Taxes are not calculated on this document.') }}</p>
                 <div class="pd__totals">
                     <div class="pd__total-row"><span>{{ __('Value issued') }}</span><span>{{ setting_money($valueIssued) }}</span></div>
+                    @if((float) $totals['discount_amount'] > 0)
+                        <div class="pd__total-row"><span>{{ __('Discount') }}</span><span>−{{ setting_money($totals['discount_amount']) }}</span></div>
+                    @endif
+                    @if($performa->tax_type !== null && $performa->tax_type !== 'none')
+                        <div class="pd__total-row"><span>{{ $performa->tax_name ?: __('IVA') }} ({{ rtrim(rtrim(number_format((float) $performa->tax_rate, 2), '0'), '.') }}%)</span><span>{{ setting_money($totals['tax_amount']) }}</span></div>
+                    @endif
+                    @if((float) $performa->recargo_rate > 0)
+                        <div class="pd__total-row"><span>{{ $performa->recargo_name ?: __('Recargo de equivalencia') }} ({{ rtrim(rtrim(number_format((float) $performa->recargo_rate, 3), '0'), '.') }}%)</span><span>{{ setting_money($totals['recargo_amount']) }}</span></div>
+                    @endif
+                    @if($performa->hasTerms())
+                        <div class="pd__total-row"><span>{{ __('Total') }}</span><span>{{ setting_money($totals['grand_total']) }}</span></div>
+                    @endif
                     <div class="pd__total-row"><span>{{ __('Paid for') }}</span><span>−{{ setting_money($valueSettled) }}</span></div>
                     <div class="pd__total-row"><span>{{ __('Returned') }}</span><span>−{{ setting_money($valueReturned) }}</span></div>
                     <div class="pd__grand">

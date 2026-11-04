@@ -435,7 +435,10 @@ class StoneService
             'dimension' => $this->nullableString($data['dimension'] ?? null),
             // Each mode keeps only the figures its formula uses, so a stale
             // rate from another mode can never resurface in a later edit.
-            'carat' => $mode === StonePricingMode::PER_CARAT ? $this->threeDecimals($data['carat'] ?? $data['weight_grams'] ?? 0) : null,
+            // Per carat: the stock itself. Any other mode: an optional description only.
+            'carat' => $mode === StonePricingMode::PER_CARAT
+                ? $this->threeDecimals($data['carat'] ?? $data['weight_grams'] ?? 0)
+                : (is_numeric($data['carat'] ?? null) && (float) $data['carat'] > 0 ? $this->threeDecimals($data['carat']) : null),
             'pairs' => (int) ($data['pairs'] ?? 0),
             'pricing_mode' => $mode,
             'price_per_carat' => $mode === StonePricingMode::PER_CARAT ? $this->threeDecimals($data['price_per_carat']) : null,

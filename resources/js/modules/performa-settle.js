@@ -177,10 +177,23 @@ export function bindPerformaSettle() {
         });
     }
 
+    // The performa's discount: a percentage applies as it is, a fixed amount in
+    // proportion to the goods settled now (as the server does).
+    function discountFor(subtotal) {
+        const d = config.discount || {};
+        if (d.type === 'percentage') return { type: 'percentage', value: d.value };
+        if (d.type === 'fixed' && d.issuedSubtotal > 0 && subtotal > 0) {
+            return { type: 'fixed', value: Math.round(d.amount * Math.min(1, subtotal / d.issuedSubtotal) * 100) / 100 };
+        }
+        return { type: 'none', value: 0 };
+    }
+
     function renderTotals() {
+        const subtotal = Number(recalculate(pricedLines(), { discount_type: 'none', discount_value: 0 }).document.subtotal) || 0;
+        const discount = discountFor(subtotal);
         const result = recalculate(pricedLines(), {
-            discount_type: 'none',
-            discount_value: 0,
+            discount_type: discount.type,
+            discount_value: discount.value,
             tax_type: chosenIva() ? 'percentage' : 'none',
             tax_rate: chosenIva()?.rate ?? 0,
             recargo_rate: chosenRecargo()?.rate ?? 0,
@@ -203,6 +216,8 @@ export function bindPerformaSettle() {
         if (els.stoneValue) els.stoneValue.textContent = formatMoney(stone);
         if (els.makingValue) els.makingValue.textContent = formatMoney(making);
         if (els.subtotal) els.subtotal.textContent = formatMoney(result.document.subtotal);
+        const discountAmountEl = document.querySelector('[data-discount-amount]');
+        if (discountAmountEl) discountAmountEl.textContent = `− ${formatMoney(result.document.discount_amount)}`;
         if (els.taxAmount) els.taxAmount.textContent = formatMoney(result.document.tax_amount);
         const taxLabelEl = document.querySelector('[data-tax-label]');
         if (taxLabelEl) taxLabelEl.textContent = chosenIva()?.name || 'IVA';

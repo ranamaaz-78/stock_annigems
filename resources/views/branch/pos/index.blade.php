@@ -196,7 +196,7 @@
                                 <span class="material-symbols-outlined icon icon--md" aria-hidden="true">assignment</span>
                                 <span class="pos-kind__text">
                                     <span class="pos-kind__name">{{ __('Performa') }}</span>
-                                    <span class="pos-kind__sub">{{ __('To a creditor · no discount, no tax') }}</span>
+                                    <span class="pos-kind__sub">{{ __('To a creditor · pays later') }}</span>
                                 </span>
                             </button>
                         </div>

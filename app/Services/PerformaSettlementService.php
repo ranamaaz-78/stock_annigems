@@ -81,7 +81,7 @@ class PerformaSettlementService
                 $data,
                 ['tax_rate_uuid' => 1, 'recargo_rate_uuid' => 1]
             ));
-            $result = $this->pricing->recalculate($pricedLines, [
+            $document = [
                 'discount_type' => DiscountType::NONE->value,
                 'discount_value' => 0,
                 'tax_type' => $taxChoice['tax_type'],
@@ -89,7 +89,18 @@ class PerformaSettlementService
                 'tax_name' => $taxChoice['tax_name'],
                 'recargo_rate' => $taxChoice['recargo_rate'],
                 'recargo_name' => $taxChoice['recargo_name'],
-            ]);
+            ];
+            $result = $this->pricing->recalculate($pricedLines, $document);
+
+            // The discount chosen on the performa carries over: a percentage as it is, a
+            // fixed amount in proportion to the goods being settled now.
+            [$discountType, $discountValue] = $this->discountShare($performa, (float) $result['document']['subtotal']);
+            if ($discountType !== DiscountType::NONE) {
+                $result = $this->pricing->recalculate($pricedLines, [
+                    'discount_type' => $discountType->value,
+                    'discount_value' => $discountValue,
+                ] + $document);
+            }
 
             $invoice = Invoice::query()->create([
                 'branch_id' => $performa->branch_id,
@@ -106,8 +117,8 @@ class PerformaSettlementService
                 'customer_phone_snapshot' => $performa->creditor?->phone,
                 'invoice_date' => now()->toDateString(),
                 'subtotal' => $result['document']['subtotal'],
-                'discount_type' => DiscountType::NONE,
-                'discount_value' => 0,
+                'discount_type' => $discountType,
+                'discount_value' => $discountValue,
                 'discount_amount' => $result['document']['discount_amount'],
                 'tax_type' => TaxType::from((string) $result['document']['tax_type']),
                 'tax_rate' => $result['document']['tax_rate'],
@@ -170,6 +181,33 @@ class PerformaSettlementService
 
             return $invoice->fresh(['items', 'branch', 'customer']);
         });
+    }
+
+    /**
+     * The performa's discount as it applies to a settlement of this subtotal.
+     *
+     * @return array{0: DiscountType, 1: float}
+     */
+    private function discountShare(Performa $performa, float $settledSubtotal): array
+    {
+        $type = $performa->discount_type ?? DiscountType::NONE;
+
+        if ($type === DiscountType::PERCENTAGE) {
+            return [$type, (float) $performa->discount_value];
+        }
+
+        if ($type === DiscountType::FIXED) {
+            $totals = $performa->documentTotals();
+            $issued = (float) $totals['subtotal'];
+
+            if ($issued > 0 && $settledSubtotal > 0) {
+                $share = round((float) $totals['discount_amount'] * min(1, $settledSubtotal / $issued), 2);
+
+                return [DiscountType::FIXED, $share];
+            }
+        }
+
+        return [DiscountType::NONE, 0.0];
     }
 
     /**

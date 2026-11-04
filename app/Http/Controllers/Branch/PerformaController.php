@@ -194,9 +194,13 @@ class PerformaController extends Controller
         $this->authorize('settle', $performa);
 
         $tax = DocumentSettings::tax();
+        $performa = $this->performaService->loadDetail($performa);
+        $totals = $performa->documentTotals();
+        $ivaRates = $this->taxRates->active(TaxRate::KIND_IVA);
+        $recargoRates = $this->taxRates->active(TaxRate::KIND_RECARGO);
 
         return view('branch.performas.settle', [
-            'performa' => $this->performaService->loadDetail($performa),
+            'performa' => $performa,
             'lines' => $this->performaService->outstandingPayload($performa),
             'rateMap' => $this->goldRateRepository->currentRateMap(),
             'paymentMethods' => \App\Enums\PaymentMethod::options(),
@@ -207,9 +211,21 @@ class PerformaController extends Controller
             'taxRate' => $tax['rate'],
             'taxLabel' => $tax['label'],
             // The cashier picks the IVA (default preselected) and an optional recargo.
-            'ivaRates' => $this->taxRates->active(TaxRate::KIND_IVA)->map(fn (TaxRate $r): array => ['uuid' => $r->uuid, 'name' => $r->name, 'rate' => (float) $r->rate])->values()->all(),
-            'recargoRates' => $this->taxRates->active(TaxRate::KIND_RECARGO)->map(fn (TaxRate $r): array => ['uuid' => $r->uuid, 'name' => $r->name, 'rate' => (float) $r->rate])->values()->all(),
-            'defaultIvaUuid' => $tax['uuid'],
+            'ivaRates' => $ivaRates->map(fn (TaxRate $r): array => ['uuid' => $r->uuid, 'name' => $r->name, 'rate' => (float) $r->rate])->values()->all(),
+            'recargoRates' => $recargoRates->map(fn (TaxRate $r): array => ['uuid' => $r->uuid, 'name' => $r->name, 'rate' => (float) $r->rate])->values()->all(),
+            // The IVA and recargo chosen when the performa was issued; one issued before
+            // taxes were kept (null) starts on the default IVA.
+            'defaultIvaUuid' => $performa->tax_type === null
+                ? $tax['uuid']
+                : $ivaRates->firstWhere('name', $performa->tax_name)?->uuid,
+            'defaultRecargoUuid' => $recargoRates->firstWhere('name', $performa->recargo_name)?->uuid,
+            // The performa's discount: a percentage settles as it is, a fixed amount in proportion.
+            'discount' => [
+                'type' => ($performa->discount_type ?? \App\Enums\DiscountType::NONE)->value,
+                'value' => (float) $performa->discount_value,
+                'amount' => (float) $totals['discount_amount'],
+                'issuedSubtotal' => (float) $totals['subtotal'],
+            ],
         ]);
     }
 

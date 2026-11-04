@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Enums\DiscountType;
 use App\Enums\LineType;
 use App\Enums\PerformaStatus;
+use App\Services\PricingCalculationService;
 use App\Traits\BelongsToBranch;
 use App\Traits\HasUuid;
 use App\Traits\TracksUserAttribution;
@@ -35,6 +37,13 @@ class Performa extends Model
         'creditor_id',
         'performa_date',
         'status',
+        'discount_type',
+        'discount_value',
+        'tax_type',
+        'tax_rate',
+        'tax_name',
+        'recargo_rate',
+        'recargo_name',
         'notes',
     ];
 
@@ -46,6 +55,10 @@ class Performa extends Model
         return [
             'performa_date' => 'date',
             'status' => PerformaStatus::class,
+            'discount_type' => DiscountType::class,
+            'discount_value' => 'decimal:2',
+            'tax_rate' => 'decimal:2',
+            'recargo_rate' => 'decimal:3',
         ];
     }
 
@@ -83,6 +96,52 @@ class Performa extends Model
         }
 
         return __('Creditor');
+    }
+
+    /**
+     * Whether a discount, IVA or recargo was chosen when this was issued.
+     */
+    public function hasTerms(): bool
+    {
+        return ($this->discount_type !== null && $this->discount_type !== DiscountType::NONE)
+            || ($this->tax_type !== null && $this->tax_type !== 'none')
+            || (float) $this->recargo_rate > 0;
+    }
+
+    /**
+     * Subtotal, discount, IVA, recargo and total of everything issued, worked
+     * out from the lines with the same calculator invoices use: tax comes
+     * after discount.
+     *
+     * @return array<string, mixed>
+     */
+    public function documentTotals(): array
+    {
+        $subtotal = (float) $this->items->sum(
+            fn (PerformaItem $item): float => $item->valueOf($item->isWeighed() ? $item->weight_issued : $item->quantity_issued)
+        );
+
+        return app(PricingCalculationService::class)->calculateDocument([['line_total' => $subtotal]], [
+            'discount_type' => ($this->discount_type ?? DiscountType::NONE)->value,
+            'discount_value' => $this->discount_value ?? 0,
+            'tax_type' => $this->tax_type ?? 'none',
+            'tax_rate' => $this->tax_rate ?? 0,
+            'tax_name' => $this->tax_name,
+            'recargo_rate' => $this->recargo_rate ?? 0,
+            'recargo_name' => $this->recargo_name,
+        ]);
+    }
+
+    /**
+     * What a line's worth becomes once the performa's discount and tax are
+     * spread over it: total divided by subtotal. 1 when nothing is chosen.
+     */
+    public function termsFactor(): float
+    {
+        $totals = $this->documentTotals();
+        $subtotal = (float) $totals['subtotal'];
+
+        return $subtotal > 0 ? (float) $totals['grand_total'] / $subtotal : 1.0;
     }
 
     /**

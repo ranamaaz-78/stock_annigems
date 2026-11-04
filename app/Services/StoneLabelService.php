@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\LabelSize;
+use App\Enums\StonePricingMode;
 use App\Models\Stone;
 use Illuminate\Support\Collection;
 
@@ -100,7 +101,14 @@ class StoneLabelService
     private function weightLabel(Stone $stone): string
     {
         if ($stone->isWeighed()) {
-            return $stone->weight_grams === null ? '' : $stone->gramsLabel().' '.$stone->weightUnit();
+            $held = $stone->weight_grams === null ? '' : $stone->gramsLabel().' '.$stone->weightUnit();
+
+            // A per-gram lot may carry a carat as a description; a per-carat lot's carat is the weight above.
+            if ($stone->pricing_mode !== StonePricingMode::PER_CARAT && $stone->carat !== null && (float) $stone->carat > 0) {
+                $held = trim($held.' · '.$stone->caratLabel().' ct', ' ·');
+            }
+
+            return $held;
         }
 
         return $stone->carat !== null && (float) $stone->carat > 0 ? $stone->caratLabel().' ct' : '';

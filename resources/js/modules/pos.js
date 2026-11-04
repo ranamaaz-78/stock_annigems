@@ -293,12 +293,11 @@ export function bindPos() {
     function render() {
         clampDiscount();
 
-        // A delivery note never carries tax and a performa neither tax nor discount,
-        // whatever the ticket's toggles say.
-        const taxed = state.apply_tax && config.taxEnabled && !['delivery_note', 'performa'].includes(documentKind);
-        const discounted = state.discount_on && documentKind !== 'performa';
+        // A delivery note never carries tax, whatever the ticket's toggles say.
+        const taxed = state.apply_tax && config.taxEnabled && documentKind !== 'delivery_note';
+        const discounted = state.discount_on;
         // IVA and recargo are separate: either, both or neither can be on.
-        const taxAllowed = config.taxEnabled && !['delivery_note', 'performa'].includes(documentKind);
+        const taxAllowed = config.taxEnabled && documentKind !== 'delivery_note';
         const iva = taxAllowed && state.apply_tax ? rateByUuid(config.ivaRates, state.iva_uuid) : null;
         const recargo = taxAllowed && state.recargo_uuid ? rateByUuid(config.recargoRates, state.recargo_uuid) : null;
         // The percentage shown here is a preview; the server looks the rate up again from the uuid.
@@ -327,12 +326,11 @@ export function bindPos() {
      * and the live fields (or applied GST label) show with an X to remove.
      */
     function renderAdjustButtons() {
-        const noDiscount = documentKind === 'performa';
-        els.discountOff?.classList.toggle('is-hidden', state.discount_on || noDiscount);
-        els.discountFields?.classList.toggle('is-hidden', !state.discount_on || noDiscount);
+        els.discountOff?.classList.toggle('is-hidden', state.discount_on);
+        els.discountFields?.classList.toggle('is-hidden', !state.discount_on);
 
         // No tax controls on a delivery note: it is issued without tax.
-        const noTax = ['delivery_note', 'performa'].includes(documentKind);
+        const noTax = documentKind === 'delivery_note';
         els.taxOff?.classList.toggle('is-hidden', state.apply_tax || noTax);
         els.taxApplied?.classList.toggle('is-hidden', !state.apply_tax || noTax);
 
@@ -393,7 +391,7 @@ export function bindPos() {
         if (documentKind === 'invoice') {
             els.kindNote.textContent = t('Payment is taken next. Stock is deducted when the invoice is saved.');
         } else if (documentKind === 'performa') {
-            els.kindNote.textContent = t('Issued to a creditor. No discount, no tax. Stock leaves now; the creditor pays later.');
+            els.kindNote.textContent = t('Issued to a creditor. Stock leaves now; the creditor pays later, and the discount and tax chosen here carry to the invoice.');
         } else if (documentKind === 'delivery_note') {
             els.kindNote.textContent = t('No tax is added. Stock leaves now; the note can be cancelled or invoiced later.');
         } else {
@@ -856,7 +854,7 @@ export function bindPos() {
                 invoice: t('An invoice takes payment and marks stock sold. It prints, then clears the ticket.'),
                 quotation: t('A quotation holds stock until it is converted or cancelled. It prints, then clears the ticket.'),
                 delivery_note: t('A delivery note takes the stock out now and prints the client\'s copy. No tax, no payment.'),
-                performa: t('A performa takes the stock out now against a creditor. No discount, no tax; payment comes later on an invoice.'),
+                performa: t('A performa takes the stock out now against a creditor. Payment comes later on an invoice, with the same discount and tax.'),
             }[kind] || '';
         }
 
@@ -1347,7 +1345,7 @@ export function bindPos() {
 
     /**
      * POST performas.store against a creditor: the picked one, or the new one
-     * the phone and name describe (saved as a creditor). No discount, no tax.
+     * the phone and name describe (saved as a creditor), with the ticket's discount and tax.
      *
      * @param {HTMLButtonElement} button
      */
@@ -1368,9 +1366,6 @@ export function bindPos() {
                 ...buildFormPayload(),
                 creditor_uuid: state.customer_uuid || null,
                 performa_date: state.quotation_date,
-                discount_type: 'none',
-                discount_value: 0,
-                apply_tax: false,
             }),
         });
         loading?.restore();
@@ -2503,6 +2498,16 @@ export function bindPos() {
         state.notes = editing.notes || '';
         if (els.notes) els.notes.value = state.notes;
         state.lines = (editing.lines || []).map((line) => ({ ...line }));
+
+        // The discount and tax the performa was issued with.
+        state.discount_on = Boolean(editing.discount?.on);
+        state.discount_type = editing.discount?.on ? editing.discount.type : 'percentage';
+        state.discount_value = editing.discount?.value || '0';
+        if (els.discountType) els.discountType.value = state.discount_type;
+        if (els.discountValue) els.discountValue.value = state.discount_on ? state.discount_value : '';
+        state.apply_tax = Boolean(editing.tax?.apply);
+        if (editing.tax?.iva_uuid) state.iva_uuid = editing.tax.iva_uuid;
+        state.recargo_uuid = editing.tax?.recargo_uuid || '';
 
         if (editing.creditor) {
             applyCustomer(editing.creditor);

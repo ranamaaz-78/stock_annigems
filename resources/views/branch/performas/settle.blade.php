@@ -20,6 +20,7 @@
         'ivaRates' => $ivaRates,
         'recargoRates' => $recargoRates,
         'defaultIvaUuid' => $defaultIvaUuid,
+        'discount' => $discount,
         'routes' => [
             'settle' => route('branch.performas.settle.store', $performa),
             'invoiceShow' => route('branch.invoices.show', ['invoice' => '__UUID__']),
@@ -70,6 +71,12 @@
                         <dt class="totals__label">{{ __('Subtotal') }}</dt>
                         <dd class="totals__value" data-subtotal>0.00</dd>
                     </div>
+                    @if($discount['type'] !== 'none')
+                        <div class="totals__row">
+                            <dt class="totals__label">{{ __('Discount') }}</dt>
+                            <dd class="totals__value" data-discount-amount>0.00</dd>
+                        </div>
+                    @endif
                     @if($taxEnabled)
                         <div class="totals__row totals__row--rule">
                             <dt class="totals__label" data-tax-label>{{ __('IVA') }}</dt>
@@ -104,7 +111,7 @@
                                 <select id="settle_recargo_rate_uuid" class="input-field" data-no-select2 data-settle-recargo>
                                     <option value="">{{ __('None') }}</option>
                                     @foreach($recargoRates as $rate)
-                                        <option value="{{ $rate['uuid'] }}">{{ $rate['name'] }}</option>
+                                        <option value="{{ $rate['uuid'] }}" @selected($rate['uuid'] === $defaultRecargoUuid)>{{ $rate['name'] }}</option>
                                     @endforeach
                                 </select>
                             </div>

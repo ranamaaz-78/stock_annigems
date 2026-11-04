@@ -716,4 +716,37 @@ class StoneUnitsTest extends TestCase
         $this->assertNull(collect($items)->firstWhere('line.stone_id', $gram->id));
         $this->actingAs($this->admin)->postJson(route('branch.quotations.lookup'), ['code' => $gram->stone_code])->assertStatus(422);
     }
+
+    public function test_a_piece_or_gram_lot_can_carry_a_carat_as_a_description_only(): void
+    {
+        $plainPiece = $this->pieceLot();
+        $piece = $this->lot(['pricing_mode' => 'per_piece', 'price_per_piece' => '7', 'pieces' => 10, 'carat' => '0.250']);
+        $plainGram = $this->gramLot('10');
+        $gram = $this->lot(['pricing_mode' => 'per_gram', 'weight_grams' => '10', 'price_per_gram' => '5', 'carat' => '1.500']);
+
+        $this->assertSame('0.250', (string) $piece->carat);
+        $this->assertSame('1.500', (string) $gram->carat);
+
+        // Cost, formula and stock are exactly what they are without a carat.
+        $this->assertSame((string) $plainPiece->total_cost, (string) $piece->total_cost);
+        $this->assertSame($plainPiece->cost_formula, $piece->cost_formula);
+        $this->assertSame(10, (int) $piece->quantity);
+        $this->assertSame((string) $plainGram->total_cost, (string) $gram->total_cost);
+        $this->assertSame($plainGram->cost_formula, $gram->cost_formula);
+        $this->assertSame('10.000', (string) $gram->weight_grams);
+
+        // It shows on the lot's page and on its label.
+        $this->actingAs($this->admin)->get(route('branch.stones.show', $gram))->assertOk()->assertSee('1.5');
+        $this->assertSame('10 g · 1.5 ct', app(\App\Services\StoneLabelService::class)->dialogData(collect([$gram]))['stones'][0]['weight']);
+    }
+
+    public function test_per_carat_still_needs_its_carats_and_other_modes_do_not(): void
+    {
+        $this->actingAs($this->admin)->post(route('branch.stones.store'), [
+            'name' => 'No carat', 'status' => 'in_stock', 'pricing_mode' => 'per_carat', 'price_per_carat' => '40',
+        ])->assertSessionHasErrors('carat');
+
+        $this->assertNull($this->pieceLot()->carat);
+        $this->assertNull($this->gramLot()->carat);
+    }
 }

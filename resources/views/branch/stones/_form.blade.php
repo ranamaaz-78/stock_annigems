@@ -65,12 +65,14 @@
             {{-- Per piece: a single piece rate. --}}
             <div class="stone-fields" data-mode-fields="per_piece">
                 <x-form.input name="price_per_piece" :label="__('Price per piece')" type="number" :value="$stone->price_per_piece ?? null" step="0.001" min="0" data-calc-input />
+                <x-form.input name="carat" :label="__('Carat (optional)')" type="number" :value="$stone->carat ?? null" step="0.001" min="0.001" :max="config('annigems.stones.carat_max')" :help="__('Carat of one piece. Shown only; never part of the price.')" />
             </div>
 
             {{-- Per gram: bulk weight and a gram rate. --}}
             <div class="stone-fields" data-mode-fields="per_gram">
                 <x-form.input name="weight_grams" :label="__('Weight (grams)')" type="number" :value="$stone->weight_grams ?? null" step="0.001" min="0" data-calc-input />
                 <x-form.input name="price_per_gram" :label="__('Price per gram')" type="number" :value="$stone->price_per_gram ?? null" step="0.001" min="0" data-calc-input />
+                <x-form.input name="carat" :label="__('Carat (optional)')" type="number" :value="$stone->carat ?? null" step="0.001" min="0.001" :max="config('annigems.stones.carat_max')" :help="__('Shown only; never part of the price or the weight.')" />
             </div>
 
             {{-- Pieces drive both the per-carat total and the on-hand stock count. --}}

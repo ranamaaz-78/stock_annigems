@@ -11,7 +11,8 @@ use Illuminate\Validation\Rule;
  *
  * Shared rules for the supplier-sheet lot fields used by stone create and
  * update. Each pricing mode only requires the figures its formula consumes,
- * so a per-gram lot is never forced to invent a carat.
+ * so a per-gram lot is never forced to invent a carat. A carat may still be
+ * given on a per-piece or per-gram lot as a description.
  */
 trait ValidatesStoneLot
 {
@@ -37,9 +38,12 @@ trait ValidatesStoneLot
             'pricing_mode' => ['required', Rule::enum(StonePricingMode::class)],
             'status' => ['required', Rule::enum(StoneStatus::class)],
 
+            // Per carat: the carats in stock, so required. Per piece and per gram: an
+            // optional description (the carat of one piece, or of the lot); it is shown
+            // but never used in a price or a stock figure.
             'carat' => [
-                'exclude_unless:pricing_mode,'.$perCarat,
-                'required', 'numeric', 'gt:0', 'decimal:0,3', 'max:'.$caratMax,
+                Rule::requiredIf(fn (): bool => $this->input('pricing_mode') === $perCarat),
+                'nullable', 'numeric', 'gt:0', 'decimal:0,3', 'max:'.$caratMax,
             ],
             'price_per_carat' => [
                 'exclude_unless:pricing_mode,'.$perCarat,

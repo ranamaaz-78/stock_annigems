@@ -709,4 +709,72 @@ class PerformaTest extends TestCase
             ->assertOk()
             ->assertDontSee('&quot;defaultKind&quot;:&quot;performa&quot;', false);
     }
+
+    public function test_discount_and_tax_are_kept_printed_and_carried_to_the_settlement_invoice(): void
+    {
+        $admin = $this->branchAdmin();
+        $this->useTax(true, 10);
+        app(\App\Services\SettingService::class)->setGroup(\App\Enums\SettingGroup::DISCOUNT, [
+            'discount_enabled' => true,
+            'max_discount_percentage' => 50,
+        ], User::factory()->create());
+        $stone = $this->stoneWithQty($admin, 10);
+        $stone->forceFill(['pricing_mode' => 'per_piece', 'price_per_piece' => '10'])->save();
+        $item = $this->jewellery($admin);
+        $payload = $this->issuePayload($item, $stone, 10);
+        $payload['lines'] = [$payload['lines'][1]];
+        $ivaUuid = \App\Models\TaxRate::query()->where('kind', 'iva')->value('uuid');
+
+        $this->actingAs($admin)->postJson(route('branch.performas.store'), $payload + [
+            'discount_type' => 'percentage',
+            'discount_value' => 20,
+            'apply_tax' => true,
+            'tax_rate_uuid' => $ivaUuid,
+        ])->assertOk();
+
+        $performa = Performa::query()->with('items')->latest('id')->firstOrFail();
+        $this->assertSame('percentage', $performa->discount_type->value);
+        $this->assertSame('percentage', $performa->tax_type);
+        // 100 issued, 20% off = 80, 10% IVA on 80 = 8, total 88.
+        $totals = $performa->documentTotals();
+        $this->assertEqualsWithDelta(100.0, (float) $totals['subtotal'], 0.001);
+        $this->assertEqualsWithDelta(20.0, (float) $totals['discount_amount'], 0.001);
+        $this->assertEqualsWithDelta(8.0, (float) $totals['tax_amount'], 0.001);
+        $this->assertEqualsWithDelta(88.0, (float) $totals['grand_total'], 0.001);
+
+        $html = $this->actingAs($admin)->get(route('branch.performas.print', $performa))->assertOk()->getContent();
+        $this->assertStringContainsString('Discount', $html);
+        $this->assertStringContainsString('88.00', $html);
+
+        // Settling half the goods carries the same discount and tax: 50 - 10 + 4 = 44.
+        $line = $performa->items->firstOrFail();
+        $this->actingAs($admin)->postJson(route('branch.performas.settle.store', $performa), [
+            'payment_method' => 'cash',
+            'tax_rate_uuid' => $ivaUuid,
+            'lines' => [['performa_item_id' => $line->id, 'quantity' => 5, 'price' => '10.00', 'price_per_piece' => '10.00']],
+        ])->assertOk();
+
+        $invoice = Invoice::query()->latest('id')->firstOrFail();
+        $this->assertEqualsWithDelta(50.0, (float) $invoice->subtotal, 0.001);
+        $this->assertEqualsWithDelta(10.0, (float) $invoice->discount_amount, 0.001);
+        $this->assertEqualsWithDelta(44.0, (float) $invoice->grand_total, 0.001);
+    }
+
+    public function test_a_discount_without_the_discount_setting_is_dropped(): void
+    {
+        $admin = $this->branchAdmin();
+        app(\App\Services\SettingService::class)->setGroup(\App\Enums\SettingGroup::DISCOUNT, [
+            'discount_enabled' => false,
+        ], User::factory()->create());
+        $stone = $this->stoneWithQty($admin, 2);
+        $item = $this->jewellery($admin);
+        $payload = $this->issuePayload($item, $stone, 2);
+
+        $this->actingAs($admin)->postJson(route('branch.performas.store'), $payload + [
+            'discount_type' => 'percentage',
+            'discount_value' => 30,
+        ])->assertOk();
+
+        $this->assertSame('none', Performa::query()->latest('id')->firstOrFail()->discount_type->value);
+    }
 }
