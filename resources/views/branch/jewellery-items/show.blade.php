@@ -12,6 +12,9 @@
         @can('update', $item)
             <x-btn href="{{ route('branch.jewellery-items.edit', $item) }}">{{ __('Edit') }}</x-btn>
         @endcan
+        @can('view', $item)
+            <x-btn href="{{ route('branch.jewellery-items.certificate', $item) }}" variant="secondary" target="_blank" rel="noopener">{{ __('Certificate') }}</x-btn>
+        @endcan
         @can('printLabel', $item)
             @if($item->barcode)
                 <x-btn href="{{ route('branch.jewellery-items.label', [$item, 'barcode']) }}" variant="secondary" data-label-open="{{ $item->uuid }}">{{ __('Print barcode') }}</x-btn>
@@ -24,7 +27,7 @@
             @endif
         @endcan
         @can('delete', $item)
-            <form method="POST" action="{{ route('branch.jewellery-items.destroy', $item) }}" data-loading-form data-confirm-delete-item data-stones-count="{{ $item->itemStones->sum('quantity') }}" class="inline">
+            <form method="POST" action="{{ route('branch.jewellery-items.destroy', $item) }}" data-loading-form data-confirm-delete-item data-stones-count="{{ $item->itemStones->whereNotNull('stone_id')->sum('quantity') }}" class="inline">
                 @csrf
                 @method('DELETE')
                 <x-btn type="submit" variant="danger" :loading-text="__('Deleting...')">{{ __('Delete') }}</x-btn>
@@ -127,7 +130,7 @@
             <tbody>
                 @foreach($item->itemStones as $row)
                     <tr>
-                        <td class="font-data-mono">{{ $row->stone_code_snapshot }}</td>
+                        <td class="font-data-mono">{{ $row->stone_id === null ? __('Manual') : $row->stone_code_snapshot }}</td>
                         <td>{{ $row->stone_name_snapshot }}</td>
                         <td>{{ $row->stone_type_snapshot }}</td>
                         <td>{{ $row->shape_snapshot ?? '—' }}</td>

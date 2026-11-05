@@ -814,4 +814,139 @@ class JewelleryManagementTest extends TestCase
         $this->actingAs(User::factory()->cashier($branch->id)->create());
         $this->assertSame('0.00', $service->stonePayload($carat)['price_per_piece']);
     }
+
+    /**
+     * Stones typed onto the piece (not in the stone list) are saved without a lot,
+     * move no stock, and count toward the stone weight.
+     */
+    public function test_manual_stones_are_saved_without_a_lot_and_move_no_stock(): void
+    {
+        [$branch, $admin, $category, $metalId, $purityId] = $this->branchContext();
+        $stone = $this->stockedStone($admin, $branch, 5);
+
+        $this->actingAs($admin)->post(route('branch.jewellery-items.store'), $this->itemPayload($category, $metalId, $purityId, [
+            'stones' => [['uuid' => $stone->uuid, 'quantity' => 2]],
+            'manual_stones' => [
+                ['name' => 'Blue sapphire', 'shape' => 'Oval', 'size' => '5x3', 'carat' => '0.500', 'quantity' => 4],
+                ['name' => 'Small diamond', 'carat' => '0.100', 'quantity' => 10],
+            ],
+        ]))->assertRedirect();
+
+        $item = JewelleryItem::query()->firstOrFail();
+        $manual = $item->itemStones()->whereNull('stone_id')->orderBy('id')->get();
+
+        $this->assertCount(2, $manual);
+        $this->assertSame('Blue sapphire', $manual[0]->stone_name_snapshot);
+        $this->assertSame('MANUAL', $manual[0]->stone_code_snapshot);
+        $this->assertSame('5x3', $manual[0]->cut_snapshot);
+        $this->assertSame('2.000', (string) $manual[0]->total_carat);
+
+        // Only the listed stone moved stock; the typed-in ones took none.
+        $this->assertSame(3, (int) $stone->fresh()->quantity);
+        $this->assertSame(1, StoneStockMovement::query()->where('type', StoneMovementType::USED_IN_ITEM)->count());
+
+        // 4 x 0.5 + 10 x 0.1 = 3 ct = 0.6 g.
+        $this->assertSame('3.000', (string) $item->stone_weight_carat);
+        $this->assertSame('0.600', (string) $item->stone_weight_grams);
+    }
+
+    public function test_editing_replaces_manual_stones_and_leaves_the_listed_stock_alone(): void
+    {
+        [$branch, $admin, $category, $metalId, $purityId] = $this->branchContext();
+        $stone = $this->stockedStone($admin, $branch, 5);
+
+        $this->actingAs($admin)->post(route('branch.jewellery-items.store'), $this->itemPayload($category, $metalId, $purityId, [
+            'stones' => [['uuid' => $stone->uuid, 'quantity' => 2]],
+            'manual_stones' => [['name' => 'Ruby', 'carat' => '1', 'quantity' => 1]],
+        ]))->assertRedirect();
+        $item = JewelleryItem::query()->firstOrFail();
+        $movements = StoneStockMovement::query()->count();
+
+        $this->actingAs($admin)->put(route('branch.jewellery-items.update', $item), $this->itemPayload($category, $metalId, $purityId, [
+            'stones' => [['uuid' => $stone->uuid, 'quantity' => 2]],
+            'manual_stones' => [['name' => 'Emerald', 'carat' => '2', 'quantity' => 2]],
+        ]))->assertRedirect();
+
+        $item = $item->fresh();
+        $names = $item->itemStones()->whereNull('stone_id')->pluck('stone_name_snapshot')->all();
+        $this->assertSame(['Emerald'], $names);
+        $this->assertSame(3, (int) $stone->fresh()->quantity);
+        $this->assertSame($movements, StoneStockMovement::query()->count());
+        $this->assertSame('4.000', (string) $item->stone_weight_carat);
+
+        // Posting none removes them.
+        $this->actingAs($admin)->put(route('branch.jewellery-items.update', $item), $this->itemPayload($category, $metalId, $purityId, [
+            'stones' => [['uuid' => $stone->uuid, 'quantity' => 2]],
+        ]))->assertRedirect();
+        $this->assertSame(0, $item->itemStones()->whereNull('stone_id')->count());
+        $this->assertSame('0.000', (string) $item->fresh()->stone_weight_carat);
+    }
+
+    public function test_manual_stones_cannot_outweigh_the_gross_weight_and_need_a_name_and_quantity(): void
+    {
+        [, $admin, $category, $metalId, $purityId] = $this->branchContext();
+
+        // 100 ct = 20 g on a 10 g piece.
+        $this->actingAs($admin)->post(route('branch.jewellery-items.store'), $this->itemPayload($category, $metalId, $purityId, [
+            'manual_stones' => [['name' => 'Big stone', 'carat' => '100', 'quantity' => 1]],
+        ]))->assertSessionHasErrors('gross_weight');
+        $this->assertSame(0, JewelleryItem::query()->count());
+
+        $this->actingAs($admin)->post(route('branch.jewellery-items.store'), $this->itemPayload($category, $metalId, $purityId, [
+            'manual_stones' => [['name' => '', 'quantity' => 0]],
+        ]))->assertSessionHasErrors(['manual_stones.0.name', 'manual_stones.0.quantity']);
+    }
+
+    public function test_deleting_a_piece_returns_only_listed_stones_and_removes_manual_ones(): void
+    {
+        [$branch, $admin, $category, $metalId, $purityId] = $this->branchContext();
+        $stone = $this->stockedStone($admin, $branch, 4);
+
+        $this->actingAs($admin)->post(route('branch.jewellery-items.store'), $this->itemPayload($category, $metalId, $purityId, [
+            'stones' => [['uuid' => $stone->uuid, 'quantity' => 3]],
+            'manual_stones' => [['name' => 'Pearl', 'carat' => '0.2', 'quantity' => 6]],
+        ]))->assertRedirect();
+        $item = JewelleryItem::query()->firstOrFail();
+
+        $this->actingAs($admin)->get(route('branch.jewellery-items.show', $item))->assertOk()->assertSee('Pearl')->assertSee('Manual');
+        $this->actingAs($admin)->get(route('branch.jewellery-items.edit', $item))->assertOk()->assertSee('Pearl');
+
+        $this->actingAs($admin)->delete(route('branch.jewellery-items.destroy', $item))->assertRedirect();
+
+        $this->assertSame(4, (int) $stone->fresh()->quantity);
+        $this->assertSame(1, StoneStockMovement::query()->where('type', StoneMovementType::RETURNED_FROM_ITEM)->count());
+        $this->assertSame(0, \App\Models\JewelleryItemStone::query()->where('jewellery_item_id', $item->id)->count());
+    }
+
+    public function test_certificate_page_is_five_by_four_and_a_half_inches_and_shows_no_cost(): void
+    {
+        [$branch, $admin, $category, $metalId, $purityId] = $this->branchContext();
+        $stone = $this->stockedStone($admin, $branch, 5);
+
+        $this->actingAs($admin)->post(route('branch.jewellery-items.store'), $this->itemPayload($category, $metalId, $purityId, [
+            'stones' => [['uuid' => $stone->uuid, 'quantity' => 2]],
+            'manual_stones' => [['name' => 'Blue sapphire', 'shape' => 'Oval', 'carat' => '0.5', 'quantity' => 3]],
+        ]))->assertRedirect();
+        $item = JewelleryItem::query()->firstOrFail();
+
+        $html = $this->actingAs($admin)->get(route('branch.jewellery-items.certificate', $item))->assertOk()->getContent();
+        $this->assertStringContainsString('size: 5in 4.5in', $html);
+        $this->assertStringContainsString('Certificate of Authenticity', $html);
+        $this->assertStringContainsString($item->item_code, $html);
+        $this->assertStringContainsString('BLUE SAPPHIRE WEIGHT', $html);
+        $this->assertStringContainsString('1.5 cts', $html);
+        $this->assertStringContainsString('TOTAL WEIGHT', $html);
+        $this->assertStringContainsString('10 grams', $html);
+        // The QR is drawn only when the piece has a QR token.
+        $this->assertSame(filled($item->qr_token), str_contains($html, 'data:image/png;base64'));
+        $this->assertStringNotContainsString('Internal bench notes', $html);
+
+        // The list and the detail page both link to it.
+        $this->actingAs($admin)->get(route('branch.jewellery-items.index'))->assertOk()->assertSee(route('branch.jewellery-items.certificate', $item), false);
+        $this->actingAs($admin)->get(route('branch.jewellery-items.show', $item))->assertOk()->assertSee(route('branch.jewellery-items.certificate', $item), false);
+
+        // Another branch cannot open it.
+        $other = User::factory()->admin(Branch::factory()->create()->id)->create();
+        $this->actingAs($other)->get(route('branch.jewellery-items.certificate', $item))->assertForbidden();
+    }
 }

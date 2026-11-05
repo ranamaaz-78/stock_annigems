@@ -372,6 +372,28 @@ td.table-admin__actions-col {
     color: var(--color-on-surface-variant);
   }
 
+  /* Round X that takes a row off the piece. */
+  &__remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--color-on-surface-variant);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+      background-color: var(--color-error-container);
+      color: var(--color-error);
+    }
+  }
+
   tfoot th,
   tfoot td {
     padding: 0.75rem 1rem;

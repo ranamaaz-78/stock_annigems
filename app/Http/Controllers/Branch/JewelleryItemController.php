@@ -79,7 +79,8 @@ class JewelleryItemController extends Controller
                 $request->validated(),
                 $request->validated('stones') ?? [],
                 $request->file('images', []) ?? [],
-                $request->user()
+                $request->user(),
+                $request->validated('manual_stones') ?? []
             );
         } catch (ValidationException $e) {
             if ($request->expectsJson()) {
@@ -146,7 +147,8 @@ class JewelleryItemController extends Controller
                 $request->validated('stones') ?? [],
                 $request->file('images', []) ?? [],
                 $request->user(),
-                $request->validated('primary_image_id')
+                $request->validated('primary_image_id'),
+                $request->validated('manual_stones') ?? []
             );
         } catch (ValidationException $e) {
             if ($request->expectsJson()) {

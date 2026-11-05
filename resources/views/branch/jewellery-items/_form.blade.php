@@ -2,8 +2,18 @@
 @php
     $item = $item ?? null;
     $showCost = auth()->user()?->hasPermission('items.view_cost') ?? false;
+    // Typed-in stones (no stone list entry); a failed save brings back what was typed.
+    $manual = old('manual_stones', $item
+        ? $item->itemStones->whereNull('stone_id')->map(fn ($row) => [
+            'name' => $row->stone_name_snapshot,
+            'shape' => $row->shape_snapshot,
+            'size' => $row->cut_snapshot,
+            'carat' => $row->carat_snapshot > 0 ? rtrim(rtrim((string) $row->carat_snapshot, '0'), '.') : '',
+            'quantity' => (int) $row->quantity,
+        ])->values()->all()
+        : []);
     $allocated = $item
-        ? $item->itemStones->map(function ($row) {
+        ? $item->itemStones->whereNotNull('stone_id')->map(function ($row) use ($showCost) {
             $stone = $row->stone;
             return [
                 'uuid' => $stone?->uuid,
@@ -34,6 +44,7 @@
      data-show-cost="{{ $showCost ? '1' : '0' }}"
      data-scanner="{{ json_encode($scanner) }}"
      data-allocated="{{ $allocated->toJson() }}"
+     data-manual="{{ json_encode(array_values($manual)) }}"
      data-selected-sub="{{ old('sub_category_id', $item->sub_category_id ?? '') }}"
      data-selected-purity="{{ old('purity_id', $item->purity_id ?? '') }}">
 
@@ -100,8 +111,18 @@
             </div>
         </section>
 
-        <section>
+        <section data-stone-tabs>
             <h2 class="text-headline-sm border-b border-outline-variant pb-2 mb-3">{{ __('Stones') }}</h2>
+            <div class="report-tabs" role="tablist" aria-label="{{ __('Stones') }}">
+                <button type="button" role="tab" class="report-tabs__tab report-tabs__tab--active" id="stone-tab-listed" aria-controls="stone-panel-listed" aria-selected="true" data-stone-tab="listed">
+                    {{ __('Stones') }} <span class="stone-tabs__count" data-tab-count="listed"></span>
+                </button>
+                <button type="button" role="tab" class="report-tabs__tab" id="stone-tab-manual" aria-controls="stone-panel-manual" aria-selected="false" data-stone-tab="manual">
+                    {{ __('Stones not in the stone list') }} <span class="stone-tabs__count" data-tab-count="manual"></span>
+                </button>
+            </div>
+
+            <div role="tabpanel" id="stone-panel-listed" aria-labelledby="stone-tab-listed" data-stone-panel="listed">
             <p class="text-body-sm text-on-surface-variant mb-3">{{ __('Scan a packet barcode or search by name. Scanning an already-added packet increases its quantity. A stone priced per gram is added by the grams used. Stock is deducted only when you save.') }}@if($showCost) {{ __('The price of each stone is worked out from its own rate.') }}@endif</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                 <div data-scan-wrap>
@@ -155,6 +176,33 @@
             </div>
             <p data-error-for="stones" class="form-error {{ $errors->has('stones') ? '' : 'is-hidden' }}">{{ $errors->first('stones') }}</p>
             <div data-stone-fields></div>
+            </div>
+
+            {{-- Stones that came with the piece and are not in the stone list: typed in, description only. They move no stock and carry no cost. --}}
+            <div role="tabpanel" id="stone-panel-manual" aria-labelledby="stone-tab-manual" data-stone-panel="manual" hidden>
+            <p class="text-body-sm text-on-surface-variant mb-3">{{ __('For a piece bought with its stones already set. Type each stone here. They are kept on this piece only: no stock is taken and no stone is added to the list.') }}</p>
+            <div class="overflow-x-auto">
+                <table class="table-admin stone-alloc">
+                    <thead>
+                        <tr>
+                            <th>{{ __('Stone name') }}</th>
+                            <th>{{ __('Shape') }}</th>
+                            <th>{{ __('Size') }}</th>
+                            <th class="table-admin__num">{{ __('Carat (each)') }}</th>
+                            <th>{{ __('Quantity') }}</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody data-manual-rows></tbody>
+                </table>
+            </div>
+            <div class="mt-2">
+                <x-btn type="button" variant="secondary" data-manual-add>{{ __('Add stone row') }}</x-btn>
+            </div>
+            @foreach($errors->get('manual_stones.*') as $messages)
+                <p class="form-error">{{ $messages[0] }}</p>
+            @endforeach
+            </div>
         </section>
 
         <section>

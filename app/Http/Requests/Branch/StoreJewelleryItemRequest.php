@@ -66,6 +66,14 @@ class StoreJewelleryItemRequest extends FormRequest
             // makes the final call; here at least one must be sent.
             'stones.*.quantity' => ['required_without:stones.*.weight_grams', 'nullable', 'integer', 'min:1', 'max:'.$qtyMax],
             'stones.*.weight_grams' => ['nullable', 'numeric', 'gt:0', 'decimal:0,3', 'max:9999999'],
+            // Stones that came with the piece and are not in the stone list: typed in,
+            // description only. They move no stock and carry no cost.
+            'manual_stones' => ['nullable', 'array', 'max:50'],
+            'manual_stones.*.name' => ['required', 'string', 'max:150'],
+            'manual_stones.*.shape' => ['nullable', 'string', 'max:60'],
+            'manual_stones.*.size' => ['nullable', 'string', 'max:40'],
+            'manual_stones.*.carat' => ['nullable', 'numeric', 'gt:0', 'decimal:0,3', 'max:9999'],
+            'manual_stones.*.quantity' => ['required', 'integer', 'min:1', 'max:'.$qtyMax],
             'images' => ['nullable', 'array', 'max:'.$imageCount],
             'images.*' => ['file', 'max:'.$imageMax],
             'primary_image_id' => ['nullable', 'integer'],

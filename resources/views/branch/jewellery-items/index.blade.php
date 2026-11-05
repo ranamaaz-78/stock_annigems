@@ -97,6 +97,9 @@
                                 <td class="table-admin__actions-col">
                                     <x-table.actions>
                                         <x-table.action :href="route('branch.jewellery-items.show', $item)" />
+                                        @can('view', $item)
+                                            <x-table.action :href="route('branch.jewellery-items.certificate', $item)" icon="workspace_premium" :label="__('Certificate')" target="_blank" rel="noopener" />
+                                        @endcan
                                         @can('printLabel', $item)
                                             @if($item->barcode)
                                                 <x-table.action :href="route('branch.jewellery-items.label', [$item, 'barcode'])" icon="barcode" :label="__('Barcode')" data-label-open="{{ $item->uuid }}" />

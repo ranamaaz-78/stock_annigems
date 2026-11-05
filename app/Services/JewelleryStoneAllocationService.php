@@ -27,6 +27,11 @@ use Illuminate\Validation\ValidationException;
  */
 class JewelleryStoneAllocationService
 {
+    /**
+     * Code shown for a stone typed onto a piece instead of picked from the list.
+     */
+    public const MANUAL_CODE = 'MANUAL';
+
     public function __construct(
         private StoneStockService $stockService,
         private JewelleryWeightService $weightService,
@@ -76,6 +81,59 @@ class JewelleryStoneAllocationService
     }
 
     /**
+     * Replace the stones typed straight onto a piece (no stone list entry).
+     *
+     * These rows are a description only: they move no stock and carry no cost.
+     * They have no stable key, so the submitted set simply replaces the old
+     * one. Run before the catalog sync so the derived stone weight counts them.
+     *
+     * @param  list<array{name: string, shape?: ?string, size?: ?string, carat?: float|string|null, quantity: int}>  $rows
+     * @return bool Whether the typed-in stones differ from what was there
+     */
+    public function syncManual(JewelleryItem $item, array $rows): bool
+    {
+        $fresh = [];
+        foreach ($rows as $row) {
+            $name = trim((string) ($row['name'] ?? ''));
+            $qty = (int) ($row['quantity'] ?? 0);
+            if ($name === '' || $qty < 1) {
+                continue;
+            }
+            $carat = round((float) ($row['carat'] ?? 0), 3);
+            $shape = trim((string) ($row['shape'] ?? '')) ?: null;
+            $size = trim((string) ($row['size'] ?? '')) ?: null;
+
+            $fresh[] = [
+                'quantity' => $qty,
+                'stone_code_snapshot' => self::MANUAL_CODE,
+                'stone_name_snapshot' => $name,
+                'carat_snapshot' => number_format($carat, 3, '.', ''),
+                'stone_type_snapshot' => (string) $shape,
+                'shape_snapshot' => $shape,
+                'cut_snapshot' => $size,
+                'total_carat' => number_format($carat * $qty, 3, '.', ''),
+            ];
+        }
+
+        $existing = $item->itemStones()->whereNull('stone_id')->get();
+        $signature = fn (iterable $list): array => collect($list)->map(fn ($r): array => [
+            (string) $r['stone_name_snapshot'], (string) $r['shape_snapshot'], (string) $r['cut_snapshot'],
+            number_format((float) $r['carat_snapshot'], 3, '.', ''), (int) $r['quantity'],
+        ])->values()->all();
+
+        if ($signature($existing) === $signature($fresh)) {
+            return false;
+        }
+
+        $item->itemStones()->whereNull('stone_id')->delete();
+        foreach ($fresh as $row) {
+            JewelleryItemStone::query()->create($row + ['jewellery_item_id' => $item->id, 'stone_id' => null]);
+        }
+
+        return true;
+    }
+
+    /**
      * Apply delta between existing allocation and the submitted set.
      *
      * @param  list<array{uuid: string, quantity?: int, weight_grams?: float|string|null}>  $rows
@@ -83,7 +141,8 @@ class JewelleryStoneAllocationService
     public function syncOnUpdate(JewelleryItem $item, array $rows, User $actor): bool
     {
         $old = [];
-        foreach ($item->itemStones()->get() as $allocation) {
+        // Typed-in stones (no stone_id) are handled by syncManual, never as stock.
+        foreach ($item->itemStones()->whereNotNull('stone_id')->get() as $allocation) {
             $stone = Stone::query()->withoutGlobalScopes()->find($allocation->stone_id);
             if ($stone) {
                 $old[(string) $stone->uuid] = [
@@ -305,14 +364,17 @@ class JewelleryStoneAllocationService
         // Stone totals only — never overwrite typed metal/net weight. A
         // per-carat row holds the carats used: they count as carat, not grams.
         $weights = $this->weightService->derive($item->itemStones->map(
-            fn (JewelleryItemStone $row): array => $row->pricing_mode === StonePricingMode::PER_CARAT
-                ? ['carat' => (float) $row->weight_grams, 'quantity' => 1, 'grams' => 0.0]
-                : [
+            fn (JewelleryItemStone $row): array => match (true) {
+                // A typed-in stone has no lot: its own carat counts, per stone.
+                $row->stone_id === null => ['carat' => (float) $row->carat_snapshot, 'quantity' => (int) $row->quantity, 'grams' => 0.0],
+                $row->pricing_mode === StonePricingMode::PER_CARAT => ['carat' => (float) $row->weight_grams, 'quantity' => 1, 'grams' => 0.0],
+                default => [
                     // A piece or gram lot's carat is a description: it adds nothing to the weight.
                     'carat' => 0.0,
                     'quantity' => (int) $row->quantity,
                     'grams' => (float) $row->weight_grams,
-                ]
+                ],
+            }
         )->all());
 
         if ((float) $weights['stone_weight_grams'] > (float) $item->gross_weight + 0.0005) {

@@ -82,6 +82,36 @@ export function bindJewelleryItemForm() {
     /** @type {Map<string, {stone: object, quantity: number, grams: number, committed: number}>} */
     const rows = new Map();
 
+    // Stones typed straight onto the piece (not in the stone list). Description only.
+    const manualBody = root.querySelector('[data-manual-rows]');
+    /** @type {{name: string, shape: string, size: string, carat: string, quantity: string}[]} */
+    let manual = [];
+
+    function blankManualRow() {
+        return { name: '', shape: '', size: '', carat: '', quantity: '1' };
+    }
+
+    /**
+     * Whether anything was typed in a row (the default quantity of 1 does not count).
+     *
+     * @param {{name: string, shape: string, size: string, carat: string}} row
+     * @returns {boolean}
+     */
+    function isManualRowUsed(row) {
+        return [row.name, row.shape, row.size, row.carat].some((value) => String(value ?? '').trim() !== '');
+    }
+    try {
+        manual = (JSON.parse(root.dataset.manual || '[]') || []).map((row) => ({
+            name: String(row.name ?? ''),
+            shape: String(row.shape ?? ''),
+            size: String(row.size ?? ''),
+            carat: String(row.carat ?? ''),
+            quantity: String(row.quantity ?? '1'),
+        }));
+    } catch (error) {
+        manual = [];
+    }
+
     let scannerConfig = {};
     try {
         scannerConfig = JSON.parse(root.dataset.scanner || '{}');
@@ -167,7 +197,11 @@ export function bindJewelleryItemForm() {
                 weighed += Number(row.grams || 0);
                 return;
             }
-            carat += Number(row.stone.carat || 0) * Number(row.quantity || 0);
+            // A piece lot's carat is a description only: it adds nothing to the weight.
+        });
+        // A stone typed onto the piece counts by its own carat, per stone.
+        manual.forEach((row) => {
+            carat += Number(row.carat || 0) * Number(row.quantity || 0);
         });
         carat = Math.round(carat * 1000) / 1000;
         const grams = Math.round((carat * gramsPerCarat + weighed) * 1000) / 1000;
@@ -179,6 +213,7 @@ export function bindJewelleryItemForm() {
         }
         const impossible = grams > gross + 0.0005 && gross > 0;
         warn?.classList.toggle('is-hidden', !impossible);
+        updateTabCounts();
     }
 
     /**
@@ -289,7 +324,7 @@ export function bindJewelleryItemForm() {
                 </td>
                 <td class="table-admin__num">${gram ? `${max} g` : `${max} pcs`}</td>
                 ${costCells}
-                <td class="table-admin__num"><button type="button" class="form-link text-body-sm" data-remove="${row.stone.uuid}">${t('Remove')}</button></td>
+                <td class="table-admin__num"><button type="button" class="stone-alloc__remove" data-remove="${row.stone.uuid}" title="${t('Remove')}" aria-label="${t('Remove')}"><span class="material-symbols-outlined icon icon--sm">close</span></button></td>
             `;
             rowsBody.appendChild(tr);
             if (fieldsWrap) {
@@ -312,6 +347,101 @@ export function bindJewelleryItemForm() {
         }
         updateWeights();
     }
+
+    /**
+     * Draw the typed-in stone rows. Inputs post as manual_stones[i][...] with the
+     * form; they are redrawn only on add/remove so typing keeps focus.
+     */
+    function renderManual() {
+        if (!manualBody) {
+            return;
+        }
+        // One row is always ready to fill in; an untouched one is not saved.
+        if (!manual.length) {
+            manual.push(blankManualRow());
+        }
+        manualBody.innerHTML = '';
+        manual.forEach((row, i) => {
+            const required = isManualRowUsed(row) ? 'required' : '';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" class="input-field" name="manual_stones[${i}][name]" value="${escapeHtml(row.name)}" maxlength="150" ${required} data-manual-field="name" aria-label="${t('Stone name')}"></td>
+                <td><input type="text" class="input-field" name="manual_stones[${i}][shape]" value="${escapeHtml(row.shape)}" maxlength="60" data-manual-field="shape" aria-label="${t('Shape')}"></td>
+                <td><input type="text" class="input-field" name="manual_stones[${i}][size]" value="${escapeHtml(row.size)}" maxlength="40" placeholder="4x6" data-manual-field="size" aria-label="${t('Size')}"></td>
+                <td><input type="number" class="input-field" name="manual_stones[${i}][carat]" value="${escapeHtml(row.carat)}" min="0.001" step="0.001" data-manual-field="carat" aria-label="${t('Carat (each)')}"></td>
+                <td><input type="number" class="input-field" name="manual_stones[${i}][quantity]" value="${escapeHtml(row.quantity)}" min="1" step="1" ${required} data-manual-field="quantity" aria-label="${t('Quantity')}"></td>
+                <td class="table-admin__num"><button type="button" class="stone-alloc__remove" data-manual-remove="${i}" title="${t('Remove')}" aria-label="${t('Remove')}"><span class="material-symbols-outlined icon icon--sm">close</span></button></td>
+            `;
+            manualBody.appendChild(tr);
+        });
+        updateWeights();
+    }
+
+    /**
+     * Switch between the listed-stones tab and the typed-in tab. Both panels stay
+     * in the form, so what is typed in the hidden one is still saved.
+     *
+     * @param {string} name
+     */
+    function showStoneTab(name) {
+        root.querySelectorAll('[data-stone-tab]').forEach((tab) => {
+            const active = tab.dataset.stoneTab === name;
+            tab.classList.toggle('report-tabs__tab--active', active);
+            tab.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+        root.querySelectorAll('[data-stone-panel]').forEach((panel) => {
+            panel.hidden = panel.dataset.stonePanel !== name;
+        });
+    }
+
+    root.querySelectorAll('[data-stone-tab]').forEach((tab) => {
+        tab.addEventListener('click', () => showStoneTab(tab.dataset.stoneTab));
+    });
+    // A blank required field in the hidden tab would block the save unseen: open it.
+    manualBody?.addEventListener('invalid', () => showStoneTab('manual'), true);
+    // Open on the typed-in tab when that is all the piece has (or a save failed on it).
+    if (manual.some(isManualRowUsed) && !rows.size) {
+        showStoneTab('manual');
+    }
+
+    /**
+     * Show how many rows each tab holds.
+     */
+    function updateTabCounts() {
+        const listed = root.querySelector('[data-tab-count="listed"]');
+        const typed = root.querySelector('[data-tab-count="manual"]');
+        if (listed) listed.textContent = rows.size ? String(rows.size) : '';
+        const typedCount = manual.filter(isManualRowUsed).length;
+        if (typed) typed.textContent = typedCount ? String(typedCount) : '';
+    }
+
+    manualBody?.addEventListener('input', (event) => {
+        const field = event.target.closest('[data-manual-field]');
+        const index = Number(field?.closest('tr') ? [...manualBody.children].indexOf(field.closest('tr')) : -1);
+        if (!field || index < 0) {
+            return;
+        }
+        manual[index][field.dataset.manualField] = field.value;
+        // A row someone has started needs a name and a quantity; an untouched one needs nothing.
+        const used = isManualRowUsed(manual[index]);
+        const tr = field.closest('tr');
+        tr.querySelector('[data-manual-field="name"]').required = used;
+        tr.querySelector('[data-manual-field="quantity"]').required = used;
+        updateWeights();
+    });
+    manualBody?.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-manual-remove]');
+        if (!button) {
+            return;
+        }
+        manual.splice(Number(button.dataset.manualRemove), 1);
+        renderManual();
+    });
+    root.querySelector('[data-manual-add]')?.addEventListener('click', () => {
+        manual.push(blankManualRow());
+        renderManual();
+        manualBody?.lastElementChild?.querySelector('input')?.focus();
+    });
 
     /**
      * Add or increment a stone row.
@@ -515,7 +645,11 @@ export function bindJewelleryItemForm() {
 
     form?.addEventListener('submit', (event) => {
         renderRows();
+        // The spare row nobody filled in is not part of the piece: keep it out of the post.
+        const spare = [...(manualBody?.children || [])].filter((tr, i) => manual[i] && !isManualRowUsed(manual[i]));
+        spare.forEach((tr) => tr.querySelectorAll('input').forEach((input) => { input.disabled = true; }));
         if (!validateMetalWeight()) {
+            spare.forEach((tr) => tr.querySelectorAll('input').forEach((input) => { input.disabled = false; }));
             event.preventDefault();
             event.stopPropagation();
             const controller = form._loadingController;
@@ -528,6 +662,7 @@ export function bindJewelleryItemForm() {
     loadSubs();
     loadPurities();
     renderRows();
+    renderManual();
 }
 
 /**

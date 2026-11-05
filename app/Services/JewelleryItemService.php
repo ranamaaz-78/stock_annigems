@@ -73,11 +73,11 @@ class JewelleryItemService
      * @param  list<array{uuid: string, quantity: int}>  $stones
      * @param  list<UploadedFile>  $images
      */
-    public function create(array $data, array $stones, array $images, User $actor): JewelleryItem
+    public function create(array $data, array $stones, array $images, User $actor, array $manualStones = []): JewelleryItem
     {
         $this->assertRelationships($data);
 
-        return DB::transaction(function () use ($data, $stones, $images, $actor) {
+        return DB::transaction(function () use ($data, $stones, $images, $actor, $manualStones) {
             $code = $this->codeSequenceService->nextJewelleryCode();
             $emptyWeights = $this->weightService->derive([]);
 
@@ -101,6 +101,8 @@ class JewelleryItemService
                 'status' => $data['status'],
             ]);
 
+            // Typed-in stones first, so the stone weight the allocation derives counts them.
+            $this->allocationService->syncManual($item, $manualStones);
             $this->allocationService->allocateOnCreate($item, $stones, $actor);
             $this->imageService->sync($item, $images, [], null);
 
@@ -118,13 +120,13 @@ class JewelleryItemService
      * @param  list<array{uuid: string, quantity: int}>  $stones
      * @param  list<UploadedFile>  $images
      */
-    public function update(JewelleryItem $item, array $data, array $stones, array $images, User $actor, ?int $primaryImageId = null): JewelleryItem
+    public function update(JewelleryItem $item, array $data, array $stones, array $images, User $actor, ?int $primaryImageId = null, array $manualStones = []): JewelleryItem
     {
         $this->assertRelationships($data);
         $old = $this->auditPayload($item);
         $oldStatus = $item->status;
 
-        return DB::transaction(function () use ($item, $data, $stones, $images, $actor, $old, $oldStatus, $primaryImageId) {
+        return DB::transaction(function () use ($item, $data, $stones, $images, $actor, $old, $oldStatus, $primaryImageId, $manualStones) {
             $item->fill([
                 'category_id' => $data['category_id'],
                 'sub_category_id' => $data['sub_category_id'] ?? null,
@@ -138,7 +140,8 @@ class JewelleryItemService
             ]);
             $item->save();
 
-            $stonesChanged = $this->allocationService->syncOnUpdate($item->fresh(), $stones, $actor);
+            $manualChanged = $this->allocationService->syncManual($item->fresh(), $manualStones);
+            $stonesChanged = $this->allocationService->syncOnUpdate($item->fresh(), $stones, $actor) || $manualChanged;
 
             $this->imageService->sync($item->fresh(), $images, [], $primaryImageId);
 

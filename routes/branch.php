@@ -9,6 +9,7 @@ use App\Http\Controllers\Branch\GoldRateController;
 use App\Http\Controllers\Branch\InvoiceController;
 use App\Http\Controllers\Branch\JewelleryImageController;
 use App\Http\Controllers\Branch\JewelleryItemController;
+use App\Http\Controllers\Branch\JewelleryCertificateController;
 use App\Http\Controllers\Branch\JewelleryLabelController;
 use App\Http\Controllers\Branch\MetalTypeController;
 use App\Http\Controllers\Branch\ProfileController;
@@ -148,6 +149,7 @@ Route::middleware(['auth', 'password.changed', 'branch.context', 'branch.member'
             ->whereIn('kind', ['barcode', 'qr', 'both'])
             ->name('jewellery-items.label');
         Route::get('/jewellery-items/{jewelleryItem}/label', [JewelleryLabelController::class, 'legacy']);
+        Route::get('/jewellery-items/{jewelleryItem}/certificate', [JewelleryCertificateController::class, 'show'])->name('jewellery-items.certificate');
         Route::get('/jewellery-items/{jewelleryItem}/images/{image}', [JewelleryImageController::class, 'show'])->name('jewellery-items.images.show');
         Route::delete('/jewellery-items/{jewelleryItem}/images/{image}', [JewelleryImageController::class, 'destroy'])->name('jewellery-items.images.destroy');
 

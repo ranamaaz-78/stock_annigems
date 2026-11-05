@@ -327,4 +327,9 @@ return [
     'carats' => 'quilates',
     'Carats for :name' => 'Quilates de :name',
     'Tray' => 'Bandeja',
+    'Stone name' => 'Nombre de la piedra',
+    'Shape' => 'Forma',
+    'Size' => 'Tamaño',
+    'Carat (each)' => 'Quilates (cada una)',
+    'Quantity' => 'Cantidad',
 ];
