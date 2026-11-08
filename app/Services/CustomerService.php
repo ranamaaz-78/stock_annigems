@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Customer;
 use App\Models\Invoice;
+use App\Models\Performa;
 use App\Models\Quotation;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -333,7 +334,8 @@ class CustomerService
     public function hasHistory(Customer $customer): bool
     {
         return Quotation::query()->where('customer_id', $customer->id)->exists()
-            || Invoice::query()->where('customer_id', $customer->id)->exists();
+            || Invoice::query()->where('customer_id', $customer->id)->exists()
+            || Performa::query()->withoutGlobalScopes()->where('customer_id', $customer->id)->exists();
     }
 
     /**
@@ -368,6 +370,21 @@ class CustomerService
             ->with(['branch:id,name', 'creator'])
             ->where('customer_id', $customer->id)
             ->orderByDesc('invoice_date')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Performas issued to the customer at the current branch (performas are
+     * branch-scoped, so another branch's are neither listed nor linkable).
+     */
+    public function performaHistory(Customer $customer, int $limit = 50): Collection
+    {
+        return Performa::query()
+            ->with('items')
+            ->where('customer_id', $customer->id)
+            ->orderByDesc('performa_date')
+            ->orderByDesc('id')
             ->limit($limit)
             ->get();
     }

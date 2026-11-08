@@ -3,14 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\Branch;
-use App\Models\Creditor;
 use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * NIE / NIF on customers and creditors: optional, stored upper-case, shown on the detail page.
+ * NIE / NIF on customers: optional, stored upper-case, shown on the detail page.
  */
 class NieFieldTest extends TestCase
 {
@@ -45,22 +44,7 @@ class NieFieldTest extends TestCase
         $this->assertNull($customer->fresh()->nie);
     }
 
-    public function test_creditor_nie_is_optional_and_stored(): void
-    {
-        $admin = $this->admin();
-
-        $this->actingAs($admin)->post(route('branch.creditors.store'), ['name' => 'Luna SL', 'phone' => '03002220001'])->assertRedirect();
-        $this->assertNull(Creditor::query()->where('phone', '03002220001')->firstOrFail()->nie);
-
-        $this->actingAs($admin)->post(route('branch.creditors.store'), ['name' => 'Sol SL', 'phone' => '03002220002', 'nie' => 'b12345678'])->assertRedirect();
-        $creditor = Creditor::query()->where('phone', '03002220002')->firstOrFail();
-        $this->assertSame('B12345678', $creditor->nie);
-
-        $this->actingAs($admin)->get(route('branch.creditors.show', $creditor))->assertOk()->assertSee('B12345678');
-        $this->actingAs($admin)->post(route('branch.creditors.store'), ['name' => 'Bad', 'phone' => '03002220003', 'nie' => '<script>'])->assertSessionHasErrors('nie');
-    }
-
-    public function test_pos_has_the_field_and_saves_it_with_a_new_customer_or_creditor(): void
+    public function test_pos_has_the_field_and_saves_it_with_a_new_customer(): void
     {
         $this->seed(\Database\Seeders\MetalPuritySeeder::class);
         $admin = $this->admin();
@@ -96,7 +80,7 @@ class NieFieldTest extends TestCase
         $this->assertSame('Y7654321X', $pablo->nie);
         $this->assertSame('Calle Sol 5, Madrid', $pablo->address);
 
-        // A new creditor from the POS performa too.
+        // A new customer from the POS performa too.
         $this->actingAs($admin)->postJson(route('branch.performas.store'), [
             'walkin_name' => 'Joyas Sol',
             'walkin_phone' => '03005550002',
@@ -105,15 +89,16 @@ class NieFieldTest extends TestCase
             'performa_date' => now()->toDateString(),
             'lines' => $line($make()),
         ])->assertOk();
-        $sol = Creditor::query()->where('phone', '03005550002')->firstOrFail();
+        $sol = Customer::query()->where('phone', '03005550002')->firstOrFail();
         $this->assertSame('B87654321', $sol->nie);
         $this->assertSame('Plaza Luna 2, Sevilla', $sol->address);
 
         // The registries the phone field searches carry the NIE, so picking someone fills it.
-        $this->actingAs($admin)->getJson(route('branch.customers.search', ['catalog' => 1]))
-            ->assertOk()->assertJsonPath('data.customers.0.nie', 'Y7654321X')->assertJsonPath('data.customers.0.address', 'Calle Sol 5, Madrid');
-        $this->actingAs($admin)->getJson(route('branch.creditors.search', ['catalog' => 1]))
-            ->assertOk()->assertJsonPath('data.creditors.0.nie', 'B87654321')->assertJsonPath('data.creditors.0.address', 'Plaza Luna 2, Sevilla');
+        $registry = collect($this->actingAs($admin)->getJson(route('branch.customers.search', ['catalog' => 1]))
+            ->assertOk()->json('data.customers'))->keyBy('phone');
+        $this->assertSame('Y7654321X', $registry['03005550001']['nie']);
+        $this->assertSame('Calle Sol 5, Madrid', $registry['03005550001']['address']);
+        $this->assertSame('B87654321', $registry['03005550002']['nie']);
 
         // A malformed one is refused rather than saved.
         $this->actingAs($admin)->postJson(route('branch.quotations.store'), [

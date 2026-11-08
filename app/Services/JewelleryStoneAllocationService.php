@@ -198,8 +198,8 @@ class JewelleryStoneAllocationService
     }
 
     /**
-     * Apply quantity deltas, then refresh stone carat/gram totals only.
-     * Typed metal weight (net_weight) is left untouched.
+     * Apply quantity deltas, then refresh stone carat/gram totals and gross
+     * weight (net + stone grams). Typed metal weight (net_weight) is left untouched.
      *
      * @param  array<string, array{quantity: int, weight_grams: float}>  $oldByUuid
      * @param  list<array{uuid: string, quantity: int, weight_grams: float}>  $newRows
@@ -377,11 +377,11 @@ class JewelleryStoneAllocationService
             }
         )->all());
 
-        if ((float) $weights['stone_weight_grams'] > (float) $item->gross_weight + 0.0005) {
-            throw ValidationException::withMessages([
-                'gross_weight' => __('Stone weight in grams cannot exceed gross weight. That is physically impossible — check carat or gross weight.'),
-            ]);
-        }
+        // Gross is never typed: it is the typed metal grams plus the stone grams.
+        $weights['gross_weight'] = number_format(
+            round((float) $item->net_weight + (float) $weights['stone_weight_grams'], 3),
+            3, '.', ''
+        );
 
         $item->fill($weights);
         $item->save();

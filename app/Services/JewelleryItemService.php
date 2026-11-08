@@ -22,7 +22,8 @@ use Illuminate\Validation\ValidationException;
  *
  * Create, update, status change, and soft-delete of individual jewellery
  * pieces. Stone stock, stone totals, codes, and QR tokens are never taken
- * from HTTP input. Typed metal_weight is persisted as net_weight.
+ * from HTTP input. Typed metal_weight is persisted as net_weight; gross
+ * weight is always net_weight + stone grams.
  */
 class JewelleryItemService
 {
@@ -93,7 +94,8 @@ class JewelleryItemService
                 'name' => trim((string) $data['name']),
                 'metal_type_id' => $data['metal_type_id'],
                 'purity_id' => $data['purity_id'],
-                'gross_weight' => $data['gross_weight'],
+                // Metal only for now; the stone allocation below adds the stone grams.
+                'gross_weight' => $this->formatMetalWeight($data['metal_weight']),
                 'stone_weight_carat' => $emptyWeights['stone_weight_carat'],
                 'stone_weight_grams' => $emptyWeights['stone_weight_grams'],
                 'net_weight' => $this->formatMetalWeight($data['metal_weight']),
@@ -133,7 +135,7 @@ class JewelleryItemService
                 'name' => trim((string) $data['name']),
                 'metal_type_id' => $data['metal_type_id'],
                 'purity_id' => $data['purity_id'],
-                'gross_weight' => $data['gross_weight'],
+                // Gross is re-derived (metal + stone grams) by the stone sync below.
                 'net_weight' => $this->formatMetalWeight($data['metal_weight']),
                 'description' => $data['description'] ?? null,
                 'status' => $data['status'],

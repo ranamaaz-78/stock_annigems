@@ -197,20 +197,6 @@ return [
                     'enabled' => true,
                 ],
                 [
-                    'label' => 'Customers',
-                    'route' => 'branch.customers.index',
-                    'icon' => 'group',
-                    'permission' => 'customers.view',
-                    'enabled' => true,
-                ],
-            ],
-        ],
-        [
-            'id' => 'credit',
-            'label' => 'Performas',
-            'icon' => 'assignment',
-            'children' => [
-                [
                     'label' => 'Performas',
                     'route' => 'branch.performas.index',
                     'icon' => 'assignment',
@@ -218,10 +204,10 @@ return [
                     'enabled' => true,
                 ],
                 [
-                    'label' => 'Creditors',
-                    'route' => 'branch.creditors.index',
-                    'icon' => 'handshake',
-                    'permission' => 'creditors.view',
+                    'label' => 'Customers',
+                    'route' => 'branch.customers.index',
+                    'icon' => 'group',
+                    'permission' => 'customers.view',
                     'enabled' => true,
                 ],
             ],

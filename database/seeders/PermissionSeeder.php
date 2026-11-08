@@ -91,11 +91,6 @@ class PermissionSeeder extends Seeder
             ['module' => 'performas', 'name' => 'performas.return', 'display_name' => 'Return Unpaid Performa Goods'],
 
             // Customers
-            ['module' => 'creditors', 'name' => 'creditors.view', 'display_name' => 'View Creditors'],
-            ['module' => 'creditors', 'name' => 'creditors.create', 'display_name' => 'Create Creditors'],
-            ['module' => 'creditors', 'name' => 'creditors.edit', 'display_name' => 'Edit Creditors'],
-            ['module' => 'creditors', 'name' => 'creditors.deactivate', 'display_name' => 'Deactivate Creditors'],
-
             ['module' => 'customers', 'name' => 'customers.view', 'display_name' => 'View Customers'],
             ['module' => 'customers', 'name' => 'customers.create', 'display_name' => 'Create Customers'],
             ['module' => 'customers', 'name' => 'customers.edit', 'display_name' => 'Edit Customers'],
@@ -107,7 +102,6 @@ class PermissionSeeder extends Seeder
             ['module' => 'performas', 'name' => 'performas.delete', 'display_name' => 'Delete Performas', 'description' => 'Unpaid goods return to stock'],
             ['module' => 'delivery_notes', 'name' => 'delivery_notes.delete', 'display_name' => 'Delete Delivery Notes', 'description' => 'Open notes return their goods to stock'],
             ['module' => 'customers', 'name' => 'customers.delete', 'display_name' => 'Delete Customers'],
-            ['module' => 'creditors', 'name' => 'creditors.delete', 'display_name' => 'Delete Creditors'],
             ['module' => 'trash', 'name' => 'trash.view', 'display_name' => 'View and Restore Trash'],
 
             // Repairs

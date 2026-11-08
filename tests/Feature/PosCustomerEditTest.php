@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Branch;
-use App\Models\Creditor;
 use App\Models\Customer;
 use App\Models\Quotation;
 use App\Models\Stone;
@@ -12,7 +11,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * A customer or creditor loaded into the POS can be corrected there: name,
+ * A customer loaded into the POS can be corrected there: name,
  * email, NIE and address are saved to their record with the ticket. The phone
  * number is the identity and never changes this way.
  */
@@ -134,23 +133,23 @@ class PosCustomerEditTest extends TestCase
         $this->assertSame('By Cashier', $customer->fresh()->name);
     }
 
-    public function test_changes_to_a_loaded_creditor_are_saved_on_a_performa(): void
+    public function test_changes_to_a_loaded_customer_are_saved_on_a_performa(): void
     {
         $stone = $this->stone();
-        $creditor = Creditor::factory()->create(['branch_id' => $this->admin->branch_id, 'name' => 'Old Creditor', 'address' => null]);
+        $customer = Customer::factory()->create(['name' => 'Old Customer', 'address' => null]);
 
         $this->actingAs($this->admin)->postJson(route('branch.performas.store'), [
-            'creditor_uuid' => $creditor->uuid,
+            'customer_uuid' => $customer->uuid,
             'update_customer' => true,
-            'walkin_name' => 'Renamed Creditor',
+            'walkin_name' => 'Renamed Customer',
             'walkin_nie' => 'b12345678',
             'walkin_address' => 'Gran Via 1',
             'performa_date' => now()->toDateString(),
             'lines' => [['line_type' => 'loose_stone', 'stone_id' => $stone->id, 'quantity' => 2]],
         ])->assertOk();
 
-        $fresh = $creditor->fresh();
-        $this->assertSame('Renamed Creditor', $fresh->name);
+        $fresh = $customer->fresh();
+        $this->assertSame('Renamed Customer', $fresh->name);
         $this->assertSame('B12345678', $fresh->nie);
         $this->assertSame('Gran Via 1', $fresh->address);
     }

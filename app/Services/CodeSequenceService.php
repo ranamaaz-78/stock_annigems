@@ -124,14 +124,6 @@ class CodeSequenceService
     }
 
     /**
-     * Next creditor code, e.g. CRD-000125.
-     */
-    public function nextCreditorCode(): string
-    {
-        return $this->next('creditor');
-    }
-
-    /**
      * Lock the sequence row, increment, and format.
      *
      * Prefix and padding come from settings so a SuperAdmin rename does

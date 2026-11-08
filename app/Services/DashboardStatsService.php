@@ -294,7 +294,7 @@ class DashboardStatsService
         $performas = $user->hasPermission('performas.view');
         $notes = $user->hasPermission('delivery_notes.view');
         if ($performas || $notes) {
-            $onCredit = $performas ? (float) $this->credit->outstandingByCreditor($branchId)->sum('outstanding') : 0.0;
+            $onCredit = $performas ? (float) $this->credit->outstandingByCustomer($branchId)->sum('outstanding') : 0.0;
             $uninvoiced = $notes ? $this->credit->uninvoicedNotes($branchId, 1000) : collect();
 
             $dashboard['secondary_cards'][] = $this->card(

@@ -6,7 +6,7 @@ use App\Enums\JewelleryItemStatus;
 use App\Enums\StoneMovementType;
 use App\Models\Branch;
 use App\Models\Category;
-use App\Models\Creditor;
+use App\Models\Customer;
 use App\Models\DeliveryNote;
 use App\Models\Invoice;
 use App\Models\JewelleryItem;
@@ -155,11 +155,11 @@ class DeleteTest extends TestCase
         $quoted = $this->pieceLot();
         $outOnCredit = $this->gramLot();
         $delivered = $this->caratLot();
-        $creditor = Creditor::factory()->create(['branch_id' => $this->admin->branch_id]);
+        $customer = Customer::factory()->create();
 
         $this->actingAs($this->admin)->postJson(route('branch.quotations.store'), $this->ticket([$this->line($quoted, 2)]))->assertOk();
         $this->actingAs($this->admin)->postJson(route('branch.performas.store'), [
-            'creditor_uuid' => $creditor->uuid,
+            'customer_uuid' => $customer->uuid,
             'performa_date' => now()->toDateString(),
             'lines' => [$this->line($outOnCredit, 4)],
         ])->assertOk();

@@ -8,7 +8,6 @@ use App\Enums\LineType;
 use App\Enums\MakingChargeType;
 use App\Enums\PerformaStatus;
 use App\Enums\StoneMovementType;
-use App\Models\Creditor;
 use App\Models\JewelleryItem;
 use App\Models\Performa;
 use App\Models\PerformaItem;
@@ -20,7 +19,6 @@ use App\Support\Settings\DocumentSettings;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -40,7 +38,7 @@ class PerformaService
         private AuditLogService $auditLog,
         private GoldRateRepository $goldRateRepository,
         private PricingCalculationService $pricing,
-        private CreditorService $creditorService,
+        private QuotationService $quotationService,
     ) {}
 
     /**
@@ -51,7 +49,7 @@ class PerformaService
     public function paginate(array $filters): LengthAwarePaginator
     {
         $query = Performa::query()
-            ->with(['creditor', 'creator', 'items'])
+            ->with(['customer', 'creator', 'items'])
             ->withCount('items')
             ->orderByDesc('performa_date')
             ->orderByDesc('id');
@@ -72,7 +70,7 @@ class PerformaService
             $term = trim((string) $filters['search']);
             $query->where(function (Builder $q) use ($term): void {
                 $q->where('performa_number', 'like', "%{$term}%")
-                    ->orWhereHas('creditor', fn (Builder $c) => $c->where('name', 'like', "%{$term}%")->orWhere('phone', 'like', "%{$term}%"));
+                    ->orWhereHas('customer', fn (Builder $c) => $c->where('name', 'like', "%{$term}%")->orWhere('phone', 'like', "%{$term}%"));
             });
         }
 
@@ -85,7 +83,7 @@ class PerformaService
     public function loadDetail(Performa $performa): Performa
     {
         return $performa->load([
-            'creditor',
+            'customer',
             'branch',
             'creator',
             'updater',
@@ -100,7 +98,7 @@ class PerformaService
     }
 
     /**
-     * Issue a performa: attach creditor, lock stock, write lines, deduct now.
+     * Issue a performa: attach customer, lock stock, write lines, deduct now.
      *
      * @param  array<string, mixed>  $data
      */
@@ -116,17 +114,17 @@ class PerformaService
         return DB::transaction(function () use ($data, $lines, $terms, $actor): Performa {
             $this->assertLinesAvailable($lines, $actor);
 
-            $creditorId = $this->resolveCreditorId($data, $actor);
-            if ($creditorId === null) {
+            $customerId = $this->resolveCustomerId($data, $actor);
+            if ($customerId === null) {
                 throw ValidationException::withMessages([
-                    'creditor_uuid' => __('Select a creditor. Register them under Creditors first.'),
+                    'customer_uuid' => __('Select a customer or enter a name and phone.'),
                 ]);
             }
 
             $performa = Performa::query()->create([
                 'branch_id' => $actor->branch_id,
                 'performa_number' => $this->codeSequence->nextPerformaNumber(),
-                'creditor_id' => $creditorId,
+                'customer_id' => $customerId,
                 'performa_date' => $data['performa_date'] ?? now()->toDateString(),
                 'status' => PerformaStatus::OPEN,
                 'notes' => $data['notes'] ?? null,
@@ -141,7 +139,7 @@ class PerformaService
 
             $this->auditLog->log('performa.issued', $performa, null, [
                 'performa_number' => $performa->performa_number,
-                'creditor_id' => $creditorId,
+                'customer_id' => $customerId,
                 'lines' => count($lines),
             ], $actor);
 
@@ -207,7 +205,7 @@ class PerformaService
      *
      * Lines nobody has paid for or returned are taken back into stock and
      * replaced by the lines sent; lines that already have a settlement or a
-     * return are kept as they are (and the creditor stays). Stock only moves
+     * return are kept as they are (and the customer stays). Stock only moves
      * for what really changed hands.
      *
      * @param  array<string, mixed>  $data
@@ -232,11 +230,11 @@ class PerformaService
 
             $kept = $performa->items->filter(fn (PerformaItem $item): bool => $this->isTouched($item));
 
-            // A performa with payments or returns keeps its creditor.
-            $creditorId = $kept->isNotEmpty() ? (int) $performa->creditor_id : $this->resolveCreditorId($data, $actor);
-            if ($creditorId === null) {
+            // A performa with payments or returns keeps its customer.
+            $customerId = $kept->isNotEmpty() ? (int) $performa->customer_id : $this->resolveCustomerId($data, $actor);
+            if ($customerId === null) {
                 throw ValidationException::withMessages([
-                    'creditor_uuid' => __('Select a creditor. Register them under Creditors first.'),
+                    'customer_uuid' => __('Select a customer or enter a name and phone.'),
                 ]);
             }
 
@@ -263,7 +261,7 @@ class PerformaService
             }
 
             $performa->update([
-                'creditor_id' => $creditorId,
+                'customer_id' => $customerId,
                 'performa_date' => $data['performa_date'] ?? $performa->performa_date,
                 'notes' => $data['notes'] ?? null,
             ] + $terms);
@@ -325,7 +323,7 @@ class PerformaService
             }
         }
 
-        $creditor = $performa->creditor;
+        $customer = $performa->customer;
 
         return [
             'uuid' => $performa->uuid,
@@ -342,15 +340,15 @@ class PerformaService
                 'iva_uuid' => $performa->tax_name ? TaxRate::query()->ofKind(TaxRate::KIND_IVA)->where('name', $performa->tax_name)->value('uuid') : null,
                 'recargo_uuid' => $performa->recargo_name ? TaxRate::query()->ofKind(TaxRate::KIND_RECARGO)->where('name', $performa->recargo_name)->value('uuid') : null,
             ],
-            'creditor_locked' => $locked !== [],
-            'creditor' => $creditor ? [
-                'uuid' => $creditor->uuid,
-                'customer_code' => $creditor->creditor_code,
-                'name' => $creditor->name,
-                'phone' => $creditor->phone,
-                'email' => $creditor->email,
-                'nie' => $creditor->nie,
-                'address' => $creditor->address,
+            'customer_locked' => $locked !== [],
+            'customer' => $customer ? [
+                'uuid' => $customer->uuid,
+                'customer_code' => $customer->customer_code,
+                'name' => $customer->name,
+                'phone' => $customer->phone,
+                'email' => $customer->email,
+                'nie' => $customer->nie,
+                'address' => $customer->address,
             ] : null,
             'locked' => $locked,
             'lines' => $lines,
@@ -470,8 +468,8 @@ class PerformaService
     {
         return [
             'performa_date' => now()->toDateString(),
-            'creditor_uuid' => '',
-            'creditor' => null,
+            'customer_uuid' => '',
+            'customer' => null,
             'notes' => '',
             'lines' => [],
         ];
@@ -561,97 +559,15 @@ class PerformaService
     }
 
     /**
-     * Prefill the create payload when the user arrived from a creditor profile.
-     *
-     * @param  array<string, mixed>  $payload
-     * @return array<string, mixed>
-     */
-    public function withSelectedCreditor(array $payload, ?string $uuid): array
-    {
-        $uuid = trim((string) $uuid);
-        if ($uuid === '') {
-            return $payload;
-        }
-
-        $creditor = Creditor::query()->active()->where('uuid', $uuid)->first();
-        if (! $creditor) {
-            return $payload;
-        }
-
-        $payload['creditor_uuid'] = $creditor->uuid;
-        $payload['creditor'] = [
-            'uuid' => $creditor->uuid,
-            'name' => $creditor->name,
-            'phone' => $creditor->phone,
-            'creditor_code' => $creditor->creditor_code,
-        ];
-
-        return $payload;
-    }
-
-    /**
-     * Resolve a live creditor on the actor's branch. Inactive or foreign
-     * creditors are refused so a performa cannot attach a sales customer
-     * or a deactivated party.
+     * The customer the performa is issued to: the picked one, or the person
+     * the name and phone describe (registered as a customer, or reused by
+     * phone) — the same rule as quotations, invoices and delivery notes.
      *
      * @param  array<string, mixed>  $data
      */
-    public function resolveCreditorId(array $data, User $actor): ?int
+    public function resolveCustomerId(array $data, User $actor): ?int
     {
-        $uuid = trim((string) ($data['creditor_uuid'] ?? ''));
-
-        if ($uuid !== '') {
-            $creditor = Creditor::query()
-                ->active()
-                ->where('uuid', $uuid)
-                ->where('branch_id', $actor->branch_id)
-                ->first();
-
-            if ($creditor && ! empty($data['update_customer'])) {
-                $this->creditorService->syncFromTicket($creditor, $data, $actor);
-            }
-
-            return $creditor ? (int) $creditor->id : null;
-        }
-
-        return $this->creditorFromWalkin($data, $actor);
-    }
-
-    /**
-     * Someone the POS has not seen before becomes a creditor, so performas
-     * only ever hang off a registered creditor. A phone already on the
-     * branch's creditors is reused rather than registered twice.
-     *
-     * @param  array<string, mixed>  $data
-     */
-    private function creditorFromWalkin(array $data, User $actor): ?int
-    {
-        $phone = trim((string) ($data['walkin_phone'] ?? ''));
-        $name = trim((string) ($data['walkin_name'] ?? ''));
-
-        if ($phone === '' || $name === '') {
-            return null;
-        }
-
-        $existing = Creditor::query()
-            ->active()
-            ->where('branch_id', $actor->branch_id)
-            ->where('phone', $phone)
-            ->value('id');
-
-        if ($existing) {
-            return (int) $existing;
-        }
-
-        Gate::forUser($actor)->authorize('create', Creditor::class);
-
-        return (int) $this->creditorService->create([
-            'name' => $name,
-            'phone' => $phone,
-            'email' => trim((string) ($data['walkin_email'] ?? '')) ?: null,
-            'nie' => trim((string) ($data['walkin_nie'] ?? '')) ?: null,
-            'address' => trim((string) ($data['walkin_address'] ?? '')) ?: null,
-        ], $actor)->id;
+        return $this->quotationService->resolveCustomerId($data, $actor);
     }
 
     /**

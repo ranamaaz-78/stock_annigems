@@ -8,7 +8,7 @@ use App\Enums\LineType;
 use App\Enums\PerformaStatus;
 use App\Enums\StoneMovementType;
 use App\Models\Branch;
-use App\Models\Creditor;
+use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\JewelleryItem;
 use App\Models\Performa;
@@ -87,12 +87,11 @@ class PerformaTest extends TestCase
     }
 
     /**
-     * Active creditor on the actor's branch.
+     * Active customer (customers are global, not branch-scoped).
      */
-    private function creditor(User $admin, array $overrides = []): Creditor
+    private function customer(array $overrides = []): Customer
     {
-        return Creditor::factory()->create(array_merge([
-            'branch_id' => $admin->branch_id,
+        return Customer::factory()->create(array_merge([
             'name' => 'Credit Buyer',
             'phone' => '03009876543',
         ], $overrides));
@@ -103,7 +102,7 @@ class PerformaTest extends TestCase
      *
      * @return array<string, mixed>
      */
-    private function issuePayload(JewelleryItem $item, ?Stone $stone = null, int $stoneQty = 1, ?Creditor $creditor = null): array
+    private function issuePayload(JewelleryItem $item, ?Stone $stone = null, int $stoneQty = 1, ?Customer $customer = null): array
     {
         $lines = [[
             'line_type' => LineType::JEWELLERY_ITEM->value,
@@ -119,12 +118,10 @@ class PerformaTest extends TestCase
             ];
         }
 
-        $creditor ??= Creditor::factory()->create([
-            'branch_id' => $item->branch_id,
-        ]);
+        $customer ??= Customer::factory()->create();
 
         return [
-            'creditor_uuid' => $creditor->uuid,
+            'customer_uuid' => $customer->uuid,
             'performa_date' => now()->toDateString(),
             'lines' => $lines,
         ];
@@ -169,8 +166,9 @@ class PerformaTest extends TestCase
 
         $performa = Performa::query()->firstOrFail();
         $this->assertSame(PerformaStatus::OPEN, $performa->status);
-        $this->assertNotNull($performa->creditor_id);
-        $this->assertSame(0, \App\Models\Customer::query()->count());
+        // The performa belongs to the customer it was issued to.
+        $this->assertNotNull($performa->customer_id);
+        $this->assertSame(1, \App\Models\Customer::query()->whereKey($performa->customer_id)->count());
 
         $this->assertDatabaseHas('stone_stock_movements', [
             'stone_id' => $stone->id,
@@ -419,11 +417,11 @@ class PerformaTest extends TestCase
         $admin = $this->branchAdmin();
         $first = $this->jewellery($admin);
         $second = $this->jewellery($admin);
-        $creditor = $this->creditor($admin);
+        $customer = $this->customer();
 
         $this->actingAs($admin)
             ->postJson(route('branch.performas.store'), [
-                'creditor_uuid' => $creditor->uuid,
+                'customer_uuid' => $customer->uuid,
                 'performa_date' => now()->toDateString(),
                 'lines' => [
                     [
@@ -457,23 +455,23 @@ class PerformaTest extends TestCase
         $this->assertSame(PerformaStatus::OPEN, $performa->fresh()->status);
     }
 
-    public function test_creditor_uuid_attaches_an_existing_creditor(): void
+    public function test_customer_uuid_attaches_an_existing_customer(): void
     {
         $admin = $this->branchAdmin();
-        $creditor = $this->creditor($admin, [
-            'name' => 'Listed Creditor',
+        $customer = $this->customer([
+            'name' => 'Listed Customer',
             'phone' => '03001110000',
         ]);
         $item = $this->jewellery($admin);
 
         $this->actingAs($admin)
-            ->postJson(route('branch.performas.store'), $this->issuePayload($item, creditor: $creditor))
+            ->postJson(route('branch.performas.store'), $this->issuePayload($item, customer: $customer))
             ->assertOk();
 
-        $this->assertSame($creditor->id, Performa::query()->value('creditor_id'));
+        $this->assertSame($customer->id, Performa::query()->value('customer_id'));
     }
 
-    public function test_walk_in_details_become_a_creditor_never_a_sales_customer(): void
+    public function test_walk_in_details_become_a_customer(): void
     {
         $admin = $this->branchAdmin();
         $item = $this->jewellery($admin);
@@ -491,20 +489,22 @@ class PerformaTest extends TestCase
             ])
             ->assertOk();
 
-        $this->assertSame(1, Creditor::query()->where('phone', '03009876543')->count());
-        $this->assertSame(0, \App\Models\Customer::query()->count());
+        $customer = Customer::query()->where('phone', '03009876543')->sole();
+        $this->assertSame($customer->id, Performa::query()->value('customer_id'));
     }
 
-    public function test_issue_rejects_an_inactive_creditor(): void
+    public function test_issue_rejects_a_customer_in_the_trash(): void
     {
         $admin = $this->branchAdmin();
-        $creditor = $this->creditor($admin, ['status' => false]);
+        $customer = $this->customer();
+        $customer->delete();
         $item = $this->jewellery($admin);
 
         $this->actingAs($admin)
-            ->postJson(route('branch.performas.store'), $this->issuePayload($item, creditor: $creditor))
+            ->postJson(route('branch.performas.store'), $this->issuePayload($item, customer: $customer))
             ->assertStatus(422)
-            ->assertJsonValidationErrors(['creditor_uuid']);
+            ->assertJsonValidationErrors(['customer_uuid']);
+        $this->assertSame(JewelleryItemStatus::AVAILABLE, $item->fresh()->status);
     }
 
     /**
@@ -568,9 +568,9 @@ class PerformaTest extends TestCase
         // Cost users start a stone line at the lot's own price per piece.
         $stone->forceFill(['pricing_mode' => 'per_piece', 'price_per_piece' => '7.5'])->save();
         $item = $this->jewellery($admin);
-        $creditor = $this->creditor($admin);
+        $customer = $this->customer();
 
-        $payload = $this->issuePayload($item, $stone, 4, $creditor);
+        $payload = $this->issuePayload($item, $stone, 4, $customer);
 
         $this->actingAs($admin)->postJson(route('branch.performas.store'), $payload)->assertOk();
         $priced = \App\Models\Performa::query()->latest('id')->firstOrFail();
@@ -602,7 +602,7 @@ class PerformaTest extends TestCase
         $this->assertStringContainsString($performa->performa_number, $html);
     }
 
-    public function test_pos_issues_a_performa_to_a_new_person_who_is_saved_as_a_creditor(): void
+    public function test_pos_issues_a_performa_to_a_new_person_who_is_saved_as_a_customer(): void
     {
         $admin = $this->branchAdmin();
         $item = $this->jewellery($admin);
@@ -624,12 +624,12 @@ class PerformaTest extends TestCase
         ])->assertOk()->assertJsonPath('success', true);
 
         $performa = \App\Models\Performa::query()->latest('id')->firstOrFail();
-        $creditor = Creditor::query()->where('phone', '03005551234')->firstOrFail();
+        $customer = Customer::query()->where('phone', '03005551234')->firstOrFail();
 
-        $this->assertSame($creditor->id, $performa->creditor_id);
-        $this->assertSame('Lucia Ortega', $creditor->name);
-        $this->assertSame('lucia@example.com', $creditor->email);
-        $this->assertTrue((bool) $creditor->status);
+        $this->assertSame($customer->id, $performa->customer_id);
+        $this->assertSame('Lucia Ortega', $customer->name);
+        $this->assertSame('lucia@example.com', $customer->email);
+        $this->assertTrue((bool) $customer->status);
         $this->assertSame($performa->performa_number, $response->json('data.number'));
         $this->assertSame(route('branch.performas.print', $performa), $response->json('data.print_url'));
         $this->assertSame(JewelleryItemStatus::ON_MEMO, $item->fresh()->status);
@@ -645,14 +645,14 @@ class PerformaTest extends TestCase
                 'quantity' => 1,
             ]],
         ])->assertOk();
-        $this->assertSame(1, Creditor::query()->where('phone', '03005551234')->count());
+        $this->assertSame(1, Customer::query()->where('phone', '03005551234')->count());
 
         // A performa has no discount or tax columns at all.
         $this->assertFalse(\Illuminate\Support\Facades\Schema::hasColumn('performas', 'discount_amount'));
         $this->assertFalse(\Illuminate\Support\Facades\Schema::hasColumn('performas', 'tax_amount'));
     }
 
-    public function test_pos_needs_an_existing_creditor_or_the_details_of_a_new_one(): void
+    public function test_pos_needs_an_existing_customer_or_the_details_of_a_new_one(): void
     {
         $admin = $this->branchAdmin();
         $item = $this->jewellery($admin);
@@ -665,18 +665,9 @@ class PerformaTest extends TestCase
         $this->assertSame(JewelleryItemStatus::AVAILABLE, $item->fresh()->status);
     }
 
-    public function test_pos_loads_the_whole_creditor_registry_and_the_next_performa_number(): void
+    public function test_pos_shows_the_performa_kind_and_the_next_performa_number(): void
     {
         $admin = $this->branchAdmin();
-        $this->creditor($admin, ['name' => 'Alpha Gems', 'phone' => '03001110001']);
-        $this->creditor($admin, ['name' => 'Beta Gems', 'phone' => '03001110002']);
-
-        $names = $this->actingAs($admin)
-            ->getJson(route('branch.creditors.search', ['catalog' => 1]))
-            ->assertOk()
-            ->json('data.creditors.*.name');
-        $this->assertContains('Alpha Gems', $names);
-        $this->assertContains('Beta Gems', $names);
 
         $this->actingAs($admin)->getJson(route('branch.pos.numbers'))
             ->assertOk()
@@ -688,17 +679,17 @@ class PerformaTest extends TestCase
             ->assertSee('data-generate-performa', false);
     }
 
-    public function test_new_performa_lands_on_the_pos_with_performa_chosen_and_the_creditor_filled(): void
+    public function test_new_performa_lands_on_the_pos_with_performa_chosen_and_the_customer_filled(): void
     {
         $admin = $this->branchAdmin();
-        $creditor = $this->creditor($admin, ['name' => 'Alpha Gems', 'phone' => '03001110001']);
+        $customer = $this->customer(['name' => 'Alpha Gems', 'phone' => '03001110001']);
 
         $this->actingAs($admin)
-            ->get(route('branch.performas.create', ['creditor' => $creditor->uuid]))
-            ->assertRedirect(route('branch.pos.show', ['kind' => 'performa', 'creditor' => $creditor->uuid]));
+            ->get(route('branch.performas.create', ['customer' => $customer->uuid]))
+            ->assertRedirect(route('branch.pos.show', ['kind' => 'performa', 'customer' => $customer->uuid]));
 
         $page = $this->actingAs($admin)
-            ->get(route('branch.pos.show', ['kind' => 'performa', 'creditor' => $creditor->uuid]))
+            ->get(route('branch.pos.show', ['kind' => 'performa', 'customer' => $customer->uuid]))
             ->assertOk()
             ->getContent();
         $this->assertStringContainsString('&quot;defaultKind&quot;:&quot;performa&quot;', $page);

@@ -5,7 +5,7 @@
 @section('page-title', __('Performas'))
 
 @section('content')
-<x-page-header :title="__('Performas')" :subtitle="__('Goods issued on credit against a creditor. Prices are captured when they pay.')">
+<x-page-header :title="__('Performas')" :subtitle="__('Goods issued on credit to a customer. Prices are captured when they pay.')">
     <x-slot:actions>
         @can('create', \App\Models\Performa::class)
             <x-btn href="{{ route('branch.performas.create') }}">{{ __('New Performa') }}</x-btn>
@@ -14,7 +14,7 @@
 </x-page-header>
 
 <form method="GET" class="filter-bar">
-    <x-filter.search name="search" :value="$filters['search'] ?? ''" :placeholder="__('Search number or creditor…')" :aria-label="__('Search performas')" />
+    <x-filter.search name="search" :value="$filters['search'] ?? ''" :placeholder="__('Search number or customer…')" :aria-label="__('Search performas')" />
     <select name="status" class="input-field" aria-label="{{ __('Filter by status') }}">
         <option value="">{{ __('All statuses') }}</option>
         @foreach(\App\Enums\PerformaStatus::cases() as $status)
@@ -30,7 +30,7 @@
 <div class="panel">
     @if($performas->isEmpty())
         <div class="panel__body">
-            <x-empty-state :title="__('No performas yet')" :message="__('Register a creditor, then issue a performa when they take jewellery or stones on credit.')" icon="assignment">
+            <x-empty-state :title="__('No performas yet')" :message="__('Issue a performa from the POS when a customer takes jewellery or stones on credit.')" icon="assignment">
                 <x-slot:actions>
                     @can('create', \App\Models\Performa::class)
                         <x-btn href="{{ route('branch.performas.create') }}">{{ __('New Performa') }}</x-btn>
@@ -44,7 +44,7 @@
                 <thead>
                     <tr>
                         <th>{{ __('Performa') }}</th>
-                        <th>{{ __('Creditor') }}</th>
+                        <th>{{ __('Customer') }}</th>
                         <th class="table-admin__num">{{ __('Lines') }}</th>
                         <th>{{ __('Outstanding') }}</th>
                         <th>{{ __('Status') }}</th>
@@ -64,7 +64,7 @@
                                     icon="assignment"
                                 />
                             </td>
-                            <td>{{ $performa->displayCreditorName() }}</td>
+                            <td>{{ $performa->displayCustomerName() }}</td>
                             <td class="table-admin__num">{{ $performa->items_count }}</td>
                             <td>
                                 <span class="font-data-mono">{{ $outstanding['jewellery'] }} {{ __('pc') }}</span>

@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Branch;
 
 use App\Enums\PaymentMethod;
 use App\Http\Controllers\Controller;
-use App\Models\Creditor;
+use App\Models\Customer;
 use App\Models\DeliveryNote;
 use App\Models\Performa;
 use App\Models\Quotation;
@@ -87,13 +87,13 @@ class PosController extends Controller
             $defaultKind = 'delivery_note';
         }
 
-        // ?creditor=uuid fills the creditor on a performa (from a creditor's page).
-        $initialCreditor = null;
-        if ($defaultKind === 'performa' && filled($request->query('creditor'))) {
-            $initialCreditor = Creditor::query()
+        // ?customer=uuid fills the customer on a performa (from a customer's page).
+        $initialCustomer = null;
+        if ($defaultKind === 'performa' && filled($request->query('customer'))) {
+            $initialCustomer = Customer::query()
                 ->active()
-                ->where('uuid', (string) $request->query('creditor'))
-                ->first(['uuid', 'creditor_code', 'name', 'phone', 'email']);
+                ->where('uuid', (string) $request->query('customer'))
+                ->first(['uuid', 'customer_code', 'name', 'phone', 'email', 'nie', 'address']);
         }
 
         return view('branch.pos.index', [
@@ -116,12 +116,14 @@ class PosController extends Controller
             'defaultKind' => $defaultKind,
             'editingPerforma' => $editingPerforma,
             'editingDocument' => $editingDocument,
-            'initialCreditor' => $initialCreditor ? [
-                'uuid' => $initialCreditor->uuid,
-                'customer_code' => $initialCreditor->creditor_code,
-                'name' => $initialCreditor->name,
-                'phone' => $initialCreditor->phone,
-                'email' => $initialCreditor->email,
+            'initialCustomer' => $initialCustomer ? [
+                'uuid' => $initialCustomer->uuid,
+                'customer_code' => $initialCustomer->customer_code,
+                'name' => $initialCustomer->name,
+                'phone' => $initialCustomer->phone,
+                'email' => $initialCustomer->email,
+                'nie' => $initialCustomer->nie,
+                'address' => $initialCustomer->address,
             ] : null,
             'paymentMethods' => PaymentMethod::options(),
             'documentNumbers' => $this->documentNumbers(),

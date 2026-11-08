@@ -13,7 +13,8 @@ use Illuminate\Validation\Rule;
  * StoreJewelleryItemRequest
  *
  * Create payload. item_code, barcode, qr_token, and stone totals are
- * stripped. Metal weight is typed by staff and stored as net_weight.
+ * stripped. Metal weight is typed by staff and stored as net_weight;
+ * gross weight is derived on save (metal + stone grams), never typed.
  */
 class StoreJewelleryItemRequest extends FormRequest
 {
@@ -54,9 +55,9 @@ class StoreJewelleryItemRequest extends FormRequest
             'name' => ['required', 'string', 'max:200'],
             'metal_type_id' => ['required', 'integer', Rule::exists('metal_types', 'id')->where('is_active', 1)->whereNull('deleted_at')],
             'purity_id' => ['required', 'integer', 'exists:purities,id'],
-            'gross_weight' => ['required', 'numeric', 'gt:0', 'decimal:0,3', 'max:'.$grossMax],
             // Sale/net weight is the metal grams staff type — never derived from stones.
-            'metal_weight' => ['required', 'numeric', 'gt:0', 'decimal:0,3', 'max:'.$grossMax, 'lte:gross_weight'],
+            // Gross weight is not typed: the server works it out as metal + stone grams.
+            'metal_weight' => ['required', 'numeric', 'gt:0', 'decimal:0,3', 'max:'.$grossMax],
             'status' => ['required', Rule::in(JewelleryItemStatus::usableValues())],
             'description' => ['nullable', 'string', 'max:2000'],
             'stones' => ['nullable', 'array'],
@@ -91,15 +92,10 @@ class StoreJewelleryItemRequest extends FormRequest
             'name.required' => __('Enter an item name.'),
             'metal_type_id.required' => __('Select a metal type.'),
             'purity_id.required' => __('Select a purity.'),
-            'gross_weight.required' => __('Enter gross weight in grams.'),
-            'gross_weight.gt' => __('Gross weight must be greater than zero.'),
-            'gross_weight.max' => __('Gross weight is unusually high. Check for a typing error.'),
-            'gross_weight.decimal' => __('Gross weight allows at most three decimal places.'),
             'metal_weight.required' => __('Enter metal weight in grams.'),
             'metal_weight.gt' => __('Metal weight must be greater than zero.'),
             'metal_weight.max' => __('Metal weight is unusually high. Check for a typing error.'),
             'metal_weight.decimal' => __('Metal weight allows at most three decimal places.'),
-            'metal_weight.lte' => __('Metal weight cannot be greater than gross weight.'),
             'status.in' => __('That status cannot be set from jewellery management.'),
             'stones.*.quantity.min' => __('Stone quantity must be at least 1.'),
             'stones.*.quantity.required_without' => __('Enter the pieces or grams used for each stone.'),

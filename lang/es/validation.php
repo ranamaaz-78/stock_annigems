@@ -197,7 +197,6 @@ return [
         'city' => 'ciudad',
         'code' => 'código',
         'contact_number' => 'teléfono de contacto',
-        'creditor_uuid' => 'acreedor',
         'current_password' => 'contraseña actual',
         'customer' => 'cliente',
         'customer_uuid' => 'cliente',

@@ -314,25 +314,34 @@ class JewelleryManagementTest extends TestCase
     }
 
     /**
-     * Stone grams exceeding gross weight is rejected.
+     * Gross weight is never typed: it is metal grams + stone grams, and a
+     * posted gross_weight is ignored.
      */
-    public function test_gross_weight_must_cover_stone_grams(): void
+    public function test_gross_weight_is_metal_plus_stone_grams(): void
     {
         [$branch, $admin, $category, $metalId, $purityId] = $this->branchContext();
         // 5 ct in stock; using 1 ct is 0.2 g of stone.
         $stone = $this->lot($admin, ['pricing_mode' => 'per_carat', 'carat' => '5', 'price_per_carat' => '100']);
 
         $this->actingAs($admin)
-            ->from(route('branch.jewellery-items.create'))
             ->post(route('branch.jewellery-items.store'), $this->itemPayload($category, $metalId, $purityId, [
                 'gross_weight' => '0.100',
-                'metal_weight' => '0.050',
+                'metal_weight' => '9.500',
                 'stones' => [['uuid' => $stone->uuid, 'quantity' => 1, 'weight_grams' => '1']],
             ]))
-            ->assertSessionHasErrors('gross_weight');
+            ->assertRedirect();
 
-        $this->assertSame('5.000', (string) $stone->fresh()->weight_grams);
-        $this->assertSame(0, JewelleryItem::query()->count());
+        $item = JewelleryItem::query()->firstOrFail();
+        $this->assertSame('9.500', (string) $item->net_weight);
+        $this->assertSame('0.200', (string) $item->stone_weight_grams);
+        $this->assertSame('9.700', (string) $item->gross_weight);
+
+        // Changing the metal weight on edit moves gross with it.
+        $this->actingAs($admin)->put(route('branch.jewellery-items.update', $item), $this->itemPayload($category, $metalId, $purityId, [
+            'metal_weight' => '8.000',
+            'stones' => [['uuid' => $stone->uuid, 'quantity' => 1, 'weight_grams' => '1']],
+        ]))->assertRedirect();
+        $this->assertSame('8.200', (string) $item->fresh()->gross_weight);
     }
 
     /**
@@ -346,23 +355,6 @@ class JewelleryManagementTest extends TestCase
             ->from(route('branch.jewellery-items.create'))
             ->postJson(route('branch.jewellery-items.store'), $this->itemPayload($category, $metalId, $purityId, [
                 'metal_weight' => null,
-            ]))
-            ->assertStatus(422)
-            ->assertJsonValidationErrors('metal_weight');
-    }
-
-    /**
-     * Typed metal grams cannot exceed the piece's gross weight.
-     */
-    public function test_metal_weight_cannot_exceed_gross(): void
-    {
-        [$branch, $admin, $category, $metalId, $purityId] = $this->branchContext();
-
-        $this->actingAs($admin)
-            ->from(route('branch.jewellery-items.create'))
-            ->postJson(route('branch.jewellery-items.store'), $this->itemPayload($category, $metalId, $purityId, [
-                'gross_weight' => '10.000',
-                'metal_weight' => '10.500',
             ]))
             ->assertStatus(422)
             ->assertJsonValidationErrors('metal_weight');
@@ -882,15 +874,15 @@ class JewelleryManagementTest extends TestCase
         $this->assertSame('0.000', (string) $item->fresh()->stone_weight_carat);
     }
 
-    public function test_manual_stones_cannot_outweigh_the_gross_weight_and_need_a_name_and_quantity(): void
+    public function test_manual_stones_add_to_gross_weight_and_need_a_name_and_quantity(): void
     {
         [, $admin, $category, $metalId, $purityId] = $this->branchContext();
 
-        // 100 ct = 20 g on a 10 g piece.
+        // 100 ct = 20 g of stone on 9.5 g of metal.
         $this->actingAs($admin)->post(route('branch.jewellery-items.store'), $this->itemPayload($category, $metalId, $purityId, [
             'manual_stones' => [['name' => 'Big stone', 'carat' => '100', 'quantity' => 1]],
-        ]))->assertSessionHasErrors('gross_weight');
-        $this->assertSame(0, JewelleryItem::query()->count());
+        ]))->assertRedirect();
+        $this->assertSame('29.500', (string) JewelleryItem::query()->firstOrFail()->gross_weight);
 
         $this->actingAs($admin)->post(route('branch.jewellery-items.store'), $this->itemPayload($category, $metalId, $purityId, [
             'manual_stones' => [['name' => '', 'quantity' => 0]],
@@ -936,7 +928,8 @@ class JewelleryManagementTest extends TestCase
         $this->assertStringContainsString('BLUE SAPPHIRE WEIGHT', $html);
         $this->assertStringContainsString('1.5 cts', $html);
         $this->assertStringContainsString('TOTAL WEIGHT', $html);
-        $this->assertStringContainsString('10 grams', $html);
+        // Gross = 9.5 g metal + 1.5 ct (0.3 g) of typed-in stones.
+        $this->assertStringContainsString('9.8 grams', $html);
         // The QR is drawn only when the piece has a QR token.
         $this->assertSame(filled($item->qr_token), str_contains($html, 'data:image/png;base64'));
         $this->assertStringNotContainsString('Internal bench notes', $html);

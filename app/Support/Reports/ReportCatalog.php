@@ -208,7 +208,7 @@ class ReportCatalog
                 'reports' => [
                     'performa-outstanding' => [
                         'label' => __('Performa Outstanding'),
-                        'summary' => 'What each creditor still holds on open and part-paid performas, at the price fixed on issue.',
+                        'summary' => 'What each customer still holds on open and part-paid performas, at the price fixed on issue.',
                         'filters' => [],
                         'chart' => true,
                     ],

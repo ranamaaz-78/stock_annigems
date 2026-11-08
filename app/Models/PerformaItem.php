@@ -111,7 +111,7 @@ class PerformaItem extends Model
     }
 
     /**
-     * Grams still with the creditor and unpaid (weighed lines).
+     * Grams still with the customer and unpaid (weighed lines).
      */
     public function outstandingWeight(): float
     {

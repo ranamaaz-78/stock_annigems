@@ -14,7 +14,7 @@ use Illuminate\Support\Collection;
  * CreditReportRepository
  *
  * Goods that have left the shelf but are not sold yet: performas (issued to a
- * creditor, paid for or sent back later) and delivery notes (handed to a client,
+ * customer, paid for or sent back later) and delivery notes (handed to a client,
  * invoiced later).
  *
  * Performa money is the value fixed on each line when it was issued
@@ -34,13 +34,13 @@ class CreditReportRepository extends ReportRepository
     }
 
     /**
-     * Open and partly paid performas, summed per creditor.
+     * Open and partly paid performas, summed per customer.
      *
      * Live: it describes what is out right now, so no date range applies.
      *
-     * @return Collection<int, array{creditor: string, creditor_code: string, performas: int, issued: float, settled: float, returned: float, outstanding: float, oldest_days: int}>
+     * @return Collection<int, array{customer: string, customer_code: string, performas: int, issued: float, settled: float, returned: float, outstanding: float, oldest_days: int}>
      */
-    public function outstandingByCreditor(?int $branchId): Collection
+    public function outstandingByCustomer(?int $branchId): Collection
     {
         $issued = $this->valueSql('quantity_issued', 'weight_issued');
         $settled = $this->valueSql('quantity_settled', 'weight_settled');
@@ -56,15 +56,15 @@ class CreditReportRepository extends ReportRepository
     {
         $query = $this->unscoped(Performa::class)
             ->join('performa_items', 'performa_items.performa_id', '=', 'performas.id')
-            ->leftJoin('creditors', 'creditors.id', '=', 'performas.creditor_id')
+            ->leftJoin('customers', 'customers.id', '=', 'performas.customer_id')
             ->whereIn('performas.status', [PerformaStatus::OPEN->value, PerformaStatus::PARTIAL->value]);
 
         $this->scopeToBranch($query, $branchId, 'performas');
 
         return $query
-            ->groupBy('performas.creditor_id', 'creditors.name', 'creditors.creditor_code')
-            ->selectRaw("COALESCE(creditors.name, 'Unknown creditor') as creditor_name")
-            ->selectRaw("COALESCE(creditors.creditor_code, '—') as creditor_code")
+            ->groupBy('performas.customer_id', 'customers.name', 'customers.customer_code')
+            ->selectRaw("COALESCE(customers.name, 'Unknown customer') as customer_name")
+            ->selectRaw("COALESCE(customers.customer_code, '—') as customer_code")
             ->selectRaw('COUNT(DISTINCT performas.id) as performas')
             ->selectRaw("COALESCE(SUM({$issued}), 0) as issued_value")
             ->selectRaw("COALESCE(SUM({$settled}), 0) as settled_value")
@@ -77,8 +77,8 @@ class CreditReportRepository extends ReportRepository
                 $returnedValue = round($this->toFloat($row->returned_value), 2);
 
                 return [
-                    'creditor' => (string) $row->creditor_name,
-                    'creditor_code' => (string) $row->creditor_code,
+                    'customer' => (string) $row->customer_name,
+                    'customer_code' => (string) $row->customer_code,
                     'performas' => $this->toInt($row->performas),
                     'issued' => $issuedValue,
                     'settled' => $settledValue,
@@ -94,7 +94,7 @@ class CreditReportRepository extends ReportRepository
     /**
      * Open and partly paid performas, oldest first, with what is still out.
      *
-     * @return Collection<int, array{uuid: string, performa_number: string, performa_date: string, creditor: string, status: string, issued: float, outstanding: float, age_days: int}>
+     * @return Collection<int, array{uuid: string, performa_number: string, performa_date: string, customer: string, status: string, issued: float, outstanding: float, age_days: int}>
      */
     public function openPerformas(?int $branchId, int $limit): Collection
     {
@@ -104,18 +104,18 @@ class CreditReportRepository extends ReportRepository
 
         $query = $this->unscoped(Performa::class)
             ->join('performa_items', 'performa_items.performa_id', '=', 'performas.id')
-            ->leftJoin('creditors', 'creditors.id', '=', 'performas.creditor_id')
+            ->leftJoin('customers', 'customers.id', '=', 'performas.customer_id')
             ->whereIn('performas.status', [PerformaStatus::OPEN->value, PerformaStatus::PARTIAL->value]);
 
         $this->scopeToBranch($query, $branchId, 'performas');
 
         return $query
-            ->groupBy('performas.id', 'performas.uuid', 'performas.performa_number', 'performas.performa_date', 'performas.status', 'creditors.name')
+            ->groupBy('performas.id', 'performas.uuid', 'performas.performa_number', 'performas.performa_date', 'performas.status', 'customers.name')
             ->orderBy('performas.performa_date')
             ->orderBy('performas.id')
             ->limit($limit)
             ->selectRaw('performas.uuid, performas.performa_number, performas.performa_date, performas.status')
-            ->selectRaw("COALESCE(creditors.name, 'Unknown creditor') as creditor_name")
+            ->selectRaw("COALESCE(customers.name, 'Unknown customer') as customer_name")
             ->selectRaw("COALESCE(SUM({$issued}), 0) as issued_value")
             ->selectRaw("COALESCE(SUM({$settled}), 0) as settled_value")
             ->selectRaw("COALESCE(SUM({$returned}), 0) as returned_value")
@@ -124,7 +124,7 @@ class CreditReportRepository extends ReportRepository
                 'uuid' => (string) $row->uuid,
                 'performa_number' => (string) $row->performa_number,
                 'performa_date' => (string) $row->performa_date,
-                'creditor' => (string) $row->creditor_name,
+                'customer' => (string) $row->customer_name,
                 'status' => $this->scalar($row->status),
                 'issued' => round($this->toFloat($row->issued_value), 2),
                 'outstanding' => round(max(0.0, $this->toFloat($row->issued_value) - $this->toFloat($row->settled_value) - $this->toFloat($row->returned_value)), 2),

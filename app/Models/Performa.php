@@ -34,7 +34,7 @@ class Performa extends Model
     protected $fillable = [
         'branch_id',
         'performa_number',
-        'creditor_id',
+        'customer_id',
         'performa_date',
         'status',
         'discount_type',
@@ -63,11 +63,12 @@ class Performa extends Model
     }
 
     /**
-     * Creditor who took the goods. Always a registered creditor row.
+     * Customer who took the goods on credit. Customers are global, so this
+     * is never branch-scoped; trashed customers still show on old performas.
      */
-    public function creditor(): BelongsTo
+    public function customer(): BelongsTo
     {
-        return $this->belongsTo(Creditor::class);
+        return $this->belongsTo(Customer::class)->withTrashed();
     }
 
     /**
@@ -87,15 +88,11 @@ class Performa extends Model
     }
 
     /**
-     * Display name from the attached creditor.
+     * Display name from the attached customer.
      */
-    public function displayCreditorName(): string
+    public function displayCustomerName(): string
     {
-        if ($this->relationLoaded('creditor') && $this->creditor) {
-            return $this->creditor->name;
-        }
-
-        return __('Creditor');
+        return $this->customer?->name ?? __('Customer');
     }
 
     /**
@@ -153,7 +150,7 @@ class Performa extends Model
     }
 
     /**
-     * Unpaid jewellery pieces and loose-stone qty still with the creditor.
+     * Unpaid jewellery pieces and loose-stone qty still with the customer.
      *
      * @return array{jewellery: int, stones: int}
      */

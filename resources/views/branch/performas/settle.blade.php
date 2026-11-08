@@ -38,7 +38,7 @@
             <div class="sales-workspace__toolbar">
                 <div class="sales-workspace__heading">
                     <h1 class="sales-workspace__title">{{ __('Settle') }} {{ $performa->performa_number }}</h1>
-                    <p class="sales-workspace__meta">{{ $performa->displayCreditorName() }} · {{ __('net weight × rate + making + stones') }}</p>
+                    <p class="sales-workspace__meta">{{ $performa->displayCustomerName() }} · {{ __('net weight × rate + making + stones') }}</p>
                 </div>
                 <div class="flex gap-2">
                     <x-btn type="button" variant="secondary" data-settle-remaining>{{ __('Settle remaining') }}</x-btn>

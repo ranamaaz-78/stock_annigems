@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Models\Creditor;
 use App\Models\Customer;
 use App\Models\DeliveryNote;
 use App\Models\Invoice;
@@ -149,7 +148,6 @@ class AppServiceProvider extends ServiceProvider
         $this->bindBranchScoped('invoice', Invoice::class);
         $this->bindBranchScoped('deliveryNote', DeliveryNote::class);
         $this->bindBranchScoped('performa', Performa::class);
-        $this->bindBranchScoped('creditor', Creditor::class);
 
         /**
          * Customers are global — bind by uuid without branch check.

@@ -81,8 +81,8 @@
         </section>
 
         <section>
-            <h2 class="text-headline-sm border-b border-outline-variant pb-2 mb-3">{{ __('Metal & weight') }}</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <h2 class="text-headline-sm border-b border-outline-variant pb-2 mb-3">{{ __('Metal') }}</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div data-field class="form-field">
                     <label for="metal_type_id" class="form-label">{{ __('Metal type') }}<span class="form-label__required"> *</span></label>
                     <select id="metal_type_id" name="metal_type_id" required class="input-field {{ $errors->has('metal_type_id') ? 'is-invalid' : '' }}" data-metal>
@@ -99,14 +99,6 @@
                         <option value="">{{ __('Select…') }}</option>
                     </select>
                     <p data-error-for="purity_id" class="form-error {{ $errors->has('purity_id') ? '' : 'is-hidden' }}">{{ $errors->first('purity_id') }}</p>
-                </div>
-                <x-form.input name="gross_weight" :label="__('Gross weight (g)')" type="number" :value="$item->gross_weight ?? null" required step="0.001" min="0.001" :max="config('annigems.jewellery.gross_weight_max')" data-gross-weight />
-                {{-- Typed gold/metal grams; stored as net_weight for pricing. --}}
-                <x-form.input name="metal_weight" :label="__('Metal weight (g)')" type="number" :value="old('metal_weight', $item->net_weight ?? null)" required step="0.001" min="0.001" :max="config('annigems.jewellery.gross_weight_max')" data-metal-weight />
-                <div data-field class="form-field">
-                    <label class="form-label">{{ __('Stone weight (ct / g)') }}</label>
-                    <input type="text" class="input-field font-data-mono" data-stone-weight readonly value="{{ $item ? $item->stone_weight_carat.' ct / '.$item->stone_weight_grams.' g' : '0.000 ct / 0.000 g' }}">
-                    <p data-weight-warning class="form-error is-hidden">{{ __('Stone grams cannot exceed gross weight.') }}</p>
                 </div>
             </div>
         </section>
@@ -202,6 +194,24 @@
             @foreach($errors->get('manual_stones.*') as $messages)
                 <p class="form-error">{{ $messages[0] }}</p>
             @endforeach
+            </div>
+        </section>
+
+        {{-- Metal grams are typed; stone weight comes from the stones above; gross = metal + stone grams. --}}
+        <section>
+            <h2 class="text-headline-sm border-b border-outline-variant pb-2 mb-3">{{ __('Weight') }}</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {{-- Typed gold/metal grams; stored as net_weight for pricing. --}}
+                <x-form.input name="metal_weight" :label="__('Metal weight (g)')" type="number" :value="old('metal_weight', $item->net_weight ?? null)" required step="0.001" min="0.001" :max="config('annigems.jewellery.gross_weight_max')" data-metal-weight />
+                <div data-field class="form-field">
+                    <label class="form-label">{{ __('Stone weight (ct / g)') }}</label>
+                    <input type="text" class="input-field font-data-mono" data-stone-weight readonly tabindex="-1" value="{{ $item ? $item->stone_weight_carat.' ct / '.$item->stone_weight_grams.' g' : '0.000 ct / 0.000 g' }}">
+                </div>
+                <div data-field class="form-field">
+                    <label class="form-label">{{ __('Gross weight (g)') }}</label>
+                    <input type="text" class="input-field font-data-mono" data-gross-weight readonly tabindex="-1" value="{{ $item ? $item->gross_weight : '0.000' }}">
+                    <p class="form-help">{{ __('Metal weight + stone weight.') }}</p>
+                </div>
             </div>
         </section>
 

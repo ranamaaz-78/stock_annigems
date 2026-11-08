@@ -43,7 +43,7 @@
         'validityDays' => $validityDays,
         // Invoice when the cashier may convert, otherwise only quotations exist.
         'defaultKind' => $defaultKind,
-        'initialCreditor' => $initialCreditor,
+        'initialCustomer' => $initialCustomer,
         // An invoice or delivery note with no payment yet, opened for editing (null on a new ticket).
         'editingDocument' => $editingDocument ?? null,
         // An issued performa opened for editing (null on a new ticket).
@@ -59,7 +59,6 @@
             'deliveryNote' => route('branch.delivery-notes.store'),
             'performa' => route('branch.performas.store'),
             'performaUpdate' => ($editingPerforma ?? null) ? route('branch.performas.update', $editingPerforma['uuid']) : null,
-            'creditorSearch' => route('branch.creditors.search'),
             'numbers' => route('branch.pos.numbers'),
             'customerLookup' => route('branch.customers.lookup'),
             'customerSearch' => route('branch.customers.search'),
@@ -196,7 +195,7 @@
                                 <span class="material-symbols-outlined icon icon--md" aria-hidden="true">assignment</span>
                                 <span class="pos-kind__text">
                                     <span class="pos-kind__name">{{ __('Performa') }}</span>
-                                    <span class="pos-kind__sub">{{ __('To a creditor · pays later') }}</span>
+                                    <span class="pos-kind__sub">{{ __('To a customer · pays later') }}</span>
                                 </span>
                             </button>
                         </div>

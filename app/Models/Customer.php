@@ -67,6 +67,14 @@ class Customer extends Model
     }
 
     /**
+     * Performas issued to this customer (goods taken on credit).
+     */
+    public function performas(): HasMany
+    {
+        return $this->hasMany(Performa::class);
+    }
+
+    /**
      * Active customers only.
      *
      * @param  Builder<static>  $query

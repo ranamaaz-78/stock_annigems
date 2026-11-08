@@ -64,11 +64,10 @@ class RolePermissionSeeder extends Seeder
             'customers.view', 'customers.create', 'customers.edit', 'customers.deactivate',
             'quotations.view', 'quotations.create', 'quotations.edit', 'quotations.cancel', 'quotations.convert',
             'performas.view', 'performas.create', 'performas.settle', 'performas.return',
-            'creditors.view', 'creditors.create', 'creditors.edit', 'creditors.deactivate',
             'invoices.view', 'invoices.void', 'invoices.discount',
             'delivery_notes.view', 'delivery_notes.create', 'delivery_notes.cancel', 'delivery_notes.convert',
             'invoices.delete', 'quotations.delete', 'performas.delete', 'delivery_notes.delete',
-            'customers.delete', 'creditors.delete', 'trash.view',
+            'customers.delete', 'trash.view',
             'repairs.view', 'repairs.create', 'repairs.edit',
             'transfers.view', 'transfers.create',
             'reports.view', 'reports.export',
@@ -87,10 +86,9 @@ class RolePermissionSeeder extends Seeder
         $manager = array_values(array_diff($branchBase, [
             // Deleting records and the Trash are Admin-only.
             'invoices.delete', 'quotations.delete', 'performas.delete', 'delivery_notes.delete',
-            'customers.delete', 'creditors.delete', 'trash.view',
+            'customers.delete', 'trash.view',
             'invoices.void',
             'customers.deactivate',
-            'creditors.deactivate',
             // Reports are Admin-only (spec section 7.2): a Manager sees dashboard
             // statistics but no report screen and no export.
             'reports.view', 'reports.export',
@@ -112,7 +110,6 @@ class RolePermissionSeeder extends Seeder
             'customers.view', 'customers.create', 'customers.edit',
             'quotations.view', 'quotations.create', 'quotations.edit', 'quotations.convert',
             'performas.view', 'performas.create', 'performas.settle',
-            'creditors.view', 'creditors.create', 'creditors.edit',
             'invoices.view', 'invoices.discount',
             'delivery_notes.view', 'delivery_notes.create', 'delivery_notes.convert',
             'items.view',

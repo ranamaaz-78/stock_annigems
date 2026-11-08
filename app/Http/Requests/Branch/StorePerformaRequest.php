@@ -13,10 +13,10 @@ use Illuminate\Validation\Rule;
 /**
  * StorePerformaRequest
  *
- * Issue payload: an existing creditor (or a new one's details) + scanned
- * lines. Prices are worked out on the server for the printed memo, with the
- * discount and tax chosen here; the settlement invoice still owns the money. Walk-in / sales-customer
- * attach is not accepted.
+ * Issue payload: an existing customer (or a new one's name and phone) +
+ * scanned lines. Prices are worked out on the server for the printed memo,
+ * with the discount and tax chosen here; the settlement invoice still owns
+ * the money.
  */
 class StorePerformaRequest extends FormRequest
 {
@@ -44,35 +44,28 @@ class StorePerformaRequest extends FormRequest
      */
     public function rules(): array
     {
-        $branchId = (int) $this->user()?->branch_id;
-
         return [
-            // An existing creditor, or the details of a new one (the POS saves
-            // someone it has not seen before as a creditor).
-            'walkin_name' => ['nullable', 'string', 'max:150', 'required_without:creditor_uuid'],
+            // An existing customer, or the details of a new one (the POS saves
+            // someone it has not seen before as a customer).
+            'walkin_name' => ['nullable', 'string', 'max:150', 'required_without:customer_uuid'],
             'walkin_phone' => [
                 'nullable',
                 'string',
                 'max:30',
-                'required_without:creditor_uuid',
+                'required_without:customer_uuid',
                 'regex:/^[0-9+\-\s()]{7,30}$/',
             ],
             'walkin_email' => ['nullable', 'email', 'max:150'],
             'walkin_address' => ['nullable', 'string', 'max:500'],
-            // Set by the POS when a loaded creditor's fields were open for editing.
+            // Set by the POS when a loaded customer's fields were open for editing.
             'update_customer' => ['nullable', 'boolean'],
             'walkin_nie' => ['nullable', 'string', 'max:20', 'regex:/^[A-Za-z0-9\-\s.\/]{5,20}$/'],
-            'creditor_uuid' => [
+            'customer_uuid' => [
                 'nullable',
                 'required_without:walkin_phone',
                 'uuid',
-                // Active creditors on this branch only — never a sales customer.
-                Rule::exists('creditors', 'uuid')->where(
-                    fn ($query) => $query
-                        ->where('branch_id', $branchId)
-                        ->where('status', true)
-                        ->whereNull('deleted_at')
-                ),
+                // Customers are global (not branch-scoped); trashed ones cannot be picked.
+                Rule::exists('customers', 'uuid')->whereNull('deleted_at'),
             ],
             'performa_date' => ['required', 'date'],
             // Discount and tax, chosen as on an invoice. The IVA and recargo are named by
@@ -114,8 +107,10 @@ class StorePerformaRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'creditor_uuid.required' => __('Select a creditor. Register them under Creditors first.'),
-            'creditor_uuid.exists' => __('Select an active creditor from this branch.'),
+            'customer_uuid.required_without' => __('Select a customer or enter a name and phone.'),
+            'customer_uuid.exists' => __('Select an existing customer.'),
+            'walkin_name.required_without' => __('Select a customer or enter a walk-in name and phone.'),
+            'walkin_phone.required_without' => __('Enter the walk-in customer phone.'),
             'lines.required' => __('Add at least one item to the performa.'),
             'lines.min' => __('Add at least one item to the performa.'),
             'performa_date.required' => __('Performa date is required.'),

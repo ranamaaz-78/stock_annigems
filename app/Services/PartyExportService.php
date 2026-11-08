@@ -11,7 +11,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 /**
  * PartyExportService
  *
- * Writes customers or creditors to an Excel file, one row per party, with the
+ * Writes customers to an Excel file, one row per party, with the
  * same columns for both so the city-wise lists can be shared or filtered further.
  */
 class PartyExportService
@@ -20,7 +20,7 @@ class PartyExportService
 
     /**
      * @param  Builder<\Illuminate\Database\Eloquent\Model>  $query
-     * @param  string  $codeColumn  customer_code or creditor_code
+     * @param  string  $codeColumn  e.g. customer_code
      * @return string Raw .xlsx bytes
      */
     public function build(Builder $query, string $codeColumn): string

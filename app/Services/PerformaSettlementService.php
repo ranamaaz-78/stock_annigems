@@ -64,7 +64,7 @@ class PerformaSettlementService
             $performa = Performa::query()
                 ->whereKey($performa->id)
                 ->lockForUpdate()
-                ->with(['items.jewelleryItem.itemStones', 'creditor'])
+                ->with(['items.jewelleryItem.itemStones', 'customer'])
                 ->firstOrFail();
 
             if (! $performa->status->isOpen()) {
@@ -110,11 +110,10 @@ class PerformaSettlementService
                     : null,
                 'quotation_id' => null,
                 'performa_id' => $performa->id,
-                // Settlement invoices snapshot the creditor. They never create
-                // or attach a sales customer — customer_id stays null.
-                'customer_id' => null,
-                'customer_name_snapshot' => $performa->creditor?->name ?? 'Creditor',
-                'customer_phone_snapshot' => $performa->creditor?->phone,
+                // The settlement invoice belongs to the performa's customer.
+                'customer_id' => $performa->customer_id,
+                'customer_name_snapshot' => $performa->customer?->name ?? 'Customer',
+                'customer_phone_snapshot' => $performa->customer?->phone,
                 'invoice_date' => now()->toDateString(),
                 'subtotal' => $result['document']['subtotal'],
                 'discount_type' => $discountType,

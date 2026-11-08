@@ -89,7 +89,6 @@ class SettingCatalog
             self::prefix('numbering_invoice_prefix', 'INV-', 'Prefix on new invoice numbers.'),
             self::prefix('numbering_performa_prefix', 'PRF-', 'Prefix on new performa numbers.'),
             self::prefix('numbering_delivery_note_prefix', 'ALB-', 'Prefix on new delivery note (albarán) numbers.'),
-            self::prefix('numbering_creditor_prefix', 'CRD-', 'Prefix on new creditor codes.'),
             self::prefix('numbering_intake_prefix', 'SIN-', 'Prefix on new stone intake numbers.'),
             self::integer('numbering_padding', SettingGroup::NUMBERING, 6, 'Zero-padded width of the numeric part.', ['required', 'integer', 'min:3', 'max:10']),
             self::integer('numbering_jewellery_start', SettingGroup::NUMBERING, 1, 'Raise to skip ahead. A value at or below the highest issued number is ignored.', ['required', 'integer', 'min:1']),
@@ -99,7 +98,6 @@ class SettingCatalog
             self::integer('numbering_invoice_start', SettingGroup::NUMBERING, 1, 'Raise to skip ahead. A value at or below the highest issued number is ignored.', ['required', 'integer', 'min:1']),
             self::integer('numbering_performa_start', SettingGroup::NUMBERING, 1, 'Raise to skip ahead. A value at or below the highest issued number is ignored.', ['required', 'integer', 'min:1']),
             self::integer('numbering_delivery_note_start', SettingGroup::NUMBERING, 1, 'Raise to skip ahead. A value at or below the highest issued number is ignored.', ['required', 'integer', 'min:1']),
-            self::integer('numbering_creditor_start', SettingGroup::NUMBERING, 1, 'Raise to skip ahead. A value at or below the highest issued number is ignored.', ['required', 'integer', 'min:1']),
             self::integer('numbering_intake_start', SettingGroup::NUMBERING, 1, 'Raise to skip ahead. A value at or below the highest issued number is ignored.', ['required', 'integer', 'min:1']),
 
             self::string('currency_symbol', SettingGroup::LOCALE, 'Rs', 'Symbol shown before every money figure.', ['required', 'string', 'max:8']),
@@ -129,7 +127,6 @@ class SettingCatalog
             'numbering_invoice_start' => 'invoice',
             'numbering_performa_start' => 'performa',
             'numbering_delivery_note_start' => 'delivery_note',
-            'numbering_creditor_start' => 'creditor',
             'numbering_intake_start' => 'stone_intake',
         ];
     }
@@ -149,7 +146,6 @@ class SettingCatalog
             'invoice' => 'numbering_invoice_prefix',
             'performa' => 'numbering_performa_prefix',
             'delivery_note' => 'numbering_delivery_note_prefix',
-            'creditor' => 'numbering_creditor_prefix',
             'stone_intake' => 'numbering_intake_prefix',
         ];
     }

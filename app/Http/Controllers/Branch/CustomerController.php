@@ -178,6 +178,7 @@ class CustomerController extends Controller
             'customer' => $customer->load(['creator', 'updater']),
             'quotations' => $this->customerService->quotationHistory($customer),
             'invoices' => $this->customerService->invoiceHistory($customer),
+            'performas' => $this->customerService->performaHistory($customer),
             'hasHistory' => $this->customerService->hasHistory($customer),
         ]);
     }

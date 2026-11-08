@@ -29,16 +29,20 @@
 <div class="panel-stack no-print">
     <div class="panel">
         <div class="panel__header">
-            <h2 class="panel__title">{{ $performa->displayCreditorName() }}</h2>
+            <h2 class="panel__title">{{ $performa->displayCustomerName() }}</h2>
             <x-status-badge :status="$performa->status" />
         </div>
         <div class="panel__body">
             <p class="text-body-sm">
-                @if($performa->creditor)
-                    <a href="{{ route('branch.creditors.show', $performa->creditor) }}" class="form-link">{{ $performa->creditor->creditor_code }}</a>
-                    · {{ $performa->creditor->phone }}
-                    @if($performa->creditor->email)
-                        · {{ $performa->creditor->email }}
+                @if($performa->customer)
+                    @can('view', $performa->customer)
+                        <a href="{{ route('branch.customers.show', $performa->customer) }}" class="form-link">{{ $performa->customer->customer_code }}</a>
+                    @else
+                        {{ $performa->customer->customer_code }}
+                    @endcan
+                    · {{ $performa->customer->phone }}
+                    @if($performa->customer->email)
+                        · {{ $performa->customer->email }}
                     @endif
                 @endif
             </p>

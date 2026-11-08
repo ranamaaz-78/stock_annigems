@@ -22,7 +22,6 @@ import { bindMetalPurities } from './modules/metal-purities';
 import { bindJewelleryItemForm } from './modules/jewellery-item-form';
 import { bindQuotationForm } from './modules/quotation-form';
 import { bindPos } from './modules/pos';
-import { bindPerformaForm } from './modules/performa-form';
 import { bindPerformaSettle } from './modules/performa-settle';
 import { bindPerformaReturn } from './modules/performa-return';
 import { bindModals } from './modules/modal';
@@ -59,7 +58,6 @@ export function bootPage() {
     bindJewelleryItemForm();
     bindQuotationForm();
     bindPos();
-    bindPerformaForm();
     bindPerformaSettle();
     bindPerformaReturn();
     bindModals();

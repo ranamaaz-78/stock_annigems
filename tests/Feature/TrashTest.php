@@ -6,7 +6,6 @@ use App\Enums\DeliveryNoteStatus;
 use App\Enums\LineType;
 use App\Enums\StoneMovementType;
 use App\Models\Branch;
-use App\Models\Creditor;
 use App\Models\Customer;
 use App\Models\DeliveryNote;
 use App\Models\Stone;
@@ -76,14 +75,13 @@ class TrashTest extends TestCase
         $this->assertSame(5, (int) $stone->fresh()->quantity);
     }
 
-    public function test_customers_and_creditors_can_be_deleted_and_restored(): void
+    public function test_customers_can_be_deleted_and_restored(): void
     {
         $branch = Branch::factory()->create();
         $admin = User::factory()->admin($branch->id)->create();
         $customer = Customer::factory()->create();
-        $creditor = Creditor::factory()->create(['branch_id' => $branch->id]);
 
-        foreach ([['customers', $customer, 'customers'], ['creditors', $creditor, 'creditors']] as [$type, $record, $table]) {
+        foreach ([['customers', $customer, 'customers']] as [$type, $record, $table]) {
             $this->actingAs($admin)
                 ->delete(route('branch.records.destroy', ['type' => $type, 'uuid' => $record->uuid]))
                 ->assertRedirect();

@@ -11,7 +11,7 @@
 @php
     $a4 = $a4 ?? false;
     $showPrices = $performa->items->contains(fn ($item) => (float) $item->unit_price > 0);
-    $creditor = $performa->creditor;
+    $customer = $performa->customer;
     $branch = $performa->branch;
 
     // Worth in each line's own unit: pieces, or grams on a weighed line.
@@ -55,12 +55,12 @@
         <section class="pd__row">
             <div class="pd__party">
                 <p class="pd__label">{{ __('Prepared for') }}</p>
-                <p class="pd__party-name">{{ $performa->displayCreditorName() }}</p>
+                <p class="pd__party-name">{{ $performa->displayCustomerName() }}</p>
                 <p class="pd__party-lines">
-                    @if($creditor?->nie)<span>N.I.F / N.I.E {{ $creditor->nie }}</span>@endif
-                    @if($creditor?->phone)<span>{{ $creditor->phone }}</span>@endif
-                    @if($creditor?->email)<span>{{ $creditor->email }}</span>@endif
-                    @if($creditor?->address)<span>{{ $creditor->address }}</span>@endif
+                    @if($customer?->nie)<span>N.I.F / N.I.E {{ $customer->nie }}</span>@endif
+                    @if($customer?->phone)<span>{{ $customer->phone }}</span>@endif
+                    @if($customer?->email)<span>{{ $customer->email }}</span>@endif
+                    @if($customer?->address)<span>{{ $customer->address }}</span>@endif
                 </p>
             </div>
             <dl class="pd__facts">

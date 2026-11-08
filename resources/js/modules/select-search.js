@@ -94,7 +94,7 @@ function rowLabel(row, collection) {
         ].filter(Boolean).join(' · ');
     }
 
-    return [row.name, row.phone, row.customer_code || row.creditor_code || row.code].filter(Boolean).join(' · ');
+    return [row.name, row.phone, row.customer_code || row.code].filter(Boolean).join(' · ');
 }
 
 /**

@@ -63,7 +63,8 @@ export function bindJewelleryItemForm() {
     const subSelect = root.querySelector('[data-sub-category]');
     const metalSelect = root.querySelector('[data-metal]');
     const puritySelect = root.querySelector('[data-purity]');
-    const grossInput = root.querySelector('[data-gross-weight], [name="gross_weight"]');
+    // Gross is a read-only display: metal (typed) + stone grams. The server derives it again on save.
+    const grossInput = root.querySelector('[data-gross-weight]');
     const metalInput = root.querySelector('[data-metal-weight], [name="metal_weight"]');
 
     const showCost = root.dataset.showCost === '1';
@@ -180,8 +181,8 @@ export function bindJewelleryItemForm() {
     }
 
     /**
-     * Refresh displayed stone ct/g from allocated packets.
-     * Metal weight is typed — never written as gross minus stones.
+     * Refresh displayed stone ct/g from allocated packets, and gross weight
+     * as typed metal grams + stone grams.
      */
     function updateWeights() {
         let carat = 0;
@@ -205,19 +206,19 @@ export function bindJewelleryItemForm() {
         });
         carat = Math.round(carat * 1000) / 1000;
         const grams = Math.round((carat * gramsPerCarat + weighed) * 1000) / 1000;
-        const gross = Number(grossInput?.value || 0);
         const stoneEl = root.querySelector('[data-stone-weight]');
-        const warn = root.querySelector('[data-weight-warning]');
         if (stoneEl) {
             stoneEl.value = `${carat.toFixed(3)} ct / ${grams.toFixed(3)} g`;
         }
-        const impossible = grams > gross + 0.0005 && gross > 0;
-        warn?.classList.toggle('is-hidden', !impossible);
+        if (grossInput) {
+            const metal = Number(metalInput?.value || 0);
+            grossInput.value = (Math.round((metal + grams) * 1000) / 1000).toFixed(3);
+        }
         updateTabCounts();
     }
 
     /**
-     * Metal grams must be present and not exceed typed gross.
+     * Metal grams must be present and valid.
      *
      * @returns {boolean}
      */
@@ -227,19 +228,6 @@ export function bindJewelleryItemForm() {
         }
 
         if (window.AnnigemsForm && !window.AnnigemsForm.validateField(metalInput)) {
-            return false;
-        }
-
-        const metal = Number(metalInput.value || 0);
-        const gross = Number(grossInput?.value || 0);
-        if (gross > 0 && metal > gross + 0.0005) {
-            const container = metalInput.closest('[data-field]') || metalInput.parentElement;
-            const errorEl = container?.querySelector('[data-error-for="metal_weight"]');
-            metalInput.classList.add('is-invalid');
-            if (errorEl) {
-                errorEl.textContent = t('Metal weight cannot be greater than gross weight.');
-                errorEl.classList.remove('is-hidden', 'hidden');
-            }
             return false;
         }
 
@@ -535,14 +523,7 @@ export function bindJewelleryItemForm() {
         renderRows();
     });
 
-    grossInput?.addEventListener('blur', () => {
-        updateWeights();
-        validateMetalWeight();
-    });
-    grossInput?.addEventListener('change', () => {
-        updateWeights();
-        validateMetalWeight();
-    });
+    metalInput?.addEventListener('input', updateWeights);
     metalInput?.addEventListener('blur', validateMetalWeight);
 
     /**

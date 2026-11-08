@@ -56,8 +56,8 @@ class PerformaController extends Controller
 
     /**
      * Performas are issued from the POS now. This old address sends people
-     * there with Performa already chosen; ?creditor=uuid carries over so the
-     * creditor is filled in.
+     * there with Performa already chosen; ?customer=uuid carries over so the
+     * customer is filled in.
      */
     public function create(Request $request): RedirectResponse
     {
@@ -65,7 +65,7 @@ class PerformaController extends Controller
 
         return redirect()->route('branch.pos.show', array_filter([
             'kind' => 'performa',
-            'creditor' => $request->query('creditor'),
+            'customer' => $request->query('customer'),
         ]));
     }
 

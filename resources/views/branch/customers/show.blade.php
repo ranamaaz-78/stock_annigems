@@ -1,4 +1,4 @@
-{{-- Customer detail: profile plus cross-branch quotation / invoice history. --}}
+{{-- Customer detail: profile plus cross-branch quotation / invoice history and this branch's performas. --}}
 @extends('layouts.branch')
 
 @section('title', $customer->name)
@@ -10,6 +10,11 @@
     <x-slot:actions>
         @can('update', $customer)
             <x-btn href="{{ route('branch.customers.edit', $customer) }}" variant="secondary">{{ __('Edit') }}</x-btn>
+        @endcan
+        @can('create', \App\Models\Performa::class)
+            @if($customer->status)
+                <x-btn href="{{ route('branch.performas.create', ['customer' => $customer->uuid]) }}">{{ __('New Performa') }}</x-btn>
+            @endif
         @endcan
         @if(auth()->user()->hasPermission('customers.delete'))
             <x-delete-record type="customers" :record="$customer" />
@@ -167,6 +172,49 @@
             </div>
         @endif
     </div>
+
+    @can('viewAny', \App\Models\Performa::class)
+        <div class="panel">
+            <div class="panel__header">
+                <h2 class="panel__title">{{ __('Performas') }}</h2>
+                <p class="panel__subtitle">{{ __('Goods taken on credit at this branch') }}</p>
+            </div>
+            @if($performas->isEmpty())
+                <div class="panel__body">
+                    <x-empty-state :title="__('No performas yet')" :message="__('Issue a performa to this customer when they take goods on credit.')" icon="assignment" />
+                </div>
+            @else
+                <div class="panel__scroll">
+                    <table class="table-admin">
+                        <thead>
+                            <tr>
+                                <th>{{ __('Number') }}</th>
+                                <th>{{ __('Date') }}</th>
+                                <th>{{ __('Outstanding') }}</th>
+                                <th>{{ __('Status') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($performas as $performa)
+                                @php $outstanding = $performa->outstandingSummary(); @endphp
+                                <tr>
+                                    <td class="font-data-mono">
+                                        <a href="{{ route('branch.performas.show', $performa) }}" class="form-link">{{ $performa->performa_number }}</a>
+                                    </td>
+                                    <td>{{ setting_date($performa->performa_date) }}</td>
+                                    <td class="font-data-mono">
+                                        {{ $outstanding['jewellery'] }} {{ __('pc') }}
+                                        · {{ $outstanding['stones'] }} {{ __('st') }}
+                                    </td>
+                                    <td><x-status-badge :status="$performa->status" /></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+    @endcan
 </div>
 
 @push('scripts')

@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Enums\DeliveryNoteStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\QuotationStatus;
-use App\Models\Creditor;
 use App\Models\Customer;
 use App\Models\DeliveryNote;
 use App\Models\Invoice;
@@ -22,7 +21,7 @@ use Illuminate\Validation\ValidationException;
  * TrashService
  *
  * Soft delete and restore for invoices, quotations, performas, delivery
- * notes, customers and creditors. Records are never purged: there is no
+ * notes and customers. Records are never purged: there is no
  * force-delete path anywhere in the application.
  *
  * Deleting a document that still holds stock first runs the document's own
@@ -43,7 +42,6 @@ class TrashService
         'performas' => ['model' => Performa::class, 'permission' => 'performas.delete', 'label' => 'Performas'],
         'delivery-notes' => ['model' => DeliveryNote::class, 'permission' => 'delivery_notes.delete', 'label' => 'Delivery Notes'],
         'customers' => ['model' => Customer::class, 'permission' => 'customers.delete', 'label' => 'Clients'],
-        'creditors' => ['model' => Creditor::class, 'permission' => 'creditors.delete', 'label' => 'Creditors'],
     ];
 
     public function __construct(
@@ -109,13 +107,6 @@ class TrashService
             ]);
         }
 
-        if ($record instanceof Creditor
-            && Creditor::query()->where('phone', $record->phone)->where('branch_id', $record->branch_id)->exists()) {
-            throw ValidationException::withMessages([
-                'restore' => __('Another creditor now uses this phone number.'),
-            ]);
-        }
-
         DB::transaction(function () use ($record, $actor): void {
             $record->restore();
             $this->auditLog->log($this->action($record, 'restored'), $record, null, null, $actor);
@@ -155,10 +146,9 @@ class TrashService
         return match (true) {
             $record instanceof Invoice => ['code' => $record->invoice_number, 'name' => (string) $record->customer_name_snapshot, 'status' => $record->status->label()],
             $record instanceof Quotation => ['code' => $record->quotation_number, 'name' => $record->displayCustomerName(), 'status' => $record->status->label()],
-            $record instanceof Performa => ['code' => $record->performa_number, 'name' => $record->displayCreditorName(), 'status' => $record->status->label()],
+            $record instanceof Performa => ['code' => $record->performa_number, 'name' => $record->displayCustomerName(), 'status' => $record->status->label()],
             $record instanceof DeliveryNote => ['code' => $record->delivery_note_number, 'name' => (string) $record->customer_name_snapshot, 'status' => $record->status->label()],
-            $record instanceof Customer => ['code' => $record->customer_code, 'name' => $record->name, 'status' => null],
-            default => ['code' => $record->creditor_code, 'name' => $record->name, 'status' => null],
+            default => ['code' => $record->customer_code, 'name' => $record->name, 'status' => null],
         };
     }
 

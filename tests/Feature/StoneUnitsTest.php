@@ -5,8 +5,8 @@ namespace Tests\Feature;
 use App\Enums\DeliveryNoteStatus;
 use App\Enums\PerformaStatus;
 use App\Enums\StoneMovementType;
+use App\Models\Customer;
 use App\Models\Branch;
-use App\Models\Creditor;
 use App\Models\DeliveryNote;
 use App\Models\Invoice;
 use App\Models\Performa;
@@ -391,19 +391,19 @@ class StoneUnitsTest extends TestCase
 
     // ---------------------------------------------------------- performas
 
-    private function creditor(): Creditor
+    private function customer(): Customer
     {
-        return Creditor::factory()->create(['branch_id' => $this->admin->branch_id]);
+        return Customer::factory()->create();
     }
 
     public function test_performa_issues_grams_then_settles_and_returns_part_of_them(): void
     {
         $piece = $this->pieceLot();
         $gram = $this->gramLot('10');
-        $creditor = $this->creditor();
+        $customer = $this->customer();
 
         $this->actingAs($this->admin)->postJson(route('branch.performas.store'), [
-            'creditor_uuid' => $creditor->uuid,
+            'customer_uuid' => $customer->uuid,
             'performa_date' => now()->toDateString(),
             'lines' => [$this->line($piece, 4), $this->line($gram, 5)],
         ])->assertOk();
@@ -470,10 +470,10 @@ class StoneUnitsTest extends TestCase
         $iva = \App\Models\TaxRate::query()->where('kind', 'iva')->firstOrFail();
         $recargo = \App\Models\TaxRate::query()->create(['kind' => 'recargo', 'name' => 'Recargo 5.2%', 'rate' => 5.2, 'is_active' => true]);
         $piece = $this->pieceLot();
-        $creditor = $this->creditor();
+        $customer = $this->customer();
 
         $this->actingAs($this->admin)->postJson(route('branch.performas.store'), [
-            'creditor_uuid' => $creditor->uuid,
+            'customer_uuid' => $customer->uuid,
             'performa_date' => now()->toDateString(),
             'lines' => [$this->line($piece, 8, 10)],
         ])->assertOk();
@@ -512,10 +512,10 @@ class StoneUnitsTest extends TestCase
     {
         $piece = $this->pieceLot();
         $gram = $this->gramLot('10');
-        $creditor = $this->creditor();
+        $customer = $this->customer();
 
         $this->actingAs($this->admin)->postJson(route('branch.performas.store'), [
-            'creditor_uuid' => $creditor->uuid,
+            'customer_uuid' => $customer->uuid,
             'performa_date' => now()->toDateString(),
             'lines' => [$this->line($piece, 2, 9), $this->line($gram, 4, 6.5)],
         ])->assertOk();
@@ -531,10 +531,10 @@ class StoneUnitsTest extends TestCase
         $piece = $this->pieceLot();
         $carat = $this->caratLot();
         $gram = $this->gramLot('10');
-        $creditor = $this->creditor();
+        $customer = $this->customer();
 
         $this->actingAs($this->admin)->postJson(route('branch.performas.store'), [
-            'creditor_uuid' => $creditor->uuid,
+            'customer_uuid' => $customer->uuid,
             'performa_date' => now()->toDateString(),
             'lines' => [$this->line($piece, 4), $this->line($carat, 3), $this->line($gram, 5)],
         ])->assertOk();
@@ -547,7 +547,7 @@ class StoneUnitsTest extends TestCase
         $config = json_decode(html_entity_decode($page->viewData('editingPerforma') ? json_encode($page->viewData('editingPerforma')) : '{}'), true);
         $this->assertSame($performa->performa_number, $config['number']);
         $this->assertCount(3, $config['lines']);
-        $this->assertFalse($config['creditor_locked']);
+        $this->assertFalse($config['customer_locked']);
         $byCode = collect($config['lines'])->keyBy('item_code_snapshot');
         $this->assertSame(4, $byCode[$piece->stone_code]['quantity']);
         $this->assertSame(10, $byCode[$piece->stone_code]['available_quantity']);
@@ -556,7 +556,7 @@ class StoneUnitsTest extends TestCase
 
         // Change it: pieces 4 -> 6, carat lot dropped, grams 5 -> 8.
         $this->actingAs($this->admin)->putJson(route('branch.performas.update', $performa), [
-            'creditor_uuid' => $creditor->uuid,
+            'customer_uuid' => $customer->uuid,
             'performa_date' => now()->toDateString(),
             'notes' => 'Edited',
             'lines' => [$this->line($piece, 6), $this->line($gram, 8)],
@@ -573,7 +573,7 @@ class StoneUnitsTest extends TestCase
 
         // More than the shelf plus the line's own grams is refused and nothing moves.
         $this->actingAs($this->admin)->putJson(route('branch.performas.update', $performa), [
-            'creditor_uuid' => $creditor->uuid,
+            'customer_uuid' => $customer->uuid,
             'performa_date' => now()->toDateString(),
             'lines' => [$this->line($piece, 6), $this->line($gram, 10.5)],
         ])->assertStatus(422);
@@ -582,15 +582,15 @@ class StoneUnitsTest extends TestCase
         $this->assertSame(2, $performa->items()->count());
     }
 
-    public function test_a_performa_with_a_payment_keeps_the_paid_line_and_its_creditor(): void
+    public function test_a_performa_with_a_payment_keeps_the_paid_line_and_its_customer(): void
     {
         $piece = $this->pieceLot();
         $gram = $this->gramLot('10');
-        $creditor = $this->creditor();
-        $other = $this->creditor();
+        $customer = $this->customer();
+        $other = $this->customer();
 
         $this->actingAs($this->admin)->postJson(route('branch.performas.store'), [
-            'creditor_uuid' => $creditor->uuid,
+            'customer_uuid' => $customer->uuid,
             'performa_date' => now()->toDateString(),
             'lines' => [$this->line($piece, 4), $this->line($gram, 5)],
         ])->assertOk();
@@ -603,19 +603,19 @@ class StoneUnitsTest extends TestCase
         ])->assertOk();
 
         $payload = app(\App\Services\PerformaService::class)->editPayload($performa);
-        $this->assertTrue($payload['creditor_locked']);
+        $this->assertTrue($payload['customer_locked']);
         $this->assertCount(1, $payload['locked']);
         $this->assertCount(1, $payload['lines'], 'only the unpaid piece line can change');
 
-        // Pieces 4 -> 2, and an attempt to move the performa to another creditor.
+        // Pieces 4 -> 2, and an attempt to move the performa to another customer.
         $this->actingAs($this->admin)->putJson(route('branch.performas.update', $performa), [
-            'creditor_uuid' => $other->uuid,
+            'customer_uuid' => $other->uuid,
             'performa_date' => now()->toDateString(),
             'lines' => [$this->line($piece, 2)],
         ])->assertOk();
 
         $performa->refresh();
-        $this->assertSame($creditor->id, $performa->creditor_id, 'the creditor stays once a payment exists');
+        $this->assertSame($customer->id, $performa->customer_id, 'the customer stays once a payment exists');
         $this->assertSame('8', $this->onHand($piece));
         $this->assertSame('5.000', $this->onHand($gram), 'the paid grams line is untouched');
         $this->assertSame('3.000', (string) $gramItem->fresh()->weight_settled);
@@ -624,7 +624,7 @@ class StoneUnitsTest extends TestCase
         // Dropping every editable line is fine while a locked line remains.
         $this->actingAs($this->admin)->putJson(route('branch.performas.update', $performa), [
             'performa_date' => now()->toDateString(),
-            'creditor_uuid' => $creditor->uuid,
+            'customer_uuid' => $customer->uuid,
             'lines' => [],
         ])->assertOk();
         $this->assertSame('10', $this->onHand($piece));
@@ -633,7 +633,7 @@ class StoneUnitsTest extends TestCase
         // Settled or cancelled performas cannot be edited.
         $this->actingAs($this->admin)->postJson(route('branch.performas.return', $performa), ['return_all' => true])->assertOk();
         $this->actingAs($this->admin)->putJson(route('branch.performas.update', $performa), [
-            'creditor_uuid' => $creditor->uuid,
+            'customer_uuid' => $customer->uuid,
             'performa_date' => now()->toDateString(),
             'lines' => [$this->line($piece, 1)],
         ])->assertForbidden();
@@ -643,7 +643,7 @@ class StoneUnitsTest extends TestCase
     {
         $gram = $this->gramLot('10');
         $this->actingAs($this->admin)->postJson(route('branch.performas.store'), [
-            'creditor_uuid' => $this->creditor()->uuid,
+            'customer_uuid' => $this->customer()->uuid,
             'performa_date' => now()->toDateString(),
             'lines' => [$this->line($gram, 6)],
         ])->assertOk();
@@ -663,14 +663,14 @@ class StoneUnitsTest extends TestCase
         $this->assertSame('0.000', (string) $item->fresh()->weight_settled);
         $this->assertSame(6.0, (float) $item->fresh()->outstandingAmount());
         $this->assertSame(PerformaStatus::OPEN, $performa->fresh()->status);
-        $this->assertSame('4.000', $this->onHand($gram), 'the grams are still with the creditor');
+        $this->assertSame('4.000', $this->onHand($gram), 'the grams are still with the customer');
     }
 
     public function test_the_performa_print_words_grams_and_the_screens_load(): void
     {
         $gram = $this->gramLot('10');
         $this->actingAs($this->admin)->postJson(route('branch.performas.store'), [
-            'creditor_uuid' => $this->creditor()->uuid,
+            'customer_uuid' => $this->customer()->uuid,
             'performa_date' => now()->toDateString(),
             'lines' => [$this->line($gram, 5.5)],
         ])->assertOk();

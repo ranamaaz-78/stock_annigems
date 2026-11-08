@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use App\Enums\StoneMovementType;
+use App\Models\Customer;
 use App\Models\Branch;
-use App\Models\Creditor;
 use App\Models\DeliveryNote;
 use App\Models\Invoice;
 use App\Models\Stone;
@@ -151,12 +151,12 @@ class ReportsStoneUnitsTest extends TestCase
     {
         $piece = $this->pieceLot();
         $gram = $this->gramLot();
-        $creditor = Creditor::factory()->create(['branch_id' => $this->admin->branch_id]);
+        $customer = Customer::factory()->create();
 
         $this->actingAs($this->admin)->postJson(route('branch.quotations.invoice'), $this->ticket([$this->line($piece, 3), $this->line($gram, 4)], ['payment_method' => 'cash']))->assertOk();
         $this->actingAs($this->admin)->postJson(route('branch.delivery-notes.store'), $this->ticket([$this->line($gram, 2)]))->assertOk();
         $this->actingAs($this->admin)->postJson(route('branch.performas.store'), [
-            'creditor_uuid' => $creditor->uuid,
+            'customer_uuid' => $customer->uuid,
             'performa_date' => now()->toDateString(),
             'lines' => [$this->line($piece, 2)],
         ])->assertOk();
@@ -239,11 +239,11 @@ class ReportsStoneUnitsTest extends TestCase
     {
         $piece = $this->pieceLot();
         $gram = $this->gramLot();
-        $creditor = Creditor::factory()->create(['branch_id' => $this->admin->branch_id]);
+        $customer = Customer::factory()->create();
 
         // Issued: 4 pcs x 10.00 = 40.00 and 5 g x 6.00 = 30.00.
         $this->actingAs($this->admin)->postJson(route('branch.performas.store'), [
-            'creditor_uuid' => $creditor->uuid,
+            'customer_uuid' => $customer->uuid,
             'performa_date' => now()->toDateString(),
             'lines' => [array_merge($this->line($piece, 4), ['price_per_piece' => 10]), array_merge($this->line($gram, 5), ['price_per_piece' => 6])],
         ])->assertOk();
@@ -261,7 +261,7 @@ class ReportsStoneUnitsTest extends TestCase
         ])->assertOk();
 
         $report = $this->report('performa-outstanding');
-        $row = $report->rows->firstWhere('creditor_code', $creditor->creditor_code);
+        $row = $report->rows->firstWhere('customer_code', $customer->customer_code);
         $this->assertEqualsWithDelta(70.0, (float) $row['issued'], 0.001);
         $this->assertEqualsWithDelta(10.0, (float) $row['settled'], 0.001);
         $this->assertEqualsWithDelta(12.0, (float) $row['returned'], 0.001);
@@ -301,9 +301,9 @@ class ReportsStoneUnitsTest extends TestCase
         $this->pieceLot();
         $this->caratLot();
         $gram = $this->gramLot();
-        $creditor = Creditor::factory()->create(['branch_id' => $this->admin->branch_id]);
+        $customer = Customer::factory()->create();
         $this->actingAs($this->admin)->postJson(route('branch.performas.store'), [
-            'creditor_uuid' => $creditor->uuid,
+            'customer_uuid' => $customer->uuid,
             'performa_date' => now()->toDateString(),
             'lines' => [array_merge($this->line($gram, 4), ['price_per_piece' => 6])],
         ])->assertOk();
@@ -315,7 +315,7 @@ class ReportsStoneUnitsTest extends TestCase
         $this->assertStringContainsString('6 g', str_replace('.000', '', $cards['total_stones']['hint']));
         // 10 x 7 + 5 ct x 40 + 6 g x 5 = 300.00 of stone in hand.
         $this->assertStringContainsString('300.00', $cards['stone_value']['value']);
-        // 4 g issued at 6.00 is out with a creditor.
+        // 4 g issued at 6.00 is out with a customer.
         $this->assertStringContainsString('24.00', $cards['out_with_clients']['value']);
 
         $inventory = User::factory()->inventoryStaff($this->admin->branch_id)->create();

@@ -10,7 +10,7 @@ use App\Support\Reports\ReportResult;
 /**
  * CreditReportService
  *
- * Goods that have left the shelf without being sold yet: what creditors still
+ * Goods that have left the shelf without being sold yet: what customers still
  * owe on performas, and delivery notes not yet invoiced. Neither is revenue.
  * Performa money is the value fixed when each line was issued; delivery note
  * money is the note's own total.
@@ -22,12 +22,12 @@ class CreditReportService
     ) {}
 
     /**
-     * What creditors still hold on open and part-paid performas.
+     * What customers still hold on open and part-paid performas.
      */
     public function performaOutstanding(ReportFilter $filter): ReportResult
     {
         $limit = (int) config('annigems.reports.per_page', 100);
-        $rows = $this->credit->outstandingByCreditor($filter->branchId);
+        $rows = $this->credit->outstandingByCustomer($filter->branchId);
         $open = $this->credit->openPerformas($filter->branchId, $limit);
         $settled = $this->credit->settledInPeriod($filter);
 
@@ -37,15 +37,15 @@ class CreditReportService
             summary: [
                 $this->card('outstanding', __('Still Out'), ReportFormatter::money($rows->sum('outstanding')), 'account_balance_wallet',
                     hint: __('At the price fixed on issue')),
-                $this->card('creditors', __('Creditors Holding Goods'), ReportFormatter::count($rows->count()), 'groups'),
+                $this->card('customers', __('Customers Holding Goods'), ReportFormatter::count($rows->count()), 'groups'),
                 $this->card('performas', __('Open Performas'), ReportFormatter::count($rows->sum('performas')), 'assignment'),
                 $this->card('collected', __('Collected in Period'), ReportFormatter::money($settled['total']), 'payments',
                     hint: __(':count settlement invoices', ['count' => ReportFormatter::count($settled['count'])])),
             ],
             rows: $rows,
             columns: [
-                ['key' => 'creditor_code', 'label' => __('Code')],
-                ['key' => 'creditor', 'label' => __('Creditor')],
+                ['key' => 'customer_code', 'label' => __('Code')],
+                ['key' => 'customer', 'label' => __('Customer')],
                 ['key' => 'performas', 'label' => __('Performas'), 'align' => 'right', 'format' => 'count'],
                 ['key' => 'issued', 'label' => __('Issued'), 'align' => 'right', 'format' => 'money'],
                 ['key' => 'settled', 'label' => __('Paid For'), 'align' => 'right', 'format' => 'money'],
@@ -54,20 +54,20 @@ class CreditReportService
                 ['key' => 'oldest_days', 'label' => __('Oldest (days)'), 'align' => 'right', 'format' => 'count'],
             ],
             totals: [
-                'creditor' => __('Total'),
+                'customer' => __('Total'),
                 'performas' => $rows->sum('performas'),
                 'issued' => $rows->sum('issued'),
                 'settled' => $rows->sum('settled'),
                 'returned' => $rows->sum('returned'),
                 'outstanding' => $rows->sum('outstanding'),
             ],
-            chart: ReportResult::chart(__('Outstanding by creditor'), 'creditors', $rows->take(10)->map(fn (array $row): array => [
-                'label' => $row['creditor'],
+            chart: ReportResult::chart(__('Outstanding by customer'), 'customers', $rows->take(10)->map(fn (array $row): array => [
+                'label' => $row['customer'],
                 'value' => $row['outstanding'],
                 'display' => ReportFormatter::moneyCompact($row['outstanding']),
             ])->all()),
             meta: [
-                'table_title' => __('Outstanding by creditor'),
+                'table_title' => __('Outstanding by customer'),
                 'live_snapshot' => true,
                 'money' => true,
                 'empty_title' => __('No goods are out on performa'),
@@ -78,7 +78,7 @@ class CreditReportService
                         'columns' => [
                             ['key' => 'performa_number', 'label' => __('Performa')],
                             ['key' => 'performa_date', 'label' => __('Date')],
-                            ['key' => 'creditor', 'label' => __('Creditor')],
+                            ['key' => 'customer', 'label' => __('Customer')],
                             ['key' => 'status', 'label' => __('Status')],
                             ['key' => 'issued', 'label' => __('Issued'), 'align' => 'right', 'format' => 'money'],
                             ['key' => 'outstanding', 'label' => __('Outstanding'), 'align' => 'right', 'format' => 'money', 'emphasis' => 'strong'],

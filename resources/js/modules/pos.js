@@ -160,8 +160,6 @@ export function bindPos() {
     let state = emptyState();
     // Invoice when the cashier may convert, otherwise only quotations exist.
     let documentKind = ['invoice', 'delivery_note', 'performa'].includes(config.defaultKind) ? config.defaultKind : 'quotation';
-    // Which registry the phone field searches: customers, or creditors on a performa.
-    let identityGroup = 'customer';
     // Line whose grams box takes the cursor after the next paint (a weighed stone was just added).
     let pendingGramsFocus = null;
     // An issued performa opened for editing (null on a new ticket).
@@ -391,7 +389,7 @@ export function bindPos() {
         if (documentKind === 'invoice') {
             els.kindNote.textContent = t('Payment is taken next. Stock is deducted when the invoice is saved.');
         } else if (documentKind === 'performa') {
-            els.kindNote.textContent = t('Issued to a creditor. Stock leaves now; the creditor pays later, and the discount and tax chosen here carry to the invoice.');
+            els.kindNote.textContent = t('Issued to a customer. Stock leaves now; the customer pays later, and the discount and tax chosen here carry to the invoice.');
         } else if (documentKind === 'delivery_note') {
             els.kindNote.textContent = t('No tax is added. Stock leaves now; the note can be cancelled or invoiced later.');
         } else {
@@ -854,19 +852,12 @@ export function bindPos() {
                 invoice: t('An invoice takes payment and marks stock sold. It prints, then clears the ticket.'),
                 quotation: t('A quotation holds stock until it is converted or cancelled. It prints, then clears the ticket.'),
                 delivery_note: t('A delivery note takes the stock out now and prints the client\'s copy. No tax, no payment.'),
-                performa: t('A performa takes the stock out now against a creditor. Payment comes later on an invoice, with the same discount and tax.'),
+                performa: t('A performa takes the stock out now against a customer. Payment comes later on an invoice, with the same discount and tax.'),
             }[kind] || '';
         }
 
-        // Who the ticket is for: a creditor on a performa, a customer otherwise.
-        if (els.billtoTitle) els.billtoTitle.textContent = kind === 'performa' ? t('Issued to (creditor)') : t('Billed to');
-        const group = kind === 'performa' ? 'creditor' : 'customer';
-        if (group !== identityGroup) {
-            identityGroup = group;
-            // The picked person belongs to the other registry: start the fields afresh.
-            unlockCustomer('idle');
-            if (group === 'creditor') loadCreditors();
-        }
+        // Who the ticket is for: always a customer, a performa included.
+        if (els.billtoTitle) els.billtoTitle.textContent = kind === 'performa' ? t('Issued to') : t('Billed to');
         renderKindNote();
         renderDocumentNumber();
         // Totals and the tax controls depend on the kind.
@@ -1036,16 +1027,15 @@ export function bindPos() {
         if (!els.chip) return;
         els.chip.classList.remove('pos-chip--existing', 'pos-chip--new');
         els.customerLocked?.classList.toggle('is-hidden', kind !== 'existing');
-        const who = identityGroup === 'creditor' ? 'creditor' : 'customer';
         if (kind === 'existing') {
             const code = state.customer_code ? ` · ${state.customer_code}` : '';
             els.chip.textContent = `Existing${code}`;
             els.chip.classList.add('pos-chip--existing');
         } else if (kind === 'new') {
-            els.chip.textContent = `New ${who}`;
+            els.chip.textContent = 'New customer';
             els.chip.classList.add('pos-chip--new');
         } else {
-            els.chip.textContent = `No ${who}`;
+            els.chip.textContent = 'No customer';
         }
     }
 
@@ -1344,8 +1334,8 @@ export function bindPos() {
     }
 
     /**
-     * POST performas.store against a creditor: the picked one, or the new one
-     * the phone and name describe (saved as a creditor), with the ticket's discount and tax.
+     * POST performas.store against a customer: the picked one, or the new one
+     * the phone and name describe (saved as a customer), with the ticket's discount and tax.
      *
      * @param {HTMLButtonElement} button
      */
@@ -1364,7 +1354,6 @@ export function bindPos() {
             method: editing ? 'PUT' : 'POST',
             body: JSON.stringify({
                 ...buildFormPayload(),
-                creditor_uuid: state.customer_uuid || null,
                 performa_date: state.quotation_date,
             }),
         });
@@ -1378,7 +1367,7 @@ export function bindPos() {
         } else if (ok) {
             finishAndPrint(json.data, json.message || t('Performa issued.'));
             refreshDocumentNumbers();
-            loadCreditors();
+            loadCustomers();
         } else if (json.errors && Object.keys(json.errors).length) {
             showErrors(json.errors, json.message);
         } else {
@@ -1933,7 +1922,7 @@ export function bindPos() {
     }
 
     /**
-     * The customer (or creditor) is filled in and every line is complete.
+     * The customer is filled in and every line is complete.
      *
      * @returns {boolean}
      */
@@ -2290,7 +2279,6 @@ export function bindPos() {
     /* -------------------------------------------------- customer typeahead ---- */
 
     let customerCatalog = [];
-    let creditorCatalog = [];
     let customerHits = [];
     let activeCustomer = 0;
     let customerSeq = 0;
@@ -2360,7 +2348,7 @@ export function bindPos() {
             return;
         }
 
-        customerHits = (identityGroup === 'creditor' ? creditorCatalog : customerCatalog).filter((row) => (
+        customerHits = customerCatalog.filter((row) => (
             row.haystack.includes(needle) || (digits.length >= 2 && row.haystack.includes(digits))
         )).slice(0, 8).map((row) => customerRow(row));
         activeCustomer = 0;
@@ -2386,29 +2374,6 @@ export function bindPos() {
                 customer.customer_code,
                 customer.email,
                 customer.city,
-            ].filter(Boolean).join(' ').toLowerCase(),
-        }));
-    }
-
-    /**
-     * GET creditors.search?catalog=1 — the branch's creditors, filtered locally
-     * like customers. A creditor looks like a customer to the phone picker.
-     */
-    async function loadCreditors() {
-        if (!routes.creditorSearch) return;
-
-        const { ok, json } = await fetchJson(`${routes.creditorSearch}?catalog=1`);
-        const rows = ok && Array.isArray(json.data?.creditors) ? json.data.creditors : [];
-        creditorCatalog = rows.map((creditor) => ({
-            ...creditor,
-            customer_code: creditor.creditor_code,
-            haystack: [
-                creditor.name,
-                creditor.phone,
-                String(creditor.phone || '').replace(/\D/g, ''),
-                creditor.creditor_code,
-                creditor.email,
-                creditor.city,
             ].filter(Boolean).join(' ').toLowerCase(),
         }));
     }
@@ -2485,9 +2450,9 @@ export function bindPos() {
     });
 
     /**
-     * Load an issued performa into the ticket: its creditor, date, notes and the
+     * Load an issued performa into the ticket: its customer, date, notes and the
      * lines that can still change. Paid or returned lines are listed, not editable,
-     * and the creditor stays put once any exist.
+     * and the customer stays put once any exist.
      */
     function openForEditing() {
         documentNumbers = { ...documentNumbers, performa: editing.number };
@@ -2509,10 +2474,10 @@ export function bindPos() {
         if (editing.tax?.iva_uuid) state.iva_uuid = editing.tax.iva_uuid;
         state.recargo_uuid = editing.tax?.recargo_uuid || '';
 
-        if (editing.creditor) {
-            applyCustomer(editing.creditor);
+        if (editing.customer) {
+            applyCustomer(editing.customer);
         }
-        if (editing.creditor_locked) {
+        if (editing.customer_locked) {
             els.customerClear?.classList.add('is-hidden');
         }
 
@@ -2548,9 +2513,9 @@ export function bindPos() {
     if (editingDoc) {
         openForEditingDocument();
     }
-    // Arriving from a creditor's page: that creditor is already the one billed.
-    if (config.initialCreditor && documentKind === 'performa') {
-        applyCustomer(config.initialCreditor);
+    // Arriving from a customer's page: that customer is already the one billed.
+    if (config.initialCustomer && documentKind === 'performa') {
+        applyCustomer(config.initialCustomer);
     }
     render();
     loadCatalog();

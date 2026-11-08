@@ -3,7 +3,6 @@
 use App\Http\Controllers\Branch\BranchDashboardController;
 use App\Http\Controllers\Branch\BranchUserController;
 use App\Http\Controllers\Branch\CategoryController;
-use App\Http\Controllers\Branch\CreditorController;
 use App\Http\Controllers\Branch\CustomerController;
 use App\Http\Controllers\Branch\GoldRateController;
 use App\Http\Controllers\Branch\InvoiceController;
@@ -190,17 +189,6 @@ Route::middleware(['auth', 'password.changed', 'branch.context', 'branch.member'
         Route::post('/quotations/{quotation}/convert', [QuotationController::class, 'convert'])->name('quotations.convert');
         Route::get('/quotations/{quotation}/print', [QuotationController::class, 'print'])->name('quotations.print');
 
-        // Creditors (branch-scoped parties for performas — not sales customers)
-        Route::get('/creditors', [CreditorController::class, 'index'])->name('creditors.index');
-        Route::get('/creditors/export', [CreditorController::class, 'export'])->name('creditors.export');
-        Route::get('/creditors/search', [CreditorController::class, 'search'])->name('creditors.search');
-        Route::get('/creditors/create', [CreditorController::class, 'create'])->name('creditors.create');
-        Route::post('/creditors', [CreditorController::class, 'store'])->name('creditors.store');
-        Route::get('/creditors/{creditor}', [CreditorController::class, 'show'])->name('creditors.show');
-        Route::get('/creditors/{creditor}/edit', [CreditorController::class, 'edit'])->name('creditors.edit');
-        Route::put('/creditors/{creditor}', [CreditorController::class, 'update'])->name('creditors.update');
-        Route::post('/creditors/{creditor}/deactivate', [CreditorController::class, 'deactivate'])->name('creditors.deactivate');
-        Route::post('/creditors/{creditor}/activate', [CreditorController::class, 'activate'])->name('creditors.activate');
 
         // Performas (credit issue — stock out now, prices on settlement)
         // Payments: pending invoices and delivery notes are paid from their own page.
